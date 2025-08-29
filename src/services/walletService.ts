@@ -46,6 +46,59 @@ export interface PendingTransferRequest {
 }
 
 class WalletService {
+  // Crear compra de BeCoins (registro correcto de tipo de transferencia)
+  async createPurchaseBecoin(purchaseData: {
+    toWalletId: string;
+    amountBecoin: number;
+    description?: string;
+  }): Promise<any> {
+    try {
+      console.log("🛒 Creando compra de BeCoins:", purchaseData);
+      const response = await apiRequest("/wallets/purchase-becoin", {
+        method: "POST",
+        body: JSON.stringify(purchaseData),
+      });
+      console.log("✅ Compra registrada:", response);
+      return response;
+    } catch (error) {
+      console.error("❌ Error creando compra de BeCoins:", error);
+      throw error;
+    }
+  }
+  // Eliminar preset de monto
+  async deletePresetAmount(id: string): Promise<any> {
+    try {
+      const response = await apiRequest(`/preset-amount/${id}`, {
+        method: "DELETE",
+      });
+      return response;
+    } catch (error) {
+      console.error("Error al eliminar preset de monto:", error);
+      throw error;
+    }
+  }
+  // Obtener QR de la wallet usando un token explícito
+  async getWalletQRWithToken(token: string): Promise<string | null> {
+    console.log("getWalletQRWithToken called");
+    console.log("Token actual:", token);
+    if (!token) {
+      console.error(
+        "No hay token de autenticación. El usuario debe iniciar sesión."
+      );
+      return null;
+    }
+    try {
+      const resp = await apiRequest("/wallets/qr", {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (resp?.qr) return resp.qr;
+      return null;
+    } catch (error) {
+      console.error("Error al obtener el QR:", error);
+      return null;
+    }
+  }
   // Obtener datos de pago tras escanear QR
   async getDataPayment(walletId: string): Promise<any> {
     try {
@@ -128,6 +181,7 @@ class WalletService {
       throw error;
     }
   }
+
   // Recarga usando el modo API Payphone (el backend hace toda la integración)
   async rechargeWithPayphoneAPI(data: {
     userId: string;
