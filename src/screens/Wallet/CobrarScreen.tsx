@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { usePaymentSocket } from "../../hooks/usePaymentSocket";
 import { Platform } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import {
@@ -17,6 +18,14 @@ import { convertUSDToBeCoins } from "../../constants/currency";
 import { useNavigation } from "@react-navigation/native";
 
 const CobrarScreen = () => {
+  // Actualizar historial de montos en tiempo real al recibir pago por socket
+  usePaymentSocket((data) => {
+    if (data && data.amount_payment_id_deleted) {
+      setAmounts((prev) =>
+        prev.filter((item) => item.id !== data.amount_payment_id_deleted)
+      );
+    }
+  });
   const [showPresetForm, setShowPresetForm] = useState(false);
   const navigation = useNavigation();
   const [qrImage, setQrImage] = useState<string | null>(null);
@@ -85,8 +94,31 @@ const CobrarScreen = () => {
       setQrLoading(true);
       setQrError(null);
       try {
-        const qr = await walletService.getWalletQR();
-        setQrImage(qr);
+        // Obtener el token desde el store o localStorage
+        let token;
+        try {
+          token =
+            require("../../stores/useAuthTokenStore").useAuthTokenStore.getState()
+              .token;
+        } catch (e) {
+          token = null;
+        }
+        if (!token && typeof window !== "undefined") {
+          token = localStorage.getItem("auth_token");
+        }
+        if (!token) {
+          setQrError(
+            "No hay token de autenticación. El usuario debe iniciar sesión."
+          );
+          setQrLoading(false);
+          return;
+        }
+        // Llamar al servicio pasando el token
+        const resp =
+          await require("../../services/walletService").walletService.getWalletQRWithToken(
+            token
+          );
+        setQrImage(resp);
       } catch (err) {
         setQrError("Error al obtener el QR");
       } finally {
@@ -131,11 +163,14 @@ const CobrarScreen = () => {
       return;
     }
     if (
-      !presetAmount ||
+      presetAmount === "" ||
       isNaN(Number(presetAmount)) ||
-      Number(presetAmount) <= 0
+      Number(presetAmount) < 0
     ) {
-      Alert.alert("Error", "Ingresa un monto válido para el preset");
+      Alert.alert(
+        "Error",
+        "Ingresa un monto válido para el preset (mayor o igual a 0)"
+      );
       return;
     }
     try {
@@ -154,8 +189,8 @@ const CobrarScreen = () => {
   };
 
   const handleCreateAmount = async () => {
-    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
-      Alert.alert("Error", "Ingresa un monto válido");
+    if (amount === "" || isNaN(Number(amount)) || Number(amount) < 0) {
+      Alert.alert("Error", "Ingresa un monto válido (mayor o igual a 0)");
       return;
     }
     setCreating(true);
@@ -176,6 +211,15 @@ const CobrarScreen = () => {
       fetchAmounts();
     } catch (err) {
       Alert.alert("Error", "No se pudo eliminar el monto");
+    }
+  };
+
+  const handleDeletePreset = async (id: string) => {
+    try {
+      await walletService.deletePresetAmount(id);
+      fetchPresets();
+    } catch (err) {
+      Alert.alert("Error", "No se pudo eliminar el preset");
     }
   };
 
@@ -240,49 +284,75 @@ const CobrarScreen = () => {
                   }}
                 >
                   {presets.map((preset, idx) => (
-                    <TouchableOpacity
+                    <View
                       key={preset.id}
                       style={{
-                        backgroundColor: "#e0f7fa",
-                        borderRadius: 20,
-                        paddingVertical: 10,
-                        paddingHorizontal: 22,
+                        position: "relative",
                         margin: 4,
-                        borderWidth: 2,
-                        borderColor: "#007AFF",
-                        shadowColor: "#007AFF",
-                        shadowOpacity: 0.12,
-                        shadowRadius: 4,
-                        elevation: 2,
-                        marginRight: idx % 2 === 0 ? 8 : 0,
-                        marginBottom: 8,
+                        flexDirection: "row",
+                        alignItems: "center",
                       }}
-                      onPress={() => setAmount(String(preset.amount))}
                     >
-                      <Text
+                      <TouchableOpacity
                         style={{
-                          color: "#007AFF",
-                          fontWeight: "bold",
-                          fontSize: 16,
-                          letterSpacing: 0.5,
+                          backgroundColor: "#e0f7fa",
+                          borderRadius: 20,
+                          paddingVertical: 10,
+                          paddingHorizontal: 22,
+                          margin: 4,
+                          borderWidth: 2,
+                          borderColor: "#007AFF",
+                          shadowColor: "#007AFF",
+                          shadowOpacity: 0.12,
+                          shadowRadius: 4,
+                          elevation: 2,
+                          marginRight: idx % 2 === 0 ? 8 : 0,
+                          marginBottom: 8,
                         }}
+                        onPress={() => setAmount(String(preset.amount))}
                       >
-                        {preset.name ? preset.name + " - " : ""}
-                        {formatUSD(preset.amount)}
-                      </Text>
-                      {preset.message ? (
                         <Text
                           style={{
-                            color: "#0097a7",
-                            fontSize: 12,
-                            marginTop: 2,
-                            textAlign: "center",
+                            color: "#007AFF",
+                            fontWeight: "bold",
+                            fontSize: 16,
+                            letterSpacing: 0.5,
                           }}
                         >
-                          {preset.message}
+                          {preset.name ? preset.name + " - " : ""}
+                          {formatUSD(preset.amount)}
                         </Text>
-                      ) : null}
-                    </TouchableOpacity>
+                        {preset.message ? (
+                          <Text
+                            style={{
+                              color: "#0097a7",
+                              fontSize: 12,
+                              marginTop: 2,
+                              textAlign: "center",
+                            }}
+                          >
+                            {preset.message}
+                          </Text>
+                        ) : null}
+                      </TouchableOpacity>
+                      {/* Botón X para eliminar preset */}
+                      <TouchableOpacity
+                        style={{
+                          position: "absolute",
+                          top: 2,
+                          right: 2,
+                          backgroundColor: "#fff",
+                          borderRadius: 12,
+                          padding: 2,
+                          borderWidth: 1,
+                          borderColor: "#E53E3E",
+                          zIndex: 2,
+                        }}
+                        onPress={() => handleDeletePreset(preset.id)}
+                      >
+                        <Icon name="close" size={16} color="#E53E3E" />
+                      </TouchableOpacity>
+                    </View>
                   ))}
                 </View>
               </View>
@@ -396,32 +466,58 @@ const CobrarScreen = () => {
               >
                 1. Ingresa el monto a cobrar (USD)
               </Text>
-              <View style={[styles.row, { marginTop: 12 }]}>
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      fontSize: 18,
-                      borderColor: "#007AFF",
-                      backgroundColor: "#fff",
-                    },
-                  ]}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 10,
+                  marginTop: 12,
+                }}
+              >
+                <input
+                  style={{
+                    fontSize: 18,
+                    borderColor: "#007AFF",
+                    backgroundColor: "#fff",
+                    borderWidth: 1,
+                    borderStyle: "solid",
+                    borderRadius: 10,
+                    padding: 12,
+                    marginBottom: 8,
+                    width: "100%",
+                    boxSizing: "border-box",
+                    MozAppearance: "textfield",
+                  }}
                   placeholder="Monto en USD"
-                  keyboardType="numeric"
+                  inputMode="decimal"
+                  pattern="^\\d*(\\.\\d{0,2})?$"
                   value={amount}
-                  onChangeText={setAmount}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[^0-9.]/g, "");
+                    setAmount(val);
+                  }}
+                  onWheel={(e) => (e.target as HTMLInputElement).blur()}
                 />
-
-                <TouchableOpacity
-                  style={styles.button}
-                  onPress={handleCreateAmount}
+                <button
+                  style={{
+                    backgroundColor: "#007AFF",
+                    color: "#fff",
+                    fontWeight: "bold",
+                    fontSize: 16,
+                    letterSpacing: 0.5,
+                    padding: "12px 24px",
+                    borderRadius: 10,
+                    border: "none",
+                    boxShadow: "0 2px 4px rgba(0,122,255,0.15)",
+                    cursor: creating ? "not-allowed" : "pointer",
+                    width: "100%",
+                  }}
+                  onClick={handleCreateAmount}
                   disabled={creating}
                 >
-                  <Text style={styles.buttonText}>
-                    {creating ? "Guardando..." : "Crear Venta"}
-                  </Text>
-                </TouchableOpacity>
-              </View>
+                  {creating ? "Guardando..." : "Crear Venta"}
+                </button>
+              </div>
             </View>
 
             {/* Conversión a BeCoins */}
@@ -600,49 +696,75 @@ const CobrarScreen = () => {
               }}
             >
               {presets.map((preset, idx) => (
-                <TouchableOpacity
+                <View
                   key={preset.id}
                   style={{
-                    backgroundColor: "#e0f7fa",
-                    borderRadius: 20,
-                    paddingVertical: 10,
-                    paddingHorizontal: 22,
+                    position: "relative",
                     margin: 4,
-                    borderWidth: 2,
-                    borderColor: "#007AFF",
-                    shadowColor: "#007AFF",
-                    shadowOpacity: 0.12,
-                    shadowRadius: 4,
-                    elevation: 2,
-                    marginRight: idx % 2 === 0 ? 8 : 0,
-                    marginBottom: 8,
+                    flexDirection: "row",
+                    alignItems: "center",
                   }}
-                  onPress={() => setAmount(String(preset.amount))}
                 >
-                  <Text
+                  <TouchableOpacity
                     style={{
-                      color: "#007AFF",
-                      fontWeight: "bold",
-                      fontSize: 16,
-                      letterSpacing: 0.5,
+                      backgroundColor: "#e0f7fa",
+                      borderRadius: 20,
+                      paddingVertical: 10,
+                      paddingHorizontal: 22,
+                      margin: 4,
+                      borderWidth: 2,
+                      borderColor: "#007AFF",
+                      shadowColor: "#007AFF",
+                      shadowOpacity: 0.12,
+                      shadowRadius: 4,
+                      elevation: 2,
+                      marginRight: idx % 2 === 0 ? 8 : 0,
+                      marginBottom: 8,
                     }}
+                    onPress={() => setAmount(String(preset.amount))}
                   >
-                    {preset.name ? preset.name + " - " : ""}
-                    {formatUSD(preset.amount)}
-                  </Text>
-                  {preset.message ? (
                     <Text
                       style={{
-                        color: "#0097a7",
-                        fontSize: 12,
-                        marginTop: 2,
-                        textAlign: "center",
+                        color: "#007AFF",
+                        fontWeight: "bold",
+                        fontSize: 16,
+                        letterSpacing: 0.5,
                       }}
                     >
-                      {preset.message}
+                      {preset.name ? preset.name + " - " : ""}
+                      {formatUSD(preset.amount)}
                     </Text>
-                  ) : null}
-                </TouchableOpacity>
+                    {preset.message ? (
+                      <Text
+                        style={{
+                          color: "#0097a7",
+                          fontSize: 12,
+                          marginTop: 2,
+                          textAlign: "center",
+                        }}
+                      >
+                        {preset.message}
+                      </Text>
+                    ) : null}
+                  </TouchableOpacity>
+                  {/* Botón X para eliminar preset */}
+                  <TouchableOpacity
+                    style={{
+                      position: "absolute",
+                      top: 2,
+                      right: 2,
+                      backgroundColor: "#fff",
+                      borderRadius: 12,
+                      padding: 2,
+                      borderWidth: 1,
+                      borderColor: "#E53E3E",
+                      zIndex: 2,
+                    }}
+                    onPress={() => handleDeletePreset(preset.id)}
+                  >
+                    <Icon name="close" size={16} color="#E53E3E" />
+                  </TouchableOpacity>
+                </View>
               ))}
             </View>
           </View>
@@ -697,20 +819,29 @@ const CobrarScreen = () => {
               value={presetName}
               onChangeText={setPresetName}
             />
-            <TextInput
+            <input
               style={{
-                borderWidth: 1,
+                fontSize: 16,
                 borderColor: "#007AFF",
+                backgroundColor: "#fff",
+                borderWidth: 1,
+                borderStyle: "solid",
                 borderRadius: 10,
                 padding: 10,
-                backgroundColor: "#fff",
-                fontSize: 16,
                 marginBottom: 8,
+                width: "100%",
+                boxSizing: "border-box",
+                MozAppearance: "textfield",
               }}
               placeholder="Monto en USD"
-              keyboardType="numeric"
+              inputMode="decimal"
+              pattern="^\\d*(\\.\\d{0,2})?$"
               value={presetAmount}
-              onChangeText={setPresetAmount}
+              onChange={(e) => {
+                const val = e.target.value.replace(/[^0-9.]/g, "");
+                setPresetAmount(val);
+              }}
+              onWheel={(e) => (e.target as HTMLInputElement).blur()}
             />
             <TextInput
               style={{
