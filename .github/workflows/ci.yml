@@ -19,7 +19,6 @@ on:
 
 env:
   NODE_VERSION: 20
-  AWS_REGION: ${{ secrets.AWS_REGION }}
 
 jobs:
   build:
