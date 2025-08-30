@@ -1,9 +1,6 @@
-name: Build & Deploy
+name: CI/CD - Deploy to AWS
 
 on:
-  push:
-    branches:
-      - production
   workflow_dispatch:
     inputs:
       branch:
@@ -14,7 +11,6 @@ on:
         options:
           - develop
           - sandbox
-          - sandbox-b
           - production
 
 env:
@@ -22,25 +18,28 @@ env:
 
 jobs:
   build:
+    name: Build project
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
 
       - name: Copy environment file
-        run: cp ${{ github.event.inputs.branch || github.ref_name }}.env .env || echo "⚠️ No env file found"
-
-      - name: Clean node_modules
         run: |
-          rm -rf node_modules node_modules/.vite
-          rm -f package-lock.json
+          if [ -f "${{ github.event.inputs.branch }}.env" ]; then
+            cp ${{ github.event.inputs.branch }}.env .env
+          else
+            echo "⚠️ No env file found for ${{ github.event.inputs.branch }}"
+          fi
 
       - name: Install dependencies
-        run: npm install --legacy-peer-deps
+        run: npm ci --legacy-peer-deps
 
       - name: Build project
         run: npm run build --quiet
@@ -50,13 +49,16 @@ jobs:
         with:
           name: dist
           path: dist
+          retention-days: 1
 
   deploy:
+    name: Deploy to AWS S3
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.branch || github.ref_name }} # usa develop o production
+    environment: ${{ github.event.inputs.branch }}
     needs: build
     steps:
-      - uses: actions/download-artifact@v4
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist
@@ -68,6 +70,14 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Deploy to S3
+      - name: Test access to S3
         run: |
-          aws s3 sync dist s3://jetz-admin-${{ github.event.inputs.branch || github.ref_name }} --delete
+          echo "Checking access to bucket jetz-admin-${{ github.event.inputs.branch }}"
+          aws s3 ls s3://jetz-admin-${{ github.event.inputs.branch }}
+
+      - name: Sync files to S3
+        run: |
+          echo "Deploying files to S3 bucket jetz-admin-${{ github.event.inputs.branch }}"
+          aws s3 sync dist s3://jetz-admin-${{ github.event.inputs.branch }} --delete
+
+     
