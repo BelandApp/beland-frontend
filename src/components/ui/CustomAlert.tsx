@@ -82,7 +82,7 @@ export const CustomAlert = ({
           width: "100vw",
           height: "100vh",
           background: "rgba(0,0,0,0.45)",
-          zIndex: 9999,
+          zIndex: 99999, // Increased z-index to be above delivery modal
           display: "flex",
           alignItems: "center",
           justifyContent: "center",

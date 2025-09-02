@@ -28,15 +28,30 @@ export const headerStyles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     marginBottom: 16,
+  },
+  headerContent: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    width: "100%",
+  },
+  titleSection: {
+    flex: 1,
   },
   sectionTitle: {
     fontSize: 24,
     fontWeight: "bold",
     color: "#FFFFFF",
-    marginBottom: 0,
+    marginBottom: 4,
+  },
+  sectionSlogan: {
+    fontSize: 14,
+    color: "rgba(255, 255, 255, 0.9)",
+    fontStyle: "italic",
+    marginTop: 2,
+  },
+  balanceContainer: {
+    marginLeft: 12,
   },
   header: {
     paddingHorizontal: 20,

@@ -227,7 +227,9 @@ const SendScreen = () => {
         {/* Información del saldo */}
         <View style={styles.balanceInfo}>
           <Text style={styles.balanceLabel}>Saldo disponible:</Text>
-          <Text style={styles.balanceAmount}>{walletData.balance} BECOINS</Text>
+          <Text style={styles.balanceAmount}>
+            {Math.floor(walletData.balance)} BECOINS
+          </Text>
         </View>
 
         {/* Botón enviar */}

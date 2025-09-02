@@ -142,7 +142,7 @@ export default function WalletSettingsScreen() {
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Balance Bloqueado</Text>
           <Text style={styles.infoValue}>
-            {fullWalletData?.locked_balance || 0} BeCoins
+            {Math.floor(fullWalletData?.locked_balance || 0)} BeCoins
           </Text>
         </View>
       </View>

@@ -6,6 +6,13 @@ export type GroupsStackParamList = {
   };
 };
 
+export type OrdersStackParamList = {
+  OrdersList: undefined;
+  OrderDetail: {
+    orderId: string;
+  };
+};
+
 export type MainTabParamList = {
   Home: undefined;
   QRScanner: undefined;

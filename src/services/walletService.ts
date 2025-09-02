@@ -71,6 +71,39 @@ class WalletService {
       throw error;
     }
   }
+
+  // Comprar recurso con BeCoins
+  async purchaseResource(resourceId: string, quantity: number): Promise<any> {
+    try {
+      console.log("🛒 Comprando recurso:", {
+        resourceId,
+        quantity,
+      });
+
+      const response = await apiRequest("/wallets/purchase-resource", {
+        method: "POST",
+        body: JSON.stringify({
+          resource_id: resourceId,
+          quantity: quantity,
+        }),
+      });
+
+      console.log("✅ Compra exitosa:", response);
+      return response;
+    } catch (error: any) {
+      console.error("❌ Error comprando recurso:", {
+        resourceId,
+        quantity,
+        error: error.message,
+        status: error.status,
+        body: error.body,
+      });
+
+      // Re-lanzar el error con información adicional si es necesario
+      throw error;
+    }
+  }
+
   // Eliminar preset de monto
   async deletePresetAmount(id: string): Promise<any> {
     try {

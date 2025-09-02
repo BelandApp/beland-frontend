@@ -38,7 +38,7 @@ export const WalletBalanceCard: React.FC<WalletBalanceCardProps> = ({
                 accentColor ? { color: accentColor } : {},
               ]}
             >
-              {isNaN(walletData.balance) ? "0" : walletData.balance}
+              {isNaN(walletData.balance) ? "0" : Math.floor(walletData.balance)}
             </Text>
           </View>
           {!hideEstimated && (

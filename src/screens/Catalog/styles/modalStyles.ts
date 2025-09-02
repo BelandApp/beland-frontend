@@ -159,4 +159,33 @@ export const modalStyles = StyleSheet.create({
     fontWeight: "600" as const,
     color: "white",
   },
+  // Processing styles
+  processingContainer: {
+    alignItems: "center" as const,
+    paddingVertical: 40,
+  },
+  processingTitle: {
+    fontSize: 18,
+    fontWeight: "700" as const,
+    color: colors.textPrimary,
+    marginBottom: 8,
+    textAlign: "center" as const,
+  },
+  processingSubtitle: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    textAlign: "center" as const,
+    marginBottom: 24,
+  },
+  // Larger modal content for forms
+  modalContentLarge: {
+    backgroundColor: "white",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 34,
+    minHeight: "70%",
+    maxHeight: "90%",
+  },
 });
