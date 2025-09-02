@@ -6,8 +6,6 @@ export interface Participant {
   consumption: number;
 }
 
-
-
 export interface Group {
   id: string;
   name: string;
@@ -17,12 +15,12 @@ export interface Group {
   deliveryTime: string;
   leader: string;
   products: Product[];
-  participants: Participant[]; 
+  participants: Participant[];
   totalAmount: number;
   costPerPerson: number;
   beCoinsEarned: number;
   myConsumption: number;
-  status: GroupStatus; 
+  status: GroupStatus;
 }
 
 export type GroupStatus =
@@ -55,3 +53,6 @@ export interface AlertConfig {
 }
 
 export { Product };
+
+// Export order types
+export * from "./Order";

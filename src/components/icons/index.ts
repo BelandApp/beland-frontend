@@ -19,6 +19,7 @@ export { TransactionIcon } from "./TransactionIcon";
 export { SendIcon } from "./SendIcon";
 export { ReceiveIcon } from "./ReceiveIcon";
 export { GroupIcon } from "./GroupIcon";
+export { OrderIcon } from "./OrderIcon";
 export { RecyclingMarker } from "./RecyclingMarker";
 export { PhoneMapSVG } from "./PhoneMapSVG";
 export { RechargeIcon, SettingsIcon } from "./WalletIcons";

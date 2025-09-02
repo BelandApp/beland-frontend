@@ -9,6 +9,7 @@ import {
 import { Resource } from "../../../types/resource";
 import { gridStyles } from "../styles";
 import { colors } from "../../../styles/colors";
+import { calculateResourcePrice } from "../../../utils/priceHelpers";
 
 interface ResourcesGridProps {
   resources: Resource[];
@@ -25,11 +26,14 @@ const ResourceCard: React.FC<ResourceCardProps> = ({
   resource,
   onPurchase,
 }) => {
-  const isOutOfStock = resource.resource_quanity <= 0;
-  const hasDiscount = resource.resource_discount > 0;
-  const finalPrice = hasDiscount
-    ? resource.resource_price * (1 - resource.resource_discount / 100)
-    : resource.resource_price;
+  // Usar la utilidad para calcular precios
+  const priceCalc = calculateResourcePrice(resource);
+  const quantity =
+    typeof resource.resource_quanity === "number"
+      ? resource.resource_quanity
+      : 0;
+
+  const isOutOfStock = quantity <= 0;
 
   return (
     <View style={gridStyles.resourceCard}>
@@ -72,7 +76,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({
             marginBottom: 4,
           }}
         >
-          {hasDiscount && (
+          {priceCalc.hasDiscount && (
             <Text
               style={{
                 fontSize: 12,
@@ -81,11 +85,13 @@ const ResourceCard: React.FC<ResourceCardProps> = ({
                 marginRight: 8,
               }}
             >
-              ${resource.resource_price.toFixed(2)}
+              {priceCalc.originalPrice.toFixed(0)} BeCoins
             </Text>
           )}
-          <Text style={gridStyles.resourcePrice}>${finalPrice.toFixed(2)}</Text>
-          {hasDiscount && (
+          <Text style={gridStyles.resourcePrice}>
+            {priceCalc.finalPrice.toFixed(0)} BeCoins
+          </Text>
+          {priceCalc.hasDiscount && (
             <Text
               style={{
                 fontSize: 10,
@@ -97,14 +103,12 @@ const ResourceCard: React.FC<ResourceCardProps> = ({
                 marginLeft: 8,
               }}
             >
-              -{resource.resource_discount}%
+              -{priceCalc.discount}%
             </Text>
           )}
         </View>
 
-        <Text style={gridStyles.resourceStock}>
-          Stock: {resource.resource_quanity} unidades
-        </Text>
+        <Text style={gridStyles.resourceStock}>Stock: {quantity} unidades</Text>
 
         <TouchableOpacity
           style={[
@@ -128,7 +132,8 @@ export const ResourcesGrid: React.FC<ResourcesGridProps> = ({
   onPurchase,
   loading = false,
 }) => {
-  if (resources.length === 0 && !loading) {
+  const safeResources = Array.isArray(resources) ? resources : [];
+  if (safeResources.length === 0 && !loading) {
     return (
       <View
         style={{

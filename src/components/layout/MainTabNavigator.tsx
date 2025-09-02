@@ -7,7 +7,7 @@ import { WalletScreen } from "../../screens/WalletScreen";
 import { CommunityScreen } from "../../screens/Community";
 import { CatalogScreen } from "../../screens/CatalogScreen";
 import { HistoryScreen } from "../../screens/HistoryScreen";
-import { GroupsStackNavigator } from "./GroupsStackNavigator";
+import { OrdersStackNavigator } from "./OrdersStackNavigator";
 import { useAuth } from "src/hooks/AuthContext";
 
 import {
@@ -16,7 +16,7 @@ import {
   WalletIcon,
   CatalogIcon,
   GiftIcon,
-  GroupIcon,
+  OrderIcon,
   CommunityIcon,
 } from "../icons";
 
@@ -46,8 +46,8 @@ export const MainTabNavigator = () => {
               return <CommunityIcon {...iconProps} />;
             case "Catalog":
               return <CatalogIcon {...iconProps} />;
-            case "Groups":
-              return <GroupIcon {...iconProps} />;
+            case "Orders":
+              return <OrderIcon {...iconProps} />;
             default:
               return <HomeIcon {...iconProps} />;
           }
@@ -132,9 +132,9 @@ export const MainTabNavigator = () => {
         options={{ tabBarLabel: "Catálogo" }}
       />
       <Tab.Screen
-        name="Groups"
-        component={GroupsStackNavigator}
-        options={{ tabBarLabel: "Grupos" }}
+        name="Orders"
+        component={OrdersStackNavigator}
+        options={{ tabBarLabel: "Órdenes" }}
       />
     </Tab.Navigator>
   );
