@@ -8,7 +8,7 @@ import WalletHistoryScreen from "../../screens/Wallet/WalletHistoryScreen";
 import RechargeScreen from "../../screens/Wallet/RechargeScreen";
 import WalletSettingsScreen from "../../screens/Wallet/WalletSettingsScreen";
 import { QRScannerScreen } from "../../screens/QRScannerScreen";
-import PaymentScreen from "../../screens/PaymentScreen";
+import PaymentScreen from "../../screens/Payment/PaymentScreen";
 import { HistoryScreen, RecyclingMapScreen } from "../../screens";
 import UserDashboardScreen from "src/screens/UserDashboardScreen";
 

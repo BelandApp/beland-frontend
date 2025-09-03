@@ -125,6 +125,160 @@ class ResourceService {
   ): Promise<ResourcesResponse> {
     return this.getResources({ ...filters, search: query });
   }
+
+  /**
+   * Obtener recursos del usuario (descuentos y promociones)
+   */
+  async getUserResources(
+    resourceId?: string,
+    limit: number = 10,
+    page: number = 1
+  ): Promise<import("../types/resource").UserResourcesResponse> {
+    console.log("[ResourceService] Fetching user resources:", {
+      resourceId,
+      limit,
+      page,
+    });
+
+    const params = new URLSearchParams();
+    if (resourceId) {
+      params.append("resource_id", resourceId);
+    }
+    params.append("limit", limit.toString());
+    params.append("page", page.toString());
+
+    const queryString = params.toString();
+    const url = queryString
+      ? `/user-resources?${queryString}`
+      : "/user-resources";
+
+    const response = await apiRequest(url, {
+      method: "GET",
+    });
+
+    console.log("[ResourceService] User resources response:", response);
+
+    // Adaptar respuesta según estructura del backend
+    let userResources: import("../types/resource").UserResource[] = [];
+    let total = 0;
+
+    if (Array.isArray(response) && response.length === 2) {
+      // Respuesta tipo [data, count]
+      const [resourcesData, resourcesCount] = response;
+
+      if (Array.isArray(resourcesData)) {
+        userResources = resourcesData.map((item: any) => ({
+          id: item.id,
+          user_id: item.user_id,
+          resource_id: item.resource_id,
+          quantity: item.quantity || 1,
+          quantity_redeemed: item.quantity_redeemed || 0,
+          hash_id: item.hash_id,
+          qr_code: item.qr_code,
+          is_redeemed: item.is_redeemed || false,
+          redeemed_at: item.redeemed_at ? new Date(item.redeemed_at) : null,
+          expires_at: item.expires_at ? new Date(item.expires_at) : null,
+          created_at: new Date(item.created_at),
+          updated_at: new Date(item.updated_at),
+          // Información del recurso
+          resource: item.resource
+            ? {
+                id: item.resource.id,
+                code: item.resource.code,
+                name: item.resource.name,
+                description: item.resource.description,
+                url_image: item.resource.url_image,
+                becoin_value: parseFloat(item.resource.becoin_value || 0),
+                discount: parseFloat(item.resource.discount || 0),
+                limit_user: item.resource.limit_user || 0,
+                limit_app: item.resource.limit_app || 0,
+                used_account: item.resource.used_account || 0,
+                is_expired: item.resource.is_expired || false,
+                expires_at: item.resource.expires_at
+                  ? new Date(item.resource.expires_at)
+                  : null,
+                created_at: new Date(item.resource.created_at),
+                resource_type_id: item.resource.resource_type_id,
+                user_commerce_id: item.resource.user_commerce_id,
+              }
+            : null,
+          // Información del usuario (opcional)
+          user: item.user
+            ? {
+                id: item.user.id,
+                full_name: item.user.full_name,
+                email: item.user.email,
+                profile_picture_url: item.user.profile_picture_url,
+              }
+            : null,
+        }));
+        total =
+          typeof resourcesCount === "number"
+            ? resourcesCount
+            : userResources.length;
+      }
+    } else if (Array.isArray(response)) {
+      // Respuesta directa como array
+      userResources = response.map((item: any) => ({
+        id: item.id,
+        user_id: item.user_id,
+        resource_id: item.resource_id,
+        quantity: item.quantity || 1,
+        quantity_redeemed: item.quantity_redeemed || 0,
+        hash_id: item.hash_id,
+        qr_code: item.qr_code,
+        is_redeemed: item.is_redeemed || false,
+        redeemed_at: item.redeemed_at ? new Date(item.redeemed_at) : null,
+        expires_at: item.expires_at ? new Date(item.expires_at) : null,
+        created_at: new Date(item.created_at),
+        updated_at: new Date(item.updated_at),
+        resource: item.resource
+          ? {
+              id: item.resource.id,
+              code: item.resource.code,
+              name: item.resource.name,
+              description: item.resource.description,
+              url_image: item.resource.url_image,
+              becoin_value: parseFloat(item.resource.becoin_value || 0),
+              discount: parseFloat(item.resource.discount || 0),
+              limit_user: item.resource.limit_user || 0,
+              limit_app: item.resource.limit_app || 0,
+              used_account: item.resource.used_account || 0,
+              is_expired: item.resource.is_expired || false,
+              expires_at: item.resource.expires_at
+                ? new Date(item.resource.expires_at)
+                : null,
+              created_at: new Date(item.resource.created_at),
+              resource_type_id: item.resource.resource_type_id,
+              user_commerce_id: item.resource.user_commerce_id,
+            }
+          : null,
+        user: item.user
+          ? {
+              id: item.user.id,
+              full_name: item.user.full_name,
+              email: item.user.email,
+              profile_picture_url: item.user.profile_picture_url,
+            }
+          : null,
+      }));
+      total = userResources.length;
+    }
+
+    const safeResponse: import("../types/resource").UserResourcesResponse = {
+      userResources,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+
+    console.log(
+      "[ResourceService] Processed user resources response:",
+      safeResponse
+    );
+    return safeResponse;
+  }
 }
 
 export const resourceService = new ResourceService();
