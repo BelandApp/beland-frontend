@@ -1,6 +1,9 @@
 name: CI/CD - Deploy to AWS
 
 on:
+  push:
+    branches:
+      - production
   workflow_dispatch:
     inputs:
       branch:
@@ -10,7 +13,6 @@ on:
         type: choice
         options:
           - develop
-          - sandbox
           - production
 
 env:
