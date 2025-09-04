@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { Resource } from "../../../types/resource";
 import { gridStyles } from "../styles";
@@ -41,7 +42,10 @@ const ResourceCard: React.FC<ResourceCardProps> = ({
         {resource.resource_img ? (
           <Image
             source={{ uri: resource.resource_img }}
-            style={{ width: "100%", height: "100%" }}
+            style={{
+              width: "100%",
+              height: "100%",
+            }}
             resizeMode="cover"
           />
         ) : (
@@ -50,11 +54,39 @@ const ResourceCard: React.FC<ResourceCardProps> = ({
               flex: 1,
               justifyContent: "center",
               alignItems: "center",
-              backgroundColor: colors.belandGreenLight,
+              backgroundColor: "#F8F9FA",
             }}
           >
-            <Text style={{ color: colors.background, fontSize: 12 }}>
-              Sin imagen
+            <Text style={{ color: "#999", fontSize: 12 }}>Sin imagen</Text>
+          </View>
+        )}
+
+        {/* Badge de descuento superpuesto en la imagen */}
+        {priceCalc.hasDiscount && (
+          <View
+            style={{
+              position: "absolute",
+              top: 8,
+              right: 8,
+              backgroundColor: colors.belandOrange,
+              paddingHorizontal: 8,
+              paddingVertical: 4,
+              borderRadius: 12,
+              elevation: 2,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.2,
+              shadowRadius: 2,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: "bold",
+                color: colors.background,
+              }}
+            >
+              {priceCalc.discount}% OFF
             </Text>
           </View>
         )}
@@ -69,41 +101,37 @@ const ResourceCard: React.FC<ResourceCardProps> = ({
           {resource.resource_desc}
         </Text>
 
+        {/* Sección de precios mejorada */}
         <View
           style={{
-            flexDirection: "row",
-            alignItems: "center",
-            marginBottom: 4,
+            marginBottom: 8,
+            alignItems: Platform.OS === "web" ? "center" : "flex-start",
           }}
         >
-          {priceCalc.hasDiscount && (
-            <Text
+          {priceCalc.hasDiscount ? (
+            <View
               style={{
-                fontSize: 12,
-                color: colors.textSecondary,
-                textDecorationLine: "line-through",
-                marginRight: 8,
+                flexDirection: "column",
+                alignItems: Platform.OS === "web" ? "center" : "flex-start",
               }}
             >
-              {priceCalc.originalPrice.toFixed(0)} BeCoins
-            </Text>
-          )}
-          <Text style={gridStyles.resourcePrice}>
-            {priceCalc.finalPrice.toFixed(0)} BeCoins
-          </Text>
-          {priceCalc.hasDiscount && (
-            <Text
-              style={{
-                fontSize: 10,
-                color: colors.success,
-                backgroundColor: colors.belandGreenLight,
-                paddingHorizontal: 4,
-                paddingVertical: 2,
-                borderRadius: 4,
-                marginLeft: 8,
-              }}
-            >
-              -{priceCalc.discount}%
+              <Text
+                style={{
+                  fontSize: 12,
+                  color: colors.textSecondary,
+                  textDecorationLine: "line-through",
+                  marginBottom: 2,
+                }}
+              >
+                {priceCalc.originalPrice.toFixed(0)} BeCoins
+              </Text>
+              <Text style={[gridStyles.resourcePrice, { marginBottom: 0 }]}>
+                {priceCalc.finalPrice.toFixed(0)} BeCoins
+              </Text>
+            </View>
+          ) : (
+            <Text style={[gridStyles.resourcePrice, { marginBottom: 0 }]}>
+              {priceCalc.finalPrice.toFixed(0)} BeCoins
             </Text>
           )}
         </View>
