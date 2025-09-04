@@ -127,7 +127,11 @@ const AppContent = () => {
 
   // Configuración de linking para rutas web
   const linking = {
-    prefixes: ["http://localhost:8081", "https://beland-project.netlify.app"],
+    prefixes: [
+      "http://localhost:8081",
+      "https://beland-project.netlify.app",
+      "https://beland.app",
+    ],
     config: {
       screens: {
         MainTabs: "",
