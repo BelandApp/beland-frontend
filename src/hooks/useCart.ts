@@ -30,6 +30,32 @@ export const useCart = () => {
     }
   }, [user]);
 
+  // Sincronizar carrito local con el servidor
+  const syncCartWithServer = useCallback(async () => {
+    if (!user) return null;
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      console.log("🔄 useCart: Syncing cart with server...");
+      const syncResult = await cartService.syncCartWithServer();
+
+      if (syncResult) {
+        console.log("✅ useCart: Cart sync successful:", syncResult);
+        return syncResult;
+      }
+
+      return null;
+    } catch (err: any) {
+      console.error("❌ useCart: Error syncing cart:", err);
+      setError(err.message || "Error al sincronizar carrito");
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
   // Obtener carrito por ID
   const getCart = useCallback(async (cartId: string) => {
     try {
@@ -48,35 +74,21 @@ export const useCart = () => {
     }
   }, []);
 
-  // Agregar producto al carrito
+  // Agregar producto al carrito (solo local, sin API hasta checkout)
   const addProduct = useCallback(
     async (productId: string, quantity: number, unitPrice: number) => {
-      if (!cart) {
-        setError("No hay carrito inicializado");
-        return false;
-      }
-
-      try {
-        setLoading(true);
-        setError(null);
-
-        await cartService.addCartItem(productId, quantity, unitPrice);
-
-        // Recargar carrito después de agregar item
-        await getCart(cart.id);
-        return true;
-      } catch (err: any) {
-        console.error("Error adding product to cart:", err);
-        setError(err.message || "Error al agregar producto");
-        return false;
-      } finally {
-        setLoading(false);
-      }
+      // Nota: Esta función ya no interactúa con la API
+      // Solo se usa para mantener compatibilidad con componentes existentes
+      // La lógica real de carrito se maneja con useCartStore
+      console.log(
+        "useCart.addProduct called but cart logic is now handled by useCartStore"
+      );
+      return true;
     },
-    [cart, getCart]
+    []
   );
 
-  // Actualizar cantidad de producto
+  // Actualizar cantidad de producto (solo usado después de checkout)
   const updateQuantity = useCallback(
     async (itemId: string, newQuantity: number) => {
       if (!cart) {
@@ -104,7 +116,7 @@ export const useCart = () => {
     [cart, getCart]
   );
 
-  // Eliminar producto del carrito
+  // Eliminar producto del carrito (solo usado después de checkout)
   const removeProduct = useCallback(
     async (itemId: string) => {
       if (!cart) {
@@ -132,7 +144,7 @@ export const useCart = () => {
     [cart, getCart]
   );
 
-  // Limpiar carrito
+  // Limpiar carrito (eliminando items uno por uno)
   const clearCart = useCallback(async () => {
     if (!cart) {
       setError("No hay carrito inicializado");
@@ -143,7 +155,16 @@ export const useCart = () => {
       setLoading(true);
       setError(null);
 
-      await cartService.clearCart(cart.id);
+      // Eliminar items uno por uno ya que no existe endpoint para limpiar todo el carrito
+      if (cart.items && cart.items.length > 0) {
+        for (const item of cart.items) {
+          try {
+            await cartService.removeCartItem(item.id);
+          } catch (error) {
+            console.warn(`Could not remove item ${item.id}:`, error);
+          }
+        }
+      }
 
       // Recargar carrito después de limpiar
       await getCart(cart.id);
@@ -156,6 +177,16 @@ export const useCart = () => {
       setLoading(false);
     }
   }, [cart, getCart]);
+
+  // Procesar carrito para checkout (deprecated - ahora se hace directo en store)
+  const processCheckout = useCallback(async (cartProducts: any[]) => {
+    console.log(
+      "⚠️ useCart: processCheckout is deprecated. Use store createOrder instead."
+    );
+    throw new Error(
+      "processCheckout is deprecated. Use store createOrder instead."
+    );
+  }, []);
 
   // Calcular totales
   const totals = cart
@@ -188,5 +219,7 @@ export const useCart = () => {
     updateQuantity,
     removeProduct,
     clearCart,
+    processCheckout,
+    syncCartWithServer,
   };
 };

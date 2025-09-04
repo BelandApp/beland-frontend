@@ -150,43 +150,42 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
         throw new Error("No items in cart to create order");
       }
 
-      console.log("🛒 Store API: Adding items to user's existing cart...");
+      console.log("🛒 Store API: Processing checkout with cart items...");
       console.log("📦 Store API: Cart items count:", cartState.products.length);
 
-      // Step 1: Add all items to the user's existing cart (cart_id comes from user data)
-      for (const product of cartState.products) {
-        console.log(
-          `Adding product ${product.name} (ID: ${product.id}) to user's cart`
-        );
-        await cartService.addCartItem(
-          product.id,
-          product.quantity,
-          product.price
-        );
-        console.log(`✅ Added product ${product.name} to cart successfully`);
-      }
-
-      console.log("✅ Store API: All items added to user's cart");
-
-      // Step 2: Get cart_id from backend using /carts/user endpoint
+      // Step 1: Get cart_id from backend using /carts/user endpoint (skip processing)
       console.log("🔍 Store API: Getting cart_id from /carts/user endpoint...");
       const cartId = await getUserCartId();
       console.log("🔍 Store API: Using cart_id from /carts/user:", cartId);
 
-      console.log(
-        "� Store API: Using user's cart_id for order creation:",
-        cartId
-      );
-
-      // Step 3: Create order from the user's cart
+      // Step 2: Create order directly from the user's existing cart
       console.log("🌐 Store API: Creating order from user's cart...");
       const newOrder = await orderService.createOrderFromCart(cartId);
 
       console.log("✅ Store API: Order created via API:", newOrder);
 
       // Clear the local cart after successful order creation
+      // Note: Backend automatically clears cart items when order is created
       useCartStore.getState().clearCart();
       console.log("🧹 Store API: Local cart cleared after order creation");
+
+      // Sync with server to ensure consistency
+      // (Backend already cleared the cart, this ensures our local state matches)
+      try {
+        const cartSyncResult = await cartService.syncCartWithServer();
+        if (cartSyncResult) {
+          const { serverItems } = cartSyncResult;
+          // Should be empty since backend cleared it
+          console.log(
+            `🔄 Store API: Cart synced - server has ${serverItems.length} items (should be 0)`
+          );
+        }
+      } catch (syncError) {
+        console.log(
+          "⚠️ Store API: Cart sync failed (non-critical):",
+          syncError
+        );
+      }
 
       // Add to store
       set((state) => {

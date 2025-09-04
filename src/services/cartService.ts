@@ -81,9 +81,18 @@ export interface CartItem {
   cart_id: string;
   product_id: string; // Cambiado a product_id para consistencia con la API
   quantity: number;
-  unit_price: number;
+  unit_price: string; // Viene como string del API
   created_at?: Date;
   updated_at?: Date;
+  // Información del producto que puede venir del endpoint /cart-items
+  product?: {
+    name?: string;
+    image_url?: string;
+    image?: string;
+    price?: number;
+    description?: string;
+    [key: string]: any;
+  };
 }
 
 export interface Cart {
@@ -125,6 +134,127 @@ class CartService {
     }
   }
 
+  // Obtener items del carrito usando el endpoint /cart-items
+  async getCartItems(cartId: string): Promise<CartItem[]> {
+    try {
+      console.log(
+        "🛒 CartService: Getting cart items from /cart-items for cart:",
+        cartId
+      );
+
+      const response = await apiRequest(
+        `/cart-items?cart_id=${cartId}&limit=100&page=1`,
+        {
+          method: "GET",
+        }
+      );
+
+      console.log("✅ CartService: Cart items retrieved:", response);
+
+      // La respuesta viene como [items[], totalCount]
+      if (Array.isArray(response) && response.length >= 1) {
+        const items = response[0]; // Los items están en el primer elemento
+        console.log("📦 CartService: Extracted cart items:", items);
+        return Array.isArray(items) ? items : [];
+      }
+
+      return [];
+    } catch (error) {
+      console.error("❌ CartService: Error getting cart items:", error);
+      return [];
+    }
+  }
+
+  // Sincronizar carrito local con el servidor
+  async syncCartWithServer(): Promise<{
+    serverItems: CartItem[];
+    cartId: string;
+  } | null> {
+    try {
+      console.log("🔄 CartService: Syncing cart with server...");
+
+      // Obtener el cart_id del usuario
+      const cartId = await getUserCartId();
+      console.log("🛒 CartService: Found cart_id:", cartId);
+
+      // Obtener items existentes en el servidor
+      const serverItems = await this.getCartItems(cartId);
+      console.log("📦 CartService: Server cart items:", serverItems);
+
+      return { serverItems, cartId };
+    } catch (error) {
+      console.error("❌ CartService: Error syncing cart with server:", error);
+      return null;
+    }
+  }
+
+  // Procesar items del carrito usando directamente los datos del endpoint /cart-items
+  processCartItems(cartItems: CartItem[]): any[] {
+    try {
+      console.log(
+        "🔍 CartService: Processing cart items with existing data..."
+      );
+
+      const processedItems = cartItems.map((item) => {
+        // Usar directamente los datos que vienen del endpoint /cart-items
+        // Solo falta el nombre del producto que vendrá desde el backend
+        return {
+          id: item.product_id,
+          name: item.product?.name || `Producto ${item.product_id}`, // Usar el nombre del producto cuando esté disponible
+          price: parseFloat(item.unit_price),
+          quantity: item.quantity,
+          image: item.product?.image_url || item.product?.image, // Usar la imagen del producto si está disponible
+          // Mantener datos originales del item para referencia
+          cart_item_id: item.id,
+          cart_id: item.cart_id,
+          available: true, // Asumimos que si está en el carrito está disponible
+        };
+      });
+
+      console.log("✅ CartService: Cart items processed successfully");
+      return processedItems;
+    } catch (error) {
+      console.error("❌ CartService: Error processing cart items:", error);
+      return cartItems.map((item) => ({
+        id: item.product_id,
+        name: `Producto ${item.product_id}`,
+        price: parseFloat(item.unit_price),
+        quantity: item.quantity,
+        cart_item_id: item.id,
+        cart_id: item.cart_id,
+        available: true,
+      }));
+    }
+  }
+
+  // Verificar si un producto ya existe en el carrito del usuario
+  async checkProductInCart(productId: string): Promise<CartItem | null> {
+    try {
+      console.log(
+        "🔍 CartService: Checking if product exists in cart:",
+        productId
+      );
+
+      const cartId = await getUserCartId();
+      const cart = await this.getCart(cartId);
+
+      const existingItem = cart.items.find(
+        (item) => item.product_id === productId
+      );
+
+      if (existingItem) {
+        console.log("✅ CartService: Product found in cart:", existingItem);
+        return existingItem;
+      }
+
+      console.log("❌ CartService: Product not found in cart");
+      return null;
+    } catch (error) {
+      console.error("❌ CartService: Error checking product in cart:", error);
+      return null;
+    }
+  }
+
   // Obtener carrito completo por ID
   async getCart(cartId: string): Promise<Cart> {
     try {
@@ -155,6 +285,22 @@ class CartService {
       const cartId = await getUserCartId();
       console.log("🔍 CartService: Using cart_id from /carts/user:", cartId);
 
+      // Primero verificar si el producto ya existe en el carrito
+      console.log(
+        "🔍 CartService: Checking if product already exists in cart..."
+      );
+      const existingItem = await this.checkProductInCart(productId);
+
+      if (existingItem) {
+        console.log(
+          "📝 CartService: Product already exists, updating quantity instead"
+        );
+        const newQuantity = existingItem.quantity + quantity;
+        return await this.updateCartItem(existingItem.id, {
+          quantity: newQuantity,
+        });
+      }
+
       const data: CreateCartItemRequest = {
         cart_id: cartId,
         product_id: productId, // Usando product_id según la documentación de la API
@@ -172,8 +318,41 @@ class CartService {
 
       console.log("✅ CartService: Item added successfully:", response);
       return response as CartItem;
-    } catch (error) {
+    } catch (error: any) {
       console.error("❌ CartService: Error adding cart item:", error);
+
+      // Si aún obtenemos error de duplicate key como fallback, manejar graciosamente
+      if (
+        error.message &&
+        (error.message.includes("duplicate key") ||
+          error.message.includes("unique constraint"))
+      ) {
+        console.log(
+          "🔄 CartService: Handling duplicate key error as fallback..."
+        );
+
+        try {
+          const existingItem = await this.checkProductInCart(productId);
+          if (existingItem) {
+            console.log(
+              "📝 CartService: Found existing item via fallback, updating quantity"
+            );
+            const newQuantity = existingItem.quantity + quantity;
+            return await this.updateCartItem(existingItem.id, {
+              quantity: newQuantity,
+            });
+          }
+        } catch (fallbackError) {
+          console.error(
+            "❌ CartService: Fallback update also failed:",
+            fallbackError
+          );
+          throw new Error(
+            "No se pudo agregar el producto al carrito. El producto puede ya existir."
+          );
+        }
+      }
+
       throw error;
     }
   }
@@ -204,18 +383,6 @@ class CartService {
       });
     } catch (error) {
       console.error("Error removing cart item:", error);
-      throw error;
-    }
-  }
-
-  // Limpiar carrito completo
-  async clearCart(cartId: string): Promise<void> {
-    try {
-      await apiRequest(`/carts/${cartId}/clear`, {
-        method: "DELETE",
-      });
-    } catch (error) {
-      console.error("Error clearing cart:", error);
       throw error;
     }
   }

@@ -41,13 +41,25 @@ class OrderService {
   async createOrderFromCart(cartId: string): Promise<Order> {
     try {
       console.log("🌐 OrderService: Creating order from cart ID:", cartId);
-      console.log(
-        "🌐 OrderService: Calling endpoint: POST /orders/cart?cart_id=" + cartId
-      );
+      console.log("🌐 OrderService: cart_id type:", typeof cartId);
+      console.log("🌐 OrderService: cart_id length:", cartId?.length);
 
-      const response = await apiRequest(`/orders/cart?cart_id=${cartId}`, {
-        method: "POST",
-      });
+      // Validar que el cartId sea un string válido
+      if (!cartId || typeof cartId !== "string" || cartId.trim() === "") {
+        throw new Error(`Invalid cart_id: ${cartId}`);
+      }
+
+      // Usar query parameter según la documentación de la API
+      console.log(
+        "🌐 OrderService: Using query parameter (as per API docs)..."
+      );
+      const response = await apiRequest(
+        `/orders/cart?cart_id=${encodeURIComponent(cartId.trim())}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
 
       console.log("✅ OrderService: Response received:", response);
       return this.mapOrderResponse(response);

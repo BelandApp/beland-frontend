@@ -116,6 +116,10 @@ export const productStyles = StyleSheet.create({
         }
       : {}),
   },
+  addToCartButtonLoading: {
+    backgroundColor: colors.textSecondary,
+    opacity: 0.7,
+  },
   addToCartText: {
     color: "white",
     fontSize: 18,
