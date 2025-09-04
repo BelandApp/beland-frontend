@@ -206,11 +206,27 @@ const PaymentScreen: React.FC = () => {
   const isAmountValid =
     !canEdit ||
     (/^\d+$/.test(amount) && Number(amount) >= 1 && Number(amount) <= 99999999);
+
+  // Lógica mejorada para canPay que considera entrada gratuita por descuentos
   const canPay =
-    isFreeEntry ||
-    (canEdit && isAmountValid) ||
-    (isPresetFreeEntry && amount === "0") ||
-    (!canEdit && amount && Number(amount) >= 1 && Number(amount) <= 99999999);
+    isFreeEntry || // Si es entrada gratuita por descuento, siempre permitir
+    (isPresetFreeEntry && amount === "0") || // Entrada gratuita preset
+    (canEdit && isAmountValid) || // Monto editable y válido
+    (!canEdit && amount && Number(amount) > 0 && Number(amount) <= 99999999) || // Monto fijo válido
+    (appliedRedemption && discountedAmount >= 0); // Si hay descuento aplicado, permitir
+
+  // Validar si Payphone está disponible (monto mínimo $1.00)
+  const effectiveAmount = getEffectiveAmount();
+  const isPayphoneAvailable = effectiveAmount >= 1.0 && !isFreeEntry;
+  const shouldForceBeCoins =
+    !isFreeEntry && effectiveAmount > 0 && effectiveAmount < 1.0;
+
+  // Auto-seleccionar BeCoins si Payphone no está disponible
+  React.useEffect(() => {
+    if (shouldForceBeCoins && selectedMethod === "payphone") {
+      setSelectedMethod("becoin");
+    }
+  }, [shouldForceBeCoins, selectedMethod]);
 
   // Función para cargar el script Payphone en web
   function loadPayphoneScript(): Promise<void> {
@@ -689,6 +705,9 @@ const PaymentScreen: React.FC = () => {
               <PaymentMethodSelector
                 selectedMethod={selectedMethod}
                 onMethodChange={setSelectedMethod}
+                isPayphoneAvailable={isPayphoneAvailable}
+                shouldForceBeCoins={shouldForceBeCoins}
+                effectiveAmount={effectiveAmount}
               />
 
               <PresetAmounts

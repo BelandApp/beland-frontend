@@ -425,4 +425,138 @@ export const orderDetailStyles = StyleSheet.create({
     fontWeight: "700",
     color: "white",
   },
+
+  // Feedback and Confirmation Buttons
+  confirmButton: {
+    backgroundColor: colors.belandGreen || "#34C759",
+    borderRadius: 16,
+    paddingVertical: 16,
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 8,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#34C759",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  confirmButtonText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "white",
+  },
+  feedbackButton: {
+    backgroundColor: "#007AFF",
+    borderRadius: 16,
+    paddingVertical: 16,
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 8,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#007AFF",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  feedbackButtonText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "white",
+  },
+
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 24,
+    width: "100%",
+    maxWidth: 400,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.25,
+        shadowRadius: 20,
+      },
+      android: {
+        elevation: 10,
+      },
+    }),
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: colors.textPrimary,
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  ratingContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 12,
+    marginBottom: 20,
+  },
+  star: {
+    fontSize: 32,
+  },
+  textInput: {
+    borderWidth: 1,
+    borderColor: "#E5E5EA",
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    minHeight: 100,
+    textAlignVertical: "top",
+    marginBottom: 20,
+    backgroundColor: "#F8F9FA",
+  },
+  modalButtons: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  modalCancelButton: {
+    flex: 1,
+    backgroundColor: "#8E8E93",
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  modalCancelButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "white",
+  },
+  modalSubmitButton: {
+    flex: 1,
+    backgroundColor: colors.belandOrange,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  modalSubmitButtonText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "white",
+  },
 });

@@ -4,7 +4,7 @@
  */
 
 export const CURRENT_USER = {
-  id: "user_1",
+  id: "550e8400-e29b-41d4-a716-446655440000", // UUID válido para el usuario de prueba
   name: "Usuario Actual",
   instagramUsername: "mi_usuario",
 } as const;

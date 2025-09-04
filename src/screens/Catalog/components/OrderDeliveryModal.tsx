@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Modal, Alert } from "react-native";
 import { modalStyles } from "../styles";
 import { AddressForm } from "./AddressForm";
-import { useOrdersStore } from "../../../stores/useOrdersStore";
+import { useOrdersStoreAPI } from "../../../stores/useOrdersStoreAPI";
 import { useCartStore, CartProduct } from "../../../stores/useCartStore";
 import { useCustomAlert } from "../../../hooks/useCustomAlert";
 import { CustomAlert } from "../../../components/ui/CustomAlert";
@@ -27,7 +27,7 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
 }) => {
   const [currentStep, setCurrentStep] = useState<ModalStep>("address_form");
 
-  const { createOrder, isLoading } = useOrdersStore();
+  const { createOrder, isLoading } = useOrdersStoreAPI();
   const { products: cartProducts, clearCart } = useCartStore();
   const { showAlert, alertConfig, showCustomAlert, hideAlert } =
     useCustomAlert();

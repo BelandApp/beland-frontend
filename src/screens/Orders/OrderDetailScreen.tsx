@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -11,11 +11,12 @@ import {
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useOrdersStore } from "../../stores/useOrdersStore";
+import { useOrdersStoreAPI } from "../../stores/useOrdersStoreAPI";
 import { OrderStatus } from "../../types/Order";
 import { OrdersStackParamList } from "../../types/navigation";
 import { colors } from "../../styles/colors";
 import { orderDetailStyles } from "./styles";
+import { FeedbackModal } from "./components/FeedbackModal";
 
 type OrderDetailScreenNavigationProp = StackNavigationProp<
   OrdersStackParamList,
@@ -31,8 +32,10 @@ const OrderDetailScreen: React.FC = () => {
   const navigation = useNavigation<OrderDetailScreenNavigationProp>();
   const route = useRoute<OrderDetailScreenRouteProp>();
   const { orderId } = route.params;
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
-  const { getOrderById, updateOrderStatus } = useOrdersStore();
+  const { getOrderById, updateOrderStatus, confirmReception } =
+    useOrdersStoreAPI();
   const order = getOrderById(orderId);
 
   if (!order) {
@@ -191,8 +194,60 @@ const OrderDetailScreen: React.FC = () => {
     }
   };
 
+  const handleConfirmReception = () => {
+    Alert.alert(
+      "Confirmar recepción",
+      "¿Confirmas que has recibido tu orden correctamente?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Sí, recibido",
+          onPress: async () => {
+            try {
+              await updateOrderStatus(orderId, "delivered");
+              Alert.alert(
+                "¡Perfecto!",
+                "Tu orden ha sido marcada como recibida. ¿Te gustaría calificar tu experiencia?",
+                [
+                  { text: "Ahora no", style: "cancel" },
+                  {
+                    text: "Calificar",
+                    onPress: () => setShowFeedbackModal(true),
+                  },
+                ]
+              );
+            } catch (error) {
+              Alert.alert(
+                "Error",
+                "No se pudo confirmar la recepción. Inténtalo de nuevo."
+              );
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleFeedbackSubmit = async (rating: number, feedback: string) => {
+    try {
+      // Aquí puedes agregar la lógica para enviar el feedback al backend
+      // Por ahora solo mostramos un mensaje de éxito
+      console.log("Feedback enviado:", { orderId, rating, feedback });
+
+      // TODO: Implementar API call para enviar feedback
+      // await orderService.submitFeedback(orderId, rating, feedback);
+
+      return Promise.resolve();
+    } catch (error) {
+      throw new Error("No se pudo enviar el feedback");
+    }
+  };
+
   const canCancelOrder =
     order.status === "pending" || order.status === "confirmed";
+
+  const canConfirmReception = order.status === "shipped";
+  const canLeaveFeedback = order.status === "delivered";
 
   return (
     <SafeAreaView style={orderDetailStyles.container}>
@@ -458,8 +513,8 @@ const OrderDetailScreen: React.FC = () => {
         )}
 
         {/* Actions */}
-        {canCancelOrder && (
-          <View style={orderDetailStyles.actions}>
+        <View style={orderDetailStyles.actions}>
+          {canCancelOrder && (
             <TouchableOpacity
               style={orderDetailStyles.cancelButton}
               onPress={handleCancelOrder}
@@ -473,9 +528,49 @@ const OrderDetailScreen: React.FC = () => {
                 Cancelar orden
               </Text>
             </TouchableOpacity>
-          </View>
-        )}
+          )}
+
+          {canConfirmReception && (
+            <TouchableOpacity
+              style={orderDetailStyles.confirmButton}
+              onPress={handleConfirmReception}
+            >
+              <MaterialCommunityIcons
+                name="check-circle"
+                size={20}
+                color="white"
+              />
+              <Text style={orderDetailStyles.confirmButtonText}>
+                Confirmar recepción
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {canLeaveFeedback && (
+            <TouchableOpacity
+              style={orderDetailStyles.feedbackButton}
+              onPress={() => setShowFeedbackModal(true)}
+            >
+              <MaterialCommunityIcons
+                name="star"
+                size={20}
+                color={colors.belandOrange}
+              />
+              <Text style={orderDetailStyles.feedbackButtonText}>
+                Calificar experiencia
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </ScrollView>
+
+      {/* Feedback Modal */}
+      <FeedbackModal
+        visible={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
+        onSubmit={handleFeedbackSubmit}
+        orderId={orderId}
+      />
     </SafeAreaView>
   );
 };

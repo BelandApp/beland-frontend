@@ -49,6 +49,7 @@ export type CartProduct = {
 };
 
 export type CartState = {
+  cartId?: string; // ID único del carrito para API
   products: CartProduct[];
   deliveryType?: "group" | "home";
   groupId?: string;
@@ -62,6 +63,7 @@ export type CartState = {
     groupId?: string,
     address?: string
   ) => void;
+  getOrCreateCartId: () => string;
   hydrate: () => Promise<void>;
 };
 
@@ -72,8 +74,10 @@ const initialCartState: Omit<
   | "updateQuantity"
   | "clearCart"
   | "setDeliveryType"
+  | "getOrCreateCartId"
   | "hydrate"
 > = {
+  cartId: undefined,
   products: [],
   deliveryType: undefined,
   groupId: undefined,
@@ -125,6 +129,21 @@ export const useCartStore = create<CartState>((set, get) => ({
     saveCartState(newState);
     set(newState);
   },
+
+  getOrCreateCartId: () => {
+    const state = get();
+    if (state.cartId) {
+      return state.cartId;
+    }
+
+    // Generate a new cart ID using crypto UUID (valid UUID format)
+    const newCartId = crypto.randomUUID();
+    const newState = { ...state, cartId: newCartId };
+    saveCartState(newState);
+    set(newState);
+    return newCartId;
+  },
+
   hydrate: async () => {
     const loaded = await loadCartState();
     if (loaded && loaded.products) {
