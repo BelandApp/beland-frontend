@@ -7,3 +7,4 @@ export { CreateGroupScreen } from "./CreateGroupScreen";
 export { RecyclingMapScreen } from "./RecyclingMapScreen";
 export { OrdersScreen } from "./Orders";
 export { default as OrderDetailScreen } from "./Orders/OrderDetailScreen";
+export { DeliveryScreen } from "./Orders/DeliveryScreen";

@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, Image } from "react-native";
 import { productStyles } from "../styles";
-import { Product } from "../../../services/productsService";
+import { Product } from "../../../types/Products";
 import { CartProduct } from "../../../stores/useCartStore";
 
 export type ProductCardType = Product | CartProduct;
@@ -9,11 +9,13 @@ export type ProductCardType = Product | CartProduct;
 export interface ProductCardProps {
   product: ProductCardType;
   onAddToCart: (product: ProductCardType) => void;
+  isAdding?: boolean;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
   onAddToCart,
+  isAdding = false,
 }) => {
   // Soporta Product (backend) o CartProduct (carrito)
   const image = (product as any).image_url || (product as any).image || "";
@@ -37,10 +39,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       <View style={productStyles.productPriceRow}>
         <Text style={productStyles.productPrice}>${price}</Text>
         <TouchableOpacity
-          style={productStyles.addToCartButton}
+          style={[
+            productStyles.addToCartButton,
+            isAdding && productStyles.addToCartButtonLoading,
+          ]}
           onPress={() => onAddToCart(product)}
+          disabled={isAdding}
         >
-          <Text style={productStyles.addToCartText}>+</Text>
+          <Text style={productStyles.addToCartText}>
+            {isAdding ? "⟳" : "+"}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
