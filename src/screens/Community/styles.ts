@@ -1,6 +1,35 @@
-import { StyleSheet, Platform } from "react-native";
+import { StyleSheet, Platform, Dimensions } from "react-native";
 import { colors } from "../../styles/colors";
 
+const { width: screenWidth } = Dimensions.get("window");
+const isWeb = Platform.OS === "web";
+
+// Función para calcular el ancho de las cards según la plataforma
+const getCardWidth = () => {
+  if (isWeb) {
+    if (screenWidth > 1200) {
+      // Pantallas muy grandes: 4 columnas
+      return (screenWidth - 160) / 4;
+    } else if (screenWidth > 768) {
+      // Pantallas medianas: 3 columnas
+      return (screenWidth - 120) / 3;
+    } else {
+      // Tablets: 2 columnas
+      return (screenWidth - 80) / 2;
+    }
+  }
+  // Mobile: 2 columnas - cálculo exacto en pixeles
+  return (screenWidth - 48) / 2; // 24 padding total + 8 gap
+};
+
+const getCardHeight = () => {
+  if (isWeb) {
+    if (screenWidth > 1200) return 180;
+    if (screenWidth > 768) return 160;
+    return 140;
+  }
+  return 130;
+};
 export const containerStyles = StyleSheet.create({
   container: {
     flex: 1,
@@ -8,7 +37,7 @@ export const containerStyles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: isWeb ? 20 : 12, // Padding optimizado
   },
 });
 
@@ -105,64 +134,88 @@ export const categoryStyles = StyleSheet.create({
 
 export const gridStyles = StyleSheet.create({
   container: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 8,
     paddingBottom: 20,
   },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between",
+    justifyContent: isWeb ? "flex-start" : "space-between",
+    ...(isWeb
+      ? {
+          gap: 16, // Gap solo en web
+        }
+      : {}),
   },
   resourceCard: {
-    width: "48%",
+    width: getCardWidth(),
+    minHeight: isWeb ? 380 : 320,
     marginBottom: 16,
     backgroundColor: colors.cardBackground,
-    borderRadius: 12,
+    borderRadius: 16,
     overflow: "hidden",
-    elevation: 3,
+    elevation: 4,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 3,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
+    ...(isWeb
+      ? {
+          maxWidth: 280, // Ancho máximo en web
+        }
+      : {}),
   },
   resourceImage: {
     width: "100%",
-    height: 120,
-    backgroundColor: colors.belandGreenLight,
+    height: getCardHeight(),
+    backgroundColor: "#F8F9FA", // Color neutro en lugar de verde
+    position: "relative",
+    justifyContent: "center",
+    alignItems: "center",
   },
   resourceContent: {
-    padding: 12,
+    padding: isWeb ? 16 : 14,
+    flex: 1,
+    justifyContent: "space-between",
   },
   resourceName: {
-    fontSize: 16,
+    fontSize: isWeb ? 16 : 15,
     fontWeight: "bold",
     color: colors.textPrimary,
-    marginBottom: 4,
+    marginBottom: 6,
+    lineHeight: isWeb ? 22 : 20,
+    textAlign: isWeb ? "center" : "left",
   },
   resourceDescription: {
     fontSize: 12,
     color: colors.textSecondary,
-    marginBottom: 8,
+    marginBottom: 10,
+    lineHeight: 16,
+    flex: 1,
+    textAlign: isWeb ? "center" : "left",
   },
   resourcePrice: {
-    fontSize: 16,
+    fontSize: isWeb ? 17 : 16,
     fontWeight: "bold",
     color: colors.primary,
-    marginBottom: 8,
+    marginBottom: 6,
+    textAlign: isWeb ? "center" : "left",
   },
   resourceStock: {
-    fontSize: 12,
+    fontSize: 11,
     color: colors.textSecondary,
     marginBottom: 12,
+    textAlign: isWeb ? "center" : "left",
   },
   purchaseButton: {
     backgroundColor: colors.primary,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingVertical: isWeb ? 14 : 12,
+    borderRadius: 10,
     alignItems: "center",
+    marginTop: "auto",
   },
   purchaseButtonText: {
     color: colors.background,
