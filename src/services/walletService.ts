@@ -47,24 +47,63 @@ export interface PendingTransferRequest {
 
 class WalletService {
   // Crear compra de BeCoins (registro correcto de tipo de transferencia)
-  async createPurchaseBecoin(purchaseData: {
-    toWalletId: string;
-    amountBecoin: number;
-    description?: string;
-  }): Promise<any> {
+  async createPurchaseBecoin(purchaseData: any): Promise<any> {
     try {
-      console.log("🛒 Creando compra de BeCoins:", purchaseData);
+      // Filtrar solo los campos que acepta TransferDto
+      const transferData = {
+        toWalletId: purchaseData.toWalletId,
+        amountBecoin: purchaseData.amountBecoin,
+        ...(purchaseData.amount_payment_id && {
+          amount_payment_id: purchaseData.amount_payment_id,
+        }),
+        ...(purchaseData.user_resource_id && {
+          user_resource_id: purchaseData.user_resource_id,
+        }),
+      };
+
       const response = await apiRequest("/wallets/purchase-becoin", {
         method: "POST",
-        body: JSON.stringify(purchaseData),
+        body: JSON.stringify(transferData),
       });
-      console.log("✅ Compra registrada:", response);
       return response;
-    } catch (error) {
-      console.error("❌ Error creando compra de BeCoins:", error);
+    } catch (error: any) {
+      console.error("Error creando compra de BeCoins:", error);
       throw error;
     }
   }
+
+  // Comprar recurso con BeCoins
+  async purchaseResource(resourceId: string, quantity: number): Promise<any> {
+    try {
+      console.log("🛒 Comprando recurso:", {
+        resourceId,
+        quantity,
+      });
+
+      const response = await apiRequest("/wallets/purchase-resource", {
+        method: "POST",
+        body: JSON.stringify({
+          resource_id: resourceId,
+          quantity: quantity,
+        }),
+      });
+
+      console.log("✅ Compra exitosa:", response);
+      return response;
+    } catch (error: any) {
+      console.error("❌ Error comprando recurso:", {
+        resourceId,
+        quantity,
+        error: error.message,
+        status: error.status,
+        body: error.body,
+      });
+
+      // Re-lanzar el error con información adicional si es necesario
+      throw error;
+    }
+  }
+
   // Eliminar preset de monto
   async deletePresetAmount(id: string): Promise<any> {
     try {

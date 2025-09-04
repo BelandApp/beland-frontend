@@ -6,6 +6,7 @@ import {
   formatBeCoins,
   formatBeCoinsWithValue,
   BECOIN_CONFIG,
+  convertBeCoinsToUSD,
 } from "../../constants";
 import { colors } from "../../styles/colors";
 
@@ -14,6 +15,7 @@ interface BeCoinsBalanceProps {
   style?: any;
   size?: "small" | "medium" | "large";
   variant?: "default" | "header"; // Nueva prop para el estilo del header
+  balance?: number; // Balance opcional como prop
 }
 
 export const BeCoinsBalance: React.FC<BeCoinsBalanceProps> = ({
@@ -21,8 +23,15 @@ export const BeCoinsBalance: React.FC<BeCoinsBalanceProps> = ({
   style,
   size = "medium",
   variant = "default", // Valor por defecto
+  balance: propBalance, // Balance como prop
 }) => {
-  const { balance, getBeCoinsInUSD } = useBeCoinsStore();
+  const { balance: storeBalance } = useBeCoinsStore();
+
+  // Usar el balance de props si está disponible, sino usar el del store
+  const currentBalance = propBalance !== undefined ? propBalance : storeBalance;
+
+  // Calcular USD usando la función de conversión directa
+  const usdValue = convertBeCoinsToUSD(currentBalance || 0);
 
   const getSizeStyles = () => {
     switch (size) {
@@ -80,10 +89,10 @@ export const BeCoinsBalance: React.FC<BeCoinsBalanceProps> = ({
       <BeCoinIcon width={sizeStyles.icon} height={sizeStyles.icon} />
       <View style={styles.textContainer}>
         <Text style={[styles.balanceText, sizeStyles.text]}>
-          {balance || 0}
+          {Math.floor(currentBalance || 0)} BeCoins
         </Text>
         <Text style={[styles.valueText, sizeStyles.value]}>
-          ${(getBeCoinsInUSD() || 0).toFixed(2)} USD
+          ${usdValue.toFixed(2)} USD
         </Text>
       </View>
     </Component>

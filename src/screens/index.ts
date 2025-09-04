@@ -1,7 +1,9 @@
 export { DashboardScreen } from "./DashboardScreen";
 export { WalletScreen } from "./WalletScreen";
-export { RewardsScreen } from "./RewardsScreen";
+export { CommunityScreen } from "./Community";
 export { HistoryScreen } from "./HistoryScreen";
 export { GroupsScreen } from "./GroupsScreen";
 export { CreateGroupScreen } from "./CreateGroupScreen";
 export { RecyclingMapScreen } from "./RecyclingMapScreen";
+export { OrdersScreen } from "./Orders";
+export { default as OrderDetailScreen } from "./Orders/OrderDetailScreen";
