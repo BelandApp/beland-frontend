@@ -14,12 +14,12 @@ const getCardWidth = () => {
       // Pantallas medianas: 3 columnas
       return (screenWidth - 120) / 3;
     } else {
-      // Tablets: 2 columnas
-      return (screenWidth - 80) / 2;
+      // Tablets y web móvil: 2 columnas
+      return (screenWidth - 48) / 2; // MISMO CÁLCULO QUE MÓVIL
     }
   }
-  // Mobile: 2 columnas - cálculo exacto en pixeles
-  return (screenWidth - 48) / 2; // 24 padding total + 8 gap
+  // Mobile: 2 columnas con espaciado
+  return (screenWidth - 48) / 2;
 };
 
 const getCardHeight = () => {
@@ -28,7 +28,7 @@ const getCardHeight = () => {
     if (screenWidth > 768) return 160;
     return 140;
   }
-  return 130;
+  return 120; // Altura más baja en móvil para dejar más espacio al contenido
 };
 export const containerStyles = StyleSheet.create({
   container: {
@@ -37,7 +37,7 @@ export const containerStyles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    paddingHorizontal: isWeb ? 20 : 12, // Padding optimizado
+    paddingHorizontal: 0, // Quitar padding del scroll, se manejará en el grid
   },
 });
 
@@ -134,22 +134,24 @@ export const categoryStyles = StyleSheet.create({
 
 export const gridStyles = StyleSheet.create({
   container: {
-    paddingHorizontal: 8,
+    paddingHorizontal: 16,
     paddingBottom: 20,
   },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: isWeb ? "flex-start" : "space-between",
-    ...(isWeb
+    justifyContent: "space-between", // space-between SIEMPRE para 2 columnas
+    alignItems: "flex-start", // flex-start para alineación correcta
+    ...(isWeb && screenWidth > 768
       ? {
-          gap: 16, // Gap solo en web
+          gap: 16, // Gap solo en web grande
+          justifyContent: "flex-start", // flex-start solo en pantallas grandes
         }
       : {}),
   },
   resourceCard: {
     width: getCardWidth(),
-    minHeight: isWeb ? 380 : 320,
+    minHeight: isWeb ? 380 : 280,
     marginBottom: 16,
     backgroundColor: colors.cardBackground,
     borderRadius: 16,
@@ -177,49 +179,51 @@ export const gridStyles = StyleSheet.create({
     alignItems: "center",
   },
   resourceContent: {
-    padding: isWeb ? 16 : 14,
+    padding: isWeb ? 16 : 12, // Padding más uniforme
     flex: 1,
     justifyContent: "space-between",
+    minHeight: 0, // Permite que flex funcione correctamente
   },
   resourceName: {
-    fontSize: isWeb ? 16 : 15,
+    fontSize: isWeb ? 16 : 14, // Texto más pequeño en móvil
     fontWeight: "bold",
     color: colors.textPrimary,
-    marginBottom: 6,
-    lineHeight: isWeb ? 22 : 20,
+    marginBottom: 4, // Menos margen
+    lineHeight: isWeb ? 22 : 18,
     textAlign: isWeb ? "center" : "left",
   },
   resourceDescription: {
-    fontSize: 12,
+    fontSize: 11, // Más pequeño para ahorrar espacio
     color: colors.textSecondary,
-    marginBottom: 10,
-    lineHeight: 16,
+    marginBottom: 8, // Menos margen
+    lineHeight: 14,
     flex: 1,
     textAlign: isWeb ? "center" : "left",
   },
   resourcePrice: {
-    fontSize: isWeb ? 17 : 16,
+    fontSize: isWeb ? 17 : 15, // Más pequeño en móvil
     fontWeight: "bold",
     color: colors.primary,
-    marginBottom: 6,
+    marginBottom: 4, // Menos margen
     textAlign: isWeb ? "center" : "left",
   },
   resourceStock: {
-    fontSize: 11,
+    fontSize: 10, // Más pequeño
     color: colors.textSecondary,
-    marginBottom: 12,
+    marginBottom: 8, // Menos margen
     textAlign: isWeb ? "center" : "left",
   },
   purchaseButton: {
     backgroundColor: colors.primary,
-    paddingVertical: isWeb ? 14 : 12,
-    borderRadius: 10,
+    paddingVertical: isWeb ? 14 : 10, // Botón más compacto en móvil
+    paddingHorizontal: 8, // Padding horizontal para no tocar bordes
+    borderRadius: 8, // Radio más pequeño
     alignItems: "center",
-    marginTop: "auto",
+    marginTop: 4, // Pequeño margen superior
   },
   purchaseButtonText: {
     color: colors.background,
-    fontSize: 14,
+    fontSize: 13, // Texto más pequeño
     fontWeight: "600",
   },
   purchaseButtonDisabled: {
