@@ -72,12 +72,12 @@ jobs:
 
       - name: Test access to S3
         run: |
-          echo "Checking access to bucket jetz-admin-${{ github.event.inputs.branch }}"
-          aws s3 ls s3://jetz-admin-${{ github.event.inputs.branch }}
+          echo "Checking access to bucket beland-admin-${{ github.event.inputs.branch }}"
+          aws s3 ls s3://beland-admin-${{ github.event.inputs.branch }}
 
       - name: Sync files to S3
         run: |
-          echo "Deploying files to S3 bucket jetz-admin-${{ github.event.inputs.branch }}"
-          aws s3 sync dist s3://jetz-admin-${{ github.event.inputs.branch }} --delete
+          echo "Deploying files to S3 bucket beland-admin-${{ github.event.inputs.branch }}"
+          aws s3 sync dist s3://beland-admin-${{ github.event.inputs.branch }} --delete
 
      
