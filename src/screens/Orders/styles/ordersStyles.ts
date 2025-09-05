@@ -35,6 +35,24 @@ export const ordersStyles = StyleSheet.create({
   headerTitles: {
     flex: 1,
   },
+
+  // Botón de Delivery
+  deliveryButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.3)",
+  },
+  deliveryButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
+    marginLeft: 6,
+  },
   headerMainTitle: {
     fontSize: 24,
     fontWeight: "700",

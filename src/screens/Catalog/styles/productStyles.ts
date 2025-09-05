@@ -1,16 +1,30 @@
-import { StyleSheet, Platform } from "react-native";
+import { StyleSheet, Platform, Dimensions } from "react-native";
 import { colors } from "../../../styles/colors";
+
+const { width: screenWidth } = Dimensions.get("window");
+const isWeb = Platform.OS === "web";
+
+// Calcular anchos adaptativos
+const getCardWidth = () => {
+  if (isWeb) {
+    if (screenWidth > 1200) return 200; // Pantallas grandes
+    if (screenWidth > 768) return 180; // Tablets grandes
+    return 160; // Tablets pequeños
+  }
+  // Mobile: 2 columnas con espaciado
+  return (screenWidth - 48) / 2; // 16 padding + 8 gap por cada lado
+};
 
 export const productStyles = StyleSheet.create({
   // Product grid
   productGrid: {
-    paddingHorizontal: 4,
+    paddingHorizontal: 16,
     width: "100%",
     boxSizing: "border-box",
   },
   productRow: {
     flexDirection: "row" as const,
-    justifyContent: "flex-start" as const,
+    justifyContent: "space-between" as const,
     marginBottom: 16,
     flexWrap: "wrap",
     ...(Platform.OS === "web"
@@ -24,7 +38,7 @@ export const productStyles = StyleSheet.create({
   // Product card
   productCard: {
     backgroundColor: "white",
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -36,85 +50,91 @@ export const productStyles = StyleSheet.create({
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          justifyContent: "center",
-          minWidth: 140,
-          maxWidth: 220,
-          width: "100%",
+          justifyContent: "space-between",
+          width: getCardWidth(),
+          minHeight: 280,
           boxSizing: "border-box",
         }
       : {
-          flex: 1,
-          marginHorizontal: 4,
+          width: getCardWidth(),
+          minHeight: 260,
         }),
   },
   productImageContainer: {
     width: "100%",
-    aspectRatio: 1,
-    backgroundColor: "#F0F0F0",
-    borderRadius: 8,
+    height: isWeb ? 140 : 120,
+    backgroundColor: "#F8F9FA",
+    borderRadius: 12,
     overflow: "hidden",
     marginBottom: 8,
+    justifyContent: "center",
+    alignItems: "center",
     ...(Platform.OS === "web"
       ? {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          maxWidth: 200,
-          maxHeight: 200,
         }
       : {}),
   },
   productImage: {
     width: "100%",
     height: "100%",
-    borderRadius: 8,
-    ...(Platform.OS === "web"
-      ? {
-          maxWidth: 320,
-          maxHeight: 200,
-        }
-      : {}),
+    borderRadius: 12,
   },
   productBrand: {
-    fontSize: 12,
+    fontSize: 11,
     color: colors.textSecondary,
     marginBottom: 4,
     fontWeight: "500" as const,
+    textAlign: "center" as const,
   },
   productName: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "600" as const,
     color: colors.textPrimary,
     marginBottom: 4,
-    lineHeight: 18,
+    lineHeight: 16,
+    textAlign: "center" as const,
+    minHeight: 32, // Altura mínima para mantener alineación
   },
   productCategory: {
-    fontSize: 12,
+    fontSize: 11,
     color: colors.textSecondary,
-    marginBottom: 8,
+    marginBottom: 12,
+    textAlign: "center" as const,
   },
   productPriceRow: {
     flexDirection: "row" as const,
     justifyContent: "space-between" as const,
     alignItems: "center" as const,
+    marginTop: "auto" as const, // Empuja hacia abajo
+    width: "100%",
   },
   productPrice: {
     fontSize: 16,
     fontWeight: "700" as const,
     color: colors.belandGreen,
+    flex: 1,
+  },
+  becoinsReference: {
+    fontSize: 10,
+    color: colors.textSecondary,
+    fontStyle: "italic" as const,
+    marginTop: 2,
   },
   addToCartButton: {
     backgroundColor: colors.belandOrange,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: "center" as const,
     alignItems: "center" as const,
-    ...(Platform.OS === "web"
-      ? {
-          marginLeft: 8,
-        }
-      : {}),
+    marginLeft: 8,
+  },
+  addToCartButtonLoading: {
+    backgroundColor: colors.textSecondary,
+    opacity: 0.7,
   },
   addToCartText: {
     color: "white",

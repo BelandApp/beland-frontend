@@ -1,6 +1,35 @@
-import { StyleSheet, Platform } from "react-native";
+import { StyleSheet, Platform, Dimensions } from "react-native";
 import { colors } from "../../styles/colors";
 
+const { width: screenWidth } = Dimensions.get("window");
+const isWeb = Platform.OS === "web";
+
+// Función para calcular el ancho de las cards según la plataforma
+const getCardWidth = () => {
+  if (isWeb) {
+    if (screenWidth > 1200) {
+      // Pantallas muy grandes: 4 columnas
+      return (screenWidth - 160) / 4;
+    } else if (screenWidth > 768) {
+      // Pantallas medianas: 3 columnas
+      return (screenWidth - 120) / 3;
+    } else {
+      // Tablets y web móvil: 2 columnas
+      return (screenWidth - 48) / 2; // MISMO CÁLCULO QUE MÓVIL
+    }
+  }
+  // Mobile: 2 columnas con espaciado
+  return (screenWidth - 48) / 2;
+};
+
+const getCardHeight = () => {
+  if (isWeb) {
+    if (screenWidth > 1200) return 180;
+    if (screenWidth > 768) return 160;
+    return 140;
+  }
+  return 120; // Altura más baja en móvil para dejar más espacio al contenido
+};
 export const containerStyles = StyleSheet.create({
   container: {
     flex: 1,
@@ -8,7 +37,7 @@ export const containerStyles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: 0, // Quitar padding del scroll, se manejará en el grid
   },
 });
 
@@ -111,62 +140,90 @@ export const gridStyles = StyleSheet.create({
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between",
+    justifyContent: "space-between", // space-between SIEMPRE para 2 columnas
+    alignItems: "flex-start", // flex-start para alineación correcta
+    ...(isWeb && screenWidth > 768
+      ? {
+          gap: 16, // Gap solo en web grande
+          justifyContent: "flex-start", // flex-start solo en pantallas grandes
+        }
+      : {}),
   },
   resourceCard: {
-    width: "48%",
+    width: getCardWidth(),
+    minHeight: isWeb ? 380 : 280,
     marginBottom: 16,
     backgroundColor: colors.cardBackground,
-    borderRadius: 12,
+    borderRadius: 16,
     overflow: "hidden",
-    elevation: 3,
+    elevation: 4,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 3,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
+    ...(isWeb
+      ? {
+          maxWidth: 280, // Ancho máximo en web
+        }
+      : {}),
   },
   resourceImage: {
     width: "100%",
-    height: 120,
-    backgroundColor: colors.belandGreenLight,
+    height: getCardHeight(),
+    backgroundColor: "#F8F9FA", // Color neutro en lugar de verde
+    position: "relative",
+    justifyContent: "center",
+    alignItems: "center",
   },
   resourceContent: {
-    padding: 12,
+    padding: isWeb ? 16 : 12, // Padding más uniforme
+    flex: 1,
+    justifyContent: "space-between",
+    minHeight: 0, // Permite que flex funcione correctamente
   },
   resourceName: {
-    fontSize: 16,
+    fontSize: isWeb ? 16 : 14, // Texto más pequeño en móvil
     fontWeight: "bold",
     color: colors.textPrimary,
-    marginBottom: 4,
+    marginBottom: 4, // Menos margen
+    lineHeight: isWeb ? 22 : 18,
+    textAlign: isWeb ? "center" : "left",
   },
   resourceDescription: {
-    fontSize: 12,
+    fontSize: 11, // Más pequeño para ahorrar espacio
     color: colors.textSecondary,
-    marginBottom: 8,
+    marginBottom: 8, // Menos margen
+    lineHeight: 14,
+    flex: 1,
+    textAlign: isWeb ? "center" : "left",
   },
   resourcePrice: {
-    fontSize: 16,
+    fontSize: isWeb ? 17 : 15, // Más pequeño en móvil
     fontWeight: "bold",
     color: colors.primary,
-    marginBottom: 8,
+    marginBottom: 4, // Menos margen
+    textAlign: isWeb ? "center" : "left",
   },
   resourceStock: {
-    fontSize: 12,
+    fontSize: 10, // Más pequeño
     color: colors.textSecondary,
-    marginBottom: 12,
+    marginBottom: 8, // Menos margen
+    textAlign: isWeb ? "center" : "left",
   },
   purchaseButton: {
     backgroundColor: colors.primary,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingVertical: isWeb ? 14 : 10, // Botón más compacto en móvil
+    paddingHorizontal: 8, // Padding horizontal para no tocar bordes
+    borderRadius: 8, // Radio más pequeño
     alignItems: "center",
+    marginTop: 4, // Pequeño margen superior
   },
   purchaseButtonText: {
     color: colors.background,
-    fontSize: 14,
+    fontSize: 13, // Texto más pequeño
     fontWeight: "600",
   },
   purchaseButtonDisabled: {

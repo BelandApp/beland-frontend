@@ -7,11 +7,13 @@ import { ProductCard, ProductCardType } from "./ProductCard";
 export interface ProductGridProps {
   products: ProductCardType[];
   onAddToCart: (product: ProductCardType) => void;
+  addingProductId?: string | null;
 }
 
 export const ProductGrid: React.FC<ProductGridProps> = ({
   products,
   onAddToCart,
+  addingProductId,
 }) => {
   if (products.length === 0) {
     return (
@@ -42,6 +44,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
               key={product.id}
               product={product}
               onAddToCart={onAddToCart}
+              isAdding={addingProductId === product.id}
             />
           ))}
         </View>

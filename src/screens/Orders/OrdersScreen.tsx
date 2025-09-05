@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useOrdersStore } from "../../stores/useOrdersStore";
+import { useOrdersStoreAPI } from "../../stores/useOrdersStoreAPI";
 import { Order, OrderStatus } from "../../types/Order";
 import { OrdersStackParamList } from "../../types/navigation";
 import { colors } from "../../styles/colors";
@@ -27,16 +27,22 @@ const { width } = Dimensions.get("window");
 
 const OrdersScreen: React.FC = () => {
   const navigation = useNavigation<OrdersScreenNavigationProp>();
-  const { orders, isLoading, getOrderSummary } = useOrdersStore();
+  const { orders, isLoading, getOrderSummary, loadUserOrders } =
+    useOrdersStoreAPI();
   const [selectedFilter, setSelectedFilter] = useState<OrderStatus | "all">(
     "all"
   );
 
+  // Load orders when component mounts
+  useEffect(() => {
+    loadUserOrders();
+  }, [loadUserOrders]);
+
   const orderSummary = getOrderSummary();
 
   const handleRefresh = async () => {
-    // Since we don't have refreshOrders method, we can just log for now
-    console.log("Refreshing orders...");
+    // Use real API to refresh orders
+    await loadUserOrders();
   };
 
   const filteredOrders = useMemo(() => {
@@ -344,6 +350,20 @@ const OrdersScreen: React.FC = () => {
               Gestiona y revisa tus compras
             </Text>
           </View>
+
+          {/* Botón de Delivery - Solo para personal autorizado */}
+          <TouchableOpacity
+            style={ordersStyles.deliveryButton}
+            onPress={() => navigation.navigate("Delivery")}
+            activeOpacity={0.8}
+          >
+            <MaterialCommunityIcons
+              name="truck-delivery"
+              size={20}
+              color="white"
+            />
+            <Text style={ordersStyles.deliveryButtonText}>Delivery</Text>
+          </TouchableOpacity>
         </View>
       </View>
 

@@ -16,6 +16,7 @@ import * as Haptics from "expo-haptics";
 // Hooks
 import { useCatalogFilters, useCatalogModals } from "./hooks";
 import { useProducts } from "../../hooks/useProducts";
+import { useCartSync } from "../../hooks/useCartSync";
 import { categoryService } from "../../services/categoryService";
 import { ProductCardType } from "./components/ProductCard";
 
@@ -33,8 +34,14 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 export const CatalogScreen = () => {
   const navigation = useNavigation();
 
-  const { addProduct: addProductToCart, products: cartProducts } =
-    useCartStore();
+  const {
+    addProduct: addProductToCart,
+    addProductToServer,
+    products: cartProducts,
+  } = useCartStore();
+
+  // Hook para sincronizar carrito con servidor
+  const { isSyncing, syncError, performCartSync } = useCartSync();
 
   const {
     searchText,
@@ -49,6 +56,7 @@ export const CatalogScreen = () => {
     useCatalogModals();
 
   const [showCart, setShowCart] = useState(false);
+  const [addingProductId, setAddingProductId] = useState<string | null>(null);
   const [allCategories, setAllCategories] = useState<
     { id: string; name: string }[]
   >([]);
@@ -97,16 +105,62 @@ export const CatalogScreen = () => {
     })();
   }, [products]);
 
-  const handleAddProduct = (product: ProductCardType) => {
+  // Sincronizar carrito al cargar el catálogo
+  useEffect(() => {
+    const syncCart = async () => {
+      try {
+        // Sincronizar carrito con servidor usando estrategia de merge
+        // para no perder productos que el usuario ya haya agregado localmente
+        await performCartSync("merge");
+      } catch (error) {
+        console.error("Error syncing cart:", error);
+        // No mostrar error al usuario ya que es una operación en segundo plano
+      }
+    };
+
+    syncCart();
+  }, []); // Solo ejecutar una vez al montar el componente
+
+  const handleAddProduct = async (product: ProductCardType) => {
     if ("image_url" in product) {
-      addProductToCart({
-        id: product.id,
-        name: product.name,
-        price: Number(product.price),
-        quantity: 1,
-        image: product.image_url,
-      });
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      try {
+        setAddingProductId(product.id);
+        console.log(
+          "🛒 CatalogScreen: Adding product to cart and server:",
+          product.name
+        );
+
+        const success = await addProductToServer({
+          id: product.id,
+          name: product.name,
+          price: Number(product.price),
+          quantity: 1,
+          image: product.image_url,
+        });
+
+        if (success) {
+          console.log("✅ CatalogScreen: Product added successfully to server");
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        } else {
+          console.log(
+            "⚠️ CatalogScreen: Product added locally but failed on server"
+          );
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+        }
+      } catch (error) {
+        console.error("❌ CatalogScreen: Error adding product:", error);
+        // Fallback a agregar solo localmente
+        addProductToCart({
+          id: product.id,
+          name: product.name,
+          price: Number(product.price),
+          quantity: 1,
+          image: product.image_url,
+        });
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      } finally {
+        setAddingProductId(null);
+      }
     }
   };
 
@@ -135,16 +189,21 @@ export const CatalogScreen = () => {
               activeOpacity={0.8}
             >
               <MaterialCommunityIcons
-                name="cart-variant"
+                name={isSyncing ? "sync" : "cart-variant"}
                 size={32}
-                color="#FF6B35"
-                style={styles.headerCartIcon}
+                color={isSyncing ? "#FFA500" : "#FF6B35"}
+                style={[styles.headerCartIcon, isSyncing && styles.syncingIcon]}
               />
-              {cartProducts.length > 0 && (
+              {cartProducts.length > 0 && !isSyncing && (
                 <View style={styles.headerBadge}>
                   <Text style={styles.headerBadgeText}>
                     {cartProducts.length}
                   </Text>
+                </View>
+              )}
+              {isSyncing && (
+                <View style={styles.syncIndicator}>
+                  <Text style={styles.syncText}>⟳</Text>
                 </View>
               )}
             </TouchableOpacity>
@@ -187,27 +246,51 @@ export const CatalogScreen = () => {
             {error}
           </Text>
         ) : (
-          <ProductGrid products={products} onAddToCart={handleAddProduct} />
+          <ProductGrid
+            products={products}
+            onAddToCart={handleAddProduct}
+            addingProductId={addingProductId}
+          />
         )}
       </ScrollView>
 
       <CartBottomSheet
         visible={showCart}
         onClose={() => setShowCart(false)}
-        onCheckout={() => {
+        onCheckout={async () => {
           setShowCart(false);
-          if (cartProducts.length > 0) {
-            const cartProd = cartProducts[0];
-            const fullProduct = products.find((p) => p.id === cartProd.id);
+
+          if (cartProducts.length === 0) {
+            Alert.alert("Carrito vacío", "Agrega productos antes de continuar");
+            return;
+          }
+
+          try {
+            // Mostrar loading si es necesario
+            console.log("🛒 Procesando checkout con productos:", cartProducts);
+
+            // Aquí es donde ahora procesamos el carrito al backend
+            // Pero por ahora, como aún no tienes la pantalla de direcciones,
+            // vamos a usar el modal de delivery existente
+            const firstProduct = cartProducts[0];
+            const fullProduct = products.find((p) => p.id === firstProduct.id);
+
             if (fullProduct) {
               openDeliveryModal(fullProduct);
             } else {
               Alert.alert(
                 "Producto no disponible",
-                "El producto seleccionado ya no está disponible en el catálogo. Por favor, actualiza la lista de productos.",
+                "El producto seleccionado ya no está disponible en el catálogo.",
                 [{ text: "OK" }]
               );
             }
+          } catch (error) {
+            console.error("Error en checkout:", error);
+            Alert.alert(
+              "Error",
+              "Hubo un problema al procesar tu carrito. Inténtalo de nuevo.",
+              [{ text: "OK" }]
+            );
           }
         }}
       />
@@ -241,6 +324,9 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   headerCartIcon: {},
+  syncingIcon: {
+    transform: [{ rotate: "45deg" }],
+  },
   headerBadge: {
     position: "absolute",
     top: 2,
@@ -255,4 +341,23 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   headerBadgeText: { color: "#fff", fontWeight: "bold", fontSize: 11 },
+  syncIndicator: {
+    position: "absolute",
+    top: 2,
+    right: 2,
+    backgroundColor: "#FFA500",
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 2,
+    zIndex: 2,
+  },
+  syncText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 11,
+    textAlign: "center",
+  },
 });
