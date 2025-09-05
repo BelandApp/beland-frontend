@@ -167,6 +167,8 @@ export const CommunityScreen = () => {
         console.warn(
           "⚠️ Backend devolvió null - posible problema de saldo o stock"
         );
+        // Cerrar el modal antes de mostrar la alerta
+        handleModalClose();
         showCustomAlert(
           "Error en la compra",
           "No se pudo completar la compra. Verifica tu saldo y que el producto tenga stock disponible.",
@@ -219,6 +221,8 @@ export const CommunityScreen = () => {
         errorMessage = error.body.error;
       }
 
+      // Cerrar el modal antes de mostrar la alerta de error
+      handleModalClose();
       showCustomAlert("Error en la compra", errorMessage, "error");
     }
   };
