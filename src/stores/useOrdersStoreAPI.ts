@@ -32,10 +32,22 @@ function saveOrdersState(state: Partial<OrdersState>) {
     // Convertir fechas a strings para serialización
     orders: state.orders?.map((order) => ({
       ...order,
-      createdAt: order.createdAt.toISOString(),
-      updatedAt: order.updatedAt.toISOString(),
-      estimatedDelivery: order.estimatedDelivery?.toISOString(),
-      deliveredAt: order.deliveredAt?.toISOString(),
+      createdAt:
+        order.createdAt && !isNaN(order.createdAt.getTime())
+          ? order.createdAt.toISOString()
+          : new Date().toISOString(),
+      updatedAt:
+        order.updatedAt && !isNaN(order.updatedAt.getTime())
+          ? order.updatedAt.toISOString()
+          : new Date().toISOString(),
+      estimatedDelivery:
+        order.estimatedDelivery && !isNaN(order.estimatedDelivery.getTime())
+          ? order.estimatedDelivery.toISOString()
+          : undefined,
+      deliveredAt:
+        order.deliveredAt && !isNaN(order.deliveredAt.getTime())
+          ? order.deliveredAt.toISOString()
+          : undefined,
     })),
   });
 
