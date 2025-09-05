@@ -40,19 +40,12 @@ class OrderService {
   // Crear orden desde carrito
   async createOrderFromCart(cartId: string): Promise<Order> {
     try {
-      console.log("🌐 OrderService: Creating order from cart ID:", cartId);
-      console.log("🌐 OrderService: cart_id type:", typeof cartId);
-      console.log("🌐 OrderService: cart_id length:", cartId?.length);
-
       // Validar que el cartId sea un string válido
       if (!cartId || typeof cartId !== "string" || cartId.trim() === "") {
         throw new Error(`Invalid cart_id: ${cartId}`);
       }
 
       // Usar query parameter según la documentación de la API
-      console.log(
-        "🌐 OrderService: Using query parameter (as per API docs)..."
-      );
       const response = await apiRequest(
         `/orders/cart?cart_id=${encodeURIComponent(cartId.trim())}`,
         {
@@ -61,11 +54,7 @@ class OrderService {
         }
       );
 
-      console.log("✅ OrderService: Response received:", response);
-      console.log("🔍 OrderService: Mapping response to Order object...");
-      const mappedOrder = this.mapOrderResponse(response);
-      console.log("✅ OrderService: Mapped order:", mappedOrder);
-      return mappedOrder;
+      return this.mapOrderResponse(response);
     } catch (error) {
       console.error("❌ OrderService: Error creating order from cart:", error);
 
@@ -124,32 +113,8 @@ class OrderService {
         method: "GET",
       });
 
-      console.log("🔍 OrderService: getUserOrders response:", response);
-      console.log("🔍 OrderService: response type:", typeof response);
-      console.log("🔍 OrderService: response.orders:", response.orders);
-      console.log(
-        "🔍 OrderService: Array.isArray(response):",
-        Array.isArray(response)
-      );
-      console.log(
-        "🔍 OrderService: Array.isArray(response.orders):",
-        Array.isArray(response.orders)
-      );
-
       // Determinar qué contiene las órdenes
       let ordersArray = response.orders || response;
-      console.log("🔍 OrderService: ordersArray:", ordersArray);
-      console.log("🔍 OrderService: ordersArray length:", ordersArray?.length);
-
-      if (Array.isArray(ordersArray)) {
-        ordersArray.forEach((item, index) => {
-          console.log(`🔍 OrderService: ordersArray[${index}]:`, item);
-          console.log(
-            `🔍 OrderService: ordersArray[${index}] type:`,
-            typeof item
-          );
-        });
-      }
 
       // Manejar el caso donde el backend devuelve [array_de_ordenes, total]
       if (Array.isArray(ordersArray) && ordersArray.length >= 2) {
@@ -158,15 +123,7 @@ class OrderService {
 
         // Si el primer elemento es un array de órdenes y el segundo es un número (total)
         if (Array.isArray(firstElement) && typeof secondElement === "number") {
-          console.log(
-            "🔍 OrderService: Detected [orders_array, total] structure"
-          );
           ordersArray = firstElement; // Usar solo el array de órdenes
-          console.log(
-            "🔍 OrderService: Using orders from first element:",
-            ordersArray.length,
-            "orders"
-          );
         }
       }
 
@@ -174,17 +131,9 @@ class OrderService {
       const validOrders = Array.isArray(ordersArray)
         ? ordersArray.filter((item, index) => {
             const isValid = item && typeof item === "object" && item.id;
-            if (!isValid) {
-              console.warn(
-                `⚠️ OrderService: Skipping invalid order at index ${index}:`,
-                item
-              );
-            }
             return isValid;
           })
         : [];
-
-      console.log("🔍 OrderService: Valid orders to map:", validOrders.length);
 
       return {
         orders: validOrders.map(this.mapOrderResponse.bind(this)),
@@ -318,15 +267,8 @@ class OrderService {
 
   // Helper para mapear respuesta del backend
   private mapOrderResponse(response: any): Order {
-    console.log("🔄 OrderService: Starting mapOrderResponse with:", response);
-    console.log("🔍 OrderService: response type:", typeof response);
-
     // Validar que la respuesta sea un objeto válido
     if (!response || typeof response !== "object") {
-      console.error(
-        "❌ OrderService: Invalid response for mapOrderResponse:",
-        response
-      );
       throw new Error(
         `Invalid order data: expected object, got ${typeof response}`
       );
@@ -334,33 +276,18 @@ class OrderService {
 
     // Validar que tenga al menos un ID
     if (!response.id) {
-      console.error("❌ OrderService: Order missing ID:", response);
       throw new Error("Order data missing required ID field");
     }
 
     // Helper function para parsear fechas de forma segura
     const parseDate = (dateValue: any, fieldName: string): Date => {
-      console.log(
-        `🗓️ OrderService: Parsing ${fieldName}:`,
-        dateValue,
-        typeof dateValue
-      );
       if (!dateValue) {
-        console.log(
-          `⚠️ OrderService: ${fieldName} is null/undefined, using current date`
-        );
         return new Date();
       }
       const date = new Date(dateValue);
       if (isNaN(date.getTime())) {
-        console.error(
-          `❌ OrderService: Invalid date for ${fieldName}:`,
-          dateValue,
-          "using current date"
-        );
         return new Date();
       }
-      console.log(`✅ OrderService: ${fieldName} parsed successfully:`, date);
       return date;
     };
 
@@ -368,27 +295,13 @@ class OrderService {
       dateValue: any,
       fieldName: string
     ): Date | undefined => {
-      console.log(
-        `🗓️ OrderService: Parsing optional ${fieldName}:`,
-        dateValue,
-        typeof dateValue
-      );
       if (!dateValue) {
-        console.log(
-          `ℹ️ OrderService: ${fieldName} is null/undefined, returning undefined`
-        );
         return undefined;
       }
       const date = new Date(dateValue);
       if (isNaN(date.getTime())) {
-        console.error(
-          `❌ OrderService: Invalid date for ${fieldName}:`,
-          dateValue,
-          "returning undefined"
-        );
         return undefined;
       }
-      console.log(`✅ OrderService: ${fieldName} parsed successfully:`, date);
       return date;
     };
 
@@ -467,9 +380,6 @@ class OrderService {
 
     // Si los items están vacíos pero tenemos total_items, crear items placeholder
     if (mappedOrder.items.length === 0 && response.total_items > 0) {
-      console.log(
-        `📦 OrderService: Creating ${response.total_items} placeholder items for order ${response.id}`
-      );
       mappedOrder.items = Array.from(
         { length: response.total_items },
         (_, index) => ({
@@ -484,7 +394,6 @@ class OrderService {
       );
     }
 
-    console.log("✅ OrderService: mapOrderResponse completed:", mappedOrder);
     return mappedOrder;
   }
 }

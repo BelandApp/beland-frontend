@@ -243,7 +243,6 @@ const OrdersScreen: React.FC = () => {
   const renderOrderCard = (order: Order) => {
     // Validación de seguridad para el ID
     if (!order || !order.id) {
-      console.warn("⚠️ OrdersScreen: Skipping order with invalid ID:", order);
       return null;
     }
 
