@@ -21,8 +21,48 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
   onClose,
   onCheckout,
 }) => {
-  const { products, removeProduct, updateQuantity, clearCart } = useCartStore();
+  const {
+    products,
+    removeProduct,
+    removeProductFromServer,
+    updateQuantity,
+    updateQuantityOnServer,
+    clearCart,
+  } = useCartStore();
   const total = products.reduce((sum, p) => sum + p.price * p.quantity, 0);
+
+  const handleRemoveProduct = async (productId: string) => {
+    try {
+      const success = await removeProductFromServer(productId);
+      if (!success) {
+        console.log(
+          "⚠️ CartBottomSheet: Could not remove from server, but removed locally"
+        );
+      }
+    } catch (error) {
+      console.error("❌ CartBottomSheet: Error removing product:", error);
+      // En caso de error, aún eliminar localmente
+      removeProduct(productId);
+    }
+  };
+
+  const handleUpdateQuantity = async (
+    productId: string,
+    newQuantity: number
+  ) => {
+    try {
+      const success = await updateQuantityOnServer(productId, newQuantity);
+      if (!success) {
+        console.log(
+          "⚠️ CartBottomSheet: Could not update quantity on server, but updated locally"
+        );
+      }
+    } catch (error) {
+      console.error("❌ CartBottomSheet: Error updating quantity:", error);
+      // En caso de error, aún actualizar localmente
+      updateQuantity(productId, newQuantity);
+    }
+  };
 
   return (
     <Modal
@@ -62,7 +102,7 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
                     <View style={styles.qtyRow}>
                       <TouchableOpacity
                         onPress={() =>
-                          updateQuantity(
+                          handleUpdateQuantity(
                             item.id,
                             Math.max(1, item.quantity - 1)
                           )
@@ -73,14 +113,16 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
                       <Text style={styles.qty}>{item.quantity}</Text>
                       <TouchableOpacity
                         onPress={() =>
-                          updateQuantity(item.id, item.quantity + 1)
+                          handleUpdateQuantity(item.id, item.quantity + 1)
                         }
                       >
                         <Text style={styles.qtyBtn}>+</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
-                  <TouchableOpacity onPress={() => removeProduct(item.id)}>
+                  <TouchableOpacity
+                    onPress={() => handleRemoveProduct(item.id)}
+                  >
                     <Text style={styles.remove}>✕</Text>
                   </TouchableOpacity>
                 </View>
