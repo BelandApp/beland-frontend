@@ -117,6 +117,12 @@ export const productStyles = StyleSheet.create({
     color: colors.belandGreen,
     flex: 1,
   },
+  becoinsReference: {
+    fontSize: 10,
+    color: colors.textSecondary,
+    fontStyle: "italic" as const,
+    marginTop: 2,
+  },
   addToCartButton: {
     backgroundColor: colors.belandOrange,
     width: 32,
