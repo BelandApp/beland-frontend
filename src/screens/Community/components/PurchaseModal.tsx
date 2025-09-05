@@ -26,6 +26,7 @@ interface PurchaseModalProps {
   userBalance: number;
   onConfirm: (quantity: number) => Promise<void>;
   onCancel: () => void;
+  onNavigateToRecharge: () => void;
 }
 
 export const PurchaseModal: React.FC<PurchaseModalProps> = ({
@@ -34,6 +35,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
   userBalance,
   onConfirm,
   onCancel,
+  onNavigateToRecharge,
 }) => {
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
