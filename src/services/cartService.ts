@@ -227,6 +227,59 @@ class CartService {
     }
   }
 
+  // Procesar carrito completo al finalizar compra (nuevo método)
+  async processCartForCheckout(cartProducts: any[]): Promise<Cart> {
+    try {
+      console.log(
+        "🛒 CartService: Processing cart for checkout with products:",
+        cartProducts
+      );
+
+      // Obtener el cart_id del usuario desde el backend usando /carts/user
+      const cartId = await getUserCartId();
+      console.log("🔍 CartService: Using cart_id from /carts/user:", cartId);
+
+      // Agregar todos los productos al carrito del backend
+      // (El backend limpia automáticamente el carrito al crear la orden)
+      console.log("📦 CartService: Adding all products to backend cart...");
+      for (const product of cartProducts) {
+        console.log(
+          `Adding product ${product.name} (ID: ${product.id}) to backend cart`
+        );
+
+        const data: CreateCartItemRequest = {
+          cart_id: cartId,
+          product_id: product.id,
+          quantity: product.quantity,
+          unit_price: product.price,
+        };
+
+        await apiRequest("/cart-items", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+
+        console.log(
+          `✅ Added product ${product.name} to backend cart successfully`
+        );
+      }
+
+      // Obtener el carrito actualizado
+      console.log("🔍 CartService: Getting updated cart from backend...");
+      const updatedCart = await this.getCart(cartId);
+      console.log("✅ CartService: Cart processed successfully for checkout");
+
+      return updatedCart;
+    } catch (error) {
+      console.error(
+        "❌ CartService: Error processing cart for checkout:",
+        error
+      );
+      throw error;
+    }
+  }
+
   // Verificar si un producto ya existe en el carrito del usuario
   async checkProductInCart(productId: string): Promise<CartItem | null> {
     try {
@@ -383,6 +436,32 @@ class CartService {
       });
     } catch (error) {
       console.error("Error removing cart item:", error);
+      throw error;
+    }
+  }
+
+  // Limpiar carrito completo
+  async clearCart(cartId: string): Promise<void> {
+    try {
+      console.log("🧹 CartService: Clearing cart by getting current items...");
+
+      // Obtener los items actuales del carrito
+      const cartItems = await this.getCartItems(cartId);
+
+      // Eliminar cada item individualmente
+      for (const item of cartItems) {
+        try {
+          await this.removeCartItem(item.id);
+          console.log(`🗑️ Removed item ${item.id} from cart`);
+        } catch (itemError) {
+          console.warn(`⚠️ Could not remove item ${item.id}:`, itemError);
+          // Continuar con los demás items
+        }
+      }
+
+      console.log("✅ Cart cleared successfully");
+    } catch (error) {
+      console.error("Error clearing cart:", error);
       throw error;
     }
   }

@@ -62,7 +62,10 @@ class OrderService {
       );
 
       console.log("✅ OrderService: Response received:", response);
-      return this.mapOrderResponse(response);
+      console.log("🔍 OrderService: Mapping response to Order object...");
+      const mappedOrder = this.mapOrderResponse(response);
+      console.log("✅ OrderService: Mapped order:", mappedOrder);
+      return mappedOrder;
     } catch (error) {
       console.error("❌ OrderService: Error creating order from cart:", error);
 
@@ -121,9 +124,76 @@ class OrderService {
         method: "GET",
       });
 
+      console.log("🔍 OrderService: getUserOrders response:", response);
+      console.log("🔍 OrderService: response type:", typeof response);
+      console.log("🔍 OrderService: response.orders:", response.orders);
+      console.log(
+        "🔍 OrderService: Array.isArray(response):",
+        Array.isArray(response)
+      );
+      console.log(
+        "🔍 OrderService: Array.isArray(response.orders):",
+        Array.isArray(response.orders)
+      );
+
+      // Determinar qué contiene las órdenes
+      let ordersArray = response.orders || response;
+      console.log("🔍 OrderService: ordersArray:", ordersArray);
+      console.log("🔍 OrderService: ordersArray length:", ordersArray?.length);
+
+      if (Array.isArray(ordersArray)) {
+        ordersArray.forEach((item, index) => {
+          console.log(`🔍 OrderService: ordersArray[${index}]:`, item);
+          console.log(
+            `🔍 OrderService: ordersArray[${index}] type:`,
+            typeof item
+          );
+        });
+      }
+
+      // Manejar el caso donde el backend devuelve [array_de_ordenes, total]
+      if (Array.isArray(ordersArray) && ordersArray.length >= 2) {
+        const firstElement = ordersArray[0];
+        const secondElement = ordersArray[1];
+
+        // Si el primer elemento es un array de órdenes y el segundo es un número (total)
+        if (Array.isArray(firstElement) && typeof secondElement === "number") {
+          console.log(
+            "🔍 OrderService: Detected [orders_array, total] structure"
+          );
+          ordersArray = firstElement; // Usar solo el array de órdenes
+          console.log(
+            "🔍 OrderService: Using orders from first element:",
+            ordersArray.length,
+            "orders"
+          );
+        }
+      }
+
+      // Filtrar y mapear solo elementos válidos
+      const validOrders = Array.isArray(ordersArray)
+        ? ordersArray.filter((item, index) => {
+            const isValid = item && typeof item === "object" && item.id;
+            if (!isValid) {
+              console.warn(
+                `⚠️ OrderService: Skipping invalid order at index ${index}:`,
+                item
+              );
+            }
+            return isValid;
+          })
+        : [];
+
+      console.log("🔍 OrderService: Valid orders to map:", validOrders.length);
+
       return {
-        orders: (response.orders || response).map(this.mapOrderResponse),
-        total: response.total || response.length || 0,
+        orders: validOrders.map(this.mapOrderResponse.bind(this)),
+        total:
+          response.total ||
+          (typeof response[1] === "number"
+            ? response[1]
+            : validOrders.length) ||
+          0,
         page: response.page || query.page || 1,
         limit: response.limit || query.limit || 10,
       };
@@ -248,29 +318,145 @@ class OrderService {
 
   // Helper para mapear respuesta del backend
   private mapOrderResponse(response: any): Order {
-    return {
+    console.log("🔄 OrderService: Starting mapOrderResponse with:", response);
+    console.log("🔍 OrderService: response type:", typeof response);
+
+    // Validar que la respuesta sea un objeto válido
+    if (!response || typeof response !== "object") {
+      console.error(
+        "❌ OrderService: Invalid response for mapOrderResponse:",
+        response
+      );
+      throw new Error(
+        `Invalid order data: expected object, got ${typeof response}`
+      );
+    }
+
+    // Validar que tenga al menos un ID
+    if (!response.id) {
+      console.error("❌ OrderService: Order missing ID:", response);
+      throw new Error("Order data missing required ID field");
+    }
+
+    // Helper function para parsear fechas de forma segura
+    const parseDate = (dateValue: any, fieldName: string): Date => {
+      console.log(
+        `🗓️ OrderService: Parsing ${fieldName}:`,
+        dateValue,
+        typeof dateValue
+      );
+      if (!dateValue) {
+        console.log(
+          `⚠️ OrderService: ${fieldName} is null/undefined, using current date`
+        );
+        return new Date();
+      }
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) {
+        console.error(
+          `❌ OrderService: Invalid date for ${fieldName}:`,
+          dateValue,
+          "using current date"
+        );
+        return new Date();
+      }
+      console.log(`✅ OrderService: ${fieldName} parsed successfully:`, date);
+      return date;
+    };
+
+    const parseOptionalDate = (
+      dateValue: any,
+      fieldName: string
+    ): Date | undefined => {
+      console.log(
+        `🗓️ OrderService: Parsing optional ${fieldName}:`,
+        dateValue,
+        typeof dateValue
+      );
+      if (!dateValue) {
+        console.log(
+          `ℹ️ OrderService: ${fieldName} is null/undefined, returning undefined`
+        );
+        return undefined;
+      }
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) {
+        console.error(
+          `❌ OrderService: Invalid date for ${fieldName}:`,
+          dateValue,
+          "returning undefined"
+        );
+        return undefined;
+      }
+      console.log(`✅ OrderService: ${fieldName} parsed successfully:`, date);
+      return date;
+    };
+
+    // Mapear el status correctamente desde el objeto anidado
+    let orderStatus: OrderStatus = "pending";
+    if (response.status?.code) {
+      const statusCode = response.status.code.toLowerCase();
+      switch (statusCode) {
+        case "pending":
+          orderStatus = "pending";
+          break;
+        case "confirmed":
+          orderStatus = "confirmed";
+          break;
+        case "preparing":
+          orderStatus = "preparing";
+          break;
+        case "ready":
+          orderStatus = "ready";
+          break;
+        case "shipped":
+          orderStatus = "shipped";
+          break;
+        case "delivered":
+          orderStatus = "delivered";
+          break;
+        case "cancelled":
+          orderStatus = "cancelled";
+          break;
+        case "refunded":
+          orderStatus = "refunded";
+          break;
+        default:
+          orderStatus = "pending";
+      }
+    }
+
+    const mappedOrder = {
       id: response.id,
-      userId: response.user_id || response.userId,
-      items: response.items || [],
-      subtotal: parseFloat(response.subtotal || 0),
+      userId: response.user_id || response.userId || "",
+      items: Array.isArray(response.items) ? response.items : [],
+      subtotal: parseFloat(response.subtotal || response.total_amount || 0),
       discount: parseFloat(response.discount || 0),
       deliveryFee: parseFloat(
         response.delivery_fee || response.deliveryFee || 0
       ),
-      total: parseFloat(response.total || 0),
-      deliveryType: response.delivery_type || response.deliveryType,
+      total: parseFloat(response.total || response.total_amount || 0),
+      deliveryType: response.delivery_type || response.deliveryType || "home",
       deliveryAddress: response.delivery_address || response.deliveryAddress,
       groupId: response.group_id || response.groupId,
-      status: response.status,
-      createdAt: new Date(response.created_at || response.createdAt),
-      updatedAt: new Date(response.updated_at || response.updatedAt),
-      estimatedDelivery: response.estimated_delivery
-        ? new Date(response.estimated_delivery)
-        : undefined,
-      deliveredAt: response.delivered_at
-        ? new Date(response.delivered_at)
-        : undefined,
-      notes: response.notes,
+      status: orderStatus,
+      createdAt: parseDate(
+        response.created_at || response.createdAt,
+        "createdAt"
+      ),
+      updatedAt: parseDate(
+        response.updated_at || response.updatedAt,
+        "updatedAt"
+      ),
+      estimatedDelivery: parseOptionalDate(
+        response.estimated_delivery || response.estimatedDelivery,
+        "estimatedDelivery"
+      ),
+      deliveredAt: parseOptionalDate(
+        response.delivered_at || response.deliveredAt,
+        "deliveredAt"
+      ),
+      notes: response.notes || "",
       trackingNumber: response.tracking_number || response.trackingNumber,
       paymentMethod:
         response.payment_method || response.paymentMethod || "becoins",
@@ -278,6 +464,28 @@ class OrderService {
         response.payment_status || response.paymentStatus || "pending",
       becoinsUsed: response.becoins_used || response.becoinsUsed,
     };
+
+    // Si los items están vacíos pero tenemos total_items, crear items placeholder
+    if (mappedOrder.items.length === 0 && response.total_items > 0) {
+      console.log(
+        `📦 OrderService: Creating ${response.total_items} placeholder items for order ${response.id}`
+      );
+      mappedOrder.items = Array.from(
+        { length: response.total_items },
+        (_, index) => ({
+          id: `${response.id}-item-${index + 1}`,
+          productId: `unknown-product-${index + 1}`,
+          name: `Producto ${index + 1}`,
+          price: parseFloat(response.total_amount || 0) / response.total_items,
+          quantity: 1,
+          subtotal:
+            parseFloat(response.total_amount || 0) / response.total_items,
+        })
+      );
+    }
+
+    console.log("✅ OrderService: mapOrderResponse completed:", mappedOrder);
+    return mappedOrder;
   }
 }
 
