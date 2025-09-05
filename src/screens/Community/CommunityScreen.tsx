@@ -6,6 +6,9 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { RootStackParamList } from "../../components/layout/RootStackNavigator";
 import { CustomAlert } from "../../components/ui/CustomAlert";
 import { colors } from "../../styles/colors";
 import { Resource } from "../../types/resource";
@@ -16,13 +19,19 @@ import { useUserBalance } from "../../hooks/useUserBalance";
 import { calculateResourcePrice } from "../../utils/priceHelpers";
 
 // Components
-import { CommunityHeader, ResourcesGrid } from "./components";
+import {
+  CommunityHeader,
+  ResourcesGrid,
+  InsufficientBalanceModal,
+} from "./components";
 import { PurchaseModal } from "./components/PurchaseModal";
 
 // Styles
 import { containerStyles } from "./styles";
 
 export const CommunityScreen = () => {
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+
   // Estado para recursos
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,6 +41,8 @@ export const CommunityScreen = () => {
 
   // Estado para modal de compra
   const [purchaseModalVisible, setPurchaseModalVisible] = useState(false);
+  const [insufficientBalanceModalVisible, setInsufficientBalanceModalVisible] =
+    useState(false);
   const [selectedResource, setSelectedResource] = useState<Resource | null>(
     null
   );
@@ -94,17 +105,48 @@ export const CommunityScreen = () => {
 
   // Función para manejar la compra con modal
   const handlePurchasePress = async (resource: Resource) => {
-    // Refrescar el balance antes de abrir el modal para tener datos actualizados
+    // Refrescar el balance antes de validar para tener datos actualizados
     await refetchBalance();
 
     setSelectedResource(resource);
-    setPurchaseModalVisible(true);
+
+    // Calcular el precio del recurso para validar saldo
+    const priceCalc = calculateResourcePrice(resource);
+    const minQuantity = 1;
+    const totalPrice = priceCalc.finalPrice * minQuantity;
+
+    // Verificar si tiene saldo suficiente para al menos 1 unidad
+    if (balance < totalPrice) {
+      // Mostrar modal de saldo insuficiente
+      setInsufficientBalanceModalVisible(true);
+    } else {
+      // Mostrar modal de compra normal
+      setPurchaseModalVisible(true);
+    }
   };
 
   // Función para cerrar el modal
   const handleModalClose = () => {
     setPurchaseModalVisible(false);
     setSelectedResource(null);
+  };
+
+  // Función para cerrar el modal de saldo insuficiente
+  const handleInsufficientBalanceModalClose = () => {
+    setInsufficientBalanceModalVisible(false);
+    setSelectedResource(null);
+  };
+
+  // Función para navegar a la pantalla de recarga desde el modal de saldo insuficiente
+  const handleNavigateToRechargeFromInsufficientBalance = () => {
+    setInsufficientBalanceModalVisible(false);
+    setSelectedResource(null);
+    navigation.navigate("RechargeScreen");
+  };
+
+  // Función para navegar a la pantalla de recarga
+  const handleNavigateToRecharge = () => {
+    navigation.navigate("RechargeScreen");
   };
 
   // Función para confirmar la compra desde el modal
@@ -119,6 +161,19 @@ export const CommunityScreen = () => {
         quantity
       );
       console.log("[BACKEND RESPUESTA COMPRA]", response);
+
+      // Verificar si la respuesta es null o undefined
+      if (!response) {
+        console.warn(
+          "⚠️ Backend devolvió null - posible problema de saldo o stock"
+        );
+        showCustomAlert(
+          "Error en la compra",
+          "No se pudo completar la compra. Verifica tu saldo y que el producto tenga stock disponible.",
+          "error"
+        );
+        return;
+      }
 
       const totalCost = priceCalc.finalPrice * quantity;
 
@@ -243,6 +298,20 @@ export const CommunityScreen = () => {
         userBalance={balance}
         onConfirm={handlePurchaseConfirm}
         onCancel={handleModalClose}
+        onNavigateToRecharge={handleNavigateToRecharge}
+      />
+
+      {/* Modal de saldo insuficiente */}
+      <InsufficientBalanceModal
+        visible={insufficientBalanceModalVisible}
+        userBalance={balance}
+        requiredAmount={
+          selectedResource
+            ? calculateResourcePrice(selectedResource).finalPrice
+            : 0
+        }
+        onRecharge={handleNavigateToRechargeFromInsufficientBalance}
+        onCancel={handleInsufficientBalanceModalClose}
       />
     </View>
   );
