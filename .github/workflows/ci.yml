@@ -56,7 +56,7 @@ jobs:
   deploy:
     name: Deploy to AWS S3
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }}
+    environment: ${{ github.event.inputs.branch }}
     needs: build
     steps:
       - name: Download build artifact
