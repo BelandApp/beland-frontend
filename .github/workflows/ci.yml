@@ -83,6 +83,12 @@ jobs:
           aws s3 sync dist s3://beland-admin-${{ github.event.inputs.branch }} \
             --delete \
             --exact-timestamps
+      
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"
 
 
      
