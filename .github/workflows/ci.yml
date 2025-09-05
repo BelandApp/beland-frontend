@@ -44,7 +44,7 @@ jobs:
         run: npm ci --legacy-peer-deps
 
       - name: Build project
-        run: npm run build --quiet
+        run: npm run build
 
       - name: Save dist as artifact
         uses: actions/upload-artifact@v4
