@@ -56,7 +56,7 @@ jobs:
   deploy:
     name: Deploy to AWS S3
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.branch }}
+    environment: ${{ github.event.inputs.environment }}
     needs: build
     steps:
       - name: Download build artifact
@@ -64,6 +64,12 @@ jobs:
         with:
           name: dist
           path: dist
+      
+      - name: List downloaded dist content (debug)
+        run: |
+          echo "Verificando que el contenido de 'dist' esté completo:"
+          find dist -type f
+
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -71,15 +77,12 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: Test access to S3
-        run: |
-          echo "Checking access to bucket beland-admin-${{ github.event.inputs.branch }}"
-          aws s3 ls s3://beland-admin-${{ github.event.inputs.branch }}
-
       - name: Sync files to S3
         run: |
           echo "Deploying files to S3 bucket beland-admin-${{ github.event.inputs.branch }}"
-          aws s3 sync dist s3://beland-admin-${{ github.event.inputs.branch }} --delete
+          aws s3 sync dist s3://beland-admin-${{ github.event.inputs.branch }} \
+            --delete \
+            --exact-timestamps
+
 
      
