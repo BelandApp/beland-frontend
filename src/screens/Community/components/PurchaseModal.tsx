@@ -13,6 +13,12 @@ import { StyleSheet } from "react-native";
 import { colors } from "../../../styles/colors";
 import { Resource } from "../../../types/resource";
 import { calculateResourcePrice } from "../../../utils/priceHelpers";
+import {
+  convertBeCoinsToUSD,
+  formatUSDPrice,
+  formatBeCoins,
+  CURRENCY_CONFIG,
+} from "../../../constants/currency";
 
 interface PurchaseModalProps {
   visible: boolean;
@@ -123,17 +129,67 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
               <Text style={styles.resourceName}>{resource.resource_name}</Text>
               <View style={styles.priceContainer}>
                 {priceCalc.hasDiscount && (
-                  <Text style={styles.originalPrice}>
-                    {priceCalc.originalPrice} BeCoins c/u
-                  </Text>
+                  <View style={{ marginBottom: 8 }}>
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        color: colors.textSecondary,
+                        marginBottom: 4,
+                      }}
+                    >
+                      Precio original:
+                    </Text>
+                    <Text style={styles.originalPrice}>
+                      {CURRENCY_CONFIG.CURRENCY_DISPLAY_SYMBOL}
+                      {formatUSDPrice(
+                        convertBeCoinsToUSD(priceCalc.originalPrice)
+                      )}{" "}
+                      c/u
+                    </Text>
+                    <Text
+                      style={[
+                        styles.becoinsReference,
+                        { textDecorationLine: "line-through" },
+                      ]}
+                    >
+                      ({formatBeCoins(priceCalc.originalPrice)} c/u)
+                    </Text>
+                  </View>
                 )}
-                <Text style={styles.resourcePrice}>
-                  {priceCalc.finalPrice.toFixed(0)} BeCoins c/u
-                </Text>
-                {priceCalc.hasDiscount && (
-                  <Text style={styles.discountBadge}>
-                    -{priceCalc.discount}% OFF
+                <View style={{ marginBottom: 8 }}>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: priceCalc.hasDiscount
+                        ? colors.primary
+                        : colors.textSecondary,
+                      marginBottom: 4,
+                      fontWeight: priceCalc.hasDiscount ? "600" : "normal",
+                    }}
+                  >
+                    {priceCalc.hasDiscount ? "Tu precio:" : "Precio:"}
                   </Text>
+                  <Text style={styles.resourcePrice}>
+                    {CURRENCY_CONFIG.CURRENCY_DISPLAY_SYMBOL}
+                    {formatUSDPrice(
+                      convertBeCoinsToUSD(priceCalc.finalPrice)
+                    )}{" "}
+                    c/u
+                  </Text>
+                  <Text style={styles.becoinsReference}>
+                    ({formatBeCoins(priceCalc.finalPrice)} c/u)
+                  </Text>
+                </View>
+                {priceCalc.hasDiscount && (
+                  <View style={styles.savingsContainer}>
+                    <Text style={styles.discountBadge}>
+                      -{priceCalc.discount}% OFF
+                    </Text>
+                    <Text style={styles.savingsText}>
+                      Ahorras {formatBeCoins(Math.round(priceCalc.savings))} por
+                      unidad
+                    </Text>
+                  </View>
                 )}
               </View>
               <Text style={styles.resourceStock}>
@@ -187,18 +243,32 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
           <View style={styles.summary}>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Total:</Text>
-              <Text style={styles.summaryValue}>{totalPrice} BeCoins</Text>
+              <View style={{ alignItems: "flex-end" }}>
+                <Text style={styles.summaryValue}>
+                  {CURRENCY_CONFIG.CURRENCY_DISPLAY_SYMBOL}
+                  {formatUSDPrice(convertBeCoinsToUSD(totalPrice))}
+                </Text>
+                <Text style={styles.becoinsReference}>
+                  ({formatBeCoins(totalPrice)})
+                </Text>
+              </View>
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Tu saldo:</Text>
-              <Text
-                style={[
-                  styles.summaryValue,
-                  !hasEnoughBalance && styles.insufficientBalance,
-                ]}
-              >
-                {userBalance} BeCoins
-              </Text>
+              <View style={{ alignItems: "flex-end" }}>
+                <Text
+                  style={[
+                    styles.summaryValue,
+                    !hasEnoughBalance && styles.insufficientBalance,
+                  ]}
+                >
+                  {CURRENCY_CONFIG.CURRENCY_DISPLAY_SYMBOL}
+                  {formatUSDPrice(convertBeCoinsToUSD(userBalance))}
+                </Text>
+                <Text style={styles.becoinsReference}>
+                  ({formatBeCoins(userBalance)})
+                </Text>
+              </View>
             </View>
             {!hasEnoughBalance && (
               <Text style={styles.errorText}>Saldo insuficiente</Text>
@@ -317,6 +387,12 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontWeight: "500",
     marginBottom: 2,
+  },
+  becoinsReference: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    fontStyle: "italic",
+    marginBottom: 4,
   },
   resourceStock: {
     fontSize: 12,
@@ -448,5 +524,18 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginLeft: 8,
     fontWeight: "600",
+  },
+  savingsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 4,
+    flexWrap: "wrap",
+  },
+  savingsText: {
+    fontSize: 11,
+    color: colors.belandOrange,
+    fontWeight: "600",
+    marginLeft: 8,
+    fontStyle: "italic",
   },
 });
