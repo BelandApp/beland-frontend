@@ -240,105 +240,112 @@ const OrdersScreen: React.FC = () => {
     </View>
   );
 
-  const renderOrderCard = (order: Order) => (
-    <TouchableOpacity
-      key={order.id}
-      style={ordersStyles.orderCard}
-      onPress={() => handleOrderPress(order)}
-    >
-      <View style={ordersStyles.orderCardHeader}>
-        <View style={ordersStyles.orderMainInfo}>
-          <View style={ordersStyles.orderIdRow}>
-            <Text style={ordersStyles.orderId}>#{order.id.slice(-8)}</Text>
-            <View
-              style={[
-                ordersStyles.statusIndicator,
-                { backgroundColor: getStatusColor(order.status) },
-              ]}
-            >
-              <MaterialCommunityIcons
-                name={getStatusIcon(order.status)}
-                size={12}
-                color="white"
-              />
+  const renderOrderCard = (order: Order) => {
+    // Validación de seguridad para el ID
+    if (!order || !order.id) {
+      return null;
+    }
+
+    return (
+      <TouchableOpacity
+        key={order.id}
+        style={ordersStyles.orderCard}
+        onPress={() => handleOrderPress(order)}
+      >
+        <View style={ordersStyles.orderCardHeader}>
+          <View style={ordersStyles.orderMainInfo}>
+            <View style={ordersStyles.orderIdRow}>
+              <Text style={ordersStyles.orderId}>#{order.id.slice(-8)}</Text>
+              <View
+                style={[
+                  ordersStyles.statusIndicator,
+                  { backgroundColor: getStatusColor(order.status) },
+                ]}
+              >
+                <MaterialCommunityIcons
+                  name={getStatusIcon(order.status)}
+                  size={12}
+                  color="white"
+                />
+              </View>
             </View>
+            <Text style={ordersStyles.orderDate}>
+              {formatDate(order.createdAt)}
+            </Text>
           </View>
-          <Text style={ordersStyles.orderDate}>
-            {formatDate(order.createdAt)}
-          </Text>
+          <View style={ordersStyles.orderPrice}>
+            <Text style={ordersStyles.orderAmount}>
+              {formatCurrency(order.total)}
+            </Text>
+            <Text style={ordersStyles.orderItemCount}>
+              {order.items.length} item{order.items.length !== 1 ? "s" : ""}
+            </Text>
+          </View>
         </View>
-        <View style={ordersStyles.orderPrice}>
-          <Text style={ordersStyles.orderAmount}>
-            {formatCurrency(order.total)}
-          </Text>
-          <Text style={ordersStyles.orderItemCount}>
-            {order.items.length} item{order.items.length !== 1 ? "s" : ""}
-          </Text>
-        </View>
-      </View>
 
-      <View style={ordersStyles.orderDetails}>
-        <View style={ordersStyles.orderDetailRow}>
-          <MaterialCommunityIcons
-            name={
-              order.deliveryType === "home"
-                ? "home-outline"
-                : "account-group-outline"
-            }
-            size={16}
-            color={colors.textSecondary}
-          />
-          <Text style={ordersStyles.orderDetailText}>
-            {order.deliveryType === "home"
-              ? "Envío a domicilio"
-              : "Juntada circular"}
-          </Text>
-        </View>
-        <View
-          style={[
-            ordersStyles.statusBadge,
-            { backgroundColor: getStatusColor(order.status) + "20" },
-          ]}
-        >
-          <Text
-            style={[
-              ordersStyles.statusBadgeText,
-              { color: getStatusColor(order.status) },
-            ]}
-          >
-            {getStatusText(order.status)}
-          </Text>
-        </View>
-      </View>
-
-      <View style={ordersStyles.orderFooter}>
-        <View style={ordersStyles.orderProgress}>
+        <View style={ordersStyles.orderDetails}>
+          <View style={ordersStyles.orderDetailRow}>
+            <MaterialCommunityIcons
+              name={
+                order.deliveryType === "home"
+                  ? "home-outline"
+                  : "account-group-outline"
+              }
+              size={16}
+              color={colors.textSecondary}
+            />
+            <Text style={ordersStyles.orderDetailText}>
+              {order.deliveryType === "home"
+                ? "Envío a domicilio"
+                : "Juntada circular"}
+            </Text>
+          </View>
           <View
             style={[
-              ordersStyles.progressBar,
-              {
-                width:
-                  order.status === "delivered"
-                    ? "100%"
-                    : order.status === "shipped"
-                    ? "75%"
-                    : order.status === "preparing"
-                    ? "50%"
-                    : order.status === "confirmed"
-                    ? "25%"
-                    : "10%",
-              },
+              ordersStyles.statusBadge,
+              { backgroundColor: getStatusColor(order.status) + "20" },
             ]}
+          >
+            <Text
+              style={[
+                ordersStyles.statusBadgeText,
+                { color: getStatusColor(order.status) },
+              ]}
+            >
+              {getStatusText(order.status)}
+            </Text>
+          </View>
+        </View>
+
+        <View style={ordersStyles.orderFooter}>
+          <View style={ordersStyles.orderProgress}>
+            <View
+              style={[
+                ordersStyles.progressBar,
+                {
+                  width:
+                    order.status === "delivered"
+                      ? "100%"
+                      : order.status === "shipped"
+                      ? "75%"
+                      : order.status === "preparing"
+                      ? "50%"
+                      : order.status === "confirmed"
+                      ? "25%"
+                      : "10%",
+                },
+              ]}
+            />
+          </View>
+          <MaterialCommunityIcons
+            name="chevron-right"
+            size={20}
+            color={colors.textSecondary}
           />
         </View>
-        <MaterialCommunityIcons
-          name="chevron-right"
-          size={20}
-          color={colors.textSecondary}
-        />
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <SafeAreaView style={ordersStyles.container}>
@@ -414,7 +421,7 @@ const OrdersScreen: React.FC = () => {
           </View>
         ) : (
           <View style={ordersStyles.ordersList}>
-            {filteredOrders.map(renderOrderCard)}
+            {filteredOrders.map(renderOrderCard).filter(Boolean)}
           </View>
         )}
       </ScrollView>

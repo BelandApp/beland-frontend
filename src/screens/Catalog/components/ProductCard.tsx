@@ -3,6 +3,11 @@ import { View, Text, TouchableOpacity, Image } from "react-native";
 import { productStyles } from "../styles";
 import { Product } from "../../../types/Products";
 import { CartProduct } from "../../../stores/useCartStore";
+import {
+  convertUSDToBeCoins,
+  formatBeCoins,
+  CURRENCY_CONFIG,
+} from "../../../constants/currency";
 
 export type ProductCardType = Product | CartProduct;
 
@@ -56,7 +61,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         <Text style={productStyles.productCategory}>{category}</Text>
 
         <View style={productStyles.productPriceRow}>
-          <Text style={productStyles.productPrice}>${price}</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={productStyles.productPrice}>
+              {CURRENCY_CONFIG.CURRENCY_DISPLAY_SYMBOL}
+              {price}
+            </Text>
+            <Text style={productStyles.becoinsReference}>
+              {formatBeCoins(convertUSDToBeCoins(price))}
+            </Text>
+          </View>
           <TouchableOpacity
             style={[
               productStyles.addToCartButton,

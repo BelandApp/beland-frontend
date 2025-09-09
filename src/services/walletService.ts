@@ -89,6 +89,15 @@ class WalletService {
       });
 
       console.log("✅ Compra exitosa:", response);
+
+      // Verificar si la respuesta es null o vacía
+      if (response === null || response === undefined) {
+        console.warn("⚠️ Backend devolvió respuesta vacía");
+        throw new Error(
+          "El servidor no pudo procesar la compra. Verifica tu saldo y stock disponible."
+        );
+      }
+
       return response;
     } catch (error: any) {
       console.error("❌ Error comprando recurso:", {

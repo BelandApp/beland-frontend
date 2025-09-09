@@ -173,16 +173,41 @@ const PaymentScreen: React.FC = () => {
     }
   };
 
-  // Función para obtener el monto efectivo a pagar
-  const getEffectiveAmount = (): number => {
-    return appliedRedemption ? discountedAmount : originalAmount;
-  };
-
   const isPresetFreeEntry =
     Number(paymentData.amount) === 0 && !!paymentData.amount_to_payment_id;
   const isEditableZero =
     Number(paymentData.amount) === 0 && !paymentData.amount_to_payment_id;
   const isFixedAmount = Number(paymentData.amount) > 0;
+
+  const canEdit = isEditableZero;
+
+  // Función para obtener el monto efectivo a pagar
+  const getEffectiveAmount = (): number => {
+    // Si el usuario puede editar el monto (QR sin monto), usar el valor ingresado
+    if (canEdit && amount) {
+      const userAmount = Number(amount);
+      // Si hay descuento aplicado, calcularlo sobre el monto ingresado por el usuario
+      if (appliedRedemption) {
+        if (
+          "type" in appliedRedemption &&
+          appliedRedemption.type === "DISCOUNT"
+        ) {
+          const discountPercent = appliedRedemption.value;
+          return Math.max(0, userAmount * (1 - discountPercent / 100));
+        } else if (
+          "resource" in appliedRedemption &&
+          appliedRedemption.resource &&
+          appliedRedemption.resource.discount
+        ) {
+          const discountPercent = appliedRedemption.resource.discount;
+          return Math.max(0, userAmount * (1 - discountPercent / 100));
+        }
+      }
+      return userAmount;
+    }
+    // Para montos fijos del QR, usar la lógica original
+    return appliedRedemption ? discountedAmount : originalAmount;
+  };
 
   // Inicializar amount
   useEffect(() => {
@@ -202,17 +227,19 @@ const PaymentScreen: React.FC = () => {
     }
   }, [appliedRedemption, discountedAmount, originalAmount, isFixedAmount]);
 
-  const canEdit = isEditableZero;
   const isAmountValid =
     !canEdit ||
-    (/^\d+$/.test(amount) && Number(amount) >= 1 && Number(amount) <= 99999999);
+    (amount &&
+      !isNaN(Number(amount)) &&
+      Number(amount) >= 1 &&
+      Number(amount) <= 999999);
 
   // Lógica mejorada para canPay que considera entrada gratuita por descuentos
   const canPay =
     isFreeEntry || // Si es entrada gratuita por descuento, siempre permitir
     (isPresetFreeEntry && amount === "0") || // Entrada gratuita preset
     (canEdit && isAmountValid) || // Monto editable y válido
-    (!canEdit && amount && Number(amount) > 0 && Number(amount) <= 99999999) || // Monto fijo válido
+    (!canEdit && amount && Number(amount) > 0 && Number(amount) <= 999999) || // Monto fijo válido
     (appliedRedemption && discountedAmount >= 0); // Si hay descuento aplicado, permitir
 
   // Validar si Payphone está disponible (monto mínimo $1.00)
@@ -405,7 +432,7 @@ const PaymentScreen: React.FC = () => {
     }
 
     if (!isAmountValid) {
-      setAmountError("El monto debe ser un entero entre 1 y 99999999");
+      setAmountError("El monto debe ser un número entre 1 y 999999");
       return;
     }
 
@@ -424,8 +451,8 @@ const PaymentScreen: React.FC = () => {
       const payphoneConfig = {
         token: payphoneToken,
         clientTransactionId: `TX-${Date.now()}`,
-        amount: getEffectiveAmount() * 100,
-        amountWithoutTax: getEffectiveAmount() * 100,
+        amount: Math.round(getEffectiveAmount() * 100), // Asegurar que sea un entero
+        amountWithoutTax: Math.round(getEffectiveAmount() * 100), // Asegurar que sea un entero
         currency: "USD",
         storeId: process.env.EXPO_PUBLIC_PAYPHONE_STOREID,
         reference: appliedRedemption
@@ -437,6 +464,14 @@ const PaymentScreen: React.FC = () => {
           : "Pago QR Beland",
         callback: `${window.location.origin}/wallet/payphone-success`,
       };
+
+      console.log("[Payphone] Config enviado:", {
+        amount: payphoneConfig.amount,
+        amountWithoutTax: payphoneConfig.amountWithoutTax,
+        effectiveAmount: getEffectiveAmount(),
+        userAmount: amount,
+        canEdit: canEdit,
+      });
       // @ts-ignore
       new window.PPaymentButtonBox(payphoneConfig).render("pp-button");
     } catch (err) {
@@ -627,7 +662,7 @@ const PaymentScreen: React.FC = () => {
                         pattern="[0-9]*"
                         onChange={(e) => {
                           const val = e.target.value.replace(/[$,]/g, "");
-                          if (/^\d{0,8}$/.test(val)) {
+                          if (/^\d{0,6}$/.test(val)) {
                             setAmount(val);
                             setAmountError(null);
                           } else if (val === "") {
@@ -635,7 +670,7 @@ const PaymentScreen: React.FC = () => {
                             setAmountError(null);
                           } else {
                             setAmountError(
-                              "Solo se permiten números del 1 al 99999999"
+                              "Solo se permiten números del 1 al 999999"
                             );
                           }
                         }}
