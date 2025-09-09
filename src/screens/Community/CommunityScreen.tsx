@@ -17,6 +17,7 @@ import { walletService } from "../../services/walletService";
 import { useCustomAlert } from "../../hooks/useCustomAlert";
 import { useUserBalance } from "../../hooks/useUserBalance";
 import { calculateResourcePrice } from "../../utils/priceHelpers";
+import { useAuth } from "../../hooks/AuthContext"; // Importar useAuth
 
 // Components
 import {
@@ -28,9 +29,12 @@ import { PurchaseModal } from "./components/PurchaseModal";
 
 // Styles
 import { containerStyles } from "./styles";
+import { AuthenticationModal } from "../AuthenticationModal";
 
 export const CommunityScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const { isAuthenticated } = useAuth(); // Obtener isAuthenticated
+  const [authModalVisible, setAuthModalVisible] = useState(false); // Estado para controlar la visibilidad del modal de autenticación
 
   // Estado para recursos
   const [resources, setResources] = useState<Resource[]>([]);
@@ -67,7 +71,7 @@ export const CommunityScreen = () => {
       if (reset || pageNum === 1) {
         setResources(response.resources);
       } else {
-        setResources((prev) => [...prev, ...response.resources]);
+        setResources(prev => [...prev, ...response.resources]);
       }
 
       setHasMore(pageNum < response.totalPages);
@@ -105,6 +109,12 @@ export const CommunityScreen = () => {
 
   // Función para manejar la compra con modal
   const handlePurchasePress = async (resource: Resource) => {
+    if (!isAuthenticated) {
+      // Verificar si el usuario está autenticado
+      setAuthModalVisible(true); // Mostrar el modal si no está autenticado
+      return; // Salir de la función
+    }
+
     // Refrescar el balance antes de validar para tener datos actualizados
     await refetchBalance();
 
@@ -233,8 +243,7 @@ export const CommunityScreen = () => {
         style={[
           containerStyles.container,
           { justifyContent: "center", alignItems: "center" },
-        ]}
-      >
+        ]}>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={{ marginTop: 16, color: colors.textPrimary }}>
           Cargando recursos...
@@ -257,7 +266,7 @@ export const CommunityScreen = () => {
             colors={[colors.primary]}
           />
         }
-        onMomentumScrollEnd={(event) => {
+        onMomentumScrollEnd={event => {
           const { layoutMeasurement, contentOffset, contentSize } =
             event.nativeEvent;
           const isCloseToBottom =
@@ -266,8 +275,7 @@ export const CommunityScreen = () => {
           if (isCloseToBottom) {
             handleLoadMore();
           }
-        }}
-      >
+        }}>
         <ResourcesGrid
           resources={resources}
           onPurchase={handlePurchasePress}
@@ -316,6 +324,12 @@ export const CommunityScreen = () => {
         }
         onRecharge={handleNavigateToRechargeFromInsufficientBalance}
         onCancel={handleInsufficientBalanceModalClose}
+      />
+      {/* Modal de autenticación */}
+      <AuthenticationModal
+        visible={authModalVisible}
+        onClose={() => setAuthModalVisible(false)}
+        message="Para comprar recursos, necesitas iniciar sesión."
       />
     </View>
   );

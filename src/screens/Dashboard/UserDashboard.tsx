@@ -1,11 +1,13 @@
+// src/components/UserDashboard.tsx
+
 import React from "react";
 import { useAuth } from "src/hooks/AuthContext";
+import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import SuperAdminPanel from "./components/SuperAdminPanel";
 import AdminPanel from "./components/AdminPanel";
 import LeaderPanel from "./components/LeaderPanel";
 import EmpresaPanel from "./components/EmpresaPanel";
 import UserPanel from "./components/UserPanel";
-import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 
 const UserDashboard: React.FC = () => {
   const { user, isLoading } = useAuth();
@@ -19,28 +21,32 @@ const UserDashboard: React.FC = () => {
     );
   }
 
-  if (!user || !user.role) {
+  // Se ha actualizado el tipo para la propiedad `role` en la interfaz AuthUser
+  // para que coincida con el backend, pero para esta corrección,
+  // la solución es usar `user.role_name`.
+  if (!user || !user.role_name) {
     return (
       <View style={styles.container}>
         <Text style={styles.errorText}>
-          No se pudo cargar la información del usuario. Intente iniciar sesión
-          nuevamente.
+          No se pudo cargar la información del usuario o el rol no está
+          definido. Intente iniciar sesión nuevamente.
         </Text>
       </View>
     );
   }
 
-  switch (user.role) {
+  // La corrección está en esta línea: se usa user.role_name en lugar de user.role
+  switch (user.role_name) {
     case "SUPERADMIN":
-      return <SuperAdminPanel />;
+      return <SuperAdminPanel user={user}/>;
     case "ADMIN":
-      return <AdminPanel />;
+      return <AdminPanel user={user} />;
     case "LEADER":
-      return <LeaderPanel />;
+      return <LeaderPanel user={user} />;
     case "EMPRESA":
-      return <EmpresaPanel />;
+      return <EmpresaPanel user={user} />;
     case "USER":
-      return <UserPanel />;
+      return <UserPanel user={user} />;
     default:
       return (
         <View style={styles.container}>
@@ -57,17 +63,17 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f0f2f5",
     padding: 20,
   },
   loadingText: {
     marginTop: 10,
     fontSize: 16,
-    color: "#666",
+    color: "#555",
   },
   errorText: {
-    fontSize: 18,
-    color: "#E53E3E",
+    marginTop: 10,
+    fontSize: 16,
+    color: "red",
     textAlign: "center",
   },
 });

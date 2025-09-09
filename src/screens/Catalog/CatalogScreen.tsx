@@ -12,6 +12,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { BeCoinsBalance } from "../../components/ui/BeCoinsBalance";
 import * as Haptics from "expo-haptics";
+import { useAuth } from "../../hooks/AuthContext"; // Importar useAuth
 
 // Hooks
 import { useCatalogFilters, useCatalogModals } from "./hooks";
@@ -30,9 +31,12 @@ import { containerStyles } from "./styles";
 import { useCartStore } from "../../stores/useCartStore";
 import { CartBottomSheet } from "./components/CartBottomSheet";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { AuthenticationModal } from "../AuthenticationModal";
 
 export const CatalogScreen = () => {
   const navigation = useNavigation();
+  const { isAuthenticated } = useAuth(); // Obtener isAuthenticated
+  const [authModalVisible, setAuthModalVisible] = useState(false); // Estado para controlar la visibilidad del modal de autenticación
 
   const {
     addProduct: addProductToCart,
@@ -62,7 +66,7 @@ export const CatalogScreen = () => {
   >([]);
 
   const selectedCategoryId = allCategories.find(
-    (cat) => cat.name === filters.categories[0]
+    cat => cat.name === filters.categories[0]
   )?.id;
 
   const brands: string[] = [];
@@ -93,13 +97,13 @@ export const CatalogScreen = () => {
       try {
         const categories = await categoryService.getCategories();
         setAllCategories(
-          categories.map((cat) => ({ id: cat.id, name: cat.name }))
+          categories.map(cat => ({ id: cat.id, name: cat.name }))
         );
       } catch (e: any) {
         console.error("[CATEGORIAS] Error al cargar categorías:", e);
         const cats = Array.from(
-          new Set((products || []).map((p) => p.category).filter(Boolean))
-        ).map((name) => ({ id: String(name), name: String(name) }));
+          new Set((products || []).map(p => p.category).filter(Boolean))
+        ).map(name => ({ id: String(name), name: String(name) }));
         setAllCategories(cats);
       }
     })();
@@ -122,6 +126,12 @@ export const CatalogScreen = () => {
   }, []); // Solo ejecutar una vez al montar el componente
 
   const handleAddProduct = async (product: ProductCardType) => {
+    if (!isAuthenticated) {
+      // Verificar si el usuario está autenticado
+      setAuthModalVisible(true); // Mostrar el modal si no está autenticado
+      return; // Salir de la función
+    }
+
     if ("image_url" in product) {
       try {
         setAddingProductId(product.id);
@@ -186,8 +196,7 @@ export const CatalogScreen = () => {
             <TouchableOpacity
               style={styles.headerCartBtn}
               onPress={() => setShowCart(true)}
-              activeOpacity={0.8}
-            >
+              activeOpacity={0.8}>
               <MaterialCommunityIcons
                 name={isSyncing ? "sync" : "cart-variant"}
                 size={32}
@@ -215,23 +224,21 @@ export const CatalogScreen = () => {
       <ScrollView
         style={containerStyles.container}
         contentContainerStyle={containerStyles.contentContainer}
-        showsVerticalScrollIndicator={false}
-      >
+        showsVerticalScrollIndicator={false}>
         <SearchBar searchQuery={searchText} onSearchChange={setSearchText} />
 
         {showFilters && (
           <FilterPanel
             filters={filters}
             onFiltersChange={setFilters}
-            categories={allCategories.map((cat) => cat.name)}
+            categories={allCategories.map(cat => cat.name)}
             brands={brands}
           />
         )}
 
         <TouchableOpacity
           style={{ marginBottom: 16, alignSelf: "flex-end" }}
-          onPress={() => setShowFilters(!showFilters)}
-        >
+          onPress={() => setShowFilters(!showFilters)}>
           <Text style={{ color: "#FF6B35", fontWeight: "600" }}>
             {showFilters ? "Ocultar filtros" : "Mostrar filtros"}
           </Text>
@@ -273,7 +280,7 @@ export const CatalogScreen = () => {
             // Pero por ahora, como aún no tienes la pantalla de direcciones,
             // vamos a usar el modal de delivery existente
             const firstProduct = cartProducts[0];
-            const fullProduct = products.find((p) => p.id === firstProduct.id);
+            const fullProduct = products.find(p => p.id === firstProduct.id);
 
             if (fullProduct) {
               openDeliveryModal(fullProduct);
@@ -303,6 +310,12 @@ export const CatalogScreen = () => {
           console.log("Order created:", orderId);
           (navigation as any).navigate("Orders");
         }}
+      />
+      {/* Modal de autenticación */}
+      <AuthenticationModal
+        visible={authModalVisible}
+        onClose={() => setAuthModalVisible(false)}
+        message="Para agregar productos al carrito, necesitas iniciar sesión."
       />
     </SafeAreaView>
   );

@@ -58,6 +58,7 @@ interface AuthContextType {
   loginWithAuth0: () => void;
   logout: () => void;
   fetchWithAuth: (url: string, options?: RequestInit) => Promise<Response>;
+  isAuthenticated: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -97,6 +98,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const setUser = useAuthTokenStore((state) => state.setUser);
   const clearUser = useAuthTokenStore((state) => state.clearUser);
   const [isLoading, setIsLoading] = useState(true);
+  const isAuthenticated = !!user;
 
   // useEffect para socket y balance eliminado
 
@@ -245,8 +247,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         loginWithAuth0,
         logout,
         fetchWithAuth,
-      }}
-    >
+        isAuthenticated,
+      }}>
       {children}
     </AuthContext.Provider>
   );
