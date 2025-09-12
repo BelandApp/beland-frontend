@@ -17,6 +17,7 @@ import { Order, OrderStatus } from "../../types/Order";
 import { OrdersStackParamList } from "../../types/navigation";
 import { colors } from "../../styles/colors";
 import { ordersStyles } from "./styles";
+import { useAuth } from "../../hooks/AuthContext";
 
 type OrdersScreenNavigationProp = StackNavigationProp<
   OrdersStackParamList,
@@ -32,17 +33,37 @@ const OrdersScreen: React.FC = () => {
   const [selectedFilter, setSelectedFilter] = useState<OrderStatus | "all">(
     "all"
   );
+  const { canPerformAction, requireAuth } = useAuth();
 
   // Load orders when component mounts
   useEffect(() => {
-    loadUserOrders();
-  }, [loadUserOrders]);
+    const loadOrders = async () => {
+      try {
+        await requireAuth(async () => {
+          await loadUserOrders();
+        });
+      } catch (error) {
+        // Error ya manejado por requireAuth
+        console.log("Authentication required for loading orders");
+      }
+    };
+
+    loadOrders();
+  }, [loadUserOrders, requireAuth]);
 
   const orderSummary = getOrderSummary();
 
   const handleRefresh = async () => {
-    // Use real API to refresh orders
-    await loadUserOrders();
+    // Usar requireAuth para proteger la carga de órdenes
+    try {
+      await requireAuth(async () => {
+        // Use real API to refresh orders
+        await loadUserOrders();
+      });
+    } catch (error) {
+      // Error ya manejado por requireAuth
+      console.log("Authentication required for loading orders");
+    }
   };
 
   const filteredOrders = useMemo(() => {
@@ -360,16 +381,31 @@ const OrdersScreen: React.FC = () => {
 
           {/* Botón de Delivery - Solo para personal autorizado */}
           <TouchableOpacity
-            style={ordersStyles.deliveryButton}
-            onPress={() => navigation.navigate("Delivery")}
-            activeOpacity={0.8}
+            style={[
+              ordersStyles.deliveryButton,
+              !canPerformAction && ordersStyles.deliveryButtonDisabled,
+            ]}
+            onPress={() => {
+              if (canPerformAction) {
+                navigation.navigate("Delivery");
+              }
+            }}
+            activeOpacity={canPerformAction ? 0.8 : 1}
+            disabled={!canPerformAction}
           >
             <MaterialCommunityIcons
               name="truck-delivery"
               size={20}
-              color="white"
+              color={canPerformAction ? "white" : colors.textSecondary}
             />
-            <Text style={ordersStyles.deliveryButtonText}>Delivery</Text>
+            <Text
+              style={[
+                ordersStyles.deliveryButtonText,
+                !canPerformAction && ordersStyles.deliveryButtonTextDisabled,
+              ]}
+            >
+              Delivery
+            </Text>
           </TouchableOpacity>
         </View>
       </View>

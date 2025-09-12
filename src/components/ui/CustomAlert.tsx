@@ -54,7 +54,7 @@ export const CustomAlert = ({
       case "error":
         return "❌";
       default:
-        return "ℹ️";
+        return "🔐";
     }
   };
 
@@ -137,24 +137,60 @@ export const CustomAlert = ({
           >
             {message}
           </div>
-          <button
-            style={{
-              background: getColorByType(),
-              color: "#fff",
-              border: "none",
-              borderRadius: 10,
-              padding: "12px 38px",
-              fontWeight: 700,
-              fontSize: 17,
-              cursor: "pointer",
-              boxShadow: "0 2px 12px rgba(0,0,0,0.10)",
-              transition: "background 0.2s",
-              letterSpacing: 0.2,
-            }}
-            onClick={onClose}
-          >
-            OK
-          </button>
+          {/* Botones personalizados para web */}
+          {(!autoCloseDelay || primaryButton || secondaryButton) && (
+            <div
+              style={{
+                display: "flex",
+                gap: "12px",
+                width: "100%",
+                justifyContent: secondaryButton ? "space-between" : "center",
+                marginTop: "4px",
+              }}
+            >
+              {secondaryButton && (
+                <button
+                  style={{
+                    background: "#F3F4F6",
+                    color: "#374151",
+                    border: "1.5px solid #E5E7EB",
+                    borderRadius: "12px",
+                    padding: "12px 28px",
+                    fontWeight: 600,
+                    fontSize: "15px",
+                    cursor: "pointer",
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.10)",
+                    transition: "background 0.2s",
+                    flex: 1,
+                    maxWidth: "160px",
+                  }}
+                  onClick={secondaryButton.onPress}
+                >
+                  {secondaryButton.text}
+                </button>
+              )}
+              <button
+                style={{
+                  background: getColorByType(),
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "12px",
+                  padding: "12px 28px",
+                  fontWeight: 600,
+                  fontSize: "15px",
+                  cursor: "pointer",
+                  boxShadow: "0 2px 12px rgba(0,0,0,0.10)",
+                  transition: "background 0.2s",
+                  flex: secondaryButton ? 1 : 0,
+                  minWidth: secondaryButton ? "auto" : "140px",
+                  maxWidth: secondaryButton ? "160px" : "200px",
+                }}
+                onClick={primaryButton?.onPress || onClose}
+              >
+                {primaryButton?.text || "OK"}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );

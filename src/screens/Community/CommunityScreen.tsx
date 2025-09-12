@@ -5,6 +5,7 @@ import {
   Text,
   ActivityIndicator,
   RefreshControl,
+  Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
@@ -17,7 +18,7 @@ import { walletService } from "../../services/walletService";
 import { useCustomAlert } from "../../hooks/useCustomAlert";
 import { useUserBalance } from "../../hooks/useUserBalance";
 import { calculateResourcePrice } from "../../utils/priceHelpers";
-import { useAuth } from "../../hooks/AuthContext"; // Importar useAuth
+import { useAuth } from "../../hooks/AuthContext";
 
 // Components
 import {
@@ -29,12 +30,10 @@ import { PurchaseModal } from "./components/PurchaseModal";
 
 // Styles
 import { containerStyles } from "./styles";
-import { AuthenticationModal } from "../AuthenticationModal";
 
 export const CommunityScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  const { isAuthenticated } = useAuth(); // Obtener isAuthenticated
-  const [authModalVisible, setAuthModalVisible] = useState(false); // Estado para controlar la visibilidad del modal de autenticación
+  const { isAuthenticated, loginWithAuth0, canPerformAction } = useAuth();
 
   // Estado para recursos
   const [resources, setResources] = useState<Resource[]>([]);
@@ -50,6 +49,7 @@ export const CommunityScreen = () => {
   const [selectedResource, setSelectedResource] = useState<Resource | null>(
     null
   );
+  const [showAuthAlert, setShowAuthAlert] = useState(false);
 
   // Hooks personalizados
   const { showAlert, alertConfig, showCustomAlert, hideAlert } =
@@ -71,28 +71,55 @@ export const CommunityScreen = () => {
       if (reset || pageNum === 1) {
         setResources(response.resources);
       } else {
-        setResources(prev => [...prev, ...response.resources]);
+        setResources((prev) => [...prev, ...response.resources]);
       }
 
       setHasMore(pageNum < response.totalPages);
       setPage(pageNum);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error cargando recursos:", error);
-      showCustomAlert(
-        "Error",
-        "No se pudieron cargar los recursos. Inténtalo de nuevo.",
-        "error"
-      );
+
+      // Mostrar mensaje de error más específico
+      let errorMessage =
+        "No se pudieron cargar los recursos. Inténtalo de nuevo.";
+
+      if (
+        error.message?.includes("Network request failed") ||
+        error.message?.includes("fetch")
+      ) {
+        errorMessage =
+          "Error de conexión. Verifica tu conexión a internet e inténtalo de nuevo.";
+      } else if (error.status === 404) {
+        errorMessage =
+          "Servicio no disponible. El servidor podría no estar funcionando.";
+      } else if (error.status >= 500) {
+        errorMessage = "Error del servidor. Por favor, inténtalo más tarde.";
+      } else if (error.message) {
+        errorMessage = `Error: ${error.message}`;
+      }
+
+      showCustomAlert("Error", errorMessage, "error");
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
 
+  // Estado para mostrar alert de login requerido
+  const [showLoginRequiredAlert, setShowLoginRequiredAlert] = useState(false);
+
   // Efectos
   useEffect(() => {
+    // Verificar si el usuario está autenticado antes de cargar recursos
+    if (!isAuthenticated) {
+      setShowLoginRequiredAlert(true);
+      return;
+    }
+
+    // Si el usuario se autentica, ocultar el alert y cargar recursos
+    setShowLoginRequiredAlert(false);
     loadResources(1, true);
-  }, []);
+  }, [isAuthenticated]);
 
   // Manejar refresh
   const handleRefresh = () => {
@@ -109,10 +136,9 @@ export const CommunityScreen = () => {
 
   // Función para manejar la compra con modal
   const handlePurchasePress = async (resource: Resource) => {
-    if (!isAuthenticated) {
-      // Verificar si el usuario está autenticado
-      setAuthModalVisible(true); // Mostrar el modal si no está autenticado
-      return; // Salir de la función
+    if (!canPerformAction) {
+      setShowAuthAlert(true);
+      return;
     }
 
     // Refrescar el balance antes de validar para tener datos actualizados
@@ -237,17 +263,60 @@ export const CommunityScreen = () => {
     }
   };
 
-  if (loading && resources.length === 0) {
+  if (!isAuthenticated) {
     return (
-      <View
-        style={[
-          containerStyles.container,
-          { justifyContent: "center", alignItems: "center" },
-        ]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={{ marginTop: 16, color: colors.textPrimary }}>
-          Cargando recursos...
-        </Text>
+      <View style={containerStyles.container}>
+        <CommunityHeader balance={balance} />
+
+        <View
+          style={[
+            containerStyles.scrollView,
+            { justifyContent: "center", alignItems: "center", padding: 40 },
+          ]}
+        >
+          <Text
+            style={{
+              fontSize: 18,
+              color: colors.textPrimary,
+              textAlign: "center",
+              marginBottom: 16,
+              fontWeight: "600",
+            }}
+          >
+            Comunidad Beland
+          </Text>
+          <Text
+            style={{
+              fontSize: 16,
+              color: colors.textSecondary,
+              textAlign: "center",
+              lineHeight: 24,
+            }}
+          >
+            Descubre recursos exclusivos y ofertas especiales disponibles solo
+            para miembros registrados.
+          </Text>
+        </View>
+
+        {/* Custom Alert para login requerido */}
+        <CustomAlert
+          visible={showLoginRequiredAlert}
+          title="¡Acceso restringido!"
+          message="Para explorar y comprar recursos en la comunidad, necesitas tener una cuenta activa. Es rápido y seguro crear una."
+          type="info"
+          onClose={() => setShowLoginRequiredAlert(false)}
+          primaryButton={{
+            text: "Iniciar sesión",
+            onPress: () => {
+              setShowLoginRequiredAlert(false);
+              loginWithAuth0();
+            },
+          }}
+          secondaryButton={{
+            text: "Más tarde",
+            onPress: () => setShowLoginRequiredAlert(false),
+          }}
+        />
       </View>
     );
   }
@@ -266,7 +335,7 @@ export const CommunityScreen = () => {
             colors={[colors.primary]}
           />
         }
-        onMomentumScrollEnd={event => {
+        onMomentumScrollEnd={(event) => {
           const { layoutMeasurement, contentOffset, contentSize } =
             event.nativeEvent;
           const isCloseToBottom =
@@ -275,7 +344,8 @@ export const CommunityScreen = () => {
           if (isCloseToBottom) {
             handleLoadMore();
           }
-        }}>
+        }}
+      >
         <ResourcesGrid
           resources={resources}
           onPurchase={handlePurchasePress}
@@ -290,18 +360,52 @@ export const CommunityScreen = () => {
             </Text>
           </View>
         )}
+
+        {/* Mostrar mensaje cuando no hay recursos y no está cargando */}
+        {!loading && resources.length === 0 && (
+          <View style={{ padding: 40, alignItems: "center" }}>
+            <Text
+              style={{
+                fontSize: 16,
+                color: colors.textSecondary,
+                textAlign: "center",
+                marginBottom: 16,
+              }}
+            >
+              No se pudieron cargar los recursos
+            </Text>
+            <Text
+              style={{
+                fontSize: 14,
+                color: colors.textSecondary,
+                textAlign: "center",
+                marginBottom: 20,
+              }}
+            >
+              Desliza hacia abajo para actualizar o verifica tu conexión a
+              internet
+            </Text>
+          </View>
+        )}
       </ScrollView>
 
       {/* Alertas */}
-      {showAlert && (
-        <CustomAlert
-          visible={showAlert}
-          title={alertConfig.title}
-          message={alertConfig.message}
-          type={alertConfig.type}
-          onClose={hideAlert}
-        />
-      )}
+      <CustomAlert
+        visible={showAlert}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        onClose={hideAlert}
+      />
+
+      {/* Modal de compra */}
+      <CustomAlert
+        visible={showAlert}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        onClose={hideAlert}
+      />
 
       {/* Modal de compra */}
       <PurchaseModal
@@ -325,11 +429,25 @@ export const CommunityScreen = () => {
         onRecharge={handleNavigateToRechargeFromInsufficientBalance}
         onCancel={handleInsufficientBalanceModalClose}
       />
-      {/* Modal de autenticación */}
-      <AuthenticationModal
-        visible={authModalVisible}
-        onClose={() => setAuthModalVisible(false)}
-        message="Para comprar recursos, necesitas iniciar sesión."
+
+      {/* Custom Alert para autenticación */}
+      <CustomAlert
+        visible={showAuthAlert}
+        title="¡Inicia sesión para comprar!"
+        message="Para comprar recursos en la comunidad, necesitas tener una cuenta activa. Es rápido y seguro."
+        type="info"
+        onClose={() => setShowAuthAlert(false)}
+        primaryButton={{
+          text: "Iniciar sesión",
+          onPress: () => {
+            setShowAuthAlert(false);
+            loginWithAuth0();
+          },
+        }}
+        secondaryButton={{
+          text: "Más tarde",
+          onPress: () => setShowAuthAlert(false),
+        }}
       />
     </View>
   );

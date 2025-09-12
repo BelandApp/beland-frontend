@@ -425,4 +425,14 @@ export const ordersStyles = StyleSheet.create({
     fontWeight: "600",
     color: colors.belandOrange,
   },
+
+  // Estilos para botón deshabilitado
+  deliveryButtonDisabled: {
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderColor: "rgba(255, 255, 255, 0.2)",
+  },
+  deliveryButtonTextDisabled: {
+    color: colors.textSecondary,
+    opacity: 0.6,
+  },
 });

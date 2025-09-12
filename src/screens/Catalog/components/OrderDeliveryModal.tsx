@@ -6,6 +6,7 @@ import { useOrdersStoreAPI } from "../../../stores/useOrdersStoreAPI";
 import { useCartStore, CartProduct } from "../../../stores/useCartStore";
 import { useCustomAlert } from "../../../hooks/useCustomAlert";
 import { CustomAlert } from "../../../components/ui/CustomAlert";
+import { useAuth } from "../../../hooks/AuthContext";
 import {
   DeliveryAddress,
   OrderItem,
@@ -31,6 +32,7 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
   const { products: cartProducts, clearCart } = useCartStore();
   const { showAlert, alertConfig, showCustomAlert, hideAlert } =
     useCustomAlert();
+  const { requireAuth } = useAuth();
 
   // Reset state when modal closes
   React.useEffect(() => {
@@ -102,30 +104,33 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
       console.log("📋 Order request:", orderRequest);
       console.log("🔄 Calling createOrder...");
 
-      const newOrder = await createOrder(orderRequest);
-      console.log("✅ Order created successfully:", newOrder);
+      // Usar requireAuth para proteger la creación de la orden
+      await requireAuth(async () => {
+        const newOrder = await createOrder(orderRequest);
+        console.log("✅ Order created successfully:", newOrder);
 
-      // Clear the cart after successful order creation
-      clearCart();
-      console.log("🧹 Cart cleared");
+        // Clear the cart after successful order creation
+        clearCart();
+        console.log("🧹 Cart cleared");
 
-      // Close modal first, then show success alert
-      onClose();
+        // Close modal first, then show success alert
+        onClose();
 
-      // Show success message using CustomAlert after modal closes
-      setTimeout(() => {
-        console.log("🚀 About to show success CustomAlert...");
-        showCustomAlert(
-          "¡Orden creada exitosamente!",
-          `Tu orden ${newOrder.id.slice(
-            -8
-          )} ha sido creada exitosamente.\n\n💰 Total: $${newOrder.total.toFixed(
-            2
-          )}`,
-          "success"
-        );
-        console.log("✅ CustomAlert shown successfully");
-      }, 300); // Small delay to ensure modal is fully closed
+        // Show success message using CustomAlert after modal closes
+        setTimeout(() => {
+          console.log("🚀 About to show success CustomAlert...");
+          showCustomAlert(
+            "¡Orden creada exitosamente!",
+            `Tu orden ${newOrder.id.slice(
+              -8
+            )} ha sido creada exitosamente.\n\n💰 Total: $${newOrder.total.toFixed(
+              2
+            )}`,
+            "success"
+          );
+          console.log("✅ CustomAlert shown successfully");
+        }, 300); // Small delay to ensure modal is fully closed
+      });
     } catch (error) {
       console.error("❌ Error creating order:", error);
 
