@@ -1,105 +1,56 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Dimensions } from "react-native";
+
+const { width } = Dimensions.get("window");
+
+export const colors = {
+  primary: "#14C38E", // Verde Turquesa
+  secondary: "#FFB84C", // Amarillo Mostaza
+  background: "#F2F2F2", // Gris muy claro para el fondo
+  surface: "#FFFFFF", // Blanco para las tarjetas
+  textPrimary: "#333333",
+  textSecondary: "#888888",
+  textTertiary: "#A0A0A0",
+  danger: "#FF4C4C",
+  success: "#14C38E",
+};
 
 export const styles = StyleSheet.create({
-  // Global Styles
-  container: {
-    flex: 1,
-    backgroundColor: "#f3f4f6",
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#1f2937",
-    marginBottom: 16,
-  },
-  card: {
-    backgroundColor: "white",
-    borderRadius: 8,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  button: {
-    backgroundColor: "#2563eb",
-    color: "white",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 6,
-    textAlign: "center",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  textCenter: {
-    textAlign: "center",
-  },
-  errorText: {
-    color: "#dc2626",
-    textAlign: "center",
-    marginTop: 20,
-  },
-  noUserContainer: {
-    padding: 20,
-    backgroundColor: "#fee2e2",
-    borderRadius: 6,
-    marginTop: 20,
-  },
-  noUserText: {
-    color: "#b91c1c",
-    textAlign: "center",
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+  // Contenedor principal del dashboard
+  dashboardContainer: {
+    backgroundColor: colors.background,
+    padding: 16,
   },
 
-  // Panel Header Styles (Reusable)
-  panelHeader: {
+  // Estilos del encabezado
+  headerContainer: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "white",
-    padding: 20,
-    borderRadius: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-    marginBottom: 20,
+    marginBottom: 24,
   },
-  panelHeaderInfo: {
-    flex: 1,
-    marginRight: 16,
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: colors.textPrimary,
   },
-  panelHeaderGreeting: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#1f2937",
-  },
-  panelHeaderEmail: {
-    color: "#6b7280",
-  },
-  panelHeaderImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 9999,
-    borderWidth: 2,
-    borderColor: "#2563eb",
+  headerSubtitle: {
+    fontSize: 16,
+    color: colors.textSecondary,
   },
 
-  // UserPanel Specific Styles (Re-added)
-  userPanelHeader: {
-    backgroundColor: "white",
-    padding: 24,
-    paddingBottom: 8,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+  // Estilos para tarjetas de información (Stats)
+  statsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    marginBottom: 24,
+  },
+  statCard: {
+    backgroundColor: colors.surface,
+    padding: 20,
+    borderRadius: 12,
+    marginBottom: 16,
+    width: "48%", // Aproximadamente la mitad para 2 columnas
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -108,290 +59,252 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
-    marginBottom: 16,
-    position: "relative",
   },
-  userPanelHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 16,
-  },
-  userPanelHeaderText: {
-    fontSize: 24,
-    fontWeight: "600",
-    color: "#1f2937",
-  },
-  userPanelIcons: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  userPanelIcon: {
-    width: 24,
-    height: 24,
-  },
-  userProfileImageLarge: {
-    width: 40,
-    height: 40,
-    borderRadius: 9999,
-    borderWidth: 2,
-    borderColor: "#d1d5db",
-  },
-  userPanelBalanceCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#e5e7eb",
+  statCardFull: {
+    backgroundColor: colors.surface,
+    padding: 20,
     borderRadius: 12,
-    padding: 16,
     marginBottom: 16,
-  },
-  userPanelBalanceTextContainer: {
-    flex: 1,
-    marginRight: 16,
-  },
-  userPanelBalanceLabel: {
-    fontSize: 14,
-    color: "#6b7280",
-  },
-  userPanelBalanceValue: {
-    fontSize: 30,
-    fontWeight: "700",
-    color: "#1f2937",
-  },
-  userProfileImageSmall: {
-    width: 64,
-    height: 64,
-    borderRadius: 9999,
-    borderWidth: 2,
-    borderColor: "#9ca3af",
-  },
-  userPanelActionsRow: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: 16,
-  },
-  userPanelActionButton: {
-    flexDirection: "column",
-    alignItems: "center",
-  },
-  userPanelActionButtonIconContainer: {
-    width: 48,
-    height: 48,
-    backgroundColor: "#dbeafe",
-    borderRadius: 9999,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 4,
-  },
-  userPanelActionButtonText: {
-    color: "#2563eb",
-    fontWeight: "600",
-  },
-  userPanelActivitySection: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-  },
-  userPanelActivityTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#1f2937",
-    marginBottom: 16,
-  },
-  userPanelActivityCards: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 12,
-    marginBottom: 16,
-  },
-  userPanelActivityCard: {
-    flexDirection: "column",
-    alignItems: "center",
-    backgroundColor: "white",
-    borderRadius: 6,
-    padding: 16,
-    flex: 1,
+    width: "100%",
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 1,
+      height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 1.41,
-    elevation: 2,
-  },
-  userPanelCardLabel: {
-    color: "#4b5563",
-    marginTop: 8,
-  },
-  noDataContainer: {
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 16,
-  },
-  noDataIcon: {
-    fontSize: 40,
-    marginBottom: 4,
-  },
-  noDataText: {
-    color: "#6b7280",
-    fontSize: 14,
-  },
-
-  // EmpresaPanel Specific Styles
-  empresaBalanceCard: {
-    backgroundColor: "#2563eb",
-    borderRadius: 8,
-    padding: 24,
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  empresaBalanceLabel: {
-    color: "#bfdbfe",
-    fontSize: 18,
-    marginBottom: 4,
-  },
-  empresaBalanceValue: {
-    color: "white",
-    fontSize: 36,
-    fontWeight: "700",
-  },
-  empresaStatCard: {
-    backgroundColor: "white",
-    borderRadius: 8,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
-    marginBottom: 20,
   },
-  empresaStatValue: {
-    color: "#4b5563",
-    textAlign: "center",
-    fontSize: 30,
-    fontWeight: "700",
+  statValue: {
+    fontSize: 32,
+    fontWeight: "bold",
+    color: colors.primary,
   },
-  empresaStatLabel: {
-    color: "#6b7280",
-    textAlign: "center",
+  statLabel: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginTop: 4,
   },
 
-  // LeaderPanel Specific Styles
-  leaderStatsRow: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    gap: 16,
-  },
-  leaderStatCard: {
-    flex: 1,
-    flexDirection: "column",
+  // Estilos de los botones
+  button: {
+    backgroundColor: colors.primary,
+    padding: 16,
+    borderRadius: 8,
     alignItems: "center",
-    backgroundColor: "#f3f4f6",
-    borderRadius: 6,
+    marginBottom: 8,
+    shadowColor: "#14C38E",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 5.46,
+    elevation: 9,
+  },
+  buttonText: {
+    color: colors.surface,
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  buttonSecondary: {
+    backgroundColor: colors.secondary,
     padding: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    marginBottom: 8,
+    shadowColor: "#FFB84C",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 5.46,
+    elevation: 9,
   },
-  leaderStatValue: {
-    fontSize: 36,
-    fontWeight: "700",
-    color: "#2563eb",
+  buttonSecondaryText: {
+    color: colors.textPrimary,
+    fontWeight: "bold",
+    fontSize: 16,
   },
-  leaderStatLabel: {
-    color: "#4b5563",
-    marginTop: 8,
-    textAlign: "center",
+  buttonDisabled: {
+    backgroundColor: colors.textTertiary,
+    shadowColor: "transparent",
+    elevation: 0,
   },
 
-  // Admin & SuperAdmin Panels Specific Styles
-  userListContainer: {
-    marginBottom: 20,
-  },
-  userItemCard: {
-    backgroundColor: "white",
+  // Estilos de las tablas/listas
+  listContainer: {
+    backgroundColor: colors.surface,
+    borderRadius: 12,
     padding: 16,
-    borderRadius: 6,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
     shadowOpacity: 0.1,
-    shadowRadius: 1.41,
-    elevation: 2,
-    marginBottom: 16,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
-  userItemText: {
-    fontWeight: "600",
-    color: "#1f2937",
+  tableHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
     marginBottom: 8,
   },
-  userItemStatusText: {
-    color: "#dc2626",
-    marginLeft: 8,
+  tableHeaderText: {
+    flex: 1,
+    fontWeight: "bold",
+    color: colors.textSecondary,
+    textAlign: "center",
   },
-  userItemButtonRow: {
+  userItem: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 8,
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F5F5F5",
   },
-  userItemButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 4,
+  userName: {
+    flex: 2,
+    fontWeight: "500",
+    color: colors.textPrimary,
   },
-  userItemButtonRed: {
-    backgroundColor: "#ef4444",
+  userRole: {
+    flex: 1,
+    color: colors.textSecondary,
+    textAlign: "center",
   },
-  userItemButtonGreen: {
-    backgroundColor: "#22c55e",
+  userStatus: {
+    flex: 1,
+    textAlign: "center",
   },
-  userItemButtonBlue: {
-    backgroundColor: "#2563eb",
-  },
-  userItemButtonText: {
-    color: "white",
-  },
-  roleButtonsRow: {
+  userActions: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
+    flex: 2,
+    justifyContent: "space-evenly",
   },
-  roleButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: "#d1d5db",
+
+  // Otros estilos genéricos
+  textCenter: {
+    textAlign: "center",
   },
-  roleButtonActive: {
-    borderColor: "#2563eb",
+  errorText: {
+    color: colors.danger,
+    textAlign: "center",
+    marginTop: 10,
   },
-  roleButtonText: {
-    color: "#4b5563",
-  },
-  roleButtonTextActive: {
-    color: "#2563eb",
-    fontWeight: "600",
-  },
+  // Estilos de paginación
   paginationContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 16,
+    marginTop: 20,
+    backgroundColor: colors.surface,
+    padding: 10,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   paginationButton: {
-    backgroundColor: "#d1d5db",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    padding: 8,
     borderRadius: 6,
+    backgroundColor: colors.primary,
   },
   paginationButtonText: {
-    color: "#4b5563",
+    color: colors.surface,
+    fontWeight: "bold",
   },
   paginationButtonDisabled: {
-    opacity: 0.5,
+    backgroundColor: colors.textTertiary,
   },
   paginationText: {
-    fontWeight: "600",
+    fontSize: 16,
+    color: colors.textPrimary,
+  },
+
+  // Estilos de la sección de perfil
+  profileHeader: {
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: 12,
+    borderWidth: 3,
+    borderColor: colors.primary,
+  },
+  profileName: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: colors.textPrimary,
+  },
+  profileInfo: {
+    fontSize: 16,
+    color: colors.textSecondary,
+  },
+  // Estilos para los "paneles"
+  panelContainer: {
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 24,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  panelTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: colors.textPrimary,
+    marginBottom: 16,
+  },
+  // Estilos agregados para solucionar el error
+  noUserContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  noUserText: {
+    color: colors.textSecondary,
+    fontSize: 18,
+    textAlign: "center",
+    paddingHorizontal: 20,
+  },
+  // Nuevos estilos para UserPanel
+  noDataContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 20,
+    backgroundColor: "#F8F8F8",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    marginBottom: 10,
+  },
+  noDataIcon: {
+    fontSize: 24,
+    marginRight: 10,
+  },
+  noDataText: {
+    fontSize: 16,
+    color: colors.textSecondary,
   },
 });

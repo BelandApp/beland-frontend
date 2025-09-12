@@ -1,4 +1,3 @@
-// FileName: /AdminPanel.tsx
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -6,15 +5,20 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import { useAdminUsers } from "src/hooks/useAdminUsers";
 import { useAuthUser } from "src/hooks/useUser";
-import { styles } from "../styles/DashboardsStyles";
+import { styles, colors } from "../styles/DashboardsStyles";
 import EditProfileModal from "./EditProfileModal";
 
-interface AuthUser {
+interface User {
+  id: string;
   full_name: string;
   email: string;
+  role_name: string;
+  is_blocked: boolean;
+  is_soft_deleted: boolean;
   picture?: string;
   phone?: number;
   country?: string;
@@ -25,7 +29,7 @@ interface AuthUser {
 }
 
 interface UserItemProps {
-  user: any;
+  user: User;
   onBlockToggle: (userId: string, block: boolean) => void;
   onSoftDeleteToggle: (userId: string, deactivate: boolean) => void;
   onChangeRole: (userId: string, newRole: string) => void;
@@ -37,253 +41,172 @@ const UserItem: React.FC<UserItemProps> = ({
   onSoftDeleteToggle,
   onChangeRole,
 }) => {
-  const [changingRole, setChangingRole] = useState(false);
-  const roles = [
-    "USER",
-    "LEADER",
-    "ADMIN",
-    "SUPERADMIN",
-    "COMMERCE",
-    "FUNDATION",
-  ];
+  const getStatusStyle = () => {
+    if (user.is_blocked) {
+      return { color: colors.danger };
+    }
+    if (user.is_soft_deleted) {
+      return { color: colors.textSecondary };
+    }
+    return { color: colors.primary };
+  };
 
   return (
-    <View style={styles.userItemCard}>
-      <Text style={styles.userItemText}>
-        {user.email} ({user.role_name})
-        {user.deleted_at && (
-          <Text style={styles.userItemStatusText}>[DESACTIVADO]</Text>
-        )}
-        {user.isBlocked && (
-          <Text style={styles.userItemStatusText}>[BLOQUEADO]</Text>
-        )}
+    <View style={styles.userItem}>
+      <Text style={styles.userName}>{user.full_name}</Text>
+      <Text style={styles.userRole}>{user.role_name}</Text>
+      <Text style={[styles.userStatus, getStatusStyle()]}>
+        {user.is_blocked
+          ? "Bloqueado"
+          : user.is_soft_deleted
+          ? "Inactivo"
+          : "Activo"}
       </Text>
-      <View style={styles.userItemButtonRow}>
-        {!user.deleted_at ? (
-          <TouchableOpacity
-            style={[styles.userItemButton, styles.userItemButtonRed]}
-            onPress={() => onSoftDeleteToggle(user.id, true)}>
-            <Text style={styles.userItemButtonText}>Desactivar</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            style={[styles.userItemButton, styles.userItemButtonGreen]}
-            onPress={() => onSoftDeleteToggle(user.id, false)}>
-            <Text style={styles.userItemButtonText}>Reactivar</Text>
-          </TouchableOpacity>
-        )}
-        {!user.isBlocked ? (
-          <TouchableOpacity
-            style={[styles.userItemButton, styles.userItemButtonRed]}
-            onPress={() => onBlockToggle(user.id, true)}>
-            <Text style={styles.userItemButtonText}>Bloquear</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            style={[styles.userItemButton, styles.userItemButtonGreen]}
-            onPress={() => onBlockToggle(user.id, false)}>
-            <Text style={styles.userItemButtonText}>Desbloquear</Text>
-          </TouchableOpacity>
-        )}
+      <View style={styles.userActions}>
         <TouchableOpacity
-          style={[styles.userItemButton, styles.userItemButtonBlue]}
-          onPress={() => setChangingRole(!changingRole)}>
-          <Text style={styles.userItemButtonText}>
-            {changingRole ? "Cancelar" : "Cambiar Rol"}
+          onPress={() => onBlockToggle(user.id, !user.is_blocked)}
+          style={[styles.button, styles.buttonSecondary]}>
+          <Text style={styles.buttonSecondaryText}>
+            {user.is_blocked ? "Desbloquear" : "Bloquear"}
           </Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => onSoftDeleteToggle(user.id, !user.is_soft_deleted)}
+          style={[styles.button, styles.buttonSecondary]}>
+          <Text style={styles.buttonSecondaryText}>
+            {user.is_soft_deleted ? "Activar" : "Inactivar"}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => onChangeRole(user.id, "USER")} // Placeholder
+          style={[styles.button, styles.buttonSecondary]}>
+          <Text style={styles.buttonSecondaryText}>Cambiar Rol</Text>
+        </TouchableOpacity>
       </View>
-      {changingRole && (
-        <View style={styles.roleButtonsRow}>
-          {roles.map(role => (
-            <TouchableOpacity
-              key={role}
-              style={[
-                styles.roleButton,
-                role === user.role_name && styles.roleButtonActive,
-              ]}
-              onPress={() => {
-                onChangeRole(user.id, role);
-                setChangingRole(false);
-              }}>
-              <Text
-                style={
-                  role === user.role_name
-                    ? styles.roleButtonTextActive
-                    : styles.roleButtonText
-                }>
-                {role}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
     </View>
   );
 };
 
-interface AdminPanelProps {
-  user: AuthUser;
-}
+const AdminPanel: React.FC = () => {
+  const [page, setPage] = useState(1);
+  const [adminUsers, setAdminUsers] = useState<User[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-const AdminPanel: React.FC<AdminPanelProps> = ({ user }) => {
   const {
     getAllUsersAdmin,
-    softDeleteUserByAdmin,
-    reactivateUserByAdmin,
-    updateBlockStatus,
-    updateUserByAdmin,
     loading: adminLoading,
     error: adminError,
   } = useAdminUsers();
-
   const {
+    getAuthenticatedUser,
     updateAuthenticatedUser,
     loading: authUserLoading,
     error: authUserError,
   } = useAuthUser();
 
-  const [usersList, setUsersList] = useState<any[]>([]);
-  const [page, setPage] = useState(1);
-  const limit = 10;
-  const [totalUsers, setTotalUsers] = useState(0);
-  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
-  const [currentUser, setCurrentUser] = useState<AuthUser>(user); // Estado para el usuario actual
-
-  // Sincronizar currentUser si la prop 'user' cambia
   useEffect(() => {
-    setCurrentUser(user);
-  }, [user]);
-
-  const fetchUsers = async (pageNumber: number) => {
-    try {
-      const result = await getAllUsersAdmin({ page: pageNumber, limit });
-      if (result) {
-        setUsersList(result.users);
-        setTotalUsers(result.total);
-        setPage(pageNumber);
+    const fetchAdminUsers = async () => {
+      const data = await getAllUsersAdmin({ page, limit: 10 });
+      if (data && data.users) {
+        setAdminUsers(data.users);
+        setTotalPages(data.totalPages);
       }
-    } catch {
-      window.alert("Error: No se pudo cargar la lista de usuarios.");
-    }
-  };
+    };
+    fetchAdminUsers();
+  }, [page, getAllUsersAdmin]);
 
   useEffect(() => {
-    fetchUsers(1);
-  }, []);
+    const fetchCurrentUser = async () => {
+      const user = await getAuthenticatedUser();
+      if (user) {
+        setCurrentUser(user);
+      }
+    };
+    fetchCurrentUser();
+  }, [getAuthenticatedUser]);
 
-  const handleBlockToggle = async (userId: string, block: boolean) => {
-    const updatedUser = await updateBlockStatus(userId, { isBlocked: block });
-    if (updatedUser) {
-      window.alert(`Éxito: Estado de bloqueo actualizado para ${userId}.`);
-      fetchUsers(page);
-    } else {
-      window.alert(
-        `Error: Fallo al actualizar estado de bloqueo para ${userId}.`
-      );
+  const handleProfileUpdated = (updatedUser: User) => {
+    updateAuthenticatedUser(updatedUser);
+    setCurrentUser(updatedUser);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage > 0 && newPage <= totalPages) {
+      setPage(newPage);
     }
   };
 
-  const handleSoftDeleteToggle = async (
-    userId: string,
-    deactivate: boolean
-  ) => {
-    if (deactivate) {
-      const success = await softDeleteUserByAdmin(userId);
-      if (success) fetchUsers(page);
-      else window.alert("Error al desactivar usuario.");
-    } else {
-      const reactivated = await reactivateUserByAdmin(userId);
-      if (reactivated) fetchUsers(page);
-      else window.alert("Error al reactivar usuario.");
-    }
-  };
-
-  const handleChangeRole = async (userId: string, newRole: string) => {
-    const updatedUser = await updateUserByAdmin(userId, { role_name: newRole });
-    if (updatedUser) {
-      window.alert(`Éxito: Rol cambiado a ${newRole} para ${userId}.`);
-      fetchUsers(page);
-    } else {
-      window.alert(`Error: No se pudo cambiar el rol para ${userId}.`);
-    }
-  };
-
-  const handleEditProfile = () => {
-    setShowEditProfileModal(true); // Abre el modal
-  };
-
-  const handleProfileUpdated = (updatedUserData: AuthUser) => {
-    setCurrentUser(updatedUserData); // Actualiza el estado del usuario en el panel
-    setShowEditProfileModal(false); // Cierra el modal
-  };
-
-  const totalPages = Math.ceil(totalUsers / limit);
+  if (adminLoading || authUserLoading) {
+    return (
+      <ActivityIndicator
+        size="large"
+        color={colors.primary}
+        style={{ flex: 1, justifyContent: "center" }}
+      />
+    );
+  }
 
   return (
-    <View style={[styles.container, { padding: 24 }]}>
-      {currentUser ? ( // Usar currentUser para renderizar
+    <ScrollView style={styles.dashboardContainer}>
+      {currentUser ? (
         <>
-          <View style={styles.panelHeader}>
-            <View style={styles.panelHeaderInfo}>
-              <Text style={styles.panelHeaderGreeting}>
-                ¡Hola, {currentUser.full_name.split(" ")[0]}!
+          <View style={styles.headerContainer}>
+            <View>
+              <Text style={styles.headerTitle}>Panel de Administrador</Text>
+              <Text style={styles.headerSubtitle}>
+                Gestión de usuarios y roles
               </Text>
-              <Text style={styles.panelHeaderEmail}>{currentUser.email}</Text>
             </View>
-            <Image
-              source={{
-                uri:
-                  currentUser.profile_picture_url ||
-                  currentUser.picture ||
-                  `https://ui-avatars.com/api/?name=${currentUser.full_name}&background=random`,
-              }}
-              style={styles.panelHeaderImage}
-            />
-          </View>
-
-          <View style={{ marginBottom: 20 }}>
-            <TouchableOpacity
-              style={[styles.button, authUserLoading && styles.buttonDisabled]}
-              onPress={handleEditProfile}
-              disabled={authUserLoading}>
-              <Text style={styles.textCenter}>Editar Mi Perfil</Text>
+            <TouchableOpacity onPress={() => {}}>
+              <Image
+                source={{
+                  uri: currentUser.profile_picture_url || currentUser.picture,
+                }}
+                style={styles.profileImage}
+              />
             </TouchableOpacity>
           </View>
 
-          <View style={styles.userListContainer}>
-            <Text style={styles.title}>Lista de Usuarios</Text>
-            {adminLoading && (
-              <ActivityIndicator
-                style={{ marginVertical: 20 }}
-                size="large"
-                color="#2563eb"
-              />
-            )}
-            {!adminLoading && usersList.length === 0 && (
-              <Text style={styles.textCenter}>
-                No hay usuarios para mostrar.
-              </Text>
-            )}
-            {usersList.map(item => (
-              <UserItem
-                key={item.id}
-                user={item}
-                onBlockToggle={handleBlockToggle}
-                onSoftDeleteToggle={handleSoftDeleteToggle}
-                onChangeRole={handleChangeRole}
-              />
-            ))}
+          <View style={styles.panelContainer}>
+            <Text style={styles.panelTitle}>Lista de Usuarios</Text>
+            <View style={styles.listContainer}>
+              <View style={styles.tableHeader}>
+                <Text style={[styles.tableHeaderText, { flex: 2 }]}>
+                  Nombre
+                </Text>
+                <Text style={styles.tableHeaderText}>Rol</Text>
+                <Text style={styles.tableHeaderText}>Estado</Text>
+                <Text style={[styles.tableHeaderText, { flex: 2 }]}>
+                  Acciones
+                </Text>
+              </View>
+              {adminUsers.length > 0 ? (
+                adminUsers.map(user => (
+                  <UserItem
+                    key={user.id}
+                    user={user}
+                    onBlockToggle={() => {}}
+                    onSoftDeleteToggle={() => {}}
+                    onChangeRole={() => {}}
+                  />
+                ))
+              ) : (
+                <Text style={styles.textCenter}>
+                  No hay usuarios para mostrar.
+                </Text>
+              )}
+            </View>
           </View>
 
           <View style={styles.paginationContainer}>
             <TouchableOpacity
               style={[
                 styles.paginationButton,
-                (page <= 1 || adminLoading) && styles.paginationButtonDisabled,
+                page <= 1 && styles.paginationButtonDisabled,
               ]}
               disabled={page <= 1 || adminLoading}
-              onPress={() => fetchUsers(page - 1)}>
+              onPress={() => handlePageChange(page - 1)}>
               <Text style={styles.paginationButtonText}>Anterior</Text>
             </TouchableOpacity>
             <Text style={styles.paginationText}>
@@ -296,7 +219,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ user }) => {
                   styles.paginationButtonDisabled,
               ]}
               disabled={page >= totalPages || adminLoading}
-              onPress={() => fetchUsers(page + 1)}>
+              onPress={() => handlePageChange(page + 1)}>
               <Text style={styles.paginationButtonText}>Siguiente</Text>
             </TouchableOpacity>
           </View>
@@ -305,10 +228,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ user }) => {
             <Text style={styles.errorText}>{adminError || authUserError}</Text>
           )}
 
-          {/* Modal de Edición de Perfil */}
           <EditProfileModal
-            isVisible={showEditProfileModal}
-            onClose={() => setShowEditProfileModal(false)}
+            isVisible={false}
+            onClose={() => {}}
             currentUser={currentUser}
             onProfileUpdated={handleProfileUpdated}
           />
@@ -320,7 +242,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ user }) => {
           </Text>
         </View>
       )}
-    </View>
+    </ScrollView>
   );
 };
 

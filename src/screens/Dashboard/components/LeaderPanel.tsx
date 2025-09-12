@@ -1,17 +1,17 @@
-// FileName: /LeaderPanel.tsx
-import React, { useState, useEffect } from "react"; // Añadido useEffect
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   Image,
   TouchableOpacity,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import { useAuthUser } from "src/hooks/useUser";
-import { styles } from "../styles/DashboardsStyles";
+import { styles, colors } from "../styles/DashboardsStyles";
 import EditProfileModal from "./EditProfileModal";
 
-interface AuthUser {
+interface User {
   full_name: string;
   email: string;
   picture?: string;
@@ -23,12 +23,11 @@ interface AuthUser {
   address?: string;
 }
 
-interface LeaderPanelProps {
-  user: AuthUser;
-}
+const LeaderPanel: React.FC = () => {
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-const LeaderPanel: React.FC<LeaderPanelProps> = ({ user }) => {
   const {
+    getAuthenticatedUser,
     updateAuthenticatedUser,
     loading: authUserLoading,
     error: authUserError,
@@ -39,98 +38,89 @@ const LeaderPanel: React.FC<LeaderPanelProps> = ({ user }) => {
     teamSize: 15,
     totalProjects: 5,
   });
-  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
-  const [currentUser, setCurrentUser] = useState<AuthUser>(user); // Estado para el usuario actual
 
-  // Sincronizar currentUser si la prop 'user' cambia
   useEffect(() => {
-    setCurrentUser(user);
-  }, [user]);
+    const fetchUser = async () => {
+      const user = await getAuthenticatedUser();
+      if (user) {
+        setCurrentUser(user);
+      }
+    };
+    fetchUser();
+  }, [getAuthenticatedUser]);
+
+  const handleProfileUpdated = (updatedUser: User) => {
+    updateAuthenticatedUser(updatedUser);
+  };
 
   const handleManageTeam = () => {
-    window.alert(
-      "Gestionar Equipo: Funcionalidad para gestionar miembros del equipo (pendiente de implementar)."
-    );
+    console.log("Gestionar equipo");
   };
 
   const handleViewProjects = () => {
-    window.alert(
-      "Ver Proyectos: Funcionalidad para ver el estado de los proyectos (pendiente de implementar)."
+    console.log("Ver proyectos");
+  };
+
+  if (authUserLoading) {
+    return (
+      <ActivityIndicator
+        size="large"
+        color={colors.primary}
+        style={{ flex: 1, justifyContent: "center" }}
+      />
     );
-  };
-
-  const handleEditProfile = () => {
-    setShowEditProfileModal(true); // Abre el modal
-  };
-
-  const handleProfileUpdated = (updatedUserData: AuthUser) => {
-    setCurrentUser(updatedUserData); // Actualiza el estado del usuario en el panel
-    setShowEditProfileModal(false); // Cierra el modal
-  };
+  }
 
   return (
-    <View style={[styles.container, { padding: 24 }]}>
-      {currentUser ? ( // Usar currentUser para renderizar
+    <ScrollView style={styles.dashboardContainer}>
+      {currentUser ? (
         <>
-          <View style={styles.panelHeader}>
-            <View style={styles.panelHeaderInfo}>
-              <Text style={styles.panelHeaderGreeting}>
-                ¡Hola, {currentUser.full_name.split(" ")[0]}!
+          <View style={styles.headerContainer}>
+            <View>
+              <Text style={styles.headerTitle}>Panel de Líder</Text>
+              <Text style={styles.headerSubtitle}>
+                Bienvenido, {currentUser.full_name}!
               </Text>
-              <Text style={styles.panelHeaderEmail}>{currentUser.email}</Text>
             </View>
-            <Image
-              source={{
-                uri:
-                  currentUser.profile_picture_url ||
-                  currentUser.picture ||
-                  `https://ui-avatars.com/api/?name=${currentUser.full_name}&background=random`,
-              }}
-              style={styles.panelHeaderImage}
-            />
-          </View>
-
-          <View style={{ marginBottom: 20 }}>
-            <TouchableOpacity
-              style={[styles.button, authUserLoading && styles.buttonDisabled]}
-              onPress={handleEditProfile}
-              disabled={authUserLoading}>
-              <Text style={styles.textCenter}>Editar Mi Perfil</Text>
+            <TouchableOpacity onPress={() => {}}>
+              <Image
+                source={{
+                  uri: currentUser.profile_picture_url || currentUser.picture,
+                }}
+                style={styles.profileImage}
+              />
             </TouchableOpacity>
           </View>
 
-          <View style={styles.card}>
-            <Text style={styles.title}>Estadísticas del Equipo</Text>
-            <View style={styles.leaderStatsRow}>
-              <View style={styles.leaderStatCard}>
-                <Text style={styles.leaderStatValue}>
-                  {leaderStats.teamSize}
-                </Text>
-                <Text style={styles.leaderStatLabel}>
-                  Miembros en el Equipo
-                </Text>
+          <View style={styles.panelContainer}>
+            <Text style={styles.panelTitle}>Estadísticas del Equipo</Text>
+            <View style={styles.statsContainer}>
+              <View style={styles.statCard}>
+                <Text style={styles.statValue}>{leaderStats.teamSize}</Text>
+                <Text style={styles.statLabel}>Miembros de equipo</Text>
               </View>
-              <View style={styles.leaderStatCard}>
-                <Text style={styles.leaderStatValue}>
+              <View style={styles.statCard}>
+                <Text style={styles.statValue}>
                   {leaderStats.totalProjects}
                 </Text>
-                <Text style={styles.leaderStatLabel}>Proyectos Totales</Text>
+                <Text style={styles.statLabel}>Proyectos Totales</Text>
               </View>
             </View>
           </View>
 
-          <View style={{ gap: 12, marginBottom: 20 }}>
+          <View style={styles.panelContainer}>
+            <Text style={styles.panelTitle}>Acciones Rápidas</Text>
             <TouchableOpacity
               style={[styles.button, authUserLoading && styles.buttonDisabled]}
               onPress={handleManageTeam}
               disabled={authUserLoading}>
-              <Text style={styles.textCenter}>Gestionar Equipo</Text>
+              <Text style={styles.buttonText}>Gestionar Equipo</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.button, authUserLoading && styles.buttonDisabled]}
               onPress={handleViewProjects}
               disabled={authUserLoading}>
-              <Text style={styles.textCenter}>Ver Proyectos</Text>
+              <Text style={styles.buttonText}>Ver Proyectos</Text>
             </TouchableOpacity>
           </View>
 
@@ -138,10 +128,9 @@ const LeaderPanel: React.FC<LeaderPanelProps> = ({ user }) => {
             <Text style={styles.errorText}>{authUserError}</Text>
           )}
 
-          {/* Modal de Edición de Perfil */}
           <EditProfileModal
-            isVisible={showEditProfileModal}
-            onClose={() => setShowEditProfileModal(false)}
+            isVisible={false}
+            onClose={() => {}}
             currentUser={currentUser}
             onProfileUpdated={handleProfileUpdated}
           />
@@ -153,7 +142,7 @@ const LeaderPanel: React.FC<LeaderPanelProps> = ({ user }) => {
           </Text>
         </View>
       )}
-    </View>
+    </ScrollView>
   );
 };
 

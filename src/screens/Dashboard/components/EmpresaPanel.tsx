@@ -1,4 +1,3 @@
-// FileName: /EmpresaPanel.tsx
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -6,13 +5,14 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import { useAuthUser } from "src/hooks/useUser";
-import { useUserResources } from "src/hooks/useUserDashResources";
-import { styles } from "../styles/DashboardsStyles";
+import { useUserResources } from "src/hooks/useUserResources";
+import { styles, colors } from "../styles/DashboardsStyles";
 import EditProfileModal from "./EditProfileModal";
 
-interface AuthUser {
+interface User {
   full_name: string;
   email: string;
   picture?: string;
@@ -24,137 +24,102 @@ interface AuthUser {
   address?: string;
 }
 
-interface EmpresaPanelProps {
-  user: AuthUser;
-}
-
-const EmpresaPanel: React.FC<EmpresaPanelProps> = ({ user }) => {
-  const {
-    getResources,
-    getTotalAvailableResource,
-    loading: resourcesLoading,
-    error: resourcesError,
-  } = useUserResources();
+const EmpresaPanel: React.FC = () => {
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   const {
+    getAuthenticatedUser,
     updateAuthenticatedUser,
     loading: authUserLoading,
     error: authUserError,
   } = useAuthUser();
+  const {
+    userResources,
+    loading: resourcesLoading,
+    error: resourcesError,
+  } = useUserResources();
 
-  const [beCoinsBalance, setBeCoinsBalance] = useState<number | null>(null);
+  const [beCoinsBalance] = useState<number | null>(null);
   const [employeesCount] = useState(120);
-  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
-  const [currentUser, setCurrentUser] = useState<AuthUser>(user); // Estado para el usuario actual
-
-  // Sincronizar currentUser si la prop 'user' cambia
-  useEffect(() => {
-    setCurrentUser(user);
-  }, [user]);
 
   useEffect(() => {
-    const fetchBeCoinsBalance = async () => {
-      try {
-        const allResources = await getResources();
-        const beCoinsResource = allResources?.find(
-          (r: any) => r.name.toLowerCase() === "becoins"
-        );
-
-        if (!beCoinsResource) {
-          window.alert("Error: No se encontró el recurso beCoins.");
-          setBeCoinsBalance(0);
-          return;
-        }
-
-        const balanceData = await getTotalAvailableResource(beCoinsResource.id);
-        setBeCoinsBalance(balanceData?.total_available ?? 0);
-      } catch (err) {
-        window.alert("Error: No se pudo cargar el balance de beCoins.");
-        setBeCoinsBalance(0);
+    const fetchUser = async () => {
+      const user = await getAuthenticatedUser();
+      if (user) {
+        setCurrentUser(user);
       }
     };
-    fetchBeCoinsBalance();
-  }, [getResources, getTotalAvailableResource]);
+    fetchUser();
+  }, [getAuthenticatedUser]);
+
+  const handleProfileUpdated = (updatedUser: User) => {
+    updateAuthenticatedUser(updatedUser);
+  };
 
   const handleManageEmployees = () => {
-    window.alert(
-      "Gestionar Empleados: Funcionalidad para gestionar empleados (pendiente de implementar)."
-    );
+    console.log("Gestionar empleados");
   };
 
   const handlePurchaseBeCoins = () => {
-    window.alert(
-      "Comprar beCoins: Funcionalidad para comprar beCoins (pendiente de implementar)."
+    console.log("Comprar beCoins");
+  };
+
+  if (authUserLoading || resourcesLoading) {
+    return (
+      <ActivityIndicator
+        size="large"
+        color={colors.primary}
+        style={{ flex: 1, justifyContent: "center" }}
+      />
     );
-  };
-
-  const handleEditProfile = () => {
-    setShowEditProfileModal(true); // Abre el modal
-  };
-
-  const handleProfileUpdated = (updatedUserData: AuthUser) => {
-    setCurrentUser(updatedUserData); // Actualiza el estado del usuario en el panel
-    setShowEditProfileModal(false); // Cierra el modal
-  };
+  }
 
   return (
-    <View style={[styles.container, { padding: 24 }]}>
-      {currentUser ? ( // Usar currentUser para renderizar
+    <ScrollView style={styles.dashboardContainer}>
+      {currentUser ? (
         <>
-          <View style={styles.panelHeader}>
-            <View style={styles.panelHeaderInfo}>
-              <Text style={styles.panelHeaderGreeting}>
-                ¡Hola, {currentUser.full_name.split(" ")[0]}!
+          <View style={styles.headerContainer}>
+            <View>
+              <Text style={styles.headerTitle}>Panel de Empresa</Text>
+              <Text style={styles.headerSubtitle}>
+                Bienvenido, {currentUser.full_name}!
               </Text>
-              <Text style={styles.panelHeaderEmail}>{currentUser.email}</Text>
             </View>
-            <Image
-              source={{
-                uri:
-                  currentUser.profile_picture_url ||
-                  currentUser.picture ||
-                  `https://ui-avatars.com/api/?name=${currentUser.full_name}&background=random`,
-              }}
-              style={styles.panelHeaderImage}
-            />
-          </View>
-
-          <View style={{ marginBottom: 20 }}>
-            <TouchableOpacity
-              style={[styles.button, authUserLoading && styles.buttonDisabled]}
-              onPress={handleEditProfile}
-              disabled={authUserLoading}>
-              <Text style={styles.textCenter}>Editar Mi Perfil</Text>
+            <TouchableOpacity onPress={() => {}}>
+              <Image
+                source={{
+                  uri: currentUser.profile_picture_url || currentUser.picture,
+                }}
+                style={styles.profileImage}
+              />
             </TouchableOpacity>
           </View>
 
-          <View style={styles.empresaBalanceCard}>
-            <Text style={styles.empresaBalanceLabel}>beCoins Disponibles</Text>
-            {resourcesLoading && beCoinsBalance === null ? (
-              <ActivityIndicator size="large" color="#bfdbfe" />
-            ) : (
-              <Text style={styles.empresaBalanceValue}>
-                {beCoinsBalance} BCD
-              </Text>
-            )}
+          <View style={styles.panelContainer}>
+            <Text style={styles.panelTitle}>Estadísticas de la Empresa</Text>
+            <View style={styles.statsContainer}>
+              <View style={styles.statCard}>
+                <Text style={styles.statValue}>{beCoinsBalance}</Text>
+                <Text style={styles.statLabel}>Balance de beCoins</Text>
+              </View>
+              <View style={styles.statCard}>
+                <Text style={styles.statValue}>{employeesCount}</Text>
+                <Text style={styles.statLabel}>Total de empleados</Text>
+              </View>
+            </View>
           </View>
 
-          <View style={styles.empresaStatCard}>
-            <Text style={styles.title}>Empleados</Text>
-            <Text style={styles.empresaStatValue}>{employeesCount}</Text>
-            <Text style={styles.empresaStatLabel}>Total de empleados</Text>
-          </View>
-
-          <View style={{ gap: 12, marginBottom: 20 }}>
+          <View style={styles.panelContainer}>
+            <Text style={styles.panelTitle}>Acciones Rápidas</Text>
             <TouchableOpacity
               style={[styles.button, authUserLoading && styles.buttonDisabled]}
               onPress={handleManageEmployees}>
-              <Text style={styles.textCenter}>Gestionar Empleados</Text>
+              <Text style={styles.buttonText}>Gestionar Empleados</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.button, authUserLoading && styles.buttonDisabled]}
               onPress={handlePurchaseBeCoins}>
-              <Text style={styles.textCenter}>Comprar beCoins</Text>
+              <Text style={styles.buttonText}>Comprar beCoins</Text>
             </TouchableOpacity>
           </View>
 
@@ -164,10 +129,9 @@ const EmpresaPanel: React.FC<EmpresaPanelProps> = ({ user }) => {
             </Text>
           )}
 
-          {/* Modal de Edición de Perfil */}
           <EditProfileModal
-            isVisible={showEditProfileModal}
-            onClose={() => setShowEditProfileModal(false)}
+            isVisible={false}
+            onClose={() => {}}
             currentUser={currentUser}
             onProfileUpdated={handleProfileUpdated}
           />
@@ -179,7 +143,7 @@ const EmpresaPanel: React.FC<EmpresaPanelProps> = ({ user }) => {
           </Text>
         </View>
       )}
-    </View>
+    </ScrollView>
   );
 };
 

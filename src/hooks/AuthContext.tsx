@@ -7,7 +7,6 @@ import React, {
 } from "react";
 import { Platform, Alert, View, Text, StyleSheet } from "react-native";
 import * as WebBrowser from "expo-web-browser";
-import * as SecureStore from "expo-secure-store";
 import {
   makeRedirectUri,
   useAuthRequest,
@@ -16,9 +15,7 @@ import {
 } from "expo-auth-session";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
-import { SocketService, RespSocket } from "../services/SocketService";
 import { useAuthTokenStore } from "src/stores/useAuthTokenStore";
-// import AsyncStorage from "@react-native-async-storage/async-storage";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -59,6 +56,8 @@ interface AuthContextType {
   logout: () => void;
   fetchWithAuth: (url: string, options?: RequestInit) => Promise<Response>;
   isAuthenticated: boolean;
+  requireAuth: (action: () => void | Promise<void>) => Promise<void>;
+  canPerformAction: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -90,24 +89,16 @@ const deleteToken = async () => {
 
 // === PROVEEDOR ===
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  // --- Socket.io integration (puedes re-agregarlo luego si lo necesitas) ---
-  // const socketService = React.useRef<SocketService | null>(null);
-  // const [socketData, setSocketData] = useState<RespSocket | null>(null);
-
-  const user = useAuthTokenStore((state) => state.user);
-  const setUser = useAuthTokenStore((state) => state.setUser);
-  const clearUser = useAuthTokenStore((state) => state.clearUser);
+  const user = useAuthTokenStore(state => state.user);
+  const setUser = useAuthTokenStore(state => state.setUser);
+  const clearUser = useAuthTokenStore(state => state.clearUser);
   const [isLoading, setIsLoading] = useState(true);
-  const isAuthenticated = !!user;
-
-  // useEffect para socket y balance eliminado
 
   if (!configIsValid) {
     return (
       <View style={styles.container}>
         <Text style={styles.errorText}>
-          Error de configuración: Falta alguna variable de entorno de Auth0. Por
-          favor, revisa tus archivos .env y app.config.js.
+          Error de configuración: Falta alguna variable de entorno de Auth0.
         </Text>
       </View>
     );
@@ -126,7 +117,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       usePKCE: true,
       extraParams: {
         audience: auth0Audience,
-        prompt: "login", // Fuerza a que Auth0 muestre la pantalla de login
+        prompt: "login",
       },
     },
     discovery
@@ -135,42 +126,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const fetchWithAuth = useCallback(
     async (url: string, options: RequestInit = {}) => {
       const token = await getToken();
-      if (!token) {
-        throw new Error("No hay token de autenticación.");
-      }
+      if (!token) throw new Error("No hay token de autenticación.");
 
       const headers = {
         ...options.headers,
         Authorization: `Bearer ${token}`,
       };
 
-      return fetch(url, {
-        ...options,
-        headers,
-      });
+      return fetch(url, { ...options, headers });
     },
     []
   );
 
   const getProfile = useCallback(async () => {
-    try {
-      const response = await fetchWithAuth(`${apiBaseUrl}/auth/me`);
-      if (!response.ok) {
-        throw new Error(`Error al obtener perfil: ${response.statusText}`);
-      }
-      const data = await response.json();
-      const userObj = {
-        ...data,
-        picture: data.profile_picture_url,
-      };
-      setUser(userObj);
-      console.log("✅ Perfil de usuario obtenido exitosamente.");
-    } catch (error) {
-      console.error("❌ Error obteniendo perfil del usuario:", error);
-      clearUser();
-      await deleteToken();
-      throw error;
-    }
+    const response = await fetchWithAuth(`${apiBaseUrl}/auth/me`);
+    if (!response.ok) throw new Error(`Error al obtener perfil`);
+    const data = await response.json();
+    setUser({ ...data, picture: data.profile_picture_url });
   }, [apiBaseUrl, fetchWithAuth]);
 
   // Se ha consolidado toda la lógica de inicialización en un solo useEffect.
@@ -179,9 +151,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         // Restaurar sesión híbrida solo una vez al montar
         const token = await getToken();
-        if (!token) clearUser();
+        if (token) {
+          // Si hay token, intenta obtener el perfil para validar la sesión
+          try {
+            await getProfile();
+            setIsLoading(false);
+            return; // Sesión restaurada, no hay más que hacer.
+          } catch (error) {
+            console.error("❌ Token inválido, limpiando sesión.", error);
+            clearUser();
+            await deleteToken();
+          }
+        }
 
-        // Procesar redireccionamiento de Auth0 solo si hay response
+        // Procesar la respuesta de autenticación solo si existe
         if (response && response.type === "success" && discovery) {
           const { code } = response.params;
           if (code) {
@@ -205,8 +188,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             if (tokenResponse.accessToken) {
               await saveToken(tokenResponse.accessToken);
               await getProfile();
-            } else {
-              throw new Error("accessToken no fue recibido.");
             }
           }
         }
@@ -222,12 +203,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     };
     initializeAuth();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [response]);
+  }, [response, discovery, getProfile, request]);
 
+  // Esta función ahora usa el promptAsync original que maneja el pop-up,
+  // y lo deja como la forma recomendada por Expo.
   const loginWithAuth0 = () => {
-    // Es importante establecer isLoading en true antes de iniciar el flujo
-    // para que la interfaz de usuario muestre el estado de carga.
     setIsLoading(true);
     promptAsync();
   };
@@ -235,6 +215,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const logout = async () => {
     clearUser();
     await deleteToken();
+    if (Platform.OS === "web") {
+      localStorage.clear();
+    } else {
+      await AsyncStorage.clear();
+    }
+  };
+
+  const isAuthenticated = !!user;
+  const canPerformAction = isAuthenticated;
+
+  const requireAuth = async (action: () => void | Promise<void>) => {
+    if (!isAuthenticated) {
+      Alert.alert("Inicio requerido", "Debes iniciar sesión para continuar.");
+      throw new Error("Usuario no autenticado");
+    }
+    await action();
   };
 
   return (
@@ -248,6 +244,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         logout,
         fetchWithAuth,
         isAuthenticated,
+        requireAuth,
+        canPerformAction,
       }}>
       {children}
     </AuthContext.Provider>

@@ -1,4 +1,3 @@
-// FileName: /UserPanel.tsx
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -6,15 +5,20 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import { useAuthUser } from "src/hooks/useUser";
-import { useUserResources } from "src/hooks/useUserDashResources";
-import { styles } from "../styles/DashboardsStyles";
+import { useUserResources } from "src/hooks/useUserResources";
+import { styles, colors } from "../styles/DashboardsStyles";
 import EditProfileModal from "./EditProfileModal";
 
-interface AuthUser {
+interface User {
+  id: string;
   full_name: string;
   email: string;
+  role_name: string;
+  is_blocked: boolean;
+  is_soft_deleted: boolean;
   picture?: string;
   phone?: number;
   country?: string;
@@ -33,162 +37,105 @@ const NoDataAvailable: React.FC<{ message?: string }> = ({
   </View>
 );
 
-interface UserPanelProps {
-  user: AuthUser;
-}
-
-const UserPanel: React.FC<UserPanelProps> = ({ user }) => {
-  const {
-    getResources,
-    getTotalAvailableResource,
-    loading: resourcesLoading,
-    error: resourcesError,
-  } = useUserResources();
+const UserPanel: React.FC = () => {
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   const {
+    getAuthenticatedUser,
     updateAuthenticatedUser,
     loading: authUserLoading,
     error: authUserError,
   } = useAuthUser();
-
-  const [beCoinsBalance, setBeCoinsBalance] = useState<number | null>(null);
-  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
-  const [currentUser, setCurrentUser] = useState<AuthUser>(user); // Estado para el usuario actual
-
-  // Sincronizar currentUser si la prop 'user' cambia (ej. al recargar la sesión)
-  useEffect(() => {
-    setCurrentUser(user);
-  }, [user]);
+  const {
+    userResources,
+    loading: resourcesLoading,
+    error: resourcesError,
+  } = useUserResources();
 
   useEffect(() => {
-    const fetchBeCoinsBalance = async () => {
-      try {
-        const allResources = await getResources();
-        const beCoinsResource = allResources?.find(
-          (r: any) => r.name.toLowerCase() === "becoins"
-        );
-
-        if (!beCoinsResource) {
-          window.alert("Error: No se encontró el recurso beCoins.");
-          setBeCoinsBalance(0);
-          return;
-        }
-
-        const balanceData = await getTotalAvailableResource(beCoinsResource.id);
-        setBeCoinsBalance(balanceData?.total_available ?? 0);
-      } catch (err) {
-        window.alert("Error: No se pudo cargar el balance de beCoins.");
-        setBeCoinsBalance(0);
+    const fetchUser = async () => {
+      const user = await getAuthenticatedUser();
+      if (user) {
+        setCurrentUser(user);
       }
     };
-    fetchBeCoinsBalance();
-  }, [getResources, getTotalAvailableResource]);
+    fetchUser();
+  }, [getAuthenticatedUser]);
 
-  const handleViewTasks = () => {
-    window.alert("Ver Tareas: Funcionalidad no disponible por ahora.");
+  const handleProfileUpdated = (updatedUser: User) => {
+    updateAuthenticatedUser(updatedUser);
   };
 
-  const handleRedeemBeCoins = () => {
-    window.alert("Redimir beCoins: Funcionalidad no disponible por ahora.");
-  };
-
-  const handleEditProfile = () => {
-    setShowEditProfileModal(true); // Abre el modal
-  };
-
-  const handleProfileUpdated = (updatedUserData: AuthUser) => {
-    setCurrentUser(updatedUserData); // Actualiza el estado del usuario en el panel
-    setShowEditProfileModal(false); // Cierra el modal
-  };
+  if (authUserLoading || resourcesLoading) {
+    return (
+      <ActivityIndicator
+        size="large"
+        color={colors.primary}
+        style={{ flex: 1, justifyContent: "center" }}
+      />
+    );
+  }
 
   return (
-    <View style={styles.container}>
-      {currentUser ? ( // Usar currentUser para renderizar
+    <ScrollView style={styles.dashboardContainer}>
+      {currentUser ? (
         <>
-          <View style={styles.userPanelHeader}>
-            <View style={styles.userPanelHeaderRow}>
-              <Text style={styles.userPanelHeaderText}>Billetera</Text>
-              <View style={styles.userPanelIcons}>
-                <Image
-                  source={{ uri: "/path/to/bell.svg" }}
-                  style={styles.userPanelIcon}
-                />
-                <Image
-                  source={{
-                    uri:
-                      currentUser.profile_picture_url ||
-                      currentUser.picture ||
-                      `https://ui-avatars.com/api/?name=${currentUser.full_name}&background=random`,
-                  }}
-                  style={styles.userProfileImageLarge}
-                />
-              </View>
+          <View style={styles.headerContainer}>
+            <View>
+              <Text style={styles.headerTitle}>Panel de Usuario</Text>
+              <Text style={styles.headerSubtitle}>
+                Bienvenido, {currentUser.full_name}!
+              </Text>
             </View>
-
-            <View style={styles.userPanelBalanceCard}>
-              <View style={styles.userPanelBalanceTextContainer}>
-                <Text style={styles.userPanelBalanceLabel}>Disponible</Text>
-                {resourcesLoading && beCoinsBalance === null ? (
-                  <ActivityIndicator size="small" color="#9ca3af" />
-                ) : (
-                  <Text style={styles.userPanelBalanceValue}>
-                    {beCoinsBalance} BCD
-                  </Text>
-                )}
-              </View>
+            <TouchableOpacity onPress={() => {}}>
               <Image
                 source={{
-                  uri:
-                    currentUser.profile_picture_url ||
-                    currentUser.picture ||
-                    `https://ui-avatars.com/api/?name=${currentUser.full_name}&background=random`,
+                  uri: currentUser.profile_picture_url || currentUser.picture,
                 }}
-                style={styles.userProfileImageSmall}
+                style={styles.profileImage}
               />
-            </View>
-
-            <View style={styles.userPanelActionsRow}>
-              <TouchableOpacity
-                style={styles.userPanelActionButton}
-                onPress={handleViewTasks}>
-                <View style={styles.userPanelActionButtonIconContainer}>
-                  <Text style={styles.noDataIcon}>📝</Text>
-                </View>
-                <Text style={styles.userPanelActionButtonText}>Ver Tareas</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.userPanelActionButton}
-                onPress={handleRedeemBeCoins}>
-                <View style={styles.userPanelActionButtonIconContainer}>
-                  <Text style={styles.noDataIcon}>🎁</Text>
-                </View>
-                <Text style={styles.userPanelActionButtonText}>Redimir</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.userPanelActionButton}
-                onPress={handleEditProfile}>
-                <View style={styles.userPanelActionButtonIconContainer}>
-                  <Text style={styles.noDataIcon}>✏️</Text>
-                </View>
-                <Text style={styles.userPanelActionButtonText}>
-                  Editar Perfil
+            </TouchableOpacity>
+          </View>
+          <View style={styles.panelContainer}>
+            <Text style={styles.panelTitle}>Mi Perfil</Text>
+            <View style={styles.statsContainer}>
+              <View style={styles.statCard}>
+                <Text style={styles.statValue}>{currentUser.email}</Text>
+                <Text style={styles.statLabel}>Email</Text>
+              </View>
+              <View style={styles.statCard}>
+                <Text style={styles.statValue}>
+                  {currentUser.country || "N/A"}
                 </Text>
-              </TouchableOpacity>
+                <Text style={styles.statLabel}>País</Text>
+              </View>
+              <View style={styles.statCard}>
+                <Text style={styles.statValue}>
+                  {currentUser.city || "N/A"}
+                </Text>
+                <Text style={styles.statLabel}>Ciudad</Text>
+              </View>
+              <View style={styles.statCard}>
+                <Text style={styles.statValue}>
+                  {currentUser.phone || "N/A"}
+                </Text>
+                <Text style={styles.statLabel}>Teléfono</Text>
+              </View>
             </View>
           </View>
 
-          <View style={styles.userPanelActivitySection}>
-            <Text style={styles.userPanelActivityTitle}>Mi Actividad</Text>
-            <View style={styles.userPanelActivityCards}>
-              <View style={styles.userPanelActivityCard}>
-                <NoDataAvailable message="Nivel" />
-                <Text style={styles.userPanelCardLabel}>Nivel Actual</Text>
-              </View>
-              <View style={styles.userPanelActivityCard}>
-                <NoDataAvailable message="Completadas" />
-                <Text style={styles.userPanelCardLabel}>
-                  Tareas Completadas
+          <View style={styles.panelContainer}>
+            <Text style={styles.panelTitle}>Mi Actividad</Text>
+            <View style={styles.statsContainer}>
+              <View style={styles.statCard}>
+                <Text style={styles.statValue}>
+                  {userResources?.length || 0}
                 </Text>
+                <Text style={styles.statLabel}>Recursos disponibles</Text>
+              </View>
+              <View style={styles.statCard}>
+                <NoDataAvailable message="Completadas" />
+                <Text style={styles.statLabel}>Tareas Completadas</Text>
               </View>
             </View>
           </View>
@@ -199,10 +146,9 @@ const UserPanel: React.FC<UserPanelProps> = ({ user }) => {
             </Text>
           )}
 
-          {/* Modal de Edición de Perfil */}
           <EditProfileModal
-            isVisible={showEditProfileModal}
-            onClose={() => setShowEditProfileModal(false)}
+            isVisible={false}
+            onClose={() => {}}
             currentUser={currentUser}
             onProfileUpdated={handleProfileUpdated}
           />
@@ -214,7 +160,7 @@ const UserPanel: React.FC<UserPanelProps> = ({ user }) => {
           </Text>
         </View>
       )}
-    </View>
+    </ScrollView>
   );
 };
 
