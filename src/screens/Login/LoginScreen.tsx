@@ -2,30 +2,36 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  Image,
-  TextInput,
-  TouchableOpacity,
   ScrollView,
+  Dimensions,
 } from "react-native";
 import { CustomAlert } from "../../components/ui/CustomAlert";
-import { SafeAreaView } from "react-native-safe-area-context";
-import BackgroundWaves from "../../components/ui/BackgroundWaves";
-import { useAuth } from "../../hooks/AuthContext";
+import { LoginWave } from "src/components/ui/waves/Login.wave";
+import BelandLogo2 from "src/components/icons/BelandLogo2";
+import { CustomInput } from "src/components/shared/input";
+import { Button } from "src/components/ui";
+import SocialButton from "./components/SocialButtons";
+import { useNavigation } from "@react-navigation/native";
 import { styles } from "./styles";
 
-export default function LoginScreen({ navigation }: any) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const { loginAsDemo, loginWithEmailPassword, isLoading } = useAuth();
+export default function LoginScreen() {
+  const navigation = useNavigation<any>();
+  const { width, height } = Dimensions.get("window");
   const [alert, setAlert] = useState<{
     visible: boolean;
     title: string;
     message: string;
     type?: "success" | "error" | "info";
   }>({ visible: false, title: "", message: "", type: "error" });
-
+  const [FormData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+ 
+  // TODO HANDLE AUTH 
+  const isLoading = false;
   const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) {
+    if (!FormData.email.trim() || !FormData.password.trim()) {
       setAlert({
         visible: true,
         title: "Error",
@@ -34,13 +40,9 @@ export default function LoginScreen({ navigation }: any) {
       });
       return;
     }
-
-    // Log de los inputs antes de enviar
-    console.log("[LOGIN] Email:", email);
-    console.log("[LOGIN] Password:", password);
-
     try {
-      const success = await loginWithEmailPassword(email, password);
+      const success = true
+        // await loginWithEmailPassword(email, password);
       console.log("[LOGIN] Resultado loginWithEmailPassword:", success);
       if (!success) {
         setAlert({
@@ -63,127 +65,76 @@ export default function LoginScreen({ navigation }: any) {
   };
 
   const handleGoogleLogin = async () => {
+    // TODO HANDLE AUTH
     setAlert({
       visible: true,
       title: "Error de Google Authentication",
       message:
-        "Hay un problema con la configuración de Auth0. Para el demo, puedes usar el botón 'Acceso Demo' que está abajo.",
+        "Hay un problema con la configuración de Auth0.",
       type: "error",
     });
   };
 
-  const handleDemoLogin = async () => {
-    setAlert({
-      visible: true,
-      title: "Demo Login",
-      message:
-        "¿Quieres ingresar como usuario demo para probar todas las funcionalidades?",
-      type: "info",
-    });
-  };
-
-  // Acción para el botón de demo dentro del CustomAlert
-  const handleDemoConfirm = async () => {
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    loginAsDemo();
-    setAlert({
-      visible: true,
-      title: "¡Bienvenido!",
-      message:
-        "Has ingresado como usuario demo. ¡Explora todas las funcionalidades!",
-      type: "success",
-    });
-  };
-
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
+    <ScrollView
+      contentContainerStyle={styles.scroll}
+      showsVerticalScrollIndicator={false}
+    >
+      <BelandLogo2
+        width={width * 0.5}
+        height={height * 0.2}
+        style={styles.logo}
+      />
+      <LoginWave />
+      <View
+        style={styles.container}
       >
-        <BackgroundWaves />
-        <View style={styles.container}>
-          <Text style={styles.title}>beland</Text>
-          <Text style={styles.subtitle}>Inicia sesión en tu cuenta</Text>
-          <TextInput
-            placeholder="Correo electrónico"
-            style={styles.input}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={email}
-            onChangeText={setEmail}
+        <Text style={styles.title}>
+          INGRESAR
+        </Text>
+        <SocialButton
+          title="Google"
+          imagePath="https://developers.google.com/identity/images/g-logo.png"
+          onPress={handleGoogleLogin}
+        />
+        <Text style={styles.subtitle}>O inicia sesión con:</Text>
+        <CustomInput
+          label="Correo Electrónico"
+          onChangeText={(email) => setFormData({ ...FormData, email })}
+          value={FormData.email}
+          keyboardType="email-address"
+        />
+        <CustomInput
+          label="Contraseña"
+          onChangeText={(password) => setFormData({ ...FormData, password })}
+          value={FormData.password}
+          secureTextEntry
+        />
+        <Button
+          title={isLoading ? "Cargando..." : "Entrar"}
+          onPress={handleLogin}
+          style={styles.button}
+          textStyle={styles.buttonText}
+        />
+        <View style={styles.containerRow}>
+          <Text style={styles.subtitle}>¿Eres nuevo? </Text>
+          <Button
+            variant="none"
+            title="Registrarse"
+            textStyle={styles.buttonLink}
+            onPress={() => navigation.navigate("Register")}
           />
-          <TextInput
-            placeholder="Contraseña"
-            style={styles.input}
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
-          <TouchableOpacity
-            style={[styles.button, isLoading && styles.buttonDisabled]}
-            onPress={handleLogin}
-            disabled={isLoading}
-          >
-            <Text style={styles.buttonText}>
-              {isLoading ? "Iniciando sesión..." : "Ingresar"}
-            </Text>
-          </TouchableOpacity>
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>O inicia sesión con</Text>
-            <View style={styles.dividerLine} />
-          </View>
-          <TouchableOpacity
-            style={styles.googleButton}
-            onPress={handleGoogleLogin}
-          >
-            <View style={styles.googleButtonContent}>
-              <Image
-                source={{
-                  uri: "https://developers.google.com/identity/images/g-logo.png",
-                }}
-                style={styles.googleLogo}
-              />
-              <Text style={styles.googleButtonText}>Continuar con Google</Text>
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.demoButton} onPress={handleDemoLogin}>
-            <Text style={styles.demoButtonText}>
-              🎯 Acceso Demo (Para pruebas)
-            </Text>
-          </TouchableOpacity>
-          <View style={styles.registerPrompt}>
-            <Text style={styles.registerPromptText}>
-              ¿No tienes una cuenta?{" "}
-            </Text>
-            <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-              <Text style={styles.registerLink}>Regístrate</Text>
-            </TouchableOpacity>
-          </View>
         </View>
-      </ScrollView>
-      {/* CustomAlert para errores y demo */}
+      </View>
+            {/* CustomAlert para errores y demo */}
       <CustomAlert
         visible={alert.visible}
         title={alert.title}
         message={alert.message}
         type={alert.type}
         onClose={() => setAlert({ ...alert, visible: false })}
-        primaryButton={
-          alert.title === "Demo Login"
-            ? { text: "Sí, ingresar", onPress: handleDemoConfirm }
-            : undefined
-        }
-        secondaryButton={
-          alert.title === "Demo Login"
-            ? {
-                text: "Cancelar",
-                onPress: () => setAlert({ ...alert, visible: false }),
-              }
-            : undefined
-        }
       />
-    </SafeAreaView>
+
+    </ScrollView>
   );
 }
