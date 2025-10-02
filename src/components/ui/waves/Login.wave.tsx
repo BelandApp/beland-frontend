@@ -49,7 +49,7 @@ export const LoginWave: React.FC = () => {
       <Svg
         width={width}
         height={height * 0.8}
-        viewBox="0 0 1440 320"
+        viewBox="0 0 1200 320"
         preserveAspectRatio="none"
         style={{ position: "absolute", bottom: 0 }}
       >

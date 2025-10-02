@@ -1,8 +1,5 @@
 import React from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { CustomInput } from 'src/components/shared/input';
-import { Button } from 'src/components/ui';
-import { colors } from 'src/styles';
+import { Image, Text, TouchableOpacity, View } from 'react-native';
 
 type SocialButtonsProps = {
   imagePath: string;

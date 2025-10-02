@@ -90,6 +90,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
       >
         <Animated.Text style={labelStyle}>{label}</Animated.Text>
         <TextInput
+          id={'input-' + label}
           value={value}
           onChangeText={onChangeText}
           secureTextEntry={secureTextEntry}
@@ -108,6 +109,8 @@ const styles = StyleSheet.create({
     width: "100%",
     marginBottom: 30,
     position: "relative",
+    outlineWidth: 0,
+    borderWidth: 0,
   },
   input: {
     paddingTop: 20,
@@ -118,6 +121,7 @@ const styles = StyleSheet.create({
     color: "white",
     borderStyle: "solid",
     borderColor: "transparent",
+    outlineColor: "transparent",
   },
 });
 

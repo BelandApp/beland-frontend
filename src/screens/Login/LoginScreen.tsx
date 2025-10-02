@@ -10,9 +10,9 @@ import { LoginWave } from "src/components/ui/waves/Login.wave";
 import BelandLogo2 from "src/components/icons/BelandLogo2";
 import { CustomInput } from "src/components/shared/input";
 import { Button } from "src/components/ui";
-import SocialButton from "./components/SocialButtons";
 import { useNavigation } from "@react-navigation/native";
 import { styles } from "./styles";
+import { SocialButton } from "src/components/shared";
 
 export default function LoginScreen() {
   const navigation = useNavigation<any>();

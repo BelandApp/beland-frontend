@@ -14,7 +14,7 @@ export const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
     width: width > 500 ? 400 : width * 0.9,
-    gap: 8,
+    gap: 5,
   },
   logo: { margin: "auto" },
   title: { fontSize: 24, fontWeight: 600, color: "white" },
