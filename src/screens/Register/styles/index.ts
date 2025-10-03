@@ -15,7 +15,7 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     width: width > 500 ? 400 : width * 0.9,
     gap: 5,
-    backgroundColor: width < 400 ? "#f88e2aca": "transparent",
+    backgroundColor: colors.belandOrange,
   },
   logo: { margin: "auto" },
   title: { fontSize: 24, fontWeight: 600, color: "white" },

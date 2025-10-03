@@ -86,15 +86,21 @@ export default function LoginScreen() {
         style={styles.logo}
       />
       <LoginWave />
-      <View
-        style={styles.container}
-      >
-        <Text style={styles.title}>
-          INGRESAR
-        </Text>
+      <View style={styles.container}>
+        <Text style={styles.title}>INGRESAR</Text>
         <SocialButton
           title="Google"
-          imagePath="https://developers.google.com/identity/images/g-logo.png"
+          iconName="google"
+          onPress={handleGoogleLogin}
+        />
+        <SocialButton
+          title="Facebook"
+          iconName="facebook"
+          onPress={handleGoogleLogin}
+        />
+        <SocialButton
+          title="Apple"
+         iconName="apple"
           onPress={handleGoogleLogin}
         />
         <Text style={styles.subtitle}>O inicia sesión con:</Text>
@@ -126,7 +132,7 @@ export default function LoginScreen() {
           />
         </View>
       </View>
-            {/* CustomAlert para errores y demo */}
+      {/* CustomAlert para errores y demo */}
       <CustomAlert
         visible={alert.visible}
         title={alert.title}
@@ -134,7 +140,6 @@ export default function LoginScreen() {
         type={alert.type}
         onClose={() => setAlert({ ...alert, visible: false })}
       />
-
     </ScrollView>
   );
 }

@@ -45,7 +45,7 @@ const AppContent = () => {
       typeof window !== "undefined" &&
       window.innerWidth < 600
     ) {
-      const tabbarHeight = 30;
+      const tabbarHeight = 0;
       const extraBottom =
         typeof window.visualViewport !== "undefined" && window.visualViewport
           ? window.innerHeight - window.visualViewport.height

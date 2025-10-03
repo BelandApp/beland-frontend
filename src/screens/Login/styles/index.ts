@@ -14,6 +14,7 @@ export const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
     width: width > 500 ? 400 : width * 0.9,
+    backgroundColor: colors.belandOrange,
     gap: 5,
   },
   logo: { margin: "auto" },
