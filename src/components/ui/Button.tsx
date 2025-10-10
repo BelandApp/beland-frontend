@@ -12,7 +12,7 @@ interface ButtonProps {
   onPress: () => void;
   style?: ViewStyle;
   textStyle?: TextStyle;
-  variant?: "primary" | "secondary" | "link";
+  variant?: "primary" | "secondary" | "link" | "none";
 }
 
 export const Button = ({
@@ -25,6 +25,8 @@ export const Button = ({
   <TouchableOpacity
     style={[styles.button, styles[variant], style]}
     onPress={onPress}
+    accessibilityLabel="button"
+    accessibilityRole="button"
   >
     <Text style={[styles.text, styles[`${variant}Text`], textStyle]}>
       {title}
@@ -48,6 +50,9 @@ const styles = StyleSheet.create({
   link: {
     backgroundColor: "transparent",
   },
+  none: {
+    padding: 0,
+  },
   text: {
     fontSize: 16,
     fontWeight: "500",
@@ -61,4 +66,7 @@ const styles = StyleSheet.create({
   linkText: {
     color: "#F88D2A",
   },
+  noneText: {
+    color: "inherit",
+  }
 });

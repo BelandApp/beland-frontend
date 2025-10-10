@@ -10,7 +10,6 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   Alert,
   StyleSheet,
   Modal,
@@ -20,6 +19,7 @@ import {
   Platform,
   Dimensions,
 } from "react-native";
+import {SafeAreaView} from 'react-native-safe-area-context'
 import { useNavigation } from "@react-navigation/native";
 import { BeCoinsBalance } from "../../components/ui/BeCoinsBalance";
 import * as Haptics from "expo-haptics";

@@ -4,10 +4,10 @@ import React from "react";
 import {
   View,
   StyleSheet,
-  SafeAreaView,
   Platform,
   StatusBar,
 } from "react-native";
+import {SafeAreaView} from 'react-native-safe-area-context'
 import { AppHeader } from "./AppHeader";
 
 type Props = {

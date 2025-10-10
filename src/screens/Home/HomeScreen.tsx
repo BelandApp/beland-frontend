@@ -4,8 +4,9 @@ import {
   ScrollView,
   Platform,
   StyleSheet,
-  SafeAreaView,
+  Text,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { AppHeader } from "../../components/layout/AppHeader";
 import {
@@ -23,6 +24,8 @@ import {
 } from "./hooks";
 import { useWalletTransactions } from "../Wallet/hooks";
 import { useBeCoinsStore } from "../../stores/useBeCoinsStore";
+import { LoginWave } from "src/components/ui/waves/Login.wave";
+import { HomeWave } from "src/components/ui/waves/Home.wave";
 
 export const HomeScreen = () => {
   const navigation = useNavigation();
@@ -130,6 +133,7 @@ export const HomeScreen = () => {
 
             <RecentTransactions transactions={transactions ?? []} />
           </View>
+          <HomeWave />
         </ScrollView>
       </View>
     );
@@ -140,6 +144,7 @@ export const HomeScreen = () => {
     <SafeAreaView style={styles.safeArea}>
       <AppHeader variant="home" />
       <ScrollView style={styles.scrollView}>
+      <LoginWave/>
         <View style={styles.content}>
           <HeroSection
             balance={balance}
