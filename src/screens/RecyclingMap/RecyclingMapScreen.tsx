@@ -1,5 +1,6 @@
 import React from "react";
-import { SafeAreaView, ScrollView } from "react-native";
+import { ScrollView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusHeader } from "./components/StatusHeader";
 import { SearchBar } from "./components/SearchBar";
 import { FilterChips } from "./components/FilterChips";
