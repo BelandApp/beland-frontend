@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { resourceService } from "../services/resourceService";
+import { ResourceService } from "@services/core";
 import { UserResource } from "../types/resource";
 
 export const useUserResources = () => {
@@ -13,17 +13,16 @@ export const useUserResources = () => {
       setError(null);
 
       console.log("🔍 Fetching user resources...");
-      const response = await resourceService.getUserResources(
-        undefined, // No filtrar por recurso específico
-        50, // Límite alto para obtener todos los recursos disponibles
-        1 // Primera página
-      );
+      const response = await ResourceService.getRecyclingTransactions({
+        limit: 50, // Límite alto para obtener todos los recursos disponibles
+        page: 1, // Primera página
+      });
 
       console.log("✅ User resources fetched:", response);
 
       // Filtrar solo los recursos no redimidos y no expirados
-      const availableResources = response.userResources.filter(
-        (userResource) => {
+      const availableResources = (response.data || []).filter(
+        (userResource: any) => {
           if (!userResource.resource) return false;
 
           const isNotRedeemed = !userResource.is_redeemed;
@@ -37,7 +36,7 @@ export const useUserResources = () => {
         }
       );
 
-      setUserResources(availableResources);
+      setUserResources(availableResources as any); // TODO: Map RecyclingTransaction to UserResource type
     } catch (err: any) {
       console.error("❌ Error fetching user resources:", err);
       setError("Error al obtener descuentos y promociones");

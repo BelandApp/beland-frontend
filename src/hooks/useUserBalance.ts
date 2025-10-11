@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { walletService } from "../services/walletService";
+import { PaymentService } from "@services/core";
 import { useAuthTokenStore } from "../stores/useAuthTokenStore";
 import { useBeCoinsStore } from "../stores/useBeCoinsStore";
 
@@ -19,7 +19,7 @@ export const useUserBalance = () => {
         throw new Error("Usuario no autenticado");
       }
 
-      const wallet = await walletService.getWalletByUserId(user.email);
+      const wallet = await PaymentService.getWallet();
       const newBalance = wallet?.becoin_balance || 0;
 
       setBalance(newBalance);

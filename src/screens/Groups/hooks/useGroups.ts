@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import { Group } from "../../../types/Group";
-import { GroupService } from "../../../services/groupService";
+import { GroupService } from "@services/core";
 
 export const useGroups = () => {
   const [groups, setGroups] = useState<Group[]>([]);
@@ -13,8 +13,8 @@ export const useGroups = () => {
     setLoading(true);
     setError(null);
     try {
-      const apiResponse = await GroupService.getGroupsFromApi();
-      setGroups(apiResponse.groups || []);
+      const apiResponse = await GroupService.getGroups();
+      setGroups((apiResponse.data as any) || []); // TODO: Fix type mapping between API and local Group types
     } catch (err: any) {
       setError(err.message || "Error al cargar los grupos desde la API.");
       setGroups([]);

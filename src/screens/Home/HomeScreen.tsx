@@ -1,14 +1,8 @@
 import React from "react";
-import {
-  View,
-  ScrollView,
-  Platform,
-  StyleSheet,
-  Text,
-} from "react-native";
+import { View, ScrollView, Platform, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
-import { AppHeader } from "../../components/layout/AppHeader";
+import { AppHeader } from "@/components/layout/AppHeader";
 import {
   HeroSection,
   QuickActions,
@@ -16,16 +10,16 @@ import {
   StatsCard,
   ActivitySection,
 } from "./components";
-import { RecentTransactions } from "../Wallet/components/RecentTransactions";
+import { RecentTransactions } from "@/screens/Wallet/components/RecentTransactions";
 import {
   useDashboardNavigation,
   useDashboardData,
   useResponsiveLayout,
 } from "./hooks";
-import { useWalletTransactions } from "../Wallet/hooks";
-import { useBeCoinsStore } from "../../stores/useBeCoinsStore";
-import { LoginWave } from "src/components/ui/waves/Login.wave";
-import { HomeWave } from "src/components/ui/waves/Home.wave";
+import { useWalletTransactions } from "@/screens/Wallet/hooks";
+import { useBeCoinsStore } from "@/stores/useBeCoinsStore";
+import { LoginWave } from "@/components/ui/waves/Login.wave";
+import { HomeWave } from "@/components/ui/waves/Home.wave";
 
 export const HomeScreen = () => {
   const navigation = useNavigation();
@@ -144,7 +138,7 @@ export const HomeScreen = () => {
     <SafeAreaView style={styles.safeArea}>
       <AppHeader variant="home" />
       <ScrollView style={styles.scrollView}>
-      <LoginWave/>
+        <LoginWave />
         <View style={styles.content}>
           <HeroSection
             balance={balance}

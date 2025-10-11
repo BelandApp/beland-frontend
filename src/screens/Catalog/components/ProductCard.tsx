@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, Image } from "react-native";
 import { productStyles } from "../styles";
-import { Product } from "../../../types/Products";
+import { Product } from "@services/core";
 import { CartProduct } from "../../../stores/useCartStore";
 import {
   convertUSDToBeCoins,

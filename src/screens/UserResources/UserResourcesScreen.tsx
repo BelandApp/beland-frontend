@@ -7,7 +7,7 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
-import { resourceService } from "src/services/resourceService";
+import { ResourceService } from "@services/core";
 import UserResourceCard from "./components/UserResourceCard";
 import { useCustomAlert } from "src/hooks/useCustomAlert";
 import { useNavigation } from "@react-navigation/native";
@@ -25,8 +25,11 @@ const UserResourcesScreen: React.FC = () => {
   const load = async () => {
     setLoading(true);
     try {
-      const resp = await resourceService.getUserResources(undefined, 50, 1);
-      setItems(resp.userResources || []);
+      const resp = await ResourceService.getRecyclingTransactions({
+        limit: 50,
+        page: 1,
+      });
+      setItems(resp.data || []);
     } catch (err) {
       console.error("Error cargando beneficios del usuario:", err);
       showCustomAlert("Error", "No se pudieron cargar tus beneficios", "error");

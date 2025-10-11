@@ -13,7 +13,7 @@ import {
   Alert,
   Image,
 } from "react-native";
-import { walletService } from "../../services/walletService";
+import { WalletService } from "@services/core";
 import { convertUSDToBeCoins } from "../../constants/currency";
 import { useNavigation } from "@react-navigation/native";
 
@@ -115,7 +115,7 @@ const CobrarScreen = () => {
         }
         // Llamar al servicio pasando el token
         const resp =
-          await require("../../services/walletService").walletService.getWalletQRWithToken(
+          await require("../../services/walletService").WalletService.getWalletQRWithToken(
             token
           );
         setQrImage(resp);
@@ -131,7 +131,7 @@ const CobrarScreen = () => {
   const fetchAmounts = async () => {
     setLoadingAmounts(true);
     try {
-      const res = await walletService.getAmountsToPayment();
+      const res = await WalletService.getAmountsToPayment();
       setAmounts(Array.isArray(res) ? res[0] : res || []);
     } catch (err) {
       Alert.alert("Error", "No se pudieron cargar los montos");
@@ -148,7 +148,7 @@ const CobrarScreen = () => {
   const fetchPresets = async () => {
     setLoadingPresets(true);
     try {
-      const res = await walletService.getPresetAmounts();
+      const res = await WalletService.getPresetAmounts();
       setPresets(Array.isArray(res) ? res[0] : res || []);
     } catch (err) {
       // No alert, solo log
@@ -174,7 +174,7 @@ const CobrarScreen = () => {
       return;
     }
     try {
-      await walletService.createPresetAmount({
+      await WalletService.createPresetAmount({
         name: presetName,
         amount: Number(presetAmount),
         message: presetMessage,
@@ -195,7 +195,7 @@ const CobrarScreen = () => {
     }
     setCreating(true);
     try {
-      await walletService.createAmountToPayment(Number(amount));
+      await WalletService.createAmountToPayment(Number(amount));
       setAmount("");
       fetchAmounts();
     } catch (err) {
@@ -207,7 +207,7 @@ const CobrarScreen = () => {
 
   const handleDeleteAmount = async (id: string) => {
     try {
-      await walletService.deleteAmountToPayment(id);
+      await WalletService.deleteAmountToPayment(id);
       fetchAmounts();
     } catch (err) {
       Alert.alert("Error", "No se pudo eliminar el monto");
@@ -216,7 +216,7 @@ const CobrarScreen = () => {
 
   const handleDeletePreset = async (id: string) => {
     try {
-      await walletService.deletePresetAmount(id);
+      await WalletService.deletePresetAmount(id);
       fetchPresets();
     } catch (err) {
       Alert.alert("Error", "No se pudo eliminar el preset");

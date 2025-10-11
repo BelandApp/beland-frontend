@@ -1,12 +1,42 @@
 import { useState, useEffect, useCallback } from "react";
-import {
-  orderService,
-  OrdersResponse,
-  OrderQuery,
-  UpdateOrderStatusRequest,
-} from "../services/orderService";
+import { OrderService } from "@services/core";
 import { Order, OrderStatus, CreateOrderRequest } from "../types/Order";
 import { useAuth } from "./AuthContext";
+
+// Legacy types - TODO: migrate to new service types
+interface OrdersResponse {
+  orders: Order[];
+  total: number;
+  page: number;
+}
+
+interface OrderQuery {
+  page?: number;
+  limit?: number;
+  status?: OrderStatus;
+}
+
+interface UpdateOrderStatusRequest {
+  orderId: string;
+  status: OrderStatus;
+  notes?: string;
+}
+
+// Helper function to map status between legacy and new API
+const mapStatusToAPI = (status?: OrderStatus): string | undefined => {
+  if (!status) return undefined;
+  const statusMap: Record<string, string> = {
+    pending: "pending",
+    confirmed: "confirmed",
+    preparing: "processing",
+    ready: "processing",
+    shipped: "shipped",
+    delivered: "delivered",
+    cancelled: "cancelled",
+    refunded: "cancelled",
+  };
+  return statusMap[status] || status;
+};
 
 // Hook para manejar órdenes
 export const useOrders = () => {
@@ -26,12 +56,36 @@ export const useOrders = () => {
         setLoading(true);
         setError(null);
 
-        const response: OrdersResponse = await orderService.getUserOrders(
-          query
-        );
-        setOrders(response.orders);
-        setTotalOrders(response.total);
-        setCurrentPage(response.page);
+        // Map query status to API format
+        const apiQuery = {
+          ...query,
+          status: mapStatusToAPI(query.status) as any,
+        };
+        const response = await OrderService.getOrders(apiQuery);
+        // Map API response to legacy format
+        const ordersResponse: OrdersResponse = {
+          orders: (response.data || []).map((apiOrder: any) => ({
+            ...apiOrder,
+            userId: apiOrder.user_id || "",
+            discount: apiOrder.discount_amount || 0,
+            deliveryFee: apiOrder.shipping_cost || 0,
+            total: apiOrder.total_amount || 0,
+            items: apiOrder.order_items || [],
+            deliveryType: "home" as const,
+            deliveryAddress: apiOrder.shipping_address,
+            subtotal: apiOrder.subtotal_amount || 0,
+            status: apiOrder.status,
+            createdAt: apiOrder.created_at,
+            updatedAt: apiOrder.updated_at,
+            paymentMethod: apiOrder.payment_method,
+            notes: apiOrder.notes,
+          })),
+          total: response.total || 0,
+          page: response.page || 1,
+        };
+        setOrders(ordersResponse.orders);
+        setTotalOrders(ordersResponse.total);
+        setCurrentPage(ordersResponse.page);
       } catch (err: any) {
         console.error("Error loading user orders:", err);
         setError(err.message || "Error al cargar órdenes");
@@ -48,12 +102,35 @@ export const useOrders = () => {
       setLoading(true);
       setError(null);
 
-      const response: OrdersResponse = await orderService.getPendingOrders(
-        query
-      );
-      setOrders(response.orders);
-      setTotalOrders(response.total);
-      setCurrentPage(response.page);
+      const apiQuery = {
+        ...query,
+        status: "pending" as any,
+      };
+      const response = await OrderService.getOrders(apiQuery);
+      // Map API response to legacy format
+      const ordersResponse: OrdersResponse = {
+        orders: (response.data || []).map((apiOrder: any) => ({
+          ...apiOrder,
+          userId: apiOrder.user_id || "",
+          discount: apiOrder.discount_amount || 0,
+          deliveryFee: apiOrder.shipping_cost || 0,
+          total: apiOrder.total_amount || 0,
+          items: apiOrder.order_items || [],
+          deliveryType: "home" as const,
+          deliveryAddress: apiOrder.shipping_address,
+          subtotal: apiOrder.subtotal_amount || 0,
+          status: apiOrder.status,
+          createdAt: apiOrder.created_at,
+          updatedAt: apiOrder.updated_at,
+          paymentMethod: apiOrder.payment_method,
+          notes: apiOrder.notes,
+        })),
+        total: response.total || 0,
+        page: response.page || 1,
+      };
+      setOrders(ordersResponse.orders);
+      setTotalOrders(ordersResponse.total);
+      setCurrentPage(ordersResponse.page);
     } catch (err: any) {
       console.error("Error loading pending orders:", err);
       setError(err.message || "Error al cargar órdenes pendientes");
@@ -69,11 +146,16 @@ export const useOrders = () => {
         setLoading(true);
         setError(null);
 
-        const newOrder = await orderService.createOrderFromCart(cartId);
+        // TODO: Implement createOrderFromCart in new OrderService
+        // For now, this is a placeholder that will need to be updated
+        throw new Error(
+          "createOrderFromCart not yet implemented in new service"
+        );
+        // const newOrder = await OrderService.createOrder(cartData);
 
         // Recargar órdenes después de crear
         await loadUserOrders();
-        return newOrder;
+        return null; // TODO: return actual order when implemented
       } catch (err: any) {
         console.error("Error creating order from cart:", err);
         setError(err.message || "Error al crear orden");
@@ -92,7 +174,11 @@ export const useOrders = () => {
         setLoading(true);
         setError(null);
 
-        const newOrder = await orderService.createOrder(orderData);
+        const newOrder = await OrderService.createOrder({
+          shipping_address_id: "default", // TODO: Map from orderData.deliveryAddress
+          payment_method: orderData.paymentMethod,
+          notes: orderData.notes,
+        });
 
         // Recargar órdenes después de crear
         await loadUserOrders();
@@ -114,7 +200,7 @@ export const useOrders = () => {
       setLoading(true);
       setError(null);
 
-      const order = await orderService.getOrderById(orderId);
+      const order = await OrderService.getOrder(orderId);
       return order;
     } catch (err: any) {
       console.error("Error getting order by ID:", err);
@@ -132,11 +218,16 @@ export const useOrders = () => {
         setLoading(true);
         setError(null);
 
-        const updatedOrder = await orderService.confirmDelivery(orderId, notes);
+        const updatedOrder = await OrderService.updateOrderStatus(
+          orderId,
+          "delivered"
+        );
 
-        // Actualizar orden en la lista local
+        // Actualizar orden en la lista local - TODO: Fix type mapping
         setOrders((prev) =>
-          prev.map((order) => (order.id === orderId ? updatedOrder : order))
+          prev.map((order) =>
+            order.id === orderId ? (updatedOrder as any) : order
+          )
         );
 
         return updatedOrder;
@@ -158,15 +249,16 @@ export const useOrders = () => {
         setLoading(true);
         setError(null);
 
-        const updatedOrder = await orderService.confirmReception(
+        const updatedOrder = await OrderService.updateOrderStatus(
           orderId,
-          rating,
-          feedback
+          "delivered"
         );
 
-        // Actualizar orden en la lista local
+        // Actualizar orden en la lista local - TODO: Fix type mapping
         setOrders((prev) =>
-          prev.map((order) => (order.id === orderId ? updatedOrder : order))
+          prev.map((order) =>
+            order.id === orderId ? (updatedOrder as any) : order
+          )
         );
 
         return updatedOrder;
@@ -188,14 +280,16 @@ export const useOrders = () => {
         setLoading(true);
         setError(null);
 
-        const updatedOrder = await orderService.updateOrderStatus(
+        const updatedOrder = await OrderService.updateOrderStatus(
           orderId,
-          data
+          mapStatusToAPI(data.status) as any
         );
 
-        // Actualizar orden en la lista local
+        // Actualizar orden en la lista local - TODO: Fix type mapping
         setOrders((prev) =>
-          prev.map((order) => (order.id === orderId ? updatedOrder : order))
+          prev.map((order) =>
+            order.id === orderId ? (updatedOrder as any) : order
+          )
         );
 
         return updatedOrder;
@@ -216,11 +310,17 @@ export const useOrders = () => {
       setLoading(true);
       setError(null);
 
-      const updatedOrder = await orderService.cancelOrder(orderId, reason);
+      const updatedOrder = await OrderService.updateOrderStatus(
+        orderId,
+        "cancelled"
+      );
 
       // Actualizar orden en la lista local
+      // Actualizar orden en la lista local - TODO: Fix type mapping
       setOrders((prev) =>
-        prev.map((order) => (order.id === orderId ? updatedOrder : order))
+        prev.map((order) =>
+          order.id === orderId ? (updatedOrder as any) : order
+        )
       );
 
       return updatedOrder;

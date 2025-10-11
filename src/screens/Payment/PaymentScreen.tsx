@@ -6,7 +6,7 @@ import { Alert } from "react-native";
 import { CustomAlert } from "../../components/ui/CustomAlert";
 import { TransactionContextManager } from "../../hooks/usePaymentSocket";
 import { useUserResources } from "../../hooks/useUserResources";
-import { walletService } from "../../services/walletService";
+import { WalletService } from "@services/core";
 import DiscountsButton from "./components/DiscountsButton";
 import DiscountsModal from "./components/DiscountsModal";
 
@@ -478,7 +478,7 @@ const PaymentScreen: React.FC = () => {
           paymentData.commerce_name || "Comercio Beland";
         freeEntryData.becoins_used = 0;
 
-        const response = await walletService.createPurchaseBecoin(
+        const response = await WalletService.createPurchaseBecoin(
           freeEntryData
         );
         setBackendResponse(response);
@@ -630,7 +630,7 @@ const PaymentScreen: React.FC = () => {
         paymentData.commerce_name || "Comercio Beland";
       purchaseData.becoins_used = beCoinsAmount;
 
-      const response = await walletService.createPurchaseBecoin(purchaseData);
+      const response = await WalletService.createPurchaseBecoin(purchaseData);
 
       // Guardar contexto de transacción para enriquecer notificaciones
       const contextManager = TransactionContextManager.getInstance();
@@ -694,7 +694,7 @@ const PaymentScreen: React.FC = () => {
         paymentData.commerce_name || "Comercio Beland";
       purchaseData.becoins_used = 0;
 
-      const response = await walletService.createPurchaseBecoin(purchaseData);
+      const response = await WalletService.createPurchaseBecoin(purchaseData);
       setBackendResponse(response);
 
       // Guardar contexto de transacción

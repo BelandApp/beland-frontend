@@ -4,6 +4,11 @@ export interface Participant {
   id: string;
   name: string;
   consumption: number;
+  email?: string;
+  instagramUsername?: string;
+  instagramProfilePic?: string;
+  instagramFullName?: string;
+  isVerified?: boolean;
 }
 
 export interface Group {

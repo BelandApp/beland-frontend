@@ -6,8 +6,7 @@ import {
   OrderFilters,
   OrderSummary,
 } from "../types/Order";
-import { orderService } from "../services/orderService";
-import { cartService, getUserCartId } from "../services/cartService";
+import { OrderService, CartService } from "@services/core";
 import { useCartStore } from "./useCartStore";
 
 // Import dinámico de AsyncStorage solo en mobile
@@ -161,22 +160,26 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
 
       // processing checkout with cart items (verbose logs removed)
 
-      // Step 1: Get cart_id from backend using /carts/user endpoint
-      const cartId = await getUserCartId();
+      // Step 1: Get current cart from backend
+      const cart = await CartService.getCart();
       // Diagnostic: log cartId used to create the order
-      console.log("[OrdersStoreAPI] Creating order using cartId:", cartId);
+      console.log("[OrdersStoreAPI] Creating order using cartId:", cart.id);
 
       // Step 2: Create order directly from the user's existing cart
       console.log(
-        "[OrdersStoreAPI] Calling orderService.createOrderFromCart with cartId:",
-        cartId
+        "[OrdersStoreAPI] Calling OrderService.createOrder with cartId:",
+        cart.id
       );
-      const newOrder = await orderService.createOrderFromCart(cartId);
+      const newOrder = await OrderService.createOrder({
+        shipping_address_id: "default", // TODO: Map from orderRequest.deliveryAddress
+        payment_method: orderRequest.paymentMethod,
+        notes: orderRequest.notes,
+      });
       // Use a mutable variable for potential patching before saving/returning
-      let orderToSave: any = newOrder;
-      // Diagnostic: log the response returned by orderService
+      let orderToSave: any = newOrder.order;
+      // Diagnostic: log the response returned by OrderService
       console.log(
-        "[OrdersStoreAPI] orderService.createOrderFromCart returned:",
+        "[OrdersStoreAPI] OrderService.createOrder returned:",
         orderToSave
       );
 
@@ -187,9 +190,9 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
       // Sync with server to ensure consistency
       // (Backend already cleared the cart, this ensures our local state matches)
       try {
-        const cartSyncResult = await cartService.syncCartWithServer();
+        const cartSyncResult = await CartService.getCart();
         if (cartSyncResult) {
-          const { serverItems } = cartSyncResult;
+          const serverItems = cartSyncResult.items || [];
           // Should be empty since backend cleared it
           console.log(
             `🔄 Store API: Cart synced - server has ${serverItems.length} items (should be 0)`
@@ -309,8 +312,24 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
 
     try {
       console.log("🌐 Store API: Loading user orders from API...");
-      const response = await orderService.getUserOrders();
-      const orders = response.orders || [];
+      const response = await OrderService.getOrders();
+      // TODO: Map API response to store types - temporary conversion
+      const orders = (response.data || []).map((apiOrder: any) => ({
+        ...apiOrder,
+        userId: apiOrder.user_id || "",
+        discount: apiOrder.discount_amount || 0,
+        deliveryFee: apiOrder.shipping_cost || 0,
+        total: apiOrder.total_amount || 0,
+        items: apiOrder.order_items || [],
+        deliveryType: "home" as const,
+        deliveryAddress: apiOrder.shipping_address,
+        subtotal: apiOrder.subtotal_amount || 0,
+        status: apiOrder.status,
+        createdAt: apiOrder.created_at,
+        updatedAt: apiOrder.updated_at,
+        paymentMethod: apiOrder.payment_method,
+        notes: apiOrder.notes,
+      }));
 
       set((state) => {
         const newState = {
@@ -339,8 +358,24 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
 
     try {
       console.log("🌐 Store API: Loading pending orders from API...");
-      const response = await orderService.getPendingOrders();
-      const orders = response.orders || [];
+      const response = await OrderService.getOrders({ status: "pending" });
+      // TODO: Map API response to store types - temporary conversion
+      const orders = (response.data || []).map((apiOrder: any) => ({
+        ...apiOrder,
+        userId: apiOrder.user_id || "",
+        discount: apiOrder.discount_amount || 0,
+        deliveryFee: apiOrder.shipping_cost || 0,
+        total: apiOrder.total_amount || 0,
+        items: apiOrder.order_items || [],
+        deliveryType: "home" as const,
+        deliveryAddress: apiOrder.shipping_address,
+        subtotal: apiOrder.subtotal_amount || 0,
+        status: apiOrder.status,
+        createdAt: apiOrder.created_at,
+        updatedAt: apiOrder.updated_at,
+        paymentMethod: apiOrder.payment_method,
+        notes: apiOrder.notes,
+      }));
 
       set((state) => {
         const newState = {
@@ -372,7 +407,10 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
 
     try {
       console.log("🌐 Store API: Confirming delivery via API:", orderId);
-      const updatedOrder = await orderService.confirmDelivery(orderId, notes);
+      const updatedOrder = await OrderService.updateOrderStatus(
+        orderId,
+        "delivered"
+      );
 
       if (updatedOrder) {
         // Update local state
@@ -402,7 +440,10 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
 
     try {
       console.log("🌐 Store API: Confirming reception via API:", orderId);
-      const updatedOrder = await orderService.confirmReception(orderId);
+      const updatedOrder = await OrderService.updateOrderStatus(
+        orderId,
+        "delivered"
+      );
 
       if (updatedOrder) {
         // Update local state

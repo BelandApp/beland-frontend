@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AVAILABLE_PRODUCTS, AvailableProduct } from "../../../data/products";
-import { Product } from "../../../services/productsService";
+import { Product } from "@services/core";
 
 export const useCatalogModals = () => {
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);

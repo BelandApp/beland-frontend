@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useCart } from "./useCart";
 import { useCartStore } from "../stores/useCartStore";
 import { useAuth } from "./AuthContext";
-import { cartService } from "../services/cartService";
+import { CartService } from "@services/core";
 
 export const useCartSync = () => {
   const [isSyncing, setIsSyncing] = useState(false);
@@ -26,15 +26,23 @@ export const useCartSync = () => {
       const syncResult = await syncCartWithServer();
 
       if (syncResult) {
-        const { serverItems, cartId } = syncResult;
+        const serverItems = syncResult.items || [];
+        const cartId = syncResult.id;
 
         if (serverItems.length > 0) {
           console.log(
             `📦 CartSync: Found ${serverItems.length} items in server cart`
           );
 
-          // Procesar items del carrito usando directamente los datos del endpoint /cart-items
-          const processedItems = cartService.processCartItems(serverItems);
+          // Procesar items del carrito para formato local
+          const processedItems = serverItems.map((item: any) => ({
+            id: item.product_id,
+            name: item.product?.name || "Unknown Product",
+            price: item.unit_price,
+            quantity: item.quantity,
+            image: item.product?.image_url,
+            cart_item_id: item.id,
+          }));
 
           if (strategy === "replace") {
             syncWithServerCart(processedItems, cartId);

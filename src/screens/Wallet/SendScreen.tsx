@@ -12,7 +12,7 @@ import {
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../../hooks/AuthContext";
-import { walletService } from "../../services/walletService";
+import { PaymentService, WalletService } from "@services/core";
 import Constants from "expo-constants";
 import { useWalletData } from "../Wallet/hooks/useWalletData";
 
@@ -110,22 +110,13 @@ const SendScreen = () => {
         const recipientIdentifier = address.trim();
 
         try {
-          // Solo BeCoins
-          const result = await walletService.transferBetweenUsers(
-            user.email,
+          // Realizar la transferencia usando WalletService
+          const transferResult = await WalletService.transferToAlias(
             recipientIdentifier,
             amountNumber
           );
 
-          if (result.isPending) {
-            setAlertType("info");
-            setAlertTitle("Invitación enviada");
-            setAlertMessage(
-              `Se ha enviado una invitación a ${recipientIdentifier}. Recibirá los BeCoins cuando se registre en la app.`
-            );
-            setAlertAutoClose(2500);
-            setAlertVisible(true);
-          } else {
+          if (transferResult) {
             // Transferencia completada exitosamente
             setSentAmount(amount);
             setSentCurrency(currency);

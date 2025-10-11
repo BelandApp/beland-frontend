@@ -19,7 +19,7 @@ import {
   Platform,
   Dimensions,
 } from "react-native";
-import {SafeAreaView} from 'react-native-safe-area-context'
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { BeCoinsBalance } from "../../components/ui/BeCoinsBalance";
 import * as Haptics from "expo-haptics";
@@ -28,9 +28,7 @@ import * as Haptics from "expo-haptics";
 import { useCatalogFilters, useCatalogModals } from "./hooks";
 import { useProducts } from "../../hooks/useProducts";
 import { useCartSync } from "../../hooks/useCartSync";
-import { categoryService } from "../../services/categoryService";
-import { resourceService } from "../../services/resourceService";
-import { walletService } from "../../services/walletService";
+import { ProductService, ResourceService, WalletService } from "@services/core";
 import { useUserBalance } from "../../hooks/useUserBalance";
 import { calculateResourcePrice } from "../../utils/priceHelpers";
 import { ProductCardType } from "./components/ProductCard";
@@ -285,7 +283,7 @@ export const CatalogScreen = () => {
     // en lugar de ids si es posible.
     (async () => {
       try {
-        const categories = await categoryService.getCategories();
+        const categories = await ProductService.getCategories();
         setAllCategories(
           categories.map((cat) => ({ id: cat.id, name: cat.name }))
         );
@@ -333,8 +331,8 @@ export const CatalogScreen = () => {
   const loadCommunityResources = async (page = 1, limit = 6) => {
     setCommunityLoading(true);
     try {
-      const resp = await resourceService.getResources({ page, limit });
-      setCommunityResources(resp.resources || []);
+      const resp = await ResourceService.getResourceTypes();
+      setCommunityResources(resp || []);
     } catch (err) {
       console.error("Error cargando recursos de comunidad:", err);
     } finally {
@@ -753,7 +751,7 @@ export const CatalogScreen = () => {
   const handleCommunityModalConfirm = async (quantity: number) => {
     if (!selectedCommunityResource) return;
     try {
-      const response = await walletService.purchaseResource(
+      const response = await WalletService.purchaseResource(
         selectedCommunityResource.id,
         quantity
       );

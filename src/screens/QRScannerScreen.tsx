@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
 import type { RootStackParamList } from "../components/layout/RootStackNavigator";
-import { walletService } from "../services/walletService";
+import { WalletService } from "@services/core";
 import { View, Text, StyleSheet, Alert, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Camera, CameraView, BarcodeScanningResult } from "expo-camera";
@@ -39,7 +39,7 @@ export const QRScannerScreen = () => {
     (async () => {
       try {
         // processing scanned wallet_id
-        const paymentDataRaw = await walletService.getDataPayment(data);
+        const paymentDataRaw = await WalletService.getDataPayment(data);
 
         // Sanitizar paymentData para evitar mostrar recursos inválidos que
         // puedan venir de QRs de sistema o usuarios admin.

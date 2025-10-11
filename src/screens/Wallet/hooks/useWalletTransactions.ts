@@ -1,20 +1,20 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../hooks/AuthContext";
-import { transactionService } from "../../../services/transactionService";
-import { walletService } from "../../../services/walletService";
-import { Transaction as BackendTransaction } from "../../../services/transactionService";
+import { PaymentService } from "@services/core";
+import { Transaction as BackendTransaction } from "@services/core";
 import { Transaction } from "../types";
 import { convertBackendTransactionAmount } from "../../../utils/balanceConverter";
 
 // Función para mapear transacciones del backend al formato del frontend
 const mapBackendTransactionToFrontend = (
-  backendTransaction: BackendTransaction
+  backendTransaction: any // TODO: Fix type mapping between legacy and new Transaction types
 ): Transaction => {
   // Mapear tipo de transacción según el backend
   let type: Transaction["type"] = "exchange";
   const typeName = (
-    backendTransaction.type?.name ||
-    backendTransaction.transaction_type?.name ||
+    (backendTransaction.type as any)?.name ||
+    (backendTransaction.transaction_type as any)?.name ||
+    backendTransaction.type ||
     ""
   ).toLowerCase();
   console.log(
@@ -188,10 +188,7 @@ export const useWalletTransactions = () => {
     const fetchWalletId = async () => {
       if (!user?.email || !user?.id) return;
       try {
-        const wallet = await walletService.getWalletByUserId(
-          user.email,
-          user.id
-        );
+        const wallet = await PaymentService.getWallet();
         setWalletId(wallet.id);
         // Guardar el wallet_id en localStorage para el mapeo
         if (typeof window !== "undefined") {
@@ -221,14 +218,13 @@ export const useWalletTransactions = () => {
         try {
           // Modo producción: intentar usar API real
           // Filtrar por wallet_id del usuario actual
-          const response = await transactionService.getTransactions({
-            wallet_id: walletId,
+          const response = await PaymentService.getTransactions({
             limit: 20,
             page: 1,
           });
 
           // Mapear transacciones del backend al formato del frontend
-          const mappedTransactions = response.transactions.map(
+          const mappedTransactions = (response.data || []).map(
             mapBackendTransactionToFrontend
           );
 

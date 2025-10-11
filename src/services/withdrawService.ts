@@ -1,6 +1,11 @@
-import { apiRequest } from "./api";
+/**
+ * Withdraw Service - Consolidated withdraw operations
+ * Handles withdraw accounts, account types, and withdraw requests
+ */
 
-// Tipos para cuentas de retiro
+import { CoreApiService, PaginatedResponse } from "./core/ApiService";
+
+// Withdraw Types
 export interface WithdrawAccount {
   id: string;
   user_id: string;
@@ -12,9 +17,8 @@ export interface WithdrawAccount {
   phone?: string;
   is_active: boolean;
   created_at: string;
-  withdraw_account_type: WithdrawAccountType; // Campo principal del backend
-  // Mantenemos type para compatibilidad hacia atrás
-  type?: WithdrawAccountType;
+  withdraw_account_type: WithdrawAccountType;
+  type?: WithdrawAccountType; // For backward compatibility
 }
 
 export interface WithdrawAccountType {
@@ -62,266 +66,110 @@ export interface UserWithdraw {
   withdraw_account: WithdrawAccount;
 }
 
-class WithdrawService {
-  // ==================== GESTIÓN DE CUENTAS DE RETIRO ====================
+class WithdrawServiceClass extends CoreApiService {
+  protected basePath = "/withdraw-account";
 
+  // Account Management
   /**
-   * Obtener todas las cuentas de retiro del usuario autenticado
+   * Get all withdraw accounts for authenticated user
    */
   async getWithdrawAccounts(
     page: number = 1,
     limit: number = 10
-  ): Promise<{
-    accounts: WithdrawAccount[];
-    total: number;
-  }> {
-    try {
-      console.log("🏦 Obteniendo cuentas de retiro...");
-      const response = await apiRequest(
-        `/withdraw-account?page=${page}&limit=${limit}`,
-        {
-          method: "GET",
-        }
-      );
-
-      // El backend devuelve un array [accounts, total]
-      if (Array.isArray(response) && response.length === 2) {
-        return {
-          accounts: response[0] || [],
-          total: response[1] || 0,
-        };
-      }
-
-      // Fallback si la respuesta no tiene el formato esperado
-      return {
-        accounts: Array.isArray(response) ? response : [],
-        total: Array.isArray(response) ? response.length : 0,
-      };
-    } catch (error) {
-      console.error("❌ Error obteniendo cuentas de retiro:", error);
-      throw error;
-    }
+  ): Promise<PaginatedResponse<WithdrawAccount>> {
+    const queryString = this.buildQueryString({ page, limit });
+    return this.get(`?${queryString}`);
   }
 
   /**
-   * Obtener una cuenta de retiro específica por ID
+   * Get specific withdraw account by ID
    */
   async getWithdrawAccount(id: string): Promise<WithdrawAccount> {
-    try {
-      console.log(`🏦 Obteniendo cuenta de retiro ${id}...`);
-      const response = await apiRequest(`/withdraw-account/${id}`, {
-        method: "GET",
-      });
-      return response;
-    } catch (error) {
-      console.error(`❌ Error obteniendo cuenta de retiro ${id}:`, error);
-      throw error;
-    }
+    return this.get(id);
   }
 
   /**
-   * Crear una nueva cuenta de retiro
+   * Create new withdraw account
    */
   async createWithdrawAccount(
     data: CreateWithdrawAccountRequest
   ): Promise<WithdrawAccount> {
-    try {
-      console.log("🏦 Creando nueva cuenta de retiro:", data);
-      const response = await apiRequest("/withdraw-account", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
-      console.log("✅ Cuenta de retiro creada exitosamente:", response);
-      return response;
-    } catch (error: any) {
-      console.error("❌ Error creando cuenta de retiro:", error);
-
-      // Error específico de migración de base de datos
-      if (
-        error?.message?.includes('column "is_active"') ||
-        error?.message?.includes("does not exist")
-      ) {
-        console.error("🔧 SOLUCIÓN PARA EL BACKEND:");
-        console.error(
-          "La tabla 'withdraw_accounts' necesita la columna 'is_active'."
-        );
-        console.error(
-          "Ejecutar: ALTER TABLE withdraw_accounts ADD COLUMN is_active BOOLEAN DEFAULT false;"
-        );
-        console.error(
-          "O crear una migración TypeORM para agregar esta columna."
-        );
-      }
-
-      throw error;
-    }
+    return this.post("", data);
   }
 
   /**
-   * Actualizar una cuenta de retiro existente
+   * Update existing withdraw account
    */
   async updateWithdrawAccount(
     id: string,
     data: UpdateWithdrawAccountRequest
   ): Promise<WithdrawAccount> {
-    try {
-      console.log(`🏦 Actualizando cuenta de retiro ${id}:`, data);
-      const response = await apiRequest(`/withdraw-account/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-      });
-      console.log("✅ Cuenta de retiro actualizada exitosamente:", response);
-      return response;
-    } catch (error) {
-      console.error(`❌ Error actualizando cuenta de retiro ${id}:`, error);
-      throw error;
-    }
+    return this.put(id, data);
   }
 
   /**
-   * Desactivar una cuenta de retiro
+   * Deactivate withdraw account
    */
   async deactivateWithdrawAccount(id: string): Promise<void> {
-    try {
-      console.log(`🏦 Desactivando cuenta de retiro ${id}...`);
-      await apiRequest(`/withdraw-account/disactive/${id}`, {
-        method: "PUT",
-      });
-      console.log("✅ Cuenta de retiro desactivada exitosamente");
-    } catch (error) {
-      console.error(`❌ Error desactivando cuenta de retiro ${id}:`, error);
-      throw error;
-    }
+    return this.put(`disactive/${id}`);
   }
 
   /**
-   * Eliminar permanentemente una cuenta de retiro
+   * Delete withdraw account permanently
    */
   async deleteWithdrawAccount(id: string): Promise<void> {
-    try {
-      console.log(`🗑️ Eliminando cuenta de retiro ${id}...`);
-      await apiRequest(`/withdraw-account/${id}`, {
-        method: "DELETE",
-      });
-      console.log("✅ Cuenta de retiro eliminada exitosamente");
-    } catch (error) {
-      console.error(`❌ Error eliminando cuenta de retiro ${id}:`, error);
-      throw error;
-    }
+    return this.delete(id);
   }
 
   /**
-   * Reactivar una cuenta de retiro
+   * Reactivate withdraw account
    */
   async activateWithdrawAccount(id: string): Promise<void> {
-    try {
-      console.log(`🏦 Reactivando cuenta de retiro ${id}...`);
-      await apiRequest(`/withdraw-account/active/${id}`, {
-        method: "PUT",
-      });
-      console.log("✅ Cuenta de retiro reactivada exitosamente");
-    } catch (error) {
-      console.error(`❌ Error reactivando cuenta de retiro ${id}:`, error);
-      throw error;
-    }
+    return this.put(`active/${id}`);
   }
 
-  // ==================== TIPOS DE CUENTA ====================
-
+  // Account Types
   /**
-   * Obtener todos los tipos de cuenta disponibles
+   * Get all available account types
    */
   async getWithdrawAccountTypes(): Promise<WithdrawAccountType[]> {
-    try {
-      console.log("🏦 Obteniendo tipos de cuenta...");
-      const response = await apiRequest("/withdraw-account-type", {
-        method: "GET",
-      });
-
-      // El backend puede devolver un array [types, total] o solo types
-      if (Array.isArray(response) && response.length === 2) {
-        return response[0] || [];
-      }
-
-      return Array.isArray(response) ? response : [];
-    } catch (error) {
-      console.error("❌ Error obteniendo tipos de cuenta:", error);
-      throw error;
-    }
+    return this.request("/withdraw-account-type", { method: "GET" });
   }
 
-  // ==================== FLUJO DE RETIRO ====================
-
+  // Withdraw Operations
   /**
-   * Solicitar un retiro de BeCoins a una cuenta bancaria
+   * Request withdraw of BeCoins to bank account
    */
   async requestWithdraw(data: WithdrawRequest): Promise<any> {
-    try {
-      console.log("💰 Solicitando retiro:", data);
-
-      // Validar datos
-      if (!data.amountBecoin || data.amountBecoin <= 0) {
-        throw new Error("El monto debe ser mayor a 0");
-      }
-
-      if (!data.withdraw_account_id) {
-        throw new Error("Debe seleccionar una cuenta de destino");
-      }
-
-      const response = await apiRequest("/user-withdraw/withdraw", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
-
-      console.log("✅ Retiro solicitado exitosamente:", response);
-      return response;
-    } catch (error) {
-      console.error("❌ Error solicitando retiro:", error);
-      throw error;
+    // Validate data
+    if (!data.amountBecoin || data.amountBecoin <= 0) {
+      throw new Error("El monto debe ser mayor a 0");
     }
+
+    if (!data.withdraw_account_id) {
+      throw new Error("Debe seleccionar una cuenta de destino");
+    }
+
+    return this.request("/user-withdraw/withdraw", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
   }
 
   /**
-   * Obtener historial de retiros del usuario
+   * Get user withdraw history
    */
   async getWithdrawHistory(
     page: number = 1,
     limit: number = 10
-  ): Promise<{
-    withdraws: UserWithdraw[];
-    total: number;
-  }> {
-    try {
-      console.log("📜 Obteniendo historial de retiros...");
-      const response = await apiRequest(
-        `/user-withdraw?page=${page}&limit=${limit}`,
-        {
-          method: "GET",
-        }
-      );
-
-      // El backend puede devolver un array [withdraws, total] o solo withdraws
-      if (Array.isArray(response) && response.length === 2) {
-        return {
-          withdraws: response[0] || [],
-          total: response[1] || 0,
-        };
-      }
-
-      return {
-        withdraws: Array.isArray(response) ? response : [],
-        total: Array.isArray(response) ? response.length : 0,
-      };
-    } catch (error) {
-      console.error("❌ Error obteniendo historial de retiros:", error);
-      throw error;
-    }
+  ): Promise<PaginatedResponse<UserWithdraw>> {
+    const queryString = this.buildQueryString({ page, limit });
+    return this.request(`/user-withdraw?${queryString}`, { method: "GET" });
   }
 
-  // ==================== HELPERS ====================
-
+  // Utility Methods
   /**
-   * Validar datos de cuenta bancaria
+   * Validate account data
    */
   validateAccountData(
     data: CreateWithdrawAccountRequest | UpdateWithdrawAccountRequest
@@ -357,7 +205,7 @@ class WithdrawService {
   }
 
   /**
-   * Formatear número de cuenta para mostrar (ocultar dígitos intermedios)
+   * Format account number for display (hide middle digits)
    */
   formatAccountNumber(accountNumber: string): string {
     if (!accountNumber || accountNumber.length < 8) {
@@ -372,7 +220,7 @@ class WithdrawService {
   }
 
   /**
-   * Obtener icono según el tipo de cuenta
+   * Get icon based on account type
    */
   getAccountTypeIcon(accountType: string): string {
     switch (accountType.toLowerCase()) {
@@ -390,18 +238,16 @@ class WithdrawService {
   }
 
   /**
-   * Función de diagnóstico para verificar el estado del servicio
+   * Health check for withdraw service
    */
   async healthCheck(): Promise<{ status: string; message: string }> {
     try {
-      // Intentar obtener tipos de cuenta para verificar conectividad
       await this.getWithdrawAccountTypes();
       return {
         status: "OK",
         message: "WithdrawService está funcionando correctamente",
       };
     } catch (error) {
-      console.error("❌ WithdrawService health check failed:", error);
       return {
         status: "ERROR",
         message: `WithdrawService no está disponible: ${
@@ -412,10 +258,5 @@ class WithdrawService {
   }
 }
 
-export const withdrawService = new WithdrawService();
-
-// Log de inicialización
-console.log("🏦 WithdrawService inicializado correctamente");
-
-// Exportar también la clase para casos especiales
-export { WithdrawService };
+// Export singleton instance
+export const WithdrawService = new WithdrawServiceClass();

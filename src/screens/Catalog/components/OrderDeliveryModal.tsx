@@ -16,7 +16,7 @@ import {
   addressService,
   CreateAddressRequest,
 } from "../../../services/addressService";
-import { cartService, getUserCartId } from "../../../services/cartService";
+import { CartService } from "@services/core";
 import { apiRequest } from "../../../services/api";
 import { useOrdersStoreAPI } from "../../../stores/useOrdersStoreAPI";
 import { useCartStore, CartProduct } from "../../../stores/useCartStore";
@@ -192,7 +192,8 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
       // Antes de crear la orden, actualizar el carrito con la dirección seleccionada
       if (addressId) {
         try {
-          const cartId = await getUserCartId();
+          const cart = await CartService.getCart();
+          const cartId = cart.id;
           // Diagnostic: log that we're updating cart with address
           console.log(
             "[OrderDeliveryModal] Updating cart with addressId:",

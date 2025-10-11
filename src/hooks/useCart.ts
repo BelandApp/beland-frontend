@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { cartService, Cart, CartItem } from "../services/cartService";
+import { CartService } from "@services/core";
+import type { Cart, CartItem } from "@services/core";
 import { useAuth } from "./AuthContext";
 
 // Hook para manejar carrito con API
@@ -20,17 +21,17 @@ export const useCart = () => {
       // Intentar obtener carrito existente del usuario primero para evitar
       // condiciones de carrera que resulten en errores 500 por duplicados.
       try {
-        const existing = await cartService.getUserCart();
+        const existing = await CartService.getCart();
         if (existing) {
           setCart(existing);
         } else {
-          const created = await cartService.createCart();
+          const created = await CartService.getCart();
           setCart(created);
         }
       } catch (getErr) {
         // Si GET falla (p. ej. 404/no cart), intentar crear uno nuevo
         try {
-          const created = await cartService.createCart();
+          const created = await CartService.getCart();
           setCart(created);
         } catch (createErr) {
           throw createErr;
@@ -53,7 +54,7 @@ export const useCart = () => {
       setError(null);
 
       console.log("🔄 useCart: Syncing cart with server...");
-      const syncResult = await cartService.syncCartWithServer();
+      const syncResult = await CartService.syncCart([]);
 
       if (syncResult) {
         console.log("✅ useCart: Cart sync successful:", syncResult);
@@ -76,7 +77,7 @@ export const useCart = () => {
       setLoading(true);
       setError(null);
 
-      const cartData = await cartService.getCart(cartId);
+      const cartData = await CartService.getCart();
       setCart(cartData);
       return cartData;
     } catch (err: any) {
@@ -114,7 +115,7 @@ export const useCart = () => {
         setLoading(true);
         setError(null);
 
-        await cartService.updateCartItem(itemId, { quantity: newQuantity });
+        await CartService.updateCartItem(itemId, { quantity: newQuantity });
 
         // Recargar carrito después de actualizar
         await getCart(cart.id);
@@ -142,7 +143,7 @@ export const useCart = () => {
         setLoading(true);
         setError(null);
 
-        await cartService.removeCartItem(itemId);
+        await CartService.removeFromCart(itemId);
 
         // Recargar carrito después de eliminar
         await getCart(cart.id);
@@ -173,7 +174,7 @@ export const useCart = () => {
       if (cart.items && cart.items.length > 0) {
         for (const item of cart.items) {
           try {
-            await cartService.removeCartItem(item.id);
+            await CartService.removeFromCart(item.id);
           } catch (error) {
             console.warn(`Could not remove item ${item.id}:`, error);
           }

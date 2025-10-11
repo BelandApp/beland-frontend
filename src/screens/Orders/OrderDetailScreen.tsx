@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { productsService } from "../../services/productsService";
-import { orderService } from "../../services/orderService";
+import { ProductService, OrderService } from "@services/core";
 import {
   View,
   Text,
@@ -101,14 +100,14 @@ const OrderDetailScreen: React.FC = () => {
             }
 
             try {
-              const prod = await productsService.getProductById(it.product_id);
+              const prod = await ProductService.getProduct(it.product_id);
               if (prod) {
                 // mark requested (success)
                 requestedProductIdsRef.current.add(it.product_id);
                 return {
                   ...it,
                   name: it.name ?? prod.name,
-                  image: it.image ?? (prod.image_url || prod.image),
+                  image: it.image ?? (prod.image_url || ""),
                 };
               }
             } catch (err) {
@@ -148,9 +147,9 @@ const OrderDetailScreen: React.FC = () => {
       if (!orderId) return;
       setApiLoading(true);
       try {
-        const fetched = await orderService.getOrderById(orderId);
+        const fetched = await OrderService.getOrder(orderId);
         if (!cancelled) {
-          setApiOrder(fetched as Order);
+          setApiOrder(fetched as any);
         }
       } catch (err) {
         console.warn("[OrderDetail] could not fetch order from API:", err);

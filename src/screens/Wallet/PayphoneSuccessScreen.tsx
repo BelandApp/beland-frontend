@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { colors } from "../../styles/colors";
 import CryptoJS from "crypto-js";
 import { v4 as uuidv4 } from "uuid";
-import { walletService } from "../../services/walletService";
+import { WalletService } from "@services/core";
 import { useAuth } from "../../hooks/AuthContext";
 
 export default function PayphoneSuccessScreen() {
@@ -82,7 +82,7 @@ export default function PayphoneSuccessScreen() {
           }
           let walletId;
           try {
-            const wallet = await walletService.getWalletByUserId(
+            const wallet = await WalletService.getWalletByUserId(
               user.email,
               user.id
             );

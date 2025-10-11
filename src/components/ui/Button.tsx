@@ -5,68 +5,158 @@ import {
   StyleSheet,
   ViewStyle,
   TextStyle,
+  ActivityIndicator,
 } from "react-native";
+import { theme } from "@design-system/tokens";
 
 interface ButtonProps {
   title: string;
   onPress: () => void;
+  variant?: "primary" | "secondary" | "danger" | "ghost";
+  size?: "small" | "medium" | "large";
+  loading?: boolean;
+  disabled?: boolean;
+  icon?: string;
   style?: ViewStyle;
   textStyle?: TextStyle;
-  variant?: "primary" | "secondary" | "link" | "none";
 }
 
-export const Button = ({
+export const Button: React.FC<ButtonProps> = ({
   title,
   onPress,
+  variant = "primary",
+  size = "medium",
+  loading = false,
+  disabled = false,
+  icon,
   style,
   textStyle,
-  variant = "primary",
-}: ButtonProps) => (
-  <TouchableOpacity
-    style={[styles.button, styles[variant], style]}
-    onPress={onPress}
-    accessibilityLabel="button"
-    accessibilityRole="button"
-  >
-    <Text style={[styles.text, styles[`${variant}Text`], textStyle]}>
-      {title}
-    </Text>
-  </TouchableOpacity>
-);
+}) => {
+  const buttonStyles = [
+    styles.button,
+    styles[variant],
+    styles[`${size}Button`],
+    (disabled || loading) && styles.disabled,
+    style,
+  ];
+
+  const textStyles = [
+    styles.text,
+    styles[`${variant}Text`],
+    styles[`${size}Text`],
+    (disabled || loading) && styles.disabledText,
+    textStyle,
+  ];
+
+  return (
+    <TouchableOpacity
+      style={buttonStyles}
+      onPress={onPress}
+      disabled={disabled || loading}
+      activeOpacity={0.8}
+    >
+      {loading ? (
+        <ActivityIndicator
+          size="small"
+          color={variant === "primary" ? "white" : theme.colors.primary[500]}
+        />
+      ) : (
+        <>
+          {icon && <Text style={styles.icon}>{icon}</Text>}
+          <Text style={textStyles}>{title}</Text>
+        </>
+      )}
+    </TouchableOpacity>
+  );
+};
 
 const styles = StyleSheet.create({
   button: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 8,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    borderRadius: theme.semanticSpacing.radius.lg,
+    ...theme.semanticShadows.button,
   },
+
+  // Variants
   primary: {
-    backgroundColor: "#F88D2A",
+    backgroundColor: theme.colors.primary[500],
   },
   secondary: {
-    backgroundColor: "#6B7280",
+    backgroundColor: theme.colors.neutral[0],
+    borderWidth: 2,
+    borderColor: theme.colors.primary[500],
   },
-  link: {
+  danger: {
+    backgroundColor: theme.colors.semantic.error[500],
+  },
+  ghost: {
     backgroundColor: "transparent",
+    shadowOpacity: 0,
+    elevation: 0,
   },
-  none: {
-    padding: 0,
+
+  // Sizes
+  smallButton: {
+    paddingHorizontal: theme.spacing[3],
+    paddingVertical: theme.spacing[2],
+    minHeight: 36,
   },
+  mediumButton: {
+    paddingHorizontal: theme.spacing[5],
+    paddingVertical: theme.spacing[3],
+    minHeight: 44,
+  },
+  largeButton: {
+    paddingHorizontal: theme.spacing[6],
+    paddingVertical: theme.spacing[4],
+    minHeight: 52,
+  },
+
+  // Text styles
   text: {
-    fontSize: 16,
-    fontWeight: "500",
+    fontSize: theme.textStyles.button.fontSize,
+    lineHeight: theme.textStyles.button.lineHeight,
+    fontWeight: theme.textStyles.button.fontWeight as TextStyle["fontWeight"],
+    letterSpacing: theme.textStyles.button.letterSpacing,
+    textAlign: "center",
   },
   primaryText: {
-    color: "#FFFFFF",
+    color: theme.colors.neutral[0],
   },
   secondaryText: {
-    color: "#FFFFFF",
+    color: theme.colors.primary[500],
   },
-  linkText: {
-    color: "#F88D2A",
+  dangerText: {
+    color: theme.colors.neutral[0],
   },
-  noneText: {
-    color: "inherit",
-  }
+  ghostText: {
+    color: theme.colors.primary[500],
+  },
+
+  // Text sizes
+  smallText: {
+    fontSize: theme.typography.fontSize.sm,
+  },
+  mediumText: {
+    fontSize: theme.typography.fontSize.base,
+  },
+  largeText: {
+    fontSize: theme.typography.fontSize.lg,
+  },
+
+  // States
+  disabled: {
+    opacity: 0.6,
+  },
+  disabledText: {
+    opacity: 0.6,
+  },
+
+  // Icon
+  icon: {
+    fontSize: theme.typography.fontSize.base,
+    marginRight: theme.spacing[2],
+  },
 });

@@ -12,9 +12,11 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../../components/layout/RootStackNavigator";
 import { CustomAlert } from "../../components/ui/CustomAlert";
 import { colors } from "../../styles/colors";
+import { ResourceType } from "@services/core";
 import { Resource } from "../../types/resource";
-import { resourceService } from "../../services/resourceService";
-import { walletService } from "../../services/walletService";
+import { ResourceService } from "@services/core";
+import { PaymentService } from "@services/core";
+import { WalletService } from "@services/core";
 import { useCustomAlert } from "../../hooks/useCustomAlert";
 import { useUserBalance } from "../../hooks/useUserBalance";
 import { calculateResourcePrice } from "../../utils/priceHelpers";
@@ -31,6 +33,20 @@ import { PurchaseModal } from "./components/PurchaseModal";
 // Styles
 import { containerStyles } from "./styles";
 
+// Helper function to map ResourceType to Resource
+const mapResourceTypeToResource = (resourceType: ResourceType): Resource => ({
+  id: resourceType.id,
+  resource_name: resourceType.name,
+  resource_desc: resourceType.description || "",
+  resource_img: resourceType.image_url || "",
+  resource_price: resourceType.price_per_unit,
+  resource_quanity: 100, // Default stock
+  resource_discount: 0, // Default no discount
+  category_id: resourceType.category,
+  created_at: resourceType.created_at,
+  updated_at: resourceType.updated_at,
+});
+
 export const CommunityScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { isAuthenticated, loginWithAuth0, canPerformAction } = useAuth();
@@ -41,6 +57,9 @@ export const CommunityScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<
+    ResourceType["category"] | undefined
+  >(undefined);
 
   // Estado para modal de compra
   const [purchaseModalVisible, setPurchaseModalVisible] = useState(false);
@@ -63,18 +82,21 @@ export const CommunityScreen = () => {
         setLoading(true);
       }
 
-      const response = await resourceService.getResources({
-        page: pageNum,
-        limit: 20,
+      const response = await ResourceService.getResourceTypes({
+        category: selectedCategory,
+        active_only: true,
       });
 
+      const mappedResources = (response || []).map(mapResourceTypeToResource);
+
       if (reset || pageNum === 1) {
-        setResources(response.resources);
+        setResources(mappedResources);
       } else {
-        setResources((prev) => [...prev, ...response.resources]);
+        setResources((prev) => [...prev, ...mappedResources]);
       }
 
-      setHasMore(pageNum < response.totalPages);
+      // Since the API doesn't return pagination info, we disable infinite scroll
+      setHasMore(false);
       setPage(pageNum);
     } catch (error: any) {
       console.error("Error cargando recursos:", error);
@@ -192,14 +214,15 @@ export const CommunityScreen = () => {
     try {
       // Calcular el precio con descuento usando la utilidad
       const priceCalc = calculateResourcePrice(selectedResource);
-      const response = await walletService.purchaseResource(
+      const response = await WalletService.purchaseResource(
         selectedResource.id,
         quantity
       );
       console.log("[BACKEND RESPUESTA COMPRA]", response);
 
       // Considerar como éxito si backend devolvió objeto o un marcador nullResponse
-      const isSuccess = response && (response.nullResponse === true || response);
+      const isSuccess =
+        response && (response.nullResponse === true || response);
 
       if (!isSuccess) {
         console.warn(
