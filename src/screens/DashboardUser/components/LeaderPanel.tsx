@@ -22,14 +22,15 @@ const LeaderPanel: React.FC = () => {
   return (
     <DashboardWrapper
       title={`Panel de ${user?.full_name || "Líder"}`}
-      isLoading={isLoading}>
+      isLoading={isLoading}
+    >
       {user ? (
         <View style={styles.container}>
           <View style={styles.profileCard}>
             <Image
               source={{
                 uri:
-                  user.profile_picture_url ||
+                  user.picture ||
                   "https://ui-avatars.com/api/?name=Leader&background=random",
               }}
               style={styles.profileImage}

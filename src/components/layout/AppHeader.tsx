@@ -2,7 +2,7 @@ import React from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { UserMenu } from "../ui/UserMenu";
-import BelandLogo2 from "../icons/BelandLogo2";
+import BelandLogo from "../icons/BelandLogo";
 
 interface AppHeaderProps {
   variant?: "invisible" | "home";
@@ -21,11 +21,13 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             style={styles.logoContainer}
             onPress={() => navigation.navigate("Home" as never)}
           >
-            <BelandLogo2 width={120} height={32} />
+            <BelandLogo width={120} height={32} />
           </TouchableOpacity>
           <TouchableOpacity
-          onPress={() => navigation.navigate("Login" as never)}
-          >Login</TouchableOpacity>
+            onPress={() => navigation.navigate("Login" as never)}
+          >
+            Login
+          </TouchableOpacity>
           <UserMenu iconColor="#334155" variant="full" />
         </View>
       </View>

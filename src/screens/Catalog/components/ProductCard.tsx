@@ -22,7 +22,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onAddToCart,
   isAdding = false,
 }) => {
-  // Soporta Product (backend) o CartProduct (carrito)
   const image = (product as any).image_url || (product as any).image || "";
   const category =
     typeof (product as any).category === "object"

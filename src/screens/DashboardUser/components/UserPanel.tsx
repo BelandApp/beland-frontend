@@ -122,7 +122,7 @@ const UserPanel: React.FC = () => {
         try {
           const FileSystem = await import("expo-file-system");
           const base64 = await FileSystem.readAsStringAsync(localImage, {
-            encoding: FileSystem.EncodingType.Base64,
+            encoding: "base64",
           });
           const filename = localImage.split("/").pop() || "photo.jpg";
           const match = /\.([0-9a-z]+)(?:[?#]|$)/i.exec(filename);

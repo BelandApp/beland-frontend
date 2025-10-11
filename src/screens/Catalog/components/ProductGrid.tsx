@@ -25,7 +25,6 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
     );
   }
 
-  // Organizar productos en filas: 3 columnas en web, 2 en mobile/tablet
   const isWeb =
     typeof window !== "undefined" &&
     (window as any).navigator?.userAgent?.includes("Mozilla");

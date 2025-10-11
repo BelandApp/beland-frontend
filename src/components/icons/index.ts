@@ -1,5 +1,5 @@
 export { CommunityIcon } from "./CommunityIcon";
-export { BottleIcon } from "./BottleIcon";
+
 export { TreesIcon } from "./TreesIcon";
 export { WaterIcon } from "./WaterIcon";
 export { WeightIcon } from "./WeightIcon";
@@ -12,10 +12,7 @@ export { HistoryIcon } from "./HistoryIcon";
 export { ProfileIcon } from "./ProfileIcon";
 export { GiftIcon } from "./GiftIcon";
 export { CatalogIcon } from "./CatalogIcon";
-export { BottleRecycleIcon } from "./BottleRecycleIcon";
-export { BitcoinIcon } from "./BitcoinIcon";
 export { BeCoinIcon } from "./BeCoinIcon";
-export { BelandLogo } from "./BelandLogo";
 export { WaveBottom } from "./WaveBottom";
 export { WaveBottomGray } from "./WaveBottomGray";
 export { ExchangeIcon } from "./ExchangeIcon";
@@ -27,5 +24,5 @@ export { OrderIcon } from "./OrderIcon";
 export { RecyclingMarker } from "./RecyclingMarker";
 export { PhoneMapSVG } from "./PhoneMapSVG";
 export { RechargeIcon, SettingsIcon } from "./WalletIcons";
-export { CobrarIcon } from "./CobrarIcon";
+
 export { PaymentPreferencesIcon } from "./PaymentPreferencesIcon";

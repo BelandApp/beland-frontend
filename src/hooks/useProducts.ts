@@ -32,7 +32,6 @@ export function useProducts(initialQuery: ProductQuery = {}) {
 
   useEffect(() => {
     fetchProducts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
   const goToNextPage = useCallback(() => {
@@ -54,7 +53,7 @@ export function useProducts(initialQuery: ProductQuery = {}) {
         ...newQuery,
         page: 1,
       };
-      // 👇 Evita el loop si el query no cambia realmente
+
       if (JSON.stringify(prev) === JSON.stringify(merged)) {
         return prev;
       }

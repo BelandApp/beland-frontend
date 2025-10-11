@@ -7,8 +7,9 @@ import {
   FlatList,
   StyleSheet,
 } from "react-native";
-import { Group } from "../../../types";
+import { Group } from "../../../types/Group";
 import { isUserAdminOfGroup } from "../../../utils/groupHelpers";
+import { useAuth } from "../../../hooks/AuthContext";
 
 interface GroupSelectModalProps {
   visible: boolean;
@@ -23,6 +24,7 @@ export const GroupSelectModal: React.FC<GroupSelectModalProps> = ({
   onSelect,
   onClose,
 }) => {
+  const { user } = useAuth();
   const [showSentMsg, setShowSentMsg] = React.useState(false);
   const [sentGroupName, setSentGroupName] = React.useState("");
 
@@ -78,7 +80,7 @@ export const GroupSelectModal: React.FC<GroupSelectModalProps> = ({
               contentContainerStyle={{ paddingBottom: 20, width: "100%" }}
               showsVerticalScrollIndicator
               renderItem={({ item }) => {
-                const isAdmin = isUserAdminOfGroup(item);
+                const isAdmin = isUserAdminOfGroup(item, user?.id || "");
                 return (
                   <TouchableOpacity
                     style={{
@@ -123,7 +125,7 @@ export const GroupSelectModal: React.FC<GroupSelectModalProps> = ({
                       numberOfLines={2}
                       ellipsizeMode="tail"
                     >
-                      {item.description}
+                      {(item as any).description || "Sin descripción"}
                     </Text>
                     <View
                       style={{
@@ -140,12 +142,15 @@ export const GroupSelectModal: React.FC<GroupSelectModalProps> = ({
                       <Text
                         style={{ fontSize: 13, color: "#999", marginRight: 10 }}
                       >
-                        ⏰ {item.deliveryTime}
+                        ⏰{" "}
+                        {(item as any).deliveryTime ||
+                          item.date_time ||
+                          "Sin fecha"}
                       </Text>
                       <Text style={{ fontSize: 13, color: "#999" }}>
                         👥{" "}
-                        {item.participantsList?.length ??
-                          item.participants?.length ??
+                        {(item as any).participantsList?.length ??
+                          (item as any).participants?.length ??
                           0}
                       </Text>
                     </View>

@@ -95,7 +95,6 @@ export const CommunityScreen = () => {
         setResources((prev) => [...prev, ...mappedResources]);
       }
 
-      // Since the API doesn't return pagination info, we disable infinite scroll
       setHasMore(false);
       setPage(pageNum);
     } catch (error: any) {
@@ -218,7 +217,6 @@ export const CommunityScreen = () => {
         selectedResource.id,
         quantity
       );
-      console.log("[BACKEND RESPUESTA COMPRA]", response);
 
       // Considerar como éxito si backend devolvió objeto o un marcador nullResponse
       const isSuccess =

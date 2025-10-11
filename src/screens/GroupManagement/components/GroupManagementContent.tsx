@@ -1,8 +1,8 @@
 import React from "react";
-import { Group } from "../../../types";
+import { Group } from "../../../types/Group";
 import { TabType } from "../types";
-import { GroupContentManager } from "./GroupContentManager";
-import { PaymentModeManager } from "./PaymentModeManager";
+import { SimpleGroupContentManager } from "./SimpleGroupContentManager";
+import { SimplePaymentModeManager } from "./SimplePaymentModeManager";
 
 interface GroupManagementContentProps {
   currentGroup: Group;
@@ -22,7 +22,7 @@ export const GroupManagementContent: React.FC<GroupManagementContentProps> = ({
   switch (activeTab) {
     case "content":
       return (
-        <GroupContentManager
+        <SimpleGroupContentManager
           group={currentGroup}
           onGroupUpdated={onGroupUpdated}
           isReadOnly={!isGroupAdmin}
@@ -31,7 +31,7 @@ export const GroupManagementContent: React.FC<GroupManagementContentProps> = ({
       );
     case "payment":
       return (
-        <PaymentModeManager
+        <SimplePaymentModeManager
           group={currentGroup}
           onGroupUpdated={onGroupUpdated}
           isReadOnly={!isGroupAdmin}

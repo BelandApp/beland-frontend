@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Text, ScrollView, Dimensions } from "react-native";
 import { CustomAlert } from "../../components/ui/CustomAlert";
 import { LoginWave } from "src/components/ui/waves/Login.wave";
-import BelandLogo2 from "src/components/icons/BelandLogo2";
+import BelandLogo from "src/components/icons/BelandLogo";
 import { CustomInput } from "src/components/shared/input";
 import { Button } from "src/components/ui";
 import { useNavigation } from "@react-navigation/native";
@@ -20,7 +20,7 @@ export default function RegisterScreen() {
   }>({ visible: false, title: "", message: "", type: "error" });
   const [FormData, setFormData] = useState({
     name: "",
-    phone:"",
+    phone: "",
     email: "",
     password: "",
   });
@@ -65,7 +65,7 @@ export default function RegisterScreen() {
       contentContainerStyle={styles.scroll}
       showsVerticalScrollIndicator={false}
     >
-      <BelandLogo2
+      <BelandLogo
         width={width * 0.5}
         height={height * 0.2}
         style={styles.logo}

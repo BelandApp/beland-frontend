@@ -1,13 +1,8 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  Dimensions,
-} from "react-native";
+import { View, Text, ScrollView, Dimensions } from "react-native";
 import { CustomAlert } from "../../components/ui/CustomAlert";
 import { LoginWave } from "src/components/ui/waves/Login.wave";
-import BelandLogo2 from "src/components/icons/BelandLogo2";
+import BelandLogo from "src/components/icons/BelandLogo";
 import { CustomInput } from "src/components/shared/input";
 import { Button } from "src/components/ui";
 import { useNavigation } from "@react-navigation/native";
@@ -27,8 +22,8 @@ export default function LoginScreen() {
     email: "",
     password: "",
   });
- 
-  // TODO HANDLE AUTH 
+
+  // TODO HANDLE AUTH
   const isLoading = false;
   const handleLogin = async () => {
     if (!FormData.email.trim() || !FormData.password.trim()) {
@@ -41,8 +36,8 @@ export default function LoginScreen() {
       return;
     }
     try {
-      const success = true
-        // await loginWithEmailPassword(email, password);
+      const success = true;
+      // await loginWithEmailPassword(email, password);
       console.log("[LOGIN] Resultado loginWithEmailPassword:", success);
       if (!success) {
         setAlert({
@@ -69,8 +64,7 @@ export default function LoginScreen() {
     setAlert({
       visible: true,
       title: "Error de Google Authentication",
-      message:
-        "Hay un problema con la configuración de Auth0.",
+      message: "Hay un problema con la configuración de Auth0.",
       type: "error",
     });
   };
@@ -80,7 +74,7 @@ export default function LoginScreen() {
       contentContainerStyle={styles.scroll}
       showsVerticalScrollIndicator={false}
     >
-      <BelandLogo2
+      <BelandLogo
         width={width * 0.5}
         height={height * 0.2}
         style={styles.logo}
@@ -100,7 +94,7 @@ export default function LoginScreen() {
         />
         <SocialButton
           title="Apple"
-         iconName="apple"
+          iconName="apple"
           onPress={handleGoogleLogin}
         />
         <Text style={styles.subtitle}>O inicia sesión con:</Text>

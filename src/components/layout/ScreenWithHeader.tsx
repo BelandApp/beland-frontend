@@ -1,13 +1,6 @@
-// src/components/layout/ScreenWithHeader.tsx
-
 import React from "react";
-import {
-  View,
-  StyleSheet,
-  Platform,
-  StatusBar,
-} from "react-native";
-import {SafeAreaView} from 'react-native-safe-area-context'
+import { View, StyleSheet, Platform, StatusBar } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { AppHeader } from "./AppHeader";
 
 type Props = {

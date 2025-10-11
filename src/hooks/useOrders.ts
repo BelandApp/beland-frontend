@@ -3,7 +3,6 @@ import { OrderService } from "@services/core";
 import { Order, OrderStatus, CreateOrderRequest } from "../types/Order";
 import { useAuth } from "./AuthContext";
 
-// Legacy types - TODO: migrate to new service types
 interface OrdersResponse {
   orders: Order[];
   total: number;
@@ -22,7 +21,6 @@ interface UpdateOrderStatusRequest {
   notes?: string;
 }
 
-// Helper function to map status between legacy and new API
 const mapStatusToAPI = (status?: OrderStatus): string | undefined => {
   if (!status) return undefined;
   const statusMap: Record<string, string> = {
@@ -38,7 +36,6 @@ const mapStatusToAPI = (status?: OrderStatus): string | undefined => {
   return statusMap[status] || status;
 };
 
-// Hook para manejar órdenes
 export const useOrders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
@@ -56,13 +53,12 @@ export const useOrders = () => {
         setLoading(true);
         setError(null);
 
-        // Map query status to API format
         const apiQuery = {
           ...query,
           status: mapStatusToAPI(query.status) as any,
         };
         const response = await OrderService.getOrders(apiQuery);
-        // Map API response to legacy format
+
         const ordersResponse: OrdersResponse = {
           orders: (response.data || []).map((apiOrder: any) => ({
             ...apiOrder,
@@ -141,23 +137,95 @@ export const useOrders = () => {
 
   // Crear orden desde carrito
   const createOrderFromCart = useCallback(
-    async (cartId: string) => {
+    async (orderData: {
+      shipping_address_id: string;
+      billing_address_id?: string;
+      payment_method: string;
+      notes?: string;
+      coupon_code?: string;
+      use_balance?: boolean;
+    }) => {
       try {
         setLoading(true);
         setError(null);
 
-        // TODO: Implement createOrderFromCart in new OrderService
-        // For now, this is a placeholder that will need to be updated
-        throw new Error(
-          "createOrderFromCart not yet implemented in new service"
-        );
-        // const newOrder = await OrderService.createOrder(cartData);
+        const result = await OrderService.createOrder(orderData);
+
+        const mappedOrder = {
+          ...result.order,
+          userId: result.order.user_id,
+          discount: result.order.discount_amount,
+          deliveryFee: result.order.shipping_amount,
+          total: result.order.total_amount,
+          items: result.order.items || [],
+          deliveryType: "home" as const,
+          deliveryAddress: result.order.shipping_address,
+          subtotal: result.order.subtotal,
+          status: result.order.status,
+          createdAt: result.order.created_at,
+          updatedAt: result.order.updated_at,
+          paymentMethod: result.order.payment_method,
+          notes: result.order.notes,
+        };
 
         // Recargar órdenes después de crear
         await loadUserOrders();
-        return null; // TODO: return actual order when implemented
+
+        return {
+          order: mappedOrder,
+          payment_intent: result.payment_intent,
+        };
       } catch (err: any) {
-        console.error("Error creating order from cart:", err);
+        console.error("❌ Error creating order from cart:", err);
+        setError(err.message || "Error al crear orden desde carrito");
+        return null;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [loadUserOrders]
+  );
+
+  const createOrder = useCallback(
+    async (orderData: CreateOrderRequest) => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const apiOrderData = {
+          shipping_address_id: "default",
+          payment_method: orderData.paymentMethod,
+          notes: orderData.notes,
+        };
+
+        const result = await OrderService.createOrder(apiOrderData);
+
+        const mappedOrder = {
+          ...result.order,
+          userId: result.order.user_id,
+          discount: result.order.discount_amount,
+          deliveryFee: result.order.shipping_amount,
+          total: result.order.total_amount,
+          items: result.order.items || [],
+          deliveryType: "home" as const,
+          deliveryAddress: result.order.shipping_address,
+          subtotal: result.order.subtotal,
+          status: result.order.status,
+          createdAt: result.order.created_at,
+          updatedAt: result.order.updated_at,
+          paymentMethod: result.order.payment_method,
+          notes: result.order.notes,
+        };
+
+        // Recargar órdenes después de crear
+        await loadUserOrders();
+
+        return {
+          order: mappedOrder,
+          payment_intent: result.payment_intent,
+        };
+      } catch (err: any) {
+        console.error("❌ Error creating direct order:", err);
         setError(err.message || "Error al crear orden");
         return null;
       } finally {
@@ -167,31 +235,38 @@ export const useOrders = () => {
     [loadUserOrders]
   );
 
-  // Crear orden directa
-  const createOrder = useCallback(
-    async (orderData: CreateOrderRequest) => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const newOrder = await OrderService.createOrder({
-          shipping_address_id: "default", // TODO: Map from orderData.deliveryAddress
-          payment_method: orderData.paymentMethod,
-          notes: orderData.notes,
-        });
-
-        // Recargar órdenes después de crear
-        await loadUserOrders();
-        return newOrder;
-      } catch (err: any) {
-        console.error("Error creating order:", err);
-        setError(err.message || "Error al crear orden");
-        return null;
-      } finally {
-        setLoading(false);
-      }
+  // Función simplificada para crear orden desde carrito con datos mínimos
+  const createQuickOrderFromCart = useCallback(
+    async (paymentMethod: string, addressId?: string, notes?: string) => {
+      return createOrderFromCart({
+        shipping_address_id: addressId || "default",
+        payment_method: paymentMethod,
+        notes: notes,
+      });
     },
-    [loadUserOrders]
+    [createOrderFromCart]
+  );
+
+  // Función para crear orden con datos completos del carrito y opciones avanzadas
+  const createAdvancedOrderFromCart = useCallback(
+    async (options: {
+      paymentMethod: string;
+      shippingAddressId?: string;
+      billingAddressId?: string;
+      notes?: string;
+      couponCode?: string;
+      useBalance?: boolean;
+    }) => {
+      return createOrderFromCart({
+        shipping_address_id: options.shippingAddressId || "default",
+        billing_address_id: options.billingAddressId,
+        payment_method: options.paymentMethod,
+        notes: options.notes,
+        coupon_code: options.couponCode,
+        use_balance: options.useBalance,
+      });
+    },
+    [createOrderFromCart]
   );
 
   // Obtener orden por ID
@@ -254,7 +329,6 @@ export const useOrders = () => {
           "delivered"
         );
 
-        // Actualizar orden en la lista local - TODO: Fix type mapping
         setOrders((prev) =>
           prev.map((order) =>
             order.id === orderId ? (updatedOrder as any) : order
@@ -285,7 +359,6 @@ export const useOrders = () => {
           mapStatusToAPI(data.status) as any
         );
 
-        // Actualizar orden en la lista local - TODO: Fix type mapping
         setOrders((prev) =>
           prev.map((order) =>
             order.id === orderId ? (updatedOrder as any) : order
@@ -315,8 +388,6 @@ export const useOrders = () => {
         "cancelled"
       );
 
-      // Actualizar orden en la lista local
-      // Actualizar orden en la lista local - TODO: Fix type mapping
       setOrders((prev) =>
         prev.map((order) =>
           order.id === orderId ? (updatedOrder as any) : order
@@ -374,6 +445,8 @@ export const useOrders = () => {
     loadUserOrders,
     loadPendingOrders,
     createOrderFromCart,
+    createQuickOrderFromCart,
+    createAdvancedOrderFromCart,
     createOrder,
     getOrderById,
     confirmDelivery,

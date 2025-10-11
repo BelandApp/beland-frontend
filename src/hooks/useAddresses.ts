@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import {
-  addressService,
+import { addressService } from "../services/addressService";
+import type {
   UserAddress,
   CreateAddressRequest,
   UpdateAddressRequest,

@@ -1,5 +1,5 @@
 import React from "react";
-import { View, StyleSheet, Platform } from "react-native";
+import { View, Platform } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { colors } from "../../styles/colors";
 import { HomeScreen } from "../../screens/HomeScreen";
@@ -14,7 +14,6 @@ import {
   QRIcon,
   WalletIcon,
   CatalogIcon,
-  GiftIcon,
   OrderIcon,
   CommunityIcon,
 } from "../icons";

@@ -19,14 +19,12 @@ import { CatalogScreen } from "src/screens/Catalog";
 import { LoginScreen } from "src/screens/Login";
 import { RegisterScreen } from "src/screens/Register";
 
-// 1. Define el tipo de tu Root Stack con los nombres correctos
 export type RootStackParamList = {
-  Home: undefined; // Añadido
+  Home: undefined;
   MainTabs: undefined;
   CobrarScreen: undefined;
   Dashboard: undefined;
-  CommerceDashboard: undefined; // Corregido: 'CommerceDashboard' para coincidir con el AppHeader
-  // Asegúrate de que todas las demás rutas están aquí, tal como las tenías
+  CommerceDashboard: undefined;
   Wallet: undefined;
   Community: undefined;
   QR: { pendingRedemption?: any } | undefined;
@@ -62,7 +60,7 @@ export type RootStackParamList = {
     amount_to_payment_id?: string | null;
   };
   PayphoneSuccess: { toWalletId: string; amountPaymentId: string };
-  // Añade aquí cualquier otra ruta que falte.
+
   Login: undefined;
   Register: undefined;
 };

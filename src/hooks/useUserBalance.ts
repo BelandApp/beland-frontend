@@ -26,7 +26,6 @@ export const useUserBalance = () => {
       // Sincronizar con el store local para que BeCoinsBalance se actualice inmediatamente
       setStoreBalance(newBalance);
     } catch (err: any) {
-      console.error("Error fetching balance:", err);
       setError("Error al obtener el saldo");
       setBalance(0);
       setStoreBalance(0);

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -11,8 +11,9 @@ import {
   TextInput,
   Pressable,
 } from "react-native";
-import { AVAILABLE_PRODUCTS, AvailableProduct } from "../../../data/products";
+import { useProducts } from "../../../hooks/useProducts";
 import { useGroupAdminStore } from "../../../stores/groupStores";
+import { Product } from "@services/core";
 
 interface GroupProductAdderProps {
   groupId: string;
@@ -26,33 +27,62 @@ export const GroupProductAdder: React.FC<GroupProductAdderProps> = ({
   const [modalVisible, setModalVisible] = useState(false);
   const [search, setSearch] = useState("");
   const flatListRef = useRef(null);
-  // Obtener categorías únicas ordenadas
-  const categories = Array.from(
-    new Set(AVAILABLE_PRODUCTS.map((p) => p.category))
-  );
-  const [selectedCategory, setSelectedCategory] = useState(categories[0] || "");
 
-  const handleAddProduct = (product: AvailableProduct) => {
+  // Usar el hook useProducts para obtener productos reales del API
+  const { products, loading } = useProducts({
+    page: 1,
+    limit: 100, // Obtener más productos para el selector
+  });
+
+  // Obtener categorías únicas de los productos del API
+  const categories = useMemo(() => {
+    if (!products) return [];
+    return Array.from(
+      new Set(
+        products
+          .map((p) => {
+            // Manejar tanto objetos categoría como strings
+            if (typeof p.category === "object" && p.category?.name) {
+              return p.category.name;
+            }
+            return typeof p.category === "string"
+              ? p.category
+              : "Sin categoría";
+          })
+          .filter(Boolean)
+      )
+    );
+  }, [products]);
+
+  const [selectedCategory, setSelectedCategory] = useState("");
+
+  const handleAddProduct = (product: Product) => {
     addProductToGroup(groupId, {
       id: product.id,
       name: product.name,
       quantity: 1,
-      estimatedPrice: product.basePrice,
-      totalPrice: product.basePrice,
-      category: product.category,
-      basePrice: product.basePrice,
-      image: product.image,
+      estimatedPrice: Number(product.price) || 0,
+      totalPrice: Number(product.price) || 0,
+      category:
+        typeof product.category === "object"
+          ? product.category?.name || "Sin categoría"
+          : product.category || "Sin categoría",
+      basePrice: Number(product.price) || 0,
+      image: (product as any).image_url || (product as any).image || "",
     });
   };
 
-  const renderProduct = ({ item }: { item: AvailableProduct }) => {
+  const renderProduct = ({ item }: { item: Product }) => {
     const alreadyInGroup = groupProducts.some((p) => p.id === item.id);
     return (
       <View style={styles.productContainer} key={item.id}>
-        <Image source={{ uri: item.image }} style={styles.productImage} />
+        <Image
+          source={{ uri: (item as any).image_url || (item as any).image || "" }}
+          style={styles.productImage}
+        />
         <View style={styles.productInfo}>
           <Text style={styles.productName}>{item.name}</Text>
-          <Text style={styles.productPrice}>${item.basePrice}</Text>
+          <Text style={styles.productPrice}>${Number(item.price) || 0}</Text>
         </View>
         <TouchableOpacity
           style={[styles.addButton, alreadyInGroup && styles.addedButton]}
@@ -67,25 +97,48 @@ export const GroupProductAdder: React.FC<GroupProductAdderProps> = ({
     );
   };
 
-  // Filtrado de productos por búsqueda
-  // Filtrado por búsqueda y categoría
-  const filteredProducts = AVAILABLE_PRODUCTS.filter(
-    (item) =>
-      item.name.toLowerCase().includes(search.toLowerCase()) &&
-      (selectedCategory ? item.category === selectedCategory : true)
-  );
+  // Filtrado de productos por búsqueda y categoría usando productos del API
+  const filteredProducts = useMemo(() => {
+    if (!products) return [];
+
+    return products.filter((item: Product) => {
+      const matchesSearch = item.name
+        .toLowerCase()
+        .includes(search.toLowerCase());
+
+      const itemCategory =
+        typeof item.category === "object"
+          ? item.category?.name || "Sin categoría"
+          : item.category || "Sin categoría";
+
+      const matchesCategory =
+        !selectedCategory || itemCategory === selectedCategory;
+
+      return matchesSearch && matchesCategory;
+    });
+  }, [products, search, selectedCategory]);
 
   // Agrupar productos por categoría para FlatList con headers
-  const groupedProducts = categories
-    .map((cat) => ({
-      title: cat,
-      data: AVAILABLE_PRODUCTS.filter(
-        (item) =>
-          item.category === cat &&
-          item.name.toLowerCase().includes(search.toLowerCase())
-      ),
-    }))
-    .filter((group) => group.data.length > 0);
+  const groupedProducts = useMemo(() => {
+    if (!products) return [];
+
+    return categories
+      .map((cat) => ({
+        title: cat,
+        data: products.filter((item: Product) => {
+          const itemCategory =
+            typeof item.category === "object"
+              ? item.category?.name || "Sin categoría"
+              : item.category || "Sin categoría";
+
+          return (
+            itemCategory === cat &&
+            item.name.toLowerCase().includes(search.toLowerCase())
+          );
+        }),
+      }))
+      .filter((group) => group.data.length > 0);
+  }, [products, categories, search]);
 
   return (
     <View style={{ marginVertical: 8, alignItems: "center" }}>
@@ -157,7 +210,9 @@ export const GroupProductAdder: React.FC<GroupProductAdderProps> = ({
               renderItem={({ item: group }) => (
                 <View>
                   <Text style={styles.categoryHeader}>{group.title}</Text>
-                  {group.data.map((prod) => renderProduct({ item: prod }))}
+                  {group.data.map((prod: Product) =>
+                    renderProduct({ item: prod })
+                  )}
                 </View>
               )}
               ListEmptyComponent={

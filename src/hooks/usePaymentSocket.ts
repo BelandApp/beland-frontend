@@ -3,7 +3,6 @@ import { useAuth } from "src/hooks/AuthContext";
 import { useNotification } from "src/hooks/NotificationContext";
 import { useEffect, useRef } from "react";
 
-// Storage para contexto de transacciones recientes
 interface RecentTransaction {
   timestamp: number;
   amount: number;
@@ -28,17 +27,11 @@ class TransactionContextManager {
 
   addTransaction(transaction: RecentTransaction) {
     this.recentTransactions.unshift(transaction);
-    // Mantener solo las últimas 10 transacciones y limpiar las de más de 5 minutos
+
     const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
     this.recentTransactions = this.recentTransactions
       .filter((t) => t.timestamp > fiveMinutesAgo)
       .slice(0, 10);
-
-    console.log("[TransactionContext] Transacción agregada:", transaction);
-    console.log(
-      "[TransactionContext] Total transacciones recientes:",
-      this.recentTransactions.length
-    );
   }
 
   findRecentTransaction(
@@ -74,10 +67,6 @@ function createDetailedMessage(data: {
     const contextManager = TransactionContextManager.getInstance();
     const recentTx = contextManager.findRecentTransaction(data.amount);
     if (recentTx) {
-      console.log(
-        "[PaymentSocket] Enriqueciendo notificación con contexto local:",
-        recentTx
-      );
       data = { ...data, ...recentTx };
       message = `${data.message || "Pago exitoso"} - Contexto local aplicado`;
     }
@@ -154,8 +143,6 @@ export function usePaymentSocket(onPaymentSuccess: (data: any) => void) {
         commerce_name?: string;
         [key: string]: any;
       }) => {
-        console.log("Transacción recibida:", data);
-
         const detailedMessage = createDetailedMessage(data);
         showNotification({
           title: "¡Venta recibida!",
@@ -178,7 +165,6 @@ export function usePaymentSocket(onPaymentSuccess: (data: any) => void) {
         transaction_type?: string;
         [key: string]: any;
       }) => {
-        console.log("Balance actualizado:", data);
         if (data.success && data.amount > 0) {
           const detailedMessage = createDetailedMessage(data);
           showNotification({
@@ -205,8 +191,6 @@ export function usePaymentSocket(onPaymentSuccess: (data: any) => void) {
         commerce_name?: string;
         [key: string]: any;
       }) => {
-        console.log("Notificación payment-success recibida:", data);
-
         const detailedMessage = createDetailedMessage(data);
         showNotification({
           title: "¡Venta recibida!",
