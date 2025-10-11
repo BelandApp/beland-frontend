@@ -15,7 +15,7 @@ export const GroupTypeFilter: React.FC<GroupTypeFilterProps> = ({
 }) => {
   return (
     <View style={groupFilterStyles.filterContainer}>
-      <Text style={groupFilterStyles.filterTitle}>Filtrar por tipo:</Text>
+      <Text style={groupFilterStyles.filterTitle}>Filtrar por estado:</Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}

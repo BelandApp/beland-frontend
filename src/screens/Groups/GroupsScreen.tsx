@@ -11,7 +11,7 @@ import { UserMenu } from "../../components/ui/UserMenu";
 import {
   useGroupsTabs,
   useGroupsNavigation,
-  useGroupsData,
+  useGroups,
   useGroupTypeFilter,
 } from "./hooks";
 
@@ -31,14 +31,11 @@ export const GroupsScreen: React.FC<any> = (props) => {
   const { selectedTab, setSelectedTab, isActiveTab } = useGroupsTabs();
   const { navigateToCreateGroup, navigateToGroupManagement } =
     useGroupsNavigation();
-  const {
-    activeGroups,
-    completedGroups,
-    hasActiveGroups,
-    hasCompletedGroups,
-    totalActiveGroups,
-    totalCompletedGroups,
-  } = useGroupsData();
+  const { getActiveGroups, getCompletedGroups } = useGroups();
+
+  // Obtener los grupos
+  const activeGroups = getActiveGroups();
+  const completedGroups = getCompletedGroups();
 
   // Determinar qué grupos mostrar según la pestaña seleccionada
   const baseGroups = isActiveTab ? activeGroups : completedGroups;
@@ -67,8 +64,8 @@ export const GroupsScreen: React.FC<any> = (props) => {
           <GroupTabs
             selectedTab={selectedTab}
             onTabChange={setSelectedTab}
-            activeCount={totalActiveGroups}
-            historyCount={totalCompletedGroups}
+            activeCount={activeGroups.length}
+            historyCount={completedGroups.length}
           />
 
           {/* Filtro por tipo de grupo */}
