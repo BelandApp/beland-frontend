@@ -5,3 +5,5 @@ export * from "./cartService";
 export * from "./addressService";
 export * from "./orderService";
 export * from "./paymentTypesService";
+export * from "./resourceService"
+export * from "./walletService"
