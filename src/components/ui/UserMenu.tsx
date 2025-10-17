@@ -16,6 +16,7 @@ import {
   Store,
   Gift,
   User,
+  Settings
 } from "lucide-react-native";
 import { useNavigation } from "@react-navigation/native";
 import { showSuccessAlert, showErrorAlert } from "../../utils/alertHelpers";
@@ -190,6 +191,16 @@ export const UserMenu: React.FC<UserMenuProps> = ({
               <Gift size={18} color="#333" />
               <Text style={styles.menuItemText}>Mis Beneficios</Text>
             </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setMenuVisible(false);
+                (navigation as any).navigate("WalletSettingsScreen");
+              }}
+            >
+              <Settings size={18} color="#333" />
+              <Text style={styles.menuItemText}>Wallet</Text>
+            </TouchableOpacity>
 
             {/* Mostrar opción solo si el usuario NO es comerciante */}
             {!(
@@ -276,6 +287,7 @@ const styles = StyleSheet.create({
   loginButton: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent:"space-between",
     backgroundColor: "rgba(255, 255, 255, 0.15)",
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -291,20 +303,21 @@ const styles = StyleSheet.create({
   },
 
   avatarContainer: {
-    width: 50,
+    width: 45,
     height: 40,
-    borderRadius: 20,
+    borderRadius: 50,
     backgroundColor: "rgba(255, 255, 255, 0.15)",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
     borderColor: "rgba(255, 255, 255, 0.25)",
+    
   },
 
   avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 30,
+    width: 45,
+    height: 45,
+    borderRadius: 50,
   },
 
   modalOverlay: {

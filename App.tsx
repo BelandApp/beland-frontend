@@ -12,7 +12,7 @@ import {
   NavigationContainerRef,
   NavigationState,
 } from "@react-navigation/native";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import {
   RootStackNavigator,
   RootStackParamList,
@@ -25,6 +25,7 @@ import { NotificationBanner } from "./src/components/ui/NotificationBanner";
 import PayphoneSuccessScreen from "./src/screens/Wallet/PayphoneSuccessScreen";
 import SocketStatus from "./src/components/SocketStatus";
 import { usePaymentSocket } from "src/hooks/usePaymentSocket";
+import { colors } from "src/styles";
 
 const AppContent = () => {
   // Declarar todos los hooks al inicio, sin condicionales
@@ -39,22 +40,7 @@ const AppContent = () => {
   usePaymentSocket(() => {});
 
   // Padding dinámico para web móvil
-  const dynamicPaddingBottom = useMemo(() => {
-    if (
-      Platform.OS === "web" &&
-      typeof window !== "undefined" &&
-      window.innerWidth < 600
-    ) {
-      const tabbarHeight = 0;
-      const extraBottom =
-        typeof window.visualViewport !== "undefined" && window.visualViewport
-          ? window.innerHeight - window.visualViewport.height
-          : 0;
-      return tabbarHeight + extraBottom;
-    }
-    return 0;
-  }, []);
-
+ 
   useEffect(() => {
     const configureSystemBars = async () => {
       if (Platform.OS === "android") {
@@ -152,23 +138,15 @@ const AppContent = () => {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
+    <View style={{ flex: 1, backgroundColor: colors.belandOrange }}>
       <StatusBar style="light" />
       <NavigationContainer
         ref={navigationRef}
         onStateChange={onNavigationStateChange}
         linking={linking}
       >
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: "#F7F8FA",
-            paddingBottom: dynamicPaddingBottom,
-          }}
-        >
-          <RootStackNavigator />
-          {shouldShowQRButton && <FloatingQRButton onPress={handleQRPress} />}
-        </View>
+        <RootStackNavigator />
+        {shouldShowQRButton && <FloatingQRButton onPress={handleQRPress} />}
       </NavigationContainer>
     </View>
   );

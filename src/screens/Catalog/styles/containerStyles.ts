@@ -7,28 +7,26 @@ export const containerStyles = StyleSheet.create({
     backgroundColor: "#F8F9FA",
   },
   contentContainer: {
-    paddingTop: 140,
+    paddingTop: 20,
     paddingHorizontal: 16,
     paddingBottom: Platform.OS === "android" ? 96 : 86, // Espacio extra para la nueva barra de navegación
   },
   // Header styles
   headerContainer: {
-    position: "absolute" as const,
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1000,
-    paddingTop: Platform.OS === "android" ? 20 : 50, // Reducido para Android porque la barra de estado está oculta
-    paddingHorizontal: 20,
-    paddingBottom: 10,
-    backgroundColor: colors.belandOrange, // Fondo naranja por defecto
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 8,
+    backgroundColor: colors.belandOrange,
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === "web" ? 20 : 50, // Reducido para Android porque la barra de estado está oculta
+    paddingBottom: 24,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    zIndex: 1,
   },
   headerCreatingGroup: {
     backgroundColor: colors.belandGreen,
@@ -39,11 +37,11 @@ export const containerStyles = StyleSheet.create({
     flexDirection: "row" as const,
     alignItems: "center" as const,
     justifyContent: "space-between" as const,
-    marginBottom: 16,
+    width: "100%",
   },
   headerLeft: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
+    flexDirection: "column" as const,
+    alignItems: "flex-start" as const,
     flex: 1,
   },
   backButton: {
@@ -60,10 +58,9 @@ export const containerStyles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 24,
-    fontWeight: "700" as const,
-    color: "#FFFFFF", // Color blanco por defecto para el fondo naranja
-    marginBottom: 2,
-    letterSpacing: -0.5,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+    marginBottom: 0,
   },
   headerSubtitle: {
     fontSize: 14,

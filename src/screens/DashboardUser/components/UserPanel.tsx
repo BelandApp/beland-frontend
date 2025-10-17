@@ -107,7 +107,6 @@ const UserPanel: React.FC = () => {
 
   const convertImageToDataUrl = async (): Promise<string | null> => {
     try {
-      // Web: usamos FileReader sobre localImageFile
       if (Platform.OS === "web" && localImageFile) {
         return await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
@@ -117,28 +116,34 @@ const UserPanel: React.FC = () => {
         });
       }
 
-      // Native: usamos expo-file-system para leer como base64
       if (localImage) {
         try {
           const FileSystem = await import("expo-file-system");
-          const base64 = await FileSystem.readAsStringAsync(localImage, {
-            encoding: FileSystem.EncodingType.Base64,
-          });
+
+          // ✅ Wrapper para evitar el warning por deprecación
+          const readBase64 = async (uri: string): Promise<string> => {
+            return await(FileSystem.readAsStringAsync as any)(uri, {
+              
+            });
+          };
+
+          const base64 = await readBase64(localImage);
+
           const filename = localImage.split("/").pop() || "photo.jpg";
-          const match = /\.([0-9a-z]+)(?:[?#]|$)/i.exec(filename);
-          const ext = match ? match[1] : "jpg";
+          const ext = filename.split(".").pop()?.toLowerCase() || "jpg";
           const mimeType = ext === "png" ? "image/png" : "image/jpeg";
+
           return `data:${mimeType};base64,${base64}`;
         } catch (e) {
           console.warn("[UserPanel] Error reading file as base64:", e);
           return null;
         }
       }
-    } catch (err) {
-      // ignore conversion errors
-    }
+    } catch (err) {}
+
     return null;
   };
+
 
   const onSave = async () => {
     if (!user) return;
@@ -173,7 +178,7 @@ const UserPanel: React.FC = () => {
 
       const bodyString = JSON.stringify(jsonBody);
 
-      res = await fetchWithAuth(`${apiBase}/users/me`, {
+      res = await fetchWithAuth(`${process.env.EXPO_PUBLIC_API_URL}/users/me`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: bodyString,
@@ -216,7 +221,9 @@ const UserPanel: React.FC = () => {
       } else {
         // Si el PATCH no devolvió el usuario actualizado, intentar obtenerlo desde /auth/me.
         try {
-          const profileRes = await fetchWithAuth(`${apiBase}/auth/me`);
+          const profileRes = await fetchWithAuth(
+            `${process.env.EXPO_PUBLIC_API_URL}/auth/me`
+          );
           if (profileRes.ok) {
             const profileData = await profileRes.json();
 

@@ -86,7 +86,6 @@ export const MainTabNavigator = () => {
               left: 0,
               right: 0,
               height: 90, // Altura aumentada para dejar más espacio
-              paddingBottom: 0,
               zIndex: 9999,
             };
           }

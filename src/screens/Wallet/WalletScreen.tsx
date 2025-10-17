@@ -103,13 +103,13 @@ export const WalletScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
       <AppHeader />
       <View style={{ flex: 1 }}>
+        <WalletHeader />
         <ScrollView
           style={{ flex: 1, backgroundColor: "#fff" }}
           contentContainerStyle={{ flexGrow: 1, paddingBottom: 120 }}
           keyboardShouldPersistTaps="handled"
         >
           <View style={containerStyles.content}>
-            <WalletHeader />
             <WalletBalanceCard
               walletData={walletData}
               avatarUrl={user?.picture}

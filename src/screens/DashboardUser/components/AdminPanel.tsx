@@ -29,7 +29,7 @@ const AdminPanel: React.FC = () => {
             <Image
               source={{
                 uri:
-                  user.profile_picture_url ||
+                  user.picture ||
                   "https://ui-avatars.com/api/?name=Admin&background=random",
               }}
               style={styles.profileImage}

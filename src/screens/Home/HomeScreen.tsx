@@ -26,6 +26,7 @@ import { useWalletTransactions } from "../Wallet/hooks";
 import { useBeCoinsStore } from "../../stores/useBeCoinsStore";
 import { LoginWave } from "src/components/ui/waves/Login.wave";
 import { HomeWave } from "src/components/ui/waves/Home.wave";
+import { colors } from "src/styles";
 
 export const HomeScreen = () => {
   const navigation = useNavigation();
@@ -95,8 +96,7 @@ export const HomeScreen = () => {
             <HeroSection
               balance={balance}
               estimatedValue={estimatedValue.toFixed(2)}
-            />
-
+              />
             <QuickActions
               onRecharge={handleRecharge}
               onSend={handleSend}
@@ -132,58 +132,56 @@ export const HomeScreen = () => {
 
   // Mobile version - mismo diseño pero con layout adaptado
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View
+      style={styles.safeArea}
+    >
       <AppHeader variant="home" />
       <ScrollView style={styles.scrollView}>
-        <View style={styles.content}>
-          <HeroSection
-            balance={balance}
-            estimatedValue={estimatedValue.toFixed(2)}
-          />
+        <HeroSection
+          balance={balance}
+          estimatedValue={estimatedValue.toFixed(2)}
+        />
+        <QuickActions
+          onRecharge={handleRecharge}
+          onSend={handleSend}
+          onReceive={handleReceive}
+          onCollect={handleCollect}
+        />
 
-          <QuickActions
-            onRecharge={handleRecharge}
-            onSend={handleSend}
-            onReceive={handleReceive}
-            onCollect={handleCollect}
-          />
+        <StatsCard
+          becoins={balance}
+          bottlesRecycled={userStats?.bottlesRecycled ?? 0}
+          estimatedValue={estimatedValue.toFixed(2)}
+        />
 
-          <StatsCard
-            becoins={balance}
-            bottlesRecycled={userStats?.bottlesRecycled ?? 0}
-            estimatedValue={estimatedValue.toFixed(2)}
-          />
+        <FeatureCard
+          type="recycling"
+          data={{ bottlesRecycled: userStats?.bottlesRecycled ?? 0 }}
+          onPress={handleRecyclingMapPress}
+        />
+        <FeatureCard type="community" onPress={handleCommunity} />
 
-          <FeatureCard
-            type="recycling"
-            data={{ bottlesRecycled: userStats?.bottlesRecycled ?? 0 }}
-            onPress={handleRecyclingMapPress}
-          />
-          <FeatureCard type="community" onPress={handleCommunity} />
+        <RecentTransactions transactions={transactions ?? []} />
 
-          <RecentTransactions transactions={transactions ?? []} />
+        <ActivitySection
+          activities={activities}
+          onViewHistory={handleViewHistory}
+        />
 
-          <ActivitySection
-            activities={activities}
-            onViewHistory={handleViewHistory}
-          />
-        </View>
         <HomeWave />
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "#ffff",
   },
   scrollView: {
     flex: 1,
-  },
-  content: {
-    paddingBottom: 120,
+    backgroundColor: "#ffff",
   },
 });
 
