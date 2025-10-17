@@ -79,7 +79,6 @@ export const HomeScreen = () => {
   const handleDelivery = () => {
     navigation.navigate("Catalog" as never);
   };
-
   if (Platform.OS === "web") {
     const dynamicStyles = StyleSheet.create({
       featuresGrid: {
@@ -144,7 +143,6 @@ export const HomeScreen = () => {
     <SafeAreaView style={styles.safeArea}>
       <AppHeader variant="home" />
       <ScrollView style={styles.scrollView}>
-      <LoginWave/>
         <View style={styles.content}>
           <HeroSection
             balance={balance}
@@ -179,6 +177,7 @@ export const HomeScreen = () => {
             onViewHistory={handleViewHistory}
           />
         </View>
+        <HomeWave />
       </ScrollView>
     </SafeAreaView>
   );

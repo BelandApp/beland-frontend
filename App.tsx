@@ -145,6 +145,8 @@ const AppContent = () => {
         GroupsScreen: "Groups",
         PaymentScreen: "payment",
         UserResources: "user-resources",
+        Login: "Login",
+        Register: "Register",
       },
     },
   };
