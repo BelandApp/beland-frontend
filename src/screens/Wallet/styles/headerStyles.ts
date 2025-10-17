@@ -22,6 +22,5 @@ export const headerStyles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: "#FFFFFF",
-    marginBottom: 0,
   },
 });

@@ -9,28 +9,26 @@ export const ordersStyles = StyleSheet.create({
 
   // Header naranja styles
   headerContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1000,
-    paddingTop: Platform.OS === "android" ? 20 : 50,
-    paddingHorizontal: 20,
-    paddingBottom: 10,
     backgroundColor: colors.belandOrange,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 8,
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === "web" ? 20 : 50, 
+    paddingBottom: 24,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    zIndex: 1,
   },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 16,
+    width: "100%",
   },
   headerTitles: {
     flex: 1,
@@ -40,12 +38,13 @@ export const ordersStyles = StyleSheet.create({
   deliveryButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    backgroundColor: colors.belandGreen,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.3)",
+    height:45
   },
   deliveryButtonText: {
     color: "#FFFFFF",
@@ -57,7 +56,6 @@ export const ordersStyles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "700",
     color: "#FFFFFF",
-    marginBottom: 2,
     letterSpacing: -0.5,
   },
   headerSubtitle: {

@@ -193,22 +193,17 @@ export const CatalogScreen = () => {
         <View style={containerStyles.headerRow}>
           <View style={containerStyles.headerLeft}>
             <Text style={containerStyles.headerTitle}>Catálogo</Text>
-            {Platform.OS === "web" && (
-              <Text style={containerStyles.headerSubtitle}>
-                Productos disponibles para entrega
-              </Text>
-            )}
           </View>
           <View
             style={{
               flexDirection: "row",
-              alignItems: "center",
+              alignItems: "flex-start",
               justifyContent: "flex-end",
-              gap: 4,
+              gap: 12,
             }}
           >
             <BeCoinsBalance
-              size="small"
+              size="medium"
               variant="header"
               style={containerStyles.coinsContainer}
             />
@@ -220,7 +215,7 @@ export const CatalogScreen = () => {
               >
                 <MaterialCommunityIcons
                   name={isSyncing ? "sync" : "cart-variant"}
-                  size={24}
+                  size={29}
                   color={isSyncing ? "#FFA500" : "#FF6B35"}
                   style={[
                     styles.headerCartIcon,
@@ -460,8 +455,10 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.15,
     shadowRadius: 2,
+    justifyContent: "center",
   },
-  headerCartIcon: {},
+  headerCartIcon: {
+  },
   syncingIcon: {
     transform: [{ rotate: "45deg" }],
   },

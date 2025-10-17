@@ -56,12 +56,11 @@ export const GroupsScreen: React.FC<any> = (props) => {
   const currentGroups = filteredGroups;
 
   return (
-    <SafeAreaView style={containerStyles.container} edges={[]}>
-      <AppHeader />
+    <>
+      <GroupsHeader onCreateGroup={navigateToCreateGroup} />
       <ScrollView style={containerStyles.scrollView}>
         <View style={containerStyles.content}>
           {/* Header con título y botón crear */}
-          <GroupsHeader onCreateGroup={navigateToCreateGroup} />
 
           {/* Pestañas de navegación */}
           <GroupTabs
@@ -93,6 +92,6 @@ export const GroupsScreen: React.FC<any> = (props) => {
       <View style={containerStyles.waveContainer}>
         <WaveBottomGray width={Dimensions.get("window").width} height={120} />
       </View>
-    </SafeAreaView>
+    </>
   );
 };

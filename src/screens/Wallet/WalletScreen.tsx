@@ -101,7 +101,6 @@ export const WalletScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
-      <AppHeader />
       <View style={{ flex: 1 }}>
         <WalletHeader />
         <ScrollView

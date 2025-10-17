@@ -40,7 +40,6 @@ export const containerStyles = StyleSheet.create({
     width: "100%",
   },
   headerLeft: {
-    flexDirection: "column" as const,
     alignItems: "flex-start" as const,
     flex: 1,
   },
@@ -60,7 +59,6 @@ export const containerStyles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: "#FFFFFF",
-    marginBottom: 0,
   },
   headerSubtitle: {
     fontSize: 14,

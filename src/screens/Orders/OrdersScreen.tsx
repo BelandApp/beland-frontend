@@ -372,19 +372,14 @@ const OrdersScreen: React.FC = () => {
 
   return (
     <>
-      <AppHeader />
-      <SafeAreaView style={ordersStyles.container}>
         <View style={ordersStyles.headerContainer}>
           <View style={ordersStyles.headerRow}>
             <View style={ordersStyles.headerTitles}>
               <Text style={ordersStyles.headerMainTitle}>Mis Órdenes</Text>
-              <Text style={ordersStyles.headerSubtitle}>
-                Gestiona y revisa tus compras
-              </Text>
             </View>
 
             <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 12 }}
+              style={{ flexDirection: "row", alignItems: "flex-start", gap: 12 }}
             >
               {/* Botón de Delivery - Solo para personal autorizado */}
               <TouchableOpacity
@@ -416,7 +411,7 @@ const OrdersScreen: React.FC = () => {
                 </Text>
               </TouchableOpacity>
 
-              <UserMenu iconColor="#fff" />
+              <UserMenu />
             </View>
           </View>
         </View>
@@ -474,7 +469,6 @@ const OrdersScreen: React.FC = () => {
             </View>
           )}
         </ScrollView>
-      </SafeAreaView>
     </>
   );
 };
