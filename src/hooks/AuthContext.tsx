@@ -206,6 +206,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     {
       clientId: clientId,
       redirectUri: makeRedirectUri({
+        preferLocalhost: true,
         scheme: Platform.OS === "web" ? undefined : scheme,
         path: Platform.OS === "web" ? undefined : "callback",
       }),
@@ -339,6 +340,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 code,
                 redirectUri: makeRedirectUri({
                   scheme: scheme,
+                  preferLocalhost: true,
                   path: Platform.select({
                     web: undefined,
                     default: "callback",
