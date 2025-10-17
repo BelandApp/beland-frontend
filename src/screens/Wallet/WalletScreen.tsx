@@ -9,9 +9,7 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { WaveBottomGray } from "../../components/icons";
-import { AppHeader } from "../../components/layout/AppHeader";
 import {
-  WalletHeader,
   WalletBalanceCard,
   WalletActions,
   RecentTransactions,
@@ -26,6 +24,7 @@ import {
   usePaymentPreferences,
 } from "./hooks";
 import { containerStyles } from "./styles";
+import { ThemedHeader } from "src/components/shared/headers/Header";
 
 export const WalletScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { user, isAuthenticated, loginWithAuth0, canPerformAction } = useAuth();
@@ -102,7 +101,7 @@ export const WalletScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
       <View style={{ flex: 1 }}>
-        <WalletHeader />
+        <ThemedHeader title="Billetera" />
         <ScrollView
           style={{ flex: 1, backgroundColor: "#fff" }}
           contentContainerStyle={{ flexGrow: 1, paddingBottom: 120 }}

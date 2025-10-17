@@ -14,6 +14,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
 import type { RootStackParamList } from "src/components/layout/RootStackNavigator";
 import { Gift, Filter } from "lucide-react-native";
+import { ThemedHeader } from "src/components/shared/headers/Header";
 
 const UserResourcesScreen: React.FC = () => {
   const [items, setItems] = useState<any[]>([]);
@@ -58,11 +59,8 @@ const UserResourcesScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerRow}>
-        <View style={styles.headerLeft}>
-          <Gift size={22} color="#FF6B35" />
-          <Text style={styles.header}>Mis Beneficios</Text>
-        </View>
+      
+        <ThemedHeader title="Mis Beneficios" canGoBack/>
 
         <View style={styles.filterRow}>
           <Filter size={18} color="#6B7280" />
@@ -87,7 +85,6 @@ const UserResourcesScreen: React.FC = () => {
               </TouchableOpacity>
             ))}
           </View>
-        </View>
       </View>
 
       <FlatList
@@ -135,7 +132,7 @@ const styles = StyleSheet.create({
   },
   headerLeft: { flexDirection: "row", alignItems: "center" },
   header: { fontSize: 20, fontWeight: "700", marginLeft: 8 },
-  filterRow: { flexDirection: "row", alignItems: "center" },
+  filterRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", width: "100%", paddingTop: 16 },
   filterOptions: { flexDirection: "row", marginLeft: 8 },
   filterBtn: {
     paddingVertical: 6,

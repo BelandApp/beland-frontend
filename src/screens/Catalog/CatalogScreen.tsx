@@ -29,7 +29,6 @@ import { useAuth } from "../../hooks/AuthContext";
 import { useCustomAlert } from "../../hooks/useCustomAlert";
 
 // Components
-import { AppHeader } from "../../components/layout/AppHeader";
 import { SearchBar, FilterPanel, ProductGrid } from "./components";
 import { OrderDeliveryModal } from "./components/OrderDeliveryModal";
 import { CustomAlert } from "../../components/ui/CustomAlert";
@@ -44,6 +43,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 // Community Main Component
 import CatalogCommunitySection from "./mainComponents/CatalogCommunitySection";
 import { useGroupedProducts } from "./mainHooks/useGroupedProducts";
+import { ThemedHeader } from "src/components/shared/headers/Header";
 
 export const CatalogScreen = () => {
   const navigation = useNavigation();
@@ -189,19 +189,10 @@ export const CatalogScreen = () => {
   return (
     <>
       {/* Header */}
-      <View style={containerStyles.headerContainer}>
-        <View style={containerStyles.headerRow}>
-          <View style={containerStyles.headerLeft}>
-            <Text style={containerStyles.headerTitle}>Catálogo</Text>
-          </View>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "flex-start",
-              justifyContent: "flex-end",
-              gap: 12,
-            }}
-          >
+      <ThemedHeader
+        title="Catalogo"
+        buttons={
+          <>
             <BeCoinsBalance
               size="medium"
               variant="header"
@@ -236,11 +227,10 @@ export const CatalogScreen = () => {
                 )}
               </TouchableOpacity>
             )}
-            <UserMenu />
-          </View>
-        </View>
-      </View>
-
+          </>
+        }
+      />
+      
       {/* Content */}
       <ScrollView
         style={containerStyles.container}

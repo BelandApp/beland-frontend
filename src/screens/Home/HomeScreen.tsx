@@ -4,11 +4,8 @@ import {
   ScrollView,
   Platform,
   StyleSheet,
-  Text,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
-import { AppHeader } from "../../components/layout/AppHeader";
 import {
   HeroSection,
   QuickActions,
@@ -27,6 +24,7 @@ import { useBeCoinsStore } from "../../stores/useBeCoinsStore";
 import { LoginWave } from "src/components/ui/waves/Login.wave";
 import { HomeWave } from "src/components/ui/waves/Home.wave";
 import { colors } from "src/styles";
+import { ThemedHeader } from "src/components/shared/headers/Header";
 
 export const HomeScreen = () => {
   const navigation = useNavigation();
@@ -90,7 +88,7 @@ export const HomeScreen = () => {
 
     return (
       <View style={webStyles.container}>
-        <AppHeader variant="home" />
+        <ThemedHeader title="Inicio" logo/>
         <ScrollView style={webStyles.scrollView}>
           <View style={dynamicStyles.content}>
             <HeroSection
@@ -135,7 +133,7 @@ export const HomeScreen = () => {
     <View
       style={styles.safeArea}
     >
-      <AppHeader variant="home" />
+      <ThemedHeader logo/>
       <ScrollView style={styles.scrollView}>
         <HeroSection
           balance={balance}

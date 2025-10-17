@@ -16,7 +16,10 @@ import {
   Store,
   Gift,
   User,
-  Settings
+  Settings,
+  PackageIcon,
+  GiftIcon,
+  Percent
 } from "lucide-react-native";
 import { useNavigation } from "@react-navigation/native";
 import { showSuccessAlert, showErrorAlert } from "../../utils/alertHelpers";
@@ -180,6 +183,16 @@ export const UserMenu: React.FC<UserMenuProps> = ({
               <LayoutDashboard size={18} color="#333" />
               <Text style={styles.menuItemText}>Dashboard</Text>
             </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setMenuVisible(false);
+                (navigation as any).navigate("Rewards");
+              }}
+            >
+              <GiftIcon size={18} color="#333" />
+              <Text style={styles.menuItemText}>Mis Premios</Text>
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.menuItem}
@@ -188,8 +201,18 @@ export const UserMenu: React.FC<UserMenuProps> = ({
                 (navigation as any).navigate("UserResources");
               }}
             >
-              <Gift size={18} color="#333" />
+              <Percent size={18} color="#333" />
               <Text style={styles.menuItemText}>Mis Beneficios</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setMenuVisible(false);
+                (navigation as any).navigate("Orders");
+              }}
+            >
+              <PackageIcon size={18} color="#333" />
+              <Text style={styles.menuItemText}>Mis Ordenes</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.menuItem}

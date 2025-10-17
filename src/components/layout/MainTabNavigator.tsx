@@ -18,6 +18,7 @@ import {
   OrderIcon,
   CommunityIcon,
 } from "../icons";
+import { CommunityScreen } from "src/screens";
 
 const Tab = createBottomTabNavigator();
 
@@ -126,9 +127,9 @@ export const MainTabNavigator = () => {
         options={{ tabBarLabel: "Catálogo" }}
       />
       <Tab.Screen
-        name="Orders"
-        component={OrdersStackNavigator}
-        options={{ tabBarLabel: "Órdenes" }}
+        name="Community"
+        component={CommunityScreen}
+        options={{ tabBarLabel: "Comunidad" }}
       />
 
       <Tab.Screen

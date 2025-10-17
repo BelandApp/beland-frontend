@@ -33,11 +33,12 @@ const getCardHeight = () => {
 export const containerStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   scrollView: {
     flex: 1,
-    paddingHorizontal: 0, // Quitar padding del scroll, se manejará en el grid
+    backgroundColor: colors.background,
+    paddingHorizontal: 0, 
+    paddingTop: 10
   },
 });
 

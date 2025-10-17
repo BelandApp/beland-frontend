@@ -22,7 +22,6 @@ import { useAuth } from "../../hooks/AuthContext";
 
 // Components
 import {
-  CommunityHeader,
   ResourcesGrid,
   InsufficientBalanceModal,
 } from "./components";
@@ -30,6 +29,8 @@ import { PurchaseModal } from "./components/PurchaseModal";
 
 // Styles
 import { containerStyles } from "./styles";
+import { ThemedHeader } from "src/components/shared/headers/Header";
+import { BeCoinsBalance } from "src/components/ui";
 
 export const CommunityScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -199,7 +200,8 @@ export const CommunityScreen = () => {
       console.log("[BACKEND RESPUESTA COMPRA]", response);
 
       // Considerar como éxito si backend devolvió objeto o un marcador nullResponse
-      const isSuccess = response && (response.nullResponse === true || response);
+      const isSuccess =
+        response && (response.nullResponse === true || response);
 
       if (!isSuccess) {
         console.warn(
@@ -266,8 +268,7 @@ export const CommunityScreen = () => {
   if (!isAuthenticated) {
     return (
       <View style={containerStyles.container}>
-        <CommunityHeader balance={balance} />
-
+        <ThemedHeader title="Comunidad" />
         <View
           style={[
             containerStyles.scrollView,
@@ -323,8 +324,12 @@ export const CommunityScreen = () => {
 
   return (
     <View style={containerStyles.container}>
-      <CommunityHeader balance={balance} />
-
+      <ThemedHeader
+        title="Comunidad"
+        buttons={
+          <BeCoinsBalance variant="header" size="medium" balance={balance} />
+        }
+      />
       <ScrollView
         style={containerStyles.scrollView}
         showsVerticalScrollIndicator={false}

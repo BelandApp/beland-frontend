@@ -295,7 +295,7 @@ const UserPanel: React.FC = () => {
 
   return (
     <DashboardWrapper
-      title={`Bienvenido, ${user?.full_name || user?.email.split("@")[0]}`}
+      title={`Dashboard`}
       isLoading={isLoading}
     >
       {user ? (
