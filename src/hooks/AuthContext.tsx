@@ -196,14 +196,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
+  const clientId =
+    Platform.OS === "web"
+      ? clientWebId
+      : (Constants.expoConfig?.extra?.auth0MobileClientId as string);
+ 
   const discovery = useAutoDiscovery(`https://${auth0Domain}`);
-
   const [request, response, promptAsync] = useAuthRequest(
     {
-      clientId: clientWebId,
+      clientId: clientId,
       redirectUri: makeRedirectUri({
-        scheme: scheme,
-        path: Platform.select({ web: undefined, default: "callback" }),
+        scheme: Platform.OS === "web" ? undefined : scheme,
+        path: Platform.OS === "web" ? undefined : "callback",
       }),
       scopes: ["openid", "profile", "email", "offline_access"],
       usePKCE: true,
@@ -331,7 +335,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           if (code) {
             const tokenResponse = await exchangeCodeAsync(
               {
-                clientId: clientWebId,
+                clientId: clientId,
                 code,
                 redirectUri: makeRedirectUri({
                   scheme: scheme,
@@ -369,11 +373,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [response]);
 
-  const loginWithAuth0 = () => {
+  const loginWithAuth0 = async () => {
     // Es importante establecer isLoading en true antes de iniciar el flujo
     // para que la interfaz de usuario muestre el estado de carga.
     setIsLoading(true);
-    promptAsync();
+    await promptAsync();
   };
 
   const logout = async () => {

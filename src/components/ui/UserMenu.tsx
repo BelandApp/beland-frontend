@@ -103,7 +103,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   if (!user) {
     return (
       <TouchableOpacity
-        onPress={handleLogin}
+        onPress={()=>navigation.navigate("Login" as never)}
         style={[styles.loginButton, style]}
       >
         <User size={20} color={iconColor} />

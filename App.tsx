@@ -113,13 +113,13 @@ const AppContent = () => {
     !walletActionScreens.includes(currentRoute) &&
     !!user;
 
-  const isPayphoneSuccess =
-    typeof window !== "undefined" &&
-    window.location.pathname.startsWith("/payphone-success");
+  // const isPayphoneSuccess =
+  //   typeof window !== "undefined" &&
+  //   window.location.pathname.startsWith("/payphone-success");
 
-  if (isPayphoneSuccess) {
-    return <PayphoneSuccessScreen />;
-  }
+  // if (isPayphoneSuccess) {
+  //   return <PayphoneSuccessScreen />;
+  // }
 
   // Configuración de linking para rutas web
   const linking = {

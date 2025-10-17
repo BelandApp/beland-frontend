@@ -21,6 +21,7 @@ export default {
       useDemoMode: process.env.EXPO_PUBLIC_USE_DEMO_MODE,
       supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
       supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+      scheme: process.env.EXPO_PUBLIC_SCHEME,
     },
     splash: {
       image: "./assets/splash-icon.png",

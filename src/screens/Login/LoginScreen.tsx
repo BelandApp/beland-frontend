@@ -13,9 +13,12 @@ import { Button } from "src/components/ui";
 import { useNavigation } from "@react-navigation/native";
 import { styles } from "./styles";
 import { SocialButton } from "src/components/shared";
+import { useAuth } from "src/hooks";
 
 export default function LoginScreen() {
   const navigation = useNavigation<any>();
+  const { loginWithAuth0 } =
+      useAuth();
   const { width, height } = Dimensions.get("window");
   const [alert, setAlert] = useState<{
     visible: boolean;
@@ -64,22 +67,17 @@ export default function LoginScreen() {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    // TODO HANDLE AUTH
-    setAlert({
-      visible: true,
-      title: "Error de Google Authentication",
-      message:
-        "Hay un problema con la configuración de Auth0.",
-      type: "error",
-    });
-  };
+   const handleLoginAuth0 = async () => {
+     await loginWithAuth0();
+     navigation.navigate("MainTabs");
+   };
 
   return (
     <ScrollView
       contentContainerStyle={styles.scroll}
       showsVerticalScrollIndicator={false}
     >
+      <Button title="Regresar" onPress={() => navigation.goBack()} />
       <BelandLogo2
         width={width * 0.5}
         height={height * 0.2}
@@ -89,19 +87,7 @@ export default function LoginScreen() {
       <View style={styles.container}>
         <Text style={styles.title}>INGRESAR</Text>
         <SocialButton
-          title="Google"
-          iconName="google"
-          onPress={handleGoogleLogin}
-        />
-        <SocialButton
-          title="Facebook"
-          iconName="facebook"
-          onPress={handleGoogleLogin}
-        />
-        <SocialButton
-          title="Apple"
-         iconName="apple"
-          onPress={handleGoogleLogin}
+          onPress={handleLoginAuth0}
         />
         <Text style={styles.subtitle}>O inicia sesión con:</Text>
         <CustomInput
