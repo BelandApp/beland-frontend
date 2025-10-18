@@ -1,398 +1,125 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  Alert,
-  Image,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import BackgroundWaves from "../../components/ui/BackgroundWaves";
+import React, { useState } from "react";
+import { View, Text, ScrollView, Dimensions } from "react-native";
 import { CustomAlert } from "../../components/ui/CustomAlert";
-import { useAuth } from "../../hooks/AuthContext";
+import { LoginWave } from "src/components/ui/waves/Login.wave";
+import BelandLogo2 from "src/components/icons/BelandLogo2";
+import { CustomInput } from "src/components/shared/input";
+import { Button } from "src/components/ui";
+import { useNavigation } from "@react-navigation/native";
 import { styles } from "./styles";
+import { SocialButton } from "src/components/shared";
 
-export default function RegisterScreen({ navigation }: any) {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    address: "",
-    phone: "",
-    country: "",
-    city: "",
-  });
-  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+export default function RegisterScreen() {
+  const navigation = useNavigation<any>();
+  const { width, height } = Dimensions.get("window");
   const [alert, setAlert] = useState<{
     visible: boolean;
     title: string;
     message: string;
     type?: "success" | "error" | "info";
-    onClose?: () => void;
-    primaryButton?: { text: string; onPress: () => void };
-    secondaryButton?: { text: string; onPress: () => void };
-  }>({ visible: false, title: "", message: "" });
-  const { registerWithEmailPassword, isLoading: authLoading } = useAuth();
+  }>({ visible: false, title: "", message: "", type: "error" });
+  const [FormData, setFormData] = useState({
+    name: "",
+    phone:"",
+    email: "",
+    password: "",
+  });
 
-  // Efecto para navegación automática después del alert
-  useEffect(() => {
-    if (showSuccessAlert) {
-      const timer = setTimeout(() => {
-        setShowSuccessAlert(false);
-        // Limpiar el formulario
-        setFormData({
-          name: "",
-          email: "",
-          password: "",
-          confirmPassword: "",
-          address: "",
-          phone: "",
-          country: "",
-          city: "",
-        });
-        // Navegar al login
-        navigation.navigate("Login");
-      }, 2500); // 2.5 segundos
-
-      return () => clearTimeout(timer);
-    }
-  }, [showSuccessAlert, navigation]);
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const validateForm = () => {
-    if (!formData.name.trim()) {
-      setAlert({
-        visible: true,
-        title: "Error",
-        message: "El nombre es obligatorio",
-        type: "error",
-        onClose: () => setAlert((a) => ({ ...a, visible: false })),
-      });
-      return false;
-    }
-    if (!formData.email.trim()) {
-      setAlert({
-        visible: true,
-        title: "Error",
-        message: "El email es obligatorio",
-        type: "error",
-        onClose: () => setAlert((a) => ({ ...a, visible: false })),
-      });
-      return false;
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      setAlert({
-        visible: true,
-        title: "Error",
-        message: "Por favor ingresa un email válido",
-        type: "error",
-        onClose: () => setAlert((a) => ({ ...a, visible: false })),
-      });
-      return false;
-    }
-    if (formData.password.length < 8) {
-      setAlert({
-        visible: true,
-        title: "Error",
-        message: "La contraseña debe tener al menos 8 caracteres",
-        type: "error",
-        onClose: () => setAlert((a) => ({ ...a, visible: false })),
-      });
-      return false;
-    }
-    // Validación de contraseña fuerte según backend
-    const hasUppercase = /[A-Z]/.test(formData.password);
-    const hasLowercase = /[a-z]/.test(formData.password);
-    const hasNumber = /\d/.test(formData.password);
-    const hasSpecialChar = /[!@#$%^&*]/.test(formData.password);
-    if (!hasUppercase || !hasLowercase || !hasNumber || !hasSpecialChar) {
-      setAlert({
-        visible: true,
-        title: "Error",
-        message:
-          "La contraseña debe tener al menos:\n• 1 mayúscula\n• 1 minúscula\n• 1 número\n• 1 símbolo (!@#$%^&*)",
-        type: "error",
-        onClose: () => setAlert((a) => ({ ...a, visible: false })),
-      });
-      return false;
-    }
-    if (formData.password !== formData.confirmPassword) {
-      setAlert({
-        visible: true,
-        title: "Error",
-        message: "Las contraseñas no coinciden",
-        type: "error",
-        onClose: () => setAlert((a) => ({ ...a, visible: false })),
-      });
-      return false;
-    }
-    if (!formData.address.trim()) {
-      setAlert({
-        visible: true,
-        title: "Error",
-        message: "La dirección es obligatoria",
-        type: "error",
-        onClose: () => setAlert((a) => ({ ...a, visible: false })),
-      });
-      return false;
-    }
-    if (!formData.phone.trim() || isNaN(Number(formData.phone))) {
-      setAlert({
-        visible: true,
-        title: "Error",
-        message: "El teléfono es obligatorio y debe ser numérico",
-        type: "error",
-        onClose: () => setAlert((a) => ({ ...a, visible: false })),
-      });
-      return false;
-    }
-    if (!formData.country.trim()) {
-      setAlert({
-        visible: true,
-        title: "Error",
-        message: "El país es obligatorio",
-        type: "error",
-        onClose: () => setAlert((a) => ({ ...a, visible: false })),
-      });
-      return false;
-    }
-    if (!formData.city.trim()) {
-      setAlert({
-        visible: true,
-        title: "Error",
-        message: "La ciudad es obligatoria",
-        type: "error",
-        onClose: () => setAlert((a) => ({ ...a, visible: false })),
-      });
-      return false;
-    }
-    return true;
-  };
-
+  // TODO HANDLE AUTH
+  const isLoading = false;
   const handleRegister = async () => {
-    if (!validateForm()) return;
-
-    const result = await registerWithEmailPassword(
-      formData.name,
-      formData.email,
-      formData.password,
-      formData.confirmPassword,
-      formData.address,
-      formData.phone,
-      formData.country,
-      formData.city
-    );
-
-    if (result === true) {
-      setShowSuccessAlert(true);
-    } else if (result === "EMAIL_ALREADY_EXISTS") {
-      setAlert({
-        visible: true,
-        title: "Email ya registrado",
-        message:
-          "Ya existe una cuenta con este email. ¿Quieres iniciar sesión en su lugar?",
-        type: "error",
-        onClose: () => setAlert((a) => ({ ...a, visible: false })),
-        primaryButton: {
-          text: "Ir a Login",
-          onPress: () => {
-            setAlert((a) => ({ ...a, visible: false }));
-            navigation.navigate("Login");
-          },
-        },
-        secondaryButton: {
-          text: "Cancelar",
-          onPress: () => setAlert((a) => ({ ...a, visible: false })),
-        },
-      });
-    } else if (result === "REGISTRATION_LOGIN_ERROR") {
-      setAlert({
-        visible: true,
-        title: "Error tras registro",
-        message:
-          "El usuario fue creado pero no se pudo iniciar sesión automáticamente. Intenta iniciar sesión manualmente.",
-        type: "error",
-        onClose: () => setAlert((a) => ({ ...a, visible: false })),
-      });
-    } else if (result === "NETWORK_ERROR") {
-      setAlert({
-        visible: true,
-        title: "Error de conexión",
-        message:
-          "No se pudo conectar con el servidor. Por favor, verifica tu conexión a internet e intenta nuevamente.",
-        type: "error",
-        onClose: () => setAlert((a) => ({ ...a, visible: false })),
-      });
-    } else {
+    if (!FormData.email.trim() || !FormData.password.trim()) {
       setAlert({
         visible: true,
         title: "Error",
-        message: "Hubo un problema al crear tu cuenta",
+        message: "Por favor completa todos los campos",
         type: "error",
-        onClose: () => setAlert((a) => ({ ...a, visible: false })),
       });
+      return;
     }
-  };
-
-  const handleGoogleRegister = async () => {
-    // Google registration is no longer supported
+    try {
+      const success = true;
+      // await loginWithEmailPassword(email, password);
+      if (!success) {
+        setAlert({
+          visible: true,
+          title: "Error",
+          message: "Credenciales incorrectas",
+          type: "error",
+        });
+      }
+      // Si es exitoso, la navegación se maneja por el AuthContext
+    } catch (error) {
+      setAlert({
+        visible: true,
+        title: "Error",
+        message: "No se pudo completar el inicio de sesión",
+        type: "error",
+      });
+      console.error("[LOGIN] Error en loginWithEmailPassword:", error);
+    }
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
-      >
-        <BackgroundWaves />
-
-        <View style={styles.container}>
-          <Text style={styles.title}>beland</Text>
-          <Text style={styles.subtitle}>Crea tu cuenta</Text>
-
-          <TextInput
-            placeholder="Nombre completo"
-            style={styles.input}
-            value={formData.name}
-            onChangeText={(value) => handleInputChange("name", value)}
-            autoCapitalize="words"
-          />
-
-          <TextInput
-            placeholder="Correo electrónico"
-            style={styles.input}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={formData.email}
-            onChangeText={(value) => handleInputChange("email", value)}
-          />
-
-          <TextInput
-            placeholder="Dirección"
-            style={styles.input}
-            value={formData.address}
-            onChangeText={(value) => handleInputChange("address", value)}
-          />
-
-          <TextInput
-            placeholder="Teléfono"
-            style={styles.input}
-            keyboardType="phone-pad"
-            value={formData.phone}
-            onChangeText={(value) => handleInputChange("phone", value)}
-          />
-
-          <TextInput
-            placeholder="País"
-            style={styles.input}
-            value={formData.country}
-            onChangeText={(value) => handleInputChange("country", value)}
-          />
-
-          <TextInput
-            placeholder="Ciudad"
-            style={styles.input}
-            value={formData.city}
-            onChangeText={(value) => handleInputChange("city", value)}
-          />
-
-          <TextInput
-            placeholder="Contraseña"
-            style={styles.input}
-            secureTextEntry
-            value={formData.password}
-            onChangeText={(value) => handleInputChange("password", value)}
-          />
-
-          <Text style={styles.passwordHint}>
-            La contraseña debe tener: 8-15 caracteres, 1 mayúscula, 1 minúscula,
-            1 número y 1 símbolo (!@#$%^&*)
-          </Text>
-
-          <TextInput
-            placeholder="Confirmar contraseña"
-            style={styles.input}
-            secureTextEntry
-            value={formData.confirmPassword}
-            onChangeText={(value) =>
-              handleInputChange("confirmPassword", value)
-            }
-          />
-
-          <TouchableOpacity
-            style={[
-              styles.button,
-              (isLoading || authLoading) && styles.buttonDisabled,
-            ]}
-            onPress={handleRegister}
-            disabled={isLoading || authLoading}
-          >
-            <Text style={styles.buttonText}>
-              {isLoading || authLoading ? "Creando cuenta..." : "Crear cuenta"}
-            </Text>
-          </TouchableOpacity>
-
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>O regístrate con</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          <TouchableOpacity
-            style={styles.googleButton}
-            onPress={handleGoogleRegister}
-          >
-            <View style={styles.googleButtonContent}>
-              <Image
-                source={{
-                  uri: "https://developers.google.com/identity/images/g-logo.png",
-                }}
-                style={styles.googleLogo}
-              />
-              <Text style={styles.googleButtonText}>Continuar con Google</Text>
-            </View>
-          </TouchableOpacity>
-
-          <View style={styles.loginPrompt}>
-            <Text style={styles.loginPromptText}>¿Ya tienes una cuenta? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-              <Text style={styles.loginLink}>Inicia sesión</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </ScrollView>
-
-      {/* CustomAlert para registro exitoso */}
-      <CustomAlert
-        visible={showSuccessAlert}
-        type="success"
-        title="¡Registro exitoso!"
-        message="Tu cuenta ha sido creada correctamente. Redirigiendo al login..."
-        onClose={() => setShowSuccessAlert(false)}
-        autoCloseDelay={2500}
+    <ScrollView
+      contentContainerStyle={styles.scroll}
+      showsVerticalScrollIndicator={false}
+    >
+      <BelandLogo2
+        width={width * 0.5}
+        height={height * 0.2}
+        style={styles.logo}
       />
+      <LoginWave />
+      <View style={styles.container}>
+        <Text style={styles.title}>REGISTRARSE</Text>
+        <CustomInput
+          label="Nombre completo"
+          onChangeText={(name) => setFormData({ ...FormData, name })}
+          value={FormData.name}
+        />
+        <CustomInput
+          label="Teléfono"
+          onChangeText={(phone) => setFormData({ ...FormData, phone })}
+          value={FormData.phone}
+          keyboardType="phone-pad"
+        />
+        <CustomInput
+          label="Correo Electrónico"
+          onChangeText={(email) => setFormData({ ...FormData, email })}
+          value={FormData.email}
+          keyboardType="email-address"
+        />
+        <CustomInput
+          label="Contraseña"
+          onChangeText={(password) => setFormData({ ...FormData, password })}
+          value={FormData.password}
+          secureTextEntry
+        />
+        <Button
+          title={isLoading ? "Cargando..." : "Registrarse"}
+          onPress={handleRegister}
+          style={styles.button}
+          textStyle={styles.buttonText}
+        />
+        <View style={styles.containerRow}>
+          <Text style={styles.subtitle}>¿Ya tienes cuenta? </Text>
+          <Button
+            variant="none"
+            title="Ingresar"
+            textStyle={styles.buttonLink}
+            onPress={() => navigation.navigate("Login")}
+          />
+        </View>
+      </View>
+      {/* CustomAlert para errores y demo */}
       <CustomAlert
         visible={alert.visible}
         title={alert.title}
         message={alert.message}
         type={alert.type}
-        onClose={
-          alert.onClose || (() => setAlert((a) => ({ ...a, visible: false })))
-        }
-        primaryButton={alert.primaryButton}
-        secondaryButton={alert.secondaryButton}
+        onClose={() => setAlert({ ...alert, visible: false })}
       />
-    </SafeAreaView>
+    </ScrollView>
   );
 }

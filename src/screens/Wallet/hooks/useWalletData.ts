@@ -7,7 +7,7 @@ import { walletService, Wallet } from "../../../services/walletService";
 
 export const useWalletData = () => {
   const { user } = useAuth();
-  const { balance, setBalance } = useBeCoinsStore();
+  const { balance, setBalance, setLockedBalance } = useBeCoinsStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fullWalletData, setFullWalletData] = useState<Wallet | null>(null);
@@ -33,8 +33,19 @@ export const useWalletData = () => {
           ? 0
           : wallet.becoin_balance || 0;
 
+      // Convertir el balance bloqueado del backend (string) a número
+      const backendLockedBalance =
+        typeof wallet.locked_balance === "string"
+          ? isNaN(parseFloat(wallet.locked_balance))
+            ? 0
+            : parseFloat(wallet.locked_balance)
+          : isNaN(wallet.locked_balance)
+          ? 0
+          : wallet.locked_balance || 0;
+
       // Actualizar el store con el balance real del backend
       setBalance(backendBalance);
+      setLockedBalance(backendLockedBalance);
       // Guardar los datos completos de la wallet
       setFullWalletData(wallet);
 
@@ -56,6 +67,7 @@ export const useWalletData = () => {
 
   const walletData: WalletData = {
     balance: balance, // Balance del store (actualizado desde backend o demo)
+    locked_balance: fullWalletData?.locked_balance ?? 0, // Balance bloqueado del backend
     estimatedValue: formatUSDPrice(balance * 0.05), // Valor estimado en USD (solo conversión directa)
     alias: fullWalletData?.alias ?? undefined,
   };

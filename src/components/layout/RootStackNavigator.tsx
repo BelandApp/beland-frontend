@@ -16,6 +16,8 @@ import UserResourcesScreen from "src/screens/UserResources/UserResourcesScreen";
 
 import PayphoneSuccessScreen from "../../screens/Wallet/PayphoneSuccessScreen";
 import { CatalogScreen } from "src/screens/Catalog";
+import { LoginScreen } from "src/screens/Login";
+import { RegisterScreen } from "src/screens/Register";
 
 // 1. Define el tipo de tu Root Stack con los nombres correctos
 export type RootStackParamList = {
@@ -61,6 +63,8 @@ export type RootStackParamList = {
   };
   PayphoneSuccess: { toWalletId: string; amountPaymentId: string };
   // Añade aquí cualquier otra ruta que falte.
+  Login: undefined;
+  Register: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -136,6 +140,16 @@ export const RootStackNavigator = () => {
       <Stack.Screen
         name="UserResources"
         component={UserResourcesScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Login"
+        component={LoginScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Register"
+        component={RegisterScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

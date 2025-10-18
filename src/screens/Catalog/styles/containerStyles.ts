@@ -7,7 +7,7 @@ export const containerStyles = StyleSheet.create({
     backgroundColor: "#F8F9FA",
   },
   contentContainer: {
-    paddingTop: 140,
+    paddingTop: 110, // Reducido de 140 a 110
     paddingHorizontal: 16,
     paddingBottom: Platform.OS === "android" ? 96 : 86, // Espacio extra para la nueva barra de navegación
   },
@@ -18,9 +18,9 @@ export const containerStyles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 1000,
-    paddingTop: Platform.OS === "android" ? 20 : 50, // Reducido para Android porque la barra de estado está oculta
+    paddingTop: Platform.OS === "android" ? 20 : 45, // Reducido de 50 a 45 para iOS
     paddingHorizontal: 20,
-    paddingBottom: 10,
+    paddingBottom: 8, // Reducido de 10 a 8
     backgroundColor: colors.belandOrange, // Fondo naranja por defecto
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
@@ -39,7 +39,7 @@ export const containerStyles = StyleSheet.create({
     flexDirection: "row" as const,
     alignItems: "center" as const,
     justifyContent: "space-between" as const,
-    marginBottom: 16,
+    marginBottom: 8, // Reducido de 16 a 8
   },
   headerLeft: {
     flexDirection: "row" as const,
@@ -59,14 +59,14 @@ export const containerStyles = StyleSheet.create({
     flex: 1,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 22, // Reducido de 24 a 22
     fontWeight: "700" as const,
     color: "#FFFFFF", // Color blanco por defecto para el fondo naranja
     marginBottom: 2,
     letterSpacing: -0.5,
   },
   headerSubtitle: {
-    fontSize: 14,
+    fontSize: 13, // Reducido de 14 a 13
     color: "#FFFFFF", // Color blanco por defecto para el fondo naranja
     fontWeight: "500" as const,
     opacity: 0.9,

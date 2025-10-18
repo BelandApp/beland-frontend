@@ -49,6 +49,7 @@ export const INITIAL_BECOIN_BALANCE = 300; // Balance inicial para usuarios
 
 interface BeCoinsState {
   balance: number;
+  locked_balance: number;
   totalEarned: number;
   totalSpent: number;
   transactions: BeCoinsTransaction[];
@@ -84,6 +85,7 @@ interface BeCoinsActions {
     relatedId?: string
   ) => void;
   setBalance: (amount: number) => void;
+  setLockedBalance: (amount: number) => void;
 
   // Utilidades
   hasEnoughBeCoins: (amount: number) => boolean;
@@ -120,6 +122,7 @@ const generateTransactionId = () => {
 
 const initialState: BeCoinsState = {
   balance: 0, // Iniciar con 0, el backend proporcionará el balance real
+  locked_balance: 0, // Balance bloqueado inicialmente en 0
   totalEarned: 0, // También iniciar con 0
   totalSpent: 0,
   transactions: [], // Sin transacciones iniciales, vendrán del backend
@@ -249,6 +252,21 @@ export const useBeCoinsStore = create<BeCoinsStore>((set, get) => ({
     });
   },
 
+  setLockedBalance: (amount: number) => {
+    if (amount < 0) {
+      console.warn("El balance bloqueado no puede ser negativo");
+      return;
+    }
+
+    set((state) => {
+      const newState = {
+        locked_balance: amount,
+      };
+      saveState({ ...state, ...newState });
+      return newState;
+    });
+  },
+
   // Utilidades
   hasEnoughBeCoins: (amount: number) => {
     return get().balance >= amount;
@@ -273,6 +291,7 @@ export const useBeCoinsStore = create<BeCoinsStore>((set, get) => ({
   resetBalance: () => {
     const resetState: BeCoinsState = {
       balance: 0, // Reset a 0, no usar balance inicial hardcodeado
+      locked_balance: 0, // Reset balance bloqueado a 0
       totalEarned: 0,
       totalSpent: 0,
       transactions: [],

@@ -2,17 +2,12 @@ import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { WalletAction } from "../types";
 import { actionsStyles } from "../styles";
-import { useCustomAlert } from "../../../hooks/useCustomAlert";
-import { CustomAlert } from "../../../components/ui/CustomAlert";
 
 interface WalletActionsProps {
   actions: WalletAction[];
 }
 
 export const WalletActions: React.FC<WalletActionsProps> = ({ actions }) => {
-  const { showAlert, alertConfig, showCustomAlert, hideAlert } =
-    useCustomAlert();
-
   const handlePress = (action: WalletAction) => {
     if (action.onPress) {
       action.onPress();
@@ -66,13 +61,6 @@ export const WalletActions: React.FC<WalletActionsProps> = ({ actions }) => {
           );
         })}
       </View>
-      <CustomAlert
-        visible={showAlert}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        type={alertConfig.type}
-        onClose={hideAlert}
-      />
     </>
   );
 };

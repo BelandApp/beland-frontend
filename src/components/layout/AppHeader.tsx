@@ -23,6 +23,9 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           >
             <BelandLogo2 width={120} height={32} />
           </TouchableOpacity>
+          <TouchableOpacity
+          onPress={() => navigation.navigate("Login" as never)}
+          >Login</TouchableOpacity>
           <UserMenu iconColor="#334155" variant="full" />
         </View>
       </View>

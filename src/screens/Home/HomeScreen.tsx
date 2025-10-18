@@ -4,8 +4,9 @@ import {
   ScrollView,
   Platform,
   StyleSheet,
-  SafeAreaView,
+  Text,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { AppHeader } from "../../components/layout/AppHeader";
 import {
@@ -23,6 +24,8 @@ import {
 } from "./hooks";
 import { useWalletTransactions } from "../Wallet/hooks";
 import { useBeCoinsStore } from "../../stores/useBeCoinsStore";
+import { LoginWave } from "src/components/ui/waves/Login.wave";
+import { HomeWave } from "src/components/ui/waves/Home.wave";
 
 export const HomeScreen = () => {
   const navigation = useNavigation();
@@ -39,7 +42,14 @@ export const HomeScreen = () => {
 
   // Usar la constante centralizada para el cálculo de USD
   const balance = userStats?.coinsAmount ?? 0;
+  const lockedBalance = useBeCoinsStore((state) => state.locked_balance) ?? 0;
   const estimatedValue = getBeCoinsInUSD(balance);
+
+  // Solo pasar locked_balance si es mayor a 0
+  const shouldShowLockedBalance = lockedBalance > 0;
+  const lockedBalanceToPass = shouldShowLockedBalance
+    ? lockedBalance
+    : undefined;
 
   // Handlers para acciones rápidas
   const handleRecharge = () => {
@@ -69,7 +79,6 @@ export const HomeScreen = () => {
   const handleDelivery = () => {
     navigation.navigate("Catalog" as never);
   };
-
   if (Platform.OS === "web") {
     const dynamicStyles = StyleSheet.create({
       featuresGrid: {
@@ -92,6 +101,7 @@ export const HomeScreen = () => {
           <View style={dynamicStyles.content}>
             <HeroSection
               balance={balance}
+              locked_balance={lockedBalanceToPass}
               estimatedValue={estimatedValue.toFixed(2)}
             />
 
@@ -122,6 +132,7 @@ export const HomeScreen = () => {
 
             <RecentTransactions transactions={transactions ?? []} />
           </View>
+          <HomeWave />
         </ScrollView>
       </View>
     );
@@ -135,6 +146,7 @@ export const HomeScreen = () => {
         <View style={styles.content}>
           <HeroSection
             balance={balance}
+            locked_balance={lockedBalanceToPass}
             estimatedValue={estimatedValue.toFixed(2)}
           />
 
@@ -165,6 +177,7 @@ export const HomeScreen = () => {
             onViewHistory={handleViewHistory}
           />
         </View>
+        <HomeWave />
       </ScrollView>
     </SafeAreaView>
   );

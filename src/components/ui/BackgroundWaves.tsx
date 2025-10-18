@@ -3,7 +3,7 @@ import { StyleSheet, View, Dimensions, Platform } from "react-native";
 import Svg, { Path } from "react-native-svg";
 
 const { width } = Dimensions.get("window");
-
+console.log("Screen width:", width);
 interface Props {
   topColor?: string;
   bottomColor?: string;
@@ -15,14 +15,21 @@ export default function BackgroundWaves({
 }: Props) {
   return (
     <>
-      <Svg height="240" width={width} viewBox="0 0 1440 320" style={styles.top}>
+      <Svg
+        height="240"
+        width={width}
+        viewBox="0 0 1440 320"
+        style={styles.top}
+        preserveAspectRatio="none"
+      >
         <Path
           fill={topColor}
           d="M0,224L48,197.3C96,171,192,117,288,122.7C384,128,480,192,576,213.3C672,235,768,213,864,192C960,171,1056,149,1152,165.3C1248,181,1344,235,1392,261.3L1440,288L1440,0L0,0Z"
         />
       </Svg>
       <Svg
-        height="120"
+        height="240"
+        preserveAspectRatio="none"
         width={width}
         viewBox="0 0 1440 320"
         style={styles.bottom}

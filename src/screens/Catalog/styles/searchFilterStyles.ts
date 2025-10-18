@@ -3,6 +3,7 @@ import { colors } from "../../../styles/colors";
 
 export const searchFilterStyles = StyleSheet.create({
   searchContainer: {
+    marginTop: 50, // Agregamos margen superior para separar del header
     marginBottom: 16,
   },
   searchBar: {

@@ -71,132 +71,7 @@ export const CustomAlert = ({
 
   if (!visible) return null;
 
-  // Render web mejorado
-  if (Platform.OS === "web") {
-    return (
-      <div
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "100vw",
-          height: "100vh",
-          background: "rgba(0,0,0,0.45)",
-          zIndex: 99999, // Increased z-index to be above delivery modal
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontFamily: "Inter, Roboto, Segoe UI, Arial, sans-serif",
-        }}
-      >
-        <div
-          style={{
-            background: "#fff",
-            borderRadius: 20,
-            padding: "40px 32px 32px 32px",
-            minWidth: 320,
-            maxWidth: 400,
-            boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
-            textAlign: "center",
-            position: "relative",
-          }}
-        >
-          <div
-            style={{
-              fontSize: 54,
-              marginBottom: 18,
-              color: getColorByType(),
-              filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.10))",
-              fontFamily:
-                "Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, Arial, sans-serif",
-            }}
-          >
-            {getIconByType()}
-          </div>
-          <div
-            style={{
-              fontWeight: 800,
-              fontSize: 24,
-              marginBottom: 10,
-              color: "#222",
-              letterSpacing: 0.5,
-              fontFamily: "Inter, Roboto, Segoe UI, Arial, sans-serif",
-            }}
-          >
-            {title}
-          </div>
-          <div
-            style={{
-              fontSize: 17,
-              color: "#555",
-              marginBottom: 28,
-              lineHeight: 1.5,
-              fontWeight: 500,
-              fontFamily: "Inter, Roboto, Segoe UI, Arial, sans-serif",
-            }}
-          >
-            {message}
-          </div>
-          {/* Botones personalizados para web */}
-          {(!autoCloseDelay || primaryButton || secondaryButton) && (
-            <div
-              style={{
-                display: "flex",
-                gap: "12px",
-                width: "100%",
-                justifyContent: secondaryButton ? "space-between" : "center",
-                marginTop: "4px",
-              }}
-            >
-              {secondaryButton && (
-                <button
-                  style={{
-                    background: "#F3F4F6",
-                    color: "#374151",
-                    border: "1.5px solid #E5E7EB",
-                    borderRadius: "12px",
-                    padding: "12px 28px",
-                    fontWeight: 600,
-                    fontSize: "15px",
-                    cursor: "pointer",
-                    boxShadow: "0 1px 2px rgba(0,0,0,0.10)",
-                    transition: "background 0.2s",
-                    flex: 1,
-                    maxWidth: "160px",
-                  }}
-                  onClick={secondaryButton.onPress}
-                >
-                  {secondaryButton.text}
-                </button>
-              )}
-              <button
-                style={{
-                  background: getColorByType(),
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "12px",
-                  padding: "12px 28px",
-                  fontWeight: 600,
-                  fontSize: "15px",
-                  cursor: "pointer",
-                  boxShadow: "0 2px 12px rgba(0,0,0,0.10)",
-                  transition: "background 0.2s",
-                  flex: secondaryButton ? 1 : 0,
-                  minWidth: secondaryButton ? "auto" : "140px",
-                  maxWidth: secondaryButton ? "160px" : "200px",
-                }}
-                onClick={primaryButton?.onPress || onClose}
-              >
-                {primaryButton?.text || "OK"}
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // Render mobile (native)
+  // Usar siempre Modal de React Native para máxima compatibilidad
   return (
     <Modal
       transparent
@@ -257,7 +132,7 @@ export const CustomAlert = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    backgroundColor: "rgba(0, 0, 0, 0.6)", // Same as delete modal
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
@@ -268,12 +143,13 @@ const styles = StyleSheet.create({
     padding: 24,
     alignItems: "center",
     maxWidth: Dimensions.get("window").width - 40,
+    minWidth: 300,
     width: "100%",
-    elevation: 8,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 }, // Same as delete modal
+    shadowOpacity: 0.15, // Same as delete modal
+    shadowRadius: 8, // Same as delete modal
+    elevation: 8, // Same as delete modal
   },
   iconContainer: {
     width: 64,

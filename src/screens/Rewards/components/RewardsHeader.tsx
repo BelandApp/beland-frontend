@@ -16,6 +16,7 @@ export const RewardsHeader: React.FC = () => {
         size="medium"
         variant="header"
         style={headerStyles.coinsDisplay}
+        showLockedBalance={true}
       />
     </View>
   );

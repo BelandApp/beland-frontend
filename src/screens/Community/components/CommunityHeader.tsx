@@ -22,7 +22,12 @@ export const CommunityHeader: React.FC<CommunityHeaderProps> = ({
           </Text>
         </View>
         <View style={headerStyles.balanceContainer}>
-          <BeCoinsBalance variant="header" size="medium" balance={balance} />
+          <BeCoinsBalance
+            variant="header"
+            size="medium"
+            balance={balance}
+            showLockedBalance={true}
+          />
         </View>
       </View>
     </View>

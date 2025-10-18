@@ -16,6 +16,8 @@ interface BeCoinsBalanceProps {
   size?: "small" | "medium" | "large";
   variant?: "default" | "header"; // Nueva prop para el estilo del header
   balance?: number; // Balance opcional como prop
+  locked_balance?: number; // Balance bloqueado opcional como prop
+  showLockedBalance?: boolean; // Mostrar o no el balance bloqueado
 }
 
 export const BeCoinsBalance: React.FC<BeCoinsBalanceProps> = ({
@@ -24,11 +26,16 @@ export const BeCoinsBalance: React.FC<BeCoinsBalanceProps> = ({
   size = "medium",
   variant = "default", // Valor por defecto
   balance: propBalance, // Balance como prop
+  locked_balance: propLockedBalance, // Balance bloqueado como prop
+  showLockedBalance = false, // Por defecto no mostrar balance bloqueado
 }) => {
-  const { balance: storeBalance } = useBeCoinsStore();
+  const { balance: storeBalance, locked_balance: storeLockedBalance } =
+    useBeCoinsStore();
 
   // Usar el balance de props si está disponible, sino usar el del store
   const currentBalance = propBalance !== undefined ? propBalance : storeBalance;
+  const currentLockedBalance =
+    propLockedBalance !== undefined ? propLockedBalance : storeLockedBalance;
 
   // Calcular USD usando la función de conversión directa
   const usdValue = convertBeCoinsToUSD(currentBalance || 0);
@@ -91,6 +98,11 @@ export const BeCoinsBalance: React.FC<BeCoinsBalanceProps> = ({
         <Text style={[styles.balanceText, sizeStyles.text]}>
           {Math.floor(currentBalance || 0)} BeCoins
         </Text>
+        {showLockedBalance && currentLockedBalance > 0 && (
+          <Text style={[styles.lockedBalanceText, sizeStyles.value]}>
+            {Math.floor(currentLockedBalance)} bloqueados
+          </Text>
+        )}
         <Text style={[styles.valueText, sizeStyles.value]}>
           ${usdValue.toFixed(2)} USD
         </Text>
@@ -159,6 +171,12 @@ const styles = {
   valueText: {
     fontWeight: "500" as const,
     color: "#666666", // Gris más oscuro para mejor legibilidad
+  },
+
+  lockedBalanceText: {
+    fontWeight: "500" as const,
+    color: "#9CA3AF", // Gris más claro para el balance bloqueado
+    fontStyle: "italic" as const,
   },
 
   // Textos por tamaño
