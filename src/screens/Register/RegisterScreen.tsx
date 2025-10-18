@@ -16,7 +16,16 @@ import { styles } from "./styles";
 import { SocialButton } from "src/components/shared";
 import { CircleArrowLeftIcon } from "lucide-react-native";
 import { authService } from "src/services/auth/auth.service";
-
+export type RegisterFormData = {
+  full_name: string;
+  phone: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  address: string;
+  country: string;
+  city: string;
+}
 export default function RegisterScreen() {
   const navigation = useNavigation();
   const { width, height } = Dimensions.get("window");
@@ -26,12 +35,18 @@ export default function RegisterScreen() {
     message: string;
     type?: "success" | "error" | "info";
   }>({ visible: false, title: "", message: "", type: "error" });
-  const [FormData, setFormData] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    password: "",
-  });
+  const [FormData, setFormData] =
+    useState <
+    RegisterFormData>({
+      full_name: "",
+      phone: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      address: "Belgrano",
+      country: "Argentina",
+      city: "Posadas",
+    });
 
   // TODO HANDLE AUTH
   const isLoading = false;
@@ -45,6 +60,7 @@ export default function RegisterScreen() {
       });
       return;
     }
+   FormData.confirmPassword = FormData.password
     try {
       const success = await authService.registerUser(FormData);
       if (!success) {
@@ -89,8 +105,8 @@ export default function RegisterScreen() {
         <Text style={styles.title}>REGISTRARSE</Text>
         <CustomInput
           label="Nombre completo"
-          onChangeText={(name) => setFormData({ ...FormData, name })}
-          value={FormData.name}
+          onChangeText={(full_name) => setFormData({ ...FormData, full_name })}
+          value={FormData.full_name}
         />
         <CustomInput
           label="Teléfono"

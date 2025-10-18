@@ -1,4 +1,5 @@
 import Constants from "expo-constants";
+import { RegisterFormData } from "src/screens/Register/RegisterScreen";
 
 // === CONFIGURACIÓN ===
 const auth0Domain = Constants.expoConfig?.extra?.auth0Domain as string;
@@ -66,7 +67,7 @@ export const authService = {
     return data;
   },
 
-  async registerUser(FormData: {name:string,phone:string,email:string,password:string}) {
+  async registerUser(FormData: RegisterFormData) {
     const res = await fetch(`${API_URL}/users`, {
       method: "POST",
       headers: {
