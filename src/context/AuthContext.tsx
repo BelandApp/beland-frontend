@@ -5,8 +5,15 @@ import React, {
   useEffect,
   useState,
 } from "react";
-import { Alert } from "react-native";
-import { useAuth0Login } from "src/hooks/authSession/useAuthLogin0";
+import {
+  makeRedirectUri,
+  useAuthRequest,
+  exchangeCodeAsync,
+  useAutoDiscovery,
+} from "expo-auth-session";
+import * as WebBrowser from "expo-web-browser";
+import { Alert, Platform } from "react-native";
+import Constants from "expo-constants";
 import { authService } from "src/services/auth/auth.service";
 import { TokenService } from "src/services/auth/token.service";
 
@@ -26,13 +33,30 @@ type AuthContextType = {
   token: string | null;
   isLoading: boolean;
   loginWithEmail: (email: string, password: string) => Promise<void>;
-  loginWithAuth0: () => Promise<void>;
+  handleAuth0Login: () => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   canPerformAction: boolean;
   setUser: (user: User | null) => void; //TODO VER SI LO PODEMOS QUITAR PARA MAYOR SEGURIDAD
   requireAuth: (action: () => void | Promise<void>) => Promise<void>; //TODO VER SI LO PODEMOS QUITAR
 };
+WebBrowser.maybeCompleteAuthSession();
+
+// === CONFIGURACIÓN ===
+const auth0Domain = Constants.expoConfig?.extra?.auth0Domain as string;
+const clientWebId = Constants.expoConfig?.extra?.auth0WebClientId as string;
+const scheme = Constants.expoConfig?.scheme as string;
+const auth0Audience = Constants.expoConfig?.extra?.auth0Audience as string;
+const apiBaseUrl = Constants.expoConfig?.extra?.apiUrl as string;
+
+// Validar que las variables de entorno están disponibles
+const configIsValid = auth0Domain && clientWebId && scheme && auth0Audience;
+
+if (!configIsValid) {
+  console.error(
+    "❌ Las variables de entorno de Auth0 no están configuradas correctamente."
+  );
+}
 
 export const AuthContext = createContext<AuthContextType | undefined>(
   undefined
@@ -42,7 +66,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { loginWithAuth0 } = useAuth0Login();
   useEffect(() => {
     (async () => {
       const savedToken = await TokenService.getToken();
@@ -59,22 +82,92 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     })();
   }, []);
 
+  const discovery = useAutoDiscovery(`https://${auth0Domain}`);
+
+  const [request, response, promptAsync] = useAuthRequest(
+    {
+      clientId: clientWebId,
+      redirectUri: makeRedirectUri({
+        scheme: scheme,
+        path: Platform.select({ web: undefined, default: "callback" }),
+      }),
+      scopes: ["openid", "profile", "email", "offline_access"],
+      usePKCE: true,
+      extraParams: {
+        audience: auth0Audience,
+        prompt: "login", // Fuerza a que Auth0 muestre la pantalla de login
+      },
+    },
+    discovery
+  );
+
+  useEffect(() => {
+    const handleRedirect = async () => {
+      try {
+        if (response && response.type === "success" && discovery) {
+          const { code } = response.params;
+          if (code) {
+            const tokenResponse = await exchangeCodeAsync(
+              {
+                clientId: clientWebId,
+                code,
+                redirectUri: makeRedirectUri({
+                  scheme: scheme,
+                  path: Platform.select({
+                    web: undefined,
+                    default: "callback",
+                  }),
+                }),
+                extraParams: {
+                  code_verifier: request?.codeVerifier || "",
+                },
+              },
+              discovery
+            );
+            if (tokenResponse.accessToken) {
+              await TokenService.saveToken(tokenResponse.accessToken);
+              await authService.getCurrentUser(tokenResponse.accessToken);
+            } else {
+              throw new Error("accessToken no fue recibido.");
+            }
+          }
+        }
+      } catch (err) {
+        await TokenService.clearToken();
+        setUser(null);
+        setToken(null);
+        Alert.alert(
+          "Error de autenticación",
+          "Fallo al iniciar sesión. Por favor, inténtelo de nuevo."
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    handleRedirect();
+  }, [response]);
+
   const loginWithEmail = async (email: string, password: string) => {
-    const newToken = await authService.loginWithEmail(email, password);
-    await TokenService.saveToken(newToken);
-    setToken(newToken);
-    setUser(await authService.getCurrentUser(newToken));
+    setIsLoading(true);
+    try {
+      const newToken = await authService.loginWithEmail(email, password);
+      await TokenService.saveToken(newToken);
+      setToken(newToken);
+      setUser(await authService.getCurrentUser(newToken));
+    } catch (error) {
+       Alert.alert(
+         "Error de autenticación",
+         "Fallo al iniciar sesión. Por favor, inténtelo de nuevo."
+       );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleAuth0Login = async () => {
-    try {
-      const token = await loginWithAuth0();
-      await TokenService.saveToken(token);
-      setToken(token);
-      setUser(await authService.getCurrentUser(token));
-    } catch (err) {
-      console.error(err);
-    }
+    setIsLoading(true);
+    await promptAsync();
   };
 
   const logout = async () => {
@@ -89,7 +182,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         "Debes iniciar sesión para realizar esta acción.",
         [
           { text: "Cancelar", style: "cancel" },
-          { text: "Iniciar sesión", onPress: loginWithAuth0 },
+          { text: "Iniciar sesión", onPress: handleAuth0Login },
         ]
       );
       return;
@@ -108,7 +201,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         token,
         isLoading,
         loginWithEmail,
-        loginWithAuth0,
+        handleAuth0Login,
         logout,
         isAuthenticated,
         canPerformAction,
