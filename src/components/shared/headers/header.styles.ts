@@ -17,7 +17,7 @@ export const HeaderStyles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     zIndex: 1,
-    minHeight: 120,
+    minHeight: Platform.OS === "web" ? 0 : 120,
   },
   logoContainer: { backgroundColor: "#FFF", borderRadius: 24 },
   left: { flexDirection: "row", gap: 12, alignItems: "center" },
