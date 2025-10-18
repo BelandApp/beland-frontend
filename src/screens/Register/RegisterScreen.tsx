@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { View, Text, ScrollView, Dimensions } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  Dimensions,
+  TouchableOpacity,
+} from "react-native";
 import { CustomAlert } from "../../components/ui/CustomAlert";
 import { LoginWave } from "src/components/ui/waves/Login.wave";
 import BelandLogo2 from "src/components/icons/BelandLogo2";
@@ -8,9 +14,10 @@ import { Button } from "src/components/ui";
 import { useNavigation } from "@react-navigation/native";
 import { styles } from "./styles";
 import { SocialButton } from "src/components/shared";
+import { CircleArrowLeftIcon } from "lucide-react-native";
 
 export default function RegisterScreen() {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation();
   const { width, height } = Dimensions.get("window");
   const [alert, setAlert] = useState<{
     visible: boolean;
@@ -20,7 +27,7 @@ export default function RegisterScreen() {
   }>({ visible: false, title: "", message: "", type: "error" });
   const [FormData, setFormData] = useState({
     name: "",
-    phone:"",
+    phone: "",
     email: "",
     password: "",
   });
@@ -70,6 +77,12 @@ export default function RegisterScreen() {
         height={height * 0.2}
         style={styles.logo}
       />
+      <TouchableOpacity
+        onPress={() => navigation.navigate("MainTabs" as never)}
+        style={styles.backButton}
+      >
+        <CircleArrowLeftIcon size={32} color="#FFF" />
+      </TouchableOpacity>
       <LoginWave />
       <View style={styles.container}>
         <Text style={styles.title}>REGISTRARSE</Text>
@@ -108,7 +121,7 @@ export default function RegisterScreen() {
             variant="none"
             title="Ingresar"
             textStyle={styles.buttonLink}
-            onPress={() => navigation.navigate("Login")}
+            onPress={() => navigation.navigate("Login" as never)}
           />
         </View>
       </View>

@@ -4,6 +4,7 @@ import {
   Text,
   ScrollView,
   Dimensions,
+  TouchableOpacity,
 } from "react-native";
 import { CustomAlert } from "../../components/ui/CustomAlert";
 import { LoginWave } from "src/components/ui/waves/Login.wave";
@@ -13,12 +14,14 @@ import { Button } from "src/components/ui";
 import { useNavigation } from "@react-navigation/native";
 import { styles } from "./styles";
 import { SocialButton } from "src/components/shared";
-import { useAuth } from "src/hooks";
+import { useAuth } from "src/context";
+import { CircleArrowLeftIcon } from "lucide-react-native";
+import { authService } from "src/services/auth/auth.service";
 
 export default function LoginScreen() {
   const navigation = useNavigation<any>();
-  const { loginWithAuth0 } =
-      useAuth();
+  const { loginWithAuth0, loginWithEmail, user, isAuthenticated, isLoading } =
+    useAuth();
   const { width, height } = Dimensions.get("window");
   const [alert, setAlert] = useState<{
     visible: boolean;
@@ -30,9 +33,7 @@ export default function LoginScreen() {
     email: "",
     password: "",
   });
- 
-  // TODO HANDLE AUTH 
-  const isLoading = false;
+  if (isAuthenticated) navigation.navigate("MainTabs");
   const handleLogin = async () => {
     if (!FormData.email.trim() || !FormData.password.trim()) {
       setAlert({
@@ -44,10 +45,8 @@ export default function LoginScreen() {
       return;
     }
     try {
-      const success = true
-        // await loginWithEmailPassword(email, password);
-      console.log("[LOGIN] Resultado loginWithEmailPassword:", success);
-      if (!success) {
+      await loginWithEmail(FormData.email, FormData.password);
+      if (!user) {
         setAlert({
           visible: true,
           title: "Error",
@@ -55,7 +54,6 @@ export default function LoginScreen() {
           type: "error",
         });
       }
-      // Si es exitoso, la navegación se maneja por el AuthContext
     } catch (error) {
       setAlert({
         visible: true,
@@ -67,17 +65,23 @@ export default function LoginScreen() {
     }
   };
 
-   const handleLoginAuth0 = async () => {
-     await loginWithAuth0();
-     navigation.navigate("MainTabs");
-   };
+  const handleLoginAuth0 = async () => {
+    const rest = await loginWithAuth0();
+    console.log(rest);
+    navigation.navigate("MainTabs");
+  };
 
   return (
     <ScrollView
       contentContainerStyle={styles.scroll}
       showsVerticalScrollIndicator={false}
     >
-      <Button title="Regresar" onPress={() => navigation.goBack()} />
+      <TouchableOpacity
+        onPress={() => navigation.navigate("MainTabs" as never)}
+        style={styles.backButton}
+      >
+        <CircleArrowLeftIcon size={32} color="#FFF" />
+      </TouchableOpacity>
       <BelandLogo2
         width={width * 0.5}
         height={height * 0.2}
@@ -85,11 +89,15 @@ export default function LoginScreen() {
       />
       <LoginWave />
       <View style={styles.container}>
-        <Text style={styles.title}>INGRESAR</Text>
-        <SocialButton
-          onPress={handleLoginAuth0}
+        <SocialButton onPress={handleLoginAuth0} />
+        <View
+          style={{
+            width: "100%",
+            height: 2,
+            backgroundColor: "rgba(255, 255, 255, 0.2)",
+            marginVertical: 10,
+          }}
         />
-        <Text style={styles.subtitle}>O inicia sesión con:</Text>
         <CustomInput
           label="Correo Electrónico"
           onChangeText={(email) => setFormData({ ...FormData, email })}
