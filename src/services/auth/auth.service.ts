@@ -65,4 +65,19 @@ export const authService = {
     const data = await res.json();
     return data;
   },
+
+  async registerUser(FormData: {name:string,phone:string,email:string,password:string}) {
+    const res = await fetch(`${API_URL}/users`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(FormData),
+    });
+    if (res.status !== 200) {
+      throw new Error("Error en la solicitud de registro de usuario");
+    }
+    const data = await res.json();
+    return data.token;
+  },
 };

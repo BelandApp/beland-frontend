@@ -20,7 +20,7 @@ import { authService } from "src/services/auth/auth.service";
 
 export default function LoginScreen() {
   const navigation = useNavigation<any>();
-  const { loginWithAuth0, loginWithEmail, user, isAuthenticated, isLoading } =
+  const { handleAuth0Login, loginWithEmail, user, isAuthenticated, isLoading } =
     useAuth();
   const { width, height } = Dimensions.get("window");
   const [alert, setAlert] = useState<{
@@ -66,8 +66,7 @@ export default function LoginScreen() {
   };
 
   const handleLoginAuth0 = async () => {
-    const rest = await loginWithAuth0();
-    console.log(rest);
+    await handleAuth0Login();
     navigation.navigate("MainTabs");
   };
 
