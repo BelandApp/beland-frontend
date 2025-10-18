@@ -14,10 +14,11 @@ import {
   PurchaseModal,
   InsufficientBalanceModal,
 } from "../../Community/components";
-import { resourceService, walletService } from "../../../services";
+import { resourceService, walletService } from "src/services";
 
-import { calculateResourcePrice } from "../../../utils";
-import { useUserBalance, useAuth, useCustomAlert } from "../../../hooks";
+import { calculateResourcePrice } from "src/utils";
+import { useAuth } from "src/context";
+import { useUserBalance, useCustomAlert } from "src/hooks";
 
 type Resource = any;
 

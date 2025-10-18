@@ -17,7 +17,7 @@ import { Order, OrderStatus } from "../../types/Order";
 import { OrdersStackParamList } from "../../types/navigation";
 import { colors } from "../../styles/colors";
 import { ordersStyles } from "./styles";
-import { useAuth } from "../../hooks/AuthContext";
+import { useAuth } from "src/context";
 import { UserMenu } from "../../components/ui/UserMenu";
 import { ThemedHeader } from "src/components/shared/headers/Header";
 

@@ -9,7 +9,7 @@ import {
   Pressable,
   ActivityIndicator,
 } from "react-native";
-import { useAuth } from "../../hooks/AuthContext";
+import { useAuth } from "src/context";
 import {
   LogOut,
   LayoutDashboard,
@@ -23,7 +23,7 @@ import {
 } from "lucide-react-native";
 import { useNavigation } from "@react-navigation/native";
 import { showSuccessAlert, showErrorAlert } from "../../utils/alertHelpers";
-import { authService } from "../../services/authService";
+import { authService } from "../../services/auth/auth.service";
 
 interface UserMenuProps {
   style?: any;
@@ -37,23 +37,14 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   iconColor = "#fff",
 }) => {
   const navigation = useNavigation();
-  const { user, isLoading, loginWithAuth0, logout, setUser, fetchWithAuth } =
+  const { user, isLoading, loginWithAuth0, logout } =
     useAuth();
 
   const [menuVisible, setMenuVisible] = useState(false);
   const [showCommerceAlert, setShowCommerceAlert] = useState(false);
   const [isChangingRole, setIsChangingRole] = useState(false);
 
-  const getProfile = async () => {
-    try {
-      const response = await fetchWithAuth(
-        `${process.env.EXPO_PUBLIC_API_URL}/auth/me`
-      );
-      if (!response.ok) return;
-      const data = await response.json();
-      setUser({ ...data, picture: data.profile_picture_url });
-    } catch {}
-  };
+ 
 
   const handleLogin = async () => {
     await loginWithAuth0();
@@ -83,7 +74,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
         "Tu perfil ha sido actualizado y ahora puedes recibir pagos por QR.",
         "OK"
       );
-      await getProfile();
+      await authService.getCurrentUser(resp.token);
     } catch (err) {
       setShowCommerceAlert(false);
       showErrorAlert(
@@ -98,9 +89,9 @@ export const UserMenu: React.FC<UserMenuProps> = ({
 
   if (isLoading) {
     return (
-      <View style={[styles.container, style]}>
+      <TouchableOpacity onPress={handleLogout} style={[styles.container, style]}>
         <ActivityIndicator size="small" color={iconColor} />
-      </View>
+      </TouchableOpacity>
     );
   }
 

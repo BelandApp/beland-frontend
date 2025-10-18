@@ -7,7 +7,7 @@ import { WalletScreen } from "../../screens/WalletScreen";
 import { GroupsStackNavigator } from "./GroupsStackNavigator";
 import { CatalogScreen } from "../../screens/CatalogScreen";
 import { OrdersStackNavigator } from "./OrdersStackNavigator";
-import { useAuth } from "src/hooks/AuthContext";
+import { useAuth } from "src/context";
 
 import {
   HomeIcon,

@@ -1,5 +1,5 @@
 import { SocketService } from "src/services/SocketService";
-import { useAuth } from "src/hooks/AuthContext";
+import { useAuth } from "src/context";
 import { useNotification } from "src/hooks/NotificationContext";
 import { useEffect, useRef } from "react";
 import { Platform } from "react-native";

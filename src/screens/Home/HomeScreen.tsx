@@ -65,7 +65,7 @@ export const HomeScreen = () => {
   };
 
   const handleCommunity = () => {
-    navigation.navigate("Catalog" as never);
+    navigation.navigate("Community" as never);
   };
 
   const handleDelivery = () => {

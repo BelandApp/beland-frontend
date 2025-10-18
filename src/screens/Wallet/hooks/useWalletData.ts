@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { WalletData } from "../types";
 import { formatUSDPrice } from "../../../constants";
 import { useBeCoinsStore } from "../../../stores/useBeCoinsStore";
-import { useAuth } from "../../../hooks/AuthContext";
+import { useAuth } from "src/context";
 import { walletService, Wallet } from "../../../services/walletService";
 
 export const useWalletData = () => {

@@ -16,6 +16,7 @@ import {
 import { walletService } from "../../services/walletService";
 import { convertUSDToBeCoins } from "../../constants/currency";
 import { useNavigation } from "@react-navigation/native";
+import { TokenService } from "src/services/auth/token.service";
 
 const CobrarScreen = () => {
   // Actualizar historial de montos en tiempo real al recibir pago por socket
@@ -41,7 +42,7 @@ const CobrarScreen = () => {
   const [presetName, setPresetName] = useState("");
   const [presetMessage, setPresetMessage] = useState("");
   const IS_WEB = Platform.OS && String(Platform.OS).toLowerCase() === "web";
-
+  
   // Helper para formatear monto USD
   const formatUSD = (value: string | number) => {
     if (!value) return "$0.00";
@@ -95,14 +96,7 @@ const CobrarScreen = () => {
       setQrError(null);
       try {
         // Obtener el token desde el store o localStorage
-        let token;
-        try {
-          token =
-            require("../../stores/useAuthTokenStore").useAuthTokenStore.getState()
-              .token;
-        } catch (e) {
-          token = null;
-        }
+        let token = await TokenService.getToken();
         if (!token && typeof window !== "undefined") {
           token = localStorage.getItem("auth_token");
         }

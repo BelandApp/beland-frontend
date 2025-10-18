@@ -14,7 +14,7 @@ import {
   ScrollView,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import { useAuth } from "../../hooks/AuthContext";
+import { useAuth } from "src/context";
 import { useBeCoinsStore } from "../../stores/useBeCoinsStore";
 import { convertBeCoinsToUSD, formatUSDPrice } from "../../constants/currency";
 import { WalletBalanceCard } from "./components/WalletBalanceCard";

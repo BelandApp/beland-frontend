@@ -1,6 +1,6 @@
 import Constants from "expo-constants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
+// TODO VER SI ES NECESARIO MANTENER ESTO
 // Configuración base para los servicios de API
 const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL ||

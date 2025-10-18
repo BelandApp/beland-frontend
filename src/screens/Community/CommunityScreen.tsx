@@ -18,7 +18,7 @@ import { walletService } from "../../services/walletService";
 import { useCustomAlert } from "../../hooks/useCustomAlert";
 import { useUserBalance } from "../../hooks/useUserBalance";
 import { calculateResourcePrice } from "../../utils/priceHelpers";
-import { useAuth } from "../../hooks/AuthContext";
+import { useAuth } from "src/context";
 
 // Components
 import {

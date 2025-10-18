@@ -6,7 +6,7 @@ import {
   UpdateOrderStatusRequest,
 } from "../services/orderService";
 import { Order, OrderStatus, CreateOrderRequest } from "../types/Order";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "src/context";
 
 // Hook para manejar órdenes
 export const useOrders = () => {

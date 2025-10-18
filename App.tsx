@@ -18,8 +18,7 @@ import {
   RootStackParamList,
 } from "./src/components/layout/RootStackNavigator";
 import { FloatingQRButton } from "./src/components/ui/FloatingQRButton";
-import { useAuth } from "src/hooks/AuthContext";
-import { AuthProvider } from "src/hooks/AuthContext";
+import { useAuth, AuthProvider } from "src/context";
 import { NotificationProvider } from "./src/hooks/NotificationContext";
 import { NotificationBanner } from "./src/components/ui/NotificationBanner";
 import PayphoneSuccessScreen from "./src/screens/Wallet/PayphoneSuccessScreen";
@@ -157,7 +156,7 @@ const App = () => {
     <SafeAreaProvider>
       <AuthProvider>
         <NotificationProvider>
-          <SocketStatus />
+          {/* <SocketStatus /> */}
           <AppContent />
           <NotificationBanner />
         </NotificationProvider>

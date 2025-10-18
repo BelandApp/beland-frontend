@@ -7,4 +7,3 @@ export * from "./useOrders";
 export { useOrders as useOrdersWithAPI } from "./useOrdersAPI";
 export * from "./usePaymentTypes";
 export * from "./useUserBalance"
-export * from "./AuthContext"

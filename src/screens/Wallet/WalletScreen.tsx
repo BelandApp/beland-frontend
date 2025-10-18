@@ -15,8 +15,7 @@ import {
   RecentTransactions,
   PaymentPreferences,
 } from "./components";
-import { useAuth } from "../../hooks/AuthContext";
-
+import { useAuth } from "src/context";
 import {
   useWalletData,
   useWalletActions,

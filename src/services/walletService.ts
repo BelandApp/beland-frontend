@@ -1,4 +1,5 @@
 import { apiRequest } from "./api";
+import { TokenService } from "./auth/token.service";
 import { resourceService } from "./resourceService";
 
 // Tipos para Wallet según el backend
@@ -604,9 +605,7 @@ class WalletService {
   // Obtener QR de la wallet del usuario/comercio
   async getWalletQR(): Promise<string | null> {
     console.log("getWalletQR called");
-    const { token } =
-      require("../stores/useAuthTokenStore").useAuthTokenStore.getState();
-    console.log("Token actual:", token);
+    const token = await TokenService.getToken()
     if (!token) {
       console.error(
         "No hay token de autenticación. El usuario debe iniciar sesión."

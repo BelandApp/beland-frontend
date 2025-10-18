@@ -25,7 +25,7 @@ import { useProducts } from "../../hooks/useProducts";
 import { useCartSync } from "../../hooks/useCartSync";
 import { categoryService } from "../../services/categoryService";
 import { ProductCardType } from "./components/ProductCard";
-import { useAuth } from "../../hooks/AuthContext";
+import { useAuth } from "src/context";
 import { useCustomAlert } from "../../hooks/useCustomAlert";
 
 // Components
