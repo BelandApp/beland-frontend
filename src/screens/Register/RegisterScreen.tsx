@@ -15,6 +15,7 @@ import { useNavigation } from "@react-navigation/native";
 import { styles } from "./styles";
 import { SocialButton } from "src/components/shared";
 import { CircleArrowLeftIcon } from "lucide-react-native";
+import { authService } from "src/services/auth/auth.service";
 
 export default function RegisterScreen() {
   const navigation = useNavigation();
@@ -45,8 +46,7 @@ export default function RegisterScreen() {
       return;
     }
     try {
-      const success = true;
-      // await loginWithEmailPassword(email, password);
+      const success = await authService.registerUser(FormData);
       if (!success) {
         setAlert({
           visible: true,
@@ -55,7 +55,8 @@ export default function RegisterScreen() {
           type: "error",
         });
       }
-      // Si es exitoso, la navegación se maneja por el AuthContext
+      await authService.loginWithEmail(FormData.email, FormData.password);
+      navigation.navigate("MainTabs" as never);
     } catch (error) {
       setAlert({
         visible: true,
