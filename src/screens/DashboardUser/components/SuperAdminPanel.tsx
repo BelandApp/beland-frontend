@@ -30,7 +30,7 @@ const SuperAdminPanel: React.FC = () => {
             <Image
               source={{
                 uri:
-                  user.picture ||
+                  user.profile_picture_url ||
                   "https://ui-avatars.com/api/?name=Super+Admin&background=random",
               }}
               style={styles.profileImage}

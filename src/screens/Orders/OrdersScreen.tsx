@@ -374,6 +374,7 @@ const OrdersScreen: React.FC = () => {
     <>
       <ThemedHeader
         title="Mis Ordenes"
+        canGoBack
         buttons={
           <TouchableOpacity
             style={[

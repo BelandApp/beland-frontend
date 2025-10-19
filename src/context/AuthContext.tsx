@@ -21,7 +21,7 @@ export type User = {
   id: string;
   email: string;
   full_name: string;
-  picture?: string;
+  profile_picture_url?: string;
   auth0_id?: string;
   role?: string;
   role_name?: string;
@@ -125,8 +125,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               discovery
             );
             if (tokenResponse.accessToken) {
+              console.log("Token recibido:", tokenResponse.accessToken);
               await TokenService.saveToken(tokenResponse.accessToken);
-              await authService.getCurrentUser(tokenResponse.accessToken);
+              let me = await authService.getCurrentUser(tokenResponse.accessToken);
+              setToken(tokenResponse.accessToken);
+              setUser(me);
             } else {
               throw new Error("accessToken no fue recibido.");
             }

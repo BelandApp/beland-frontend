@@ -19,6 +19,7 @@ import {
   CommunityIcon,
 } from "../icons";
 import { CommunityScreen } from "src/screens";
+import EventsScreen from "src/screens/Events/EventsScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -128,7 +129,7 @@ export const MainTabNavigator = () => {
       />
       <Tab.Screen
         name="Community"
-        component={CommunityScreen}
+        component={EventsScreen}
         options={{ tabBarLabel: "Comunidad" }}
       />
 

@@ -20,14 +20,15 @@ const EmpresaPanel: React.FC = () => {
   return (
     <DashboardWrapper
       title={`Panel de ${user?.full_name || "Empresa"}`}
-      isLoading={isLoading}>
+      isLoading={isLoading}
+    >
       {user ? (
         <View style={styles.container}>
           <View style={styles.profileCard}>
             <Image
               source={{
                 uri:
-                  user.picture ||
+                  user.profile_picture_url ||
                   "https://ui-avatars.com/api/?name=Empresa&background=random",
               }}
               style={styles.profileImage}

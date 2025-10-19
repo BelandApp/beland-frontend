@@ -6,16 +6,17 @@ const { width, height } = Dimensions.get("window");
 export const styles = StyleSheet.create({
   scroll: {
     flex: 1,
-    position:"relative"
+    position: "relative",
   },
   container: {
     flexDirection: "column",
-    margin: "auto",
+    marginHorizontal: "auto",
+    marginBottom: 20,
     padding: 20,
     borderRadius: 20,
-    alignItems: "center",
     width: width > 500 ? 400 : width * 0.9,
-    backgroundColor: colors.belandOrange,
+    // TODO PROBAR RESPONSIVE BACKGROUND
+    // backgroundColor: colors.belandOrange,
     gap: 5,
   },
   logo: { margin: "auto" },

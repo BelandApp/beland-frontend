@@ -52,7 +52,7 @@ export const UserPanel: React.FC = () => {
 
           <ProfileImagePicker
             localImage={form.localImage}
-            userPicture={user.picture}
+            userPicture={user.profile_picture_url}
             editing={form.editing}
             pickImage={form.pickImage}
           />

@@ -26,7 +26,7 @@ import { containerStyles } from "./styles";
 import { ThemedHeader } from "src/components/shared/headers/Header";
 
 export const WalletScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
-  const { user, isAuthenticated, loginWithAuth0, canPerformAction } = useAuth();
+  const { user, isAuthenticated, handleAuth0Login, canPerformAction } = useAuth();
 
   const { walletData, refetch: refetchWallet } = useWalletData();
   const { mainWalletActions } = useWalletActions();
@@ -84,7 +84,7 @@ export const WalletScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
           <TouchableOpacity
             style={styles.authRequiredButton}
-            onPress={loginWithAuth0}
+            onPress={handleAuth0Login}
           >
             <Text style={styles.authRequiredButtonText}>Iniciar Sesión</Text>
           </TouchableOpacity>
@@ -109,7 +109,7 @@ export const WalletScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           <View style={containerStyles.content}>
             <WalletBalanceCard
               walletData={walletData}
-              avatarUrl={user?.picture}
+              avatarUrl={user?.profile_picture_url}
             />
             {/* Preferencias de pago */}
             <PaymentPreferences

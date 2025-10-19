@@ -10,10 +10,11 @@ export const styles = StyleSheet.create({
   },
   container: {
     flexDirection: "column",
-    margin: "auto",
+    justifyContent: "center",
+    marginHorizontal: "auto",
+    marginBottom: 20,
     padding: 20,
     borderRadius: 20,
-    alignItems: "center",
     width: width > 500 ? 400 : width * 0.9,
     gap: 5,
     backgroundColor: colors.belandOrange,

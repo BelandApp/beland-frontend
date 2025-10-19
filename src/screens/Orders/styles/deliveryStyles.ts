@@ -55,11 +55,11 @@ export const deliveryStyles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "rgba(255, 255, 255, 0.2)",
     borderRadius: 12,
-    paddingVertical: 8,
     paddingHorizontal: 16,
+    height: 45
   },
   statsNumber: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: "800",
     color: "white",
   },

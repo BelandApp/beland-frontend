@@ -90,12 +90,7 @@ export default function LoginScreen() {
       <View style={styles.container}>
         <SocialButton onPress={handleLoginAuth0} />
         <View
-          style={{
-            width: "100%",
-            height: 2,
-            backgroundColor: "rgba(255, 255, 255, 0.2)",
-            marginVertical: 10,
-          }}
+          style={styles.container}
         />
         <CustomInput
           label="Correo Electrónico"

@@ -7,3 +7,4 @@ export * from "./orderService";
 export * from "./paymentTypesService";
 export * from "./resourceService"
 export * from "./walletService"
+export * from "./auth"

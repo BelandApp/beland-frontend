@@ -34,7 +34,7 @@ import { BeCoinsBalance } from "src/components/ui";
 
 export const CommunityScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  const { isAuthenticated, loginWithAuth0, canPerformAction } = useAuth();
+  const { isAuthenticated, handleAuth0Login, canPerformAction } = useAuth();
 
   // Estado para recursos
   const [resources, setResources] = useState<Resource[]>([]);
@@ -310,7 +310,7 @@ export const CommunityScreen = () => {
             text: "Iniciar sesión",
             onPress: () => {
               setShowLoginRequiredAlert(false);
-              loginWithAuth0();
+              handleAuth0Login();
             },
           }}
           secondaryButton={{
@@ -446,7 +446,7 @@ export const CommunityScreen = () => {
           text: "Iniciar sesión",
           onPress: () => {
             setShowAuthAlert(false);
-            loginWithAuth0();
+            handleAuth0Login();
           },
         }}
         secondaryButton={{

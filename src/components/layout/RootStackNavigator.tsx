@@ -20,6 +20,7 @@ import { LoginScreen } from "src/screens/Login";
 import { RegisterScreen } from "src/screens/Register";
 import { OrdersStackNavigator } from "./OrdersStackNavigator";
 import { RewardsScreen } from "src/screens/Rewards";
+import { EventModal } from "src/screens/Community/components/event/Event.modal";
 
 // 1. Define el tipo de tu Root Stack con los nombres correctos
 export type RootStackParamList = {
@@ -69,6 +70,7 @@ export type RootStackParamList = {
   Register: undefined;
   // Chequear si es necesario
   Rewards: undefined;
+  EventModal: { id: string };
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -165,6 +167,16 @@ export const RootStackNavigator = () => {
         name="Rewards"
         component={RewardsScreen}
         options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="EventModal"
+        component={EventModal}
+        options={{
+          headerShown: false,
+          gestureEnabled: true,
+          presentation: "transparentModal",
+          animation: "slide_from_bottom",
+        }}
       />
     </Stack.Navigator>
   );

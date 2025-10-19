@@ -12,6 +12,8 @@ import BelandLogo2 from "src/components/icons/BelandLogo2";
 import { UserMenu } from "src/components/ui/UserMenu";
 import { colors } from "src/styles";
 import { HeaderStyles } from "./header.styles";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { RootStackParamList } from "src/components/layout/RootStackNavigator";
 
 type HeaderProps = {
   title?: string;
@@ -28,14 +30,14 @@ export const ThemedHeader: React.FC<HeaderProps> = ({
   buttons,
   centerTitle = false,
 }) => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
   const renderLeftContent = () => {
     if (logo) {
       return (
         <TouchableOpacity
           style={HeaderStyles.logoContainer}
-          onPress={() => navigation.navigate("Home" as never)}
+          onPress={() => navigation.navigate("MainTabs")}
         >
           <BelandLogo2 width={120} height={32} />
         </TouchableOpacity>
@@ -45,7 +47,7 @@ export const ThemedHeader: React.FC<HeaderProps> = ({
     return (
       <View style={HeaderStyles.left}>
         {canGoBack && (
-          <TouchableOpacity onPress={() => navigation.goBack()}>
+          <TouchableOpacity onPress={() => navigation.navigate("MainTabs")}>
             <CircleArrowLeftIcon size={32} color="#FFF" />
           </TouchableOpacity>
         )}

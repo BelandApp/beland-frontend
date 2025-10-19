@@ -37,18 +37,12 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   iconColor = "#fff",
 }) => {
   const navigation = useNavigation();
-  const { user, isLoading, loginWithAuth0, logout } =
+  const { user, isLoading, handleAuth0Login, logout } =
     useAuth();
 
   const [menuVisible, setMenuVisible] = useState(false);
   const [showCommerceAlert, setShowCommerceAlert] = useState(false);
   const [isChangingRole, setIsChangingRole] = useState(false);
-
- 
-
-  const handleLogin = async () => {
-    await loginWithAuth0();
-  };
 
   const handleLogout = async () => {
     setMenuVisible(false);
@@ -63,7 +57,6 @@ export const UserMenu: React.FC<UserMenuProps> = ({
     setMenuVisible(false);
     (navigation as any).navigate("UserDashboardScreen");
   };
-
   const handleChangeRoleToCommerce = async () => {
     setIsChangingRole(true);
     try {
@@ -86,7 +79,6 @@ export const UserMenu: React.FC<UserMenuProps> = ({
       setIsChangingRole(false);
     }
   };
-
   if (isLoading) {
     return (
       <TouchableOpacity onPress={handleLogout} style={[styles.container, style]}>
@@ -116,7 +108,9 @@ export const UserMenu: React.FC<UserMenuProps> = ({
       <TouchableOpacity onPress={toggleMenu} style={styles.avatarContainer}>
         <Image
           source={{
-            uri: user.picture || "https://ui-avatars.com/api/?name=User",
+            uri:
+              user.profile_picture_url ||
+              "https://ui-avatars.com/api/?name=User",
           }}
           style={styles.avatar}
         />
@@ -133,7 +127,9 @@ export const UserMenu: React.FC<UserMenuProps> = ({
             <View style={styles.menuHeader}>
               <Image
                 source={{
-                  uri: user.picture || "https://ui-avatars.com/api/?name=User",
+                  uri:
+                    user.profile_picture_url ||
+                    "https://ui-avatars.com/api/?name=User",
                 }}
                 style={styles.menuAvatar}
               />
