@@ -43,7 +43,6 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
   };
 
   try {
-    console.log(`🌐 API Request: ${options.method || "GET"} ${url}`);
     const response = await fetch(url, config);
 
     console.log(
@@ -53,7 +52,7 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
     let data;
     try {
       data = await response.json();
-      console.log(`📦 Response Data:`, data);
+      // console.log(`📦 Response Data:`, data);
     } catch (jsonError) {
       console.log(`⚠️ No JSON response or empty body`);
       data = null;

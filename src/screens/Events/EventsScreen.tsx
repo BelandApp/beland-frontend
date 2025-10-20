@@ -18,11 +18,9 @@ import { EventCard } from "../Community/components/event/Event.card";
 import { useUserBalance } from "src/hooks";
 
 const EventsScreen = () => {
-  // const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [refreshing, setRefreshing] = useState(false);
   const { events, setEvents } = useEventStore();
   const { balance, refetch: refetchBalance } = useUserBalance();
-  console.log(events);
   useEffect(() => {
     fetchEvents();
   }, []);
@@ -30,6 +28,7 @@ const EventsScreen = () => {
   const fetchEvents = async () => {
     try {
       const data = await eventsService.getEvents();
+      console.log(data);
       setEvents(data);
       refetchBalance();
     } catch (error) {
@@ -61,9 +60,13 @@ const EventsScreen = () => {
         }
       >
         <View style={{ flexWrap: "wrap", flexDirection: "row", gap: 16 }}>
-          {Object.values(events).map((event) => (
-            <EventCard key={event.id} {...event} />
-          ))}
+          {Object.values(events).length > 0 ? (
+            Object.values(events).map((event) => (
+              <EventCard key={event.id} {...event} />
+            ))
+          ) : (
+            <Text>Vaya parece que estamos sin eventos próximos</Text>
+          )}
         </View>
       </ScrollView>
     </View>
