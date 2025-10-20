@@ -15,6 +15,6 @@ export * from "./useLoadingState";
 export * from "./useStorage";
 
 // Context hooks
-export * from "./AuthContext";
+
 export * from "./NotificationContext";
 export * from "./usePaymentSocket";

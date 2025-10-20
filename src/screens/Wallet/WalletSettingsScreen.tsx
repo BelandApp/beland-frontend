@@ -11,8 +11,8 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useAuth } from "@/hooks/AuthContext";
-import { PaymentService, Wallet } from "@services/core";
+import { useAuth } from "@/context/AuthContext";
+
 import { useWalletData } from "./hooks/useWalletData";
 
 export default function WalletSettingsScreen() {

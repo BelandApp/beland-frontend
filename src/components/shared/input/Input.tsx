@@ -4,7 +4,8 @@ import {
   Animated,
   Easing,
   StyleSheet,
-  TouchableWithoutFeedback,
+  Pressable,
+  TouchableOpacity,
 } from "react-native";
 
 interface CustomInputProps {
@@ -78,7 +79,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
   });
 
   return (
-    <TouchableWithoutFeedback onPress={() => setIsFocused(true)}>
+    <TouchableOpacity onPress={() => setIsFocused(true)}>
       <Animated.View
         style={[
           styles.container,
@@ -100,7 +101,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
           onBlur={() => setIsFocused(false)}
         />
       </Animated.View>
-    </TouchableWithoutFeedback>
+    </TouchableOpacity>
   );
 };
 

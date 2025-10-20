@@ -15,10 +15,13 @@ import {
 } from "./hooks";
 
 // Components
-import { RewardsHeader, CategoryFilter, RewardsGrid } from "./components";
+import { CategoryFilter, RewardsGrid } from "./components";
 
 // Styles
 import { containerStyles } from "./styles";
+import { ThemedHeader } from "src/components/shared/headers/Header";
+import { BeCoinsBalance } from "src/components/ui";
+import { headerStyles } from "../Payment";
 
 export const RewardsScreen = () => {
   // Hooks personalizados
@@ -102,8 +105,11 @@ export const RewardsScreen = () => {
 
   return (
     <View style={containerStyles.container}>
-      {/* Header fijo */}
-      <RewardsHeader />
+      <ThemedHeader
+        title="Premios"
+        canGoBack
+        buttons={<BeCoinsBalance size="medium" variant="header" />}
+      />
 
       <ScrollView
         style={containerStyles.scrollView}

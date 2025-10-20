@@ -1,8 +1,6 @@
 import React from "react";
-import { View, ScrollView, Platform, StyleSheet, Text } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { View, ScrollView, Platform, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { AppHeader } from "@/components/layout/AppHeader";
 import {
   HeroSection,
   QuickActions,
@@ -16,10 +14,12 @@ import {
   useDashboardData,
   useResponsiveLayout,
 } from "./hooks";
-import { useWalletTransactions } from "@/screens/Wallet/hooks";
-import { useBeCoinsStore } from "@/stores/useBeCoinsStore";
-import { LoginWave } from "@/components/ui/waves/Login.wave";
-import { HomeWave } from "@/components/ui/waves/Home.wave";
+import { useWalletTransactions } from "../Wallet/hooks";
+import { useBeCoinsStore } from "../../stores/useBeCoinsStore";
+import { LoginWave } from "src/components/ui/waves/Login.wave";
+import { HomeWave } from "src/components/ui/waves/Home.wave";
+import { colors } from "src/styles";
+import { ThemedHeader } from "src/components/shared/headers/Header";
 
 export const HomeScreen = () => {
   const navigation = useNavigation();
@@ -67,13 +67,12 @@ export const HomeScreen = () => {
   };
 
   const handleCommunity = () => {
-    navigation.navigate("Catalog" as never);
+    navigation.navigate("Community" as never);
   };
 
   const handleDelivery = () => {
     navigation.navigate("Catalog" as never);
   };
-
   if (Platform.OS === "web") {
     const dynamicStyles = StyleSheet.create({
       featuresGrid: {
@@ -91,7 +90,7 @@ export const HomeScreen = () => {
 
     return (
       <View style={webStyles.container}>
-        <AppHeader variant="home" />
+        <ThemedHeader title="Inicio" logo />
         <ScrollView style={webStyles.scrollView}>
           <View style={dynamicStyles.content}>
             <HeroSection
@@ -99,7 +98,6 @@ export const HomeScreen = () => {
               locked_balance={lockedBalanceToPass}
               estimatedValue={estimatedValue.toFixed(2)}
             />
-
             <QuickActions
               onRecharge={handleRecharge}
               onSend={handleSend}
@@ -135,59 +133,54 @@ export const HomeScreen = () => {
 
   // Mobile version - mismo diseño pero con layout adaptado
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <AppHeader variant="home" />
+    <View style={styles.safeArea}>
+      <ThemedHeader logo />
       <ScrollView style={styles.scrollView}>
-        <LoginWave />
-        <View style={styles.content}>
-          <HeroSection
-            balance={balance}
-            locked_balance={lockedBalanceToPass}
-            estimatedValue={estimatedValue.toFixed(2)}
-          />
+        <HeroSection
+          balance={balance}
+          estimatedValue={estimatedValue.toFixed(2)}
+        />
+        <QuickActions
+          onRecharge={handleRecharge}
+          onSend={handleSend}
+          onReceive={handleReceive}
+          onCollect={handleCollect}
+        />
 
-          <QuickActions
-            onRecharge={handleRecharge}
-            onSend={handleSend}
-            onReceive={handleReceive}
-            onCollect={handleCollect}
-          />
+        <StatsCard
+          becoins={balance}
+          bottlesRecycled={userStats?.bottlesRecycled ?? 0}
+          estimatedValue={estimatedValue.toFixed(2)}
+        />
 
-          <StatsCard
-            becoins={balance}
-            bottlesRecycled={userStats?.bottlesRecycled ?? 0}
-            estimatedValue={estimatedValue.toFixed(2)}
-          />
+        <FeatureCard
+          type="recycling"
+          data={{ bottlesRecycled: userStats?.bottlesRecycled ?? 0 }}
+          onPress={handleRecyclingMapPress}
+        />
+        <FeatureCard type="community" onPress={handleCommunity} />
 
-          <FeatureCard
-            type="recycling"
-            data={{ bottlesRecycled: userStats?.bottlesRecycled ?? 0 }}
-            onPress={handleRecyclingMapPress}
-          />
-          <FeatureCard type="community" onPress={handleCommunity} />
+        <RecentTransactions transactions={transactions ?? []} />
 
-          <RecentTransactions transactions={transactions ?? []} />
+        <ActivitySection
+          activities={activities}
+          onViewHistory={handleViewHistory}
+        />
 
-          <ActivitySection
-            activities={activities}
-            onViewHistory={handleViewHistory}
-          />
-        </View>
+        <HomeWave />
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "#ffff",
   },
   scrollView: {
     flex: 1,
-  },
-  content: {
-    paddingBottom: 120,
+    backgroundColor: "#ffff",
   },
 });
 

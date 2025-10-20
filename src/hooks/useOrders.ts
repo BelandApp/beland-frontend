@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { OrderService } from "@services/core";
 import { Order, OrderStatus, CreateOrderRequest } from "../types/Order";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "src/context";
 
 interface OrdersResponse {
   orders: Order[];

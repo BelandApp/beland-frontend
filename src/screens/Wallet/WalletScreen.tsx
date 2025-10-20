@@ -9,16 +9,13 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { WaveBottomGray } from "../../components/icons";
-import { AppHeader } from "../../components/layout/AppHeader";
 import {
-  WalletHeader,
   WalletBalanceCard,
   WalletActions,
   RecentTransactions,
   PaymentPreferences,
 } from "./components";
-import { useAuth } from "../../hooks/AuthContext";
-
+import { useAuth } from "src/context";
 import {
   useWalletData,
   useWalletActions,
@@ -26,9 +23,10 @@ import {
   usePaymentPreferences,
 } from "./hooks";
 import { containerStyles } from "./styles";
+import { ThemedHeader } from "src/components/shared/headers/Header";
 
 export const WalletScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
-  const { user, isAuthenticated, loginWithAuth0, canPerformAction } = useAuth();
+  const { user, isAuthenticated, handleAuth0Login, canPerformAction } = useAuth();
 
   const { walletData, refetch: refetchWallet } = useWalletData();
   const { mainWalletActions } = useWalletActions();
@@ -86,7 +84,7 @@ export const WalletScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
           <TouchableOpacity
             style={styles.authRequiredButton}
-            onPress={loginWithAuth0}
+            onPress={handleAuth0Login}
           >
             <Text style={styles.authRequiredButtonText}>Iniciar Sesión</Text>
           </TouchableOpacity>
@@ -101,18 +99,17 @@ export const WalletScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
-      <AppHeader />
       <View style={{ flex: 1 }}>
+        <ThemedHeader title="Billetera" />
         <ScrollView
           style={{ flex: 1, backgroundColor: "#fff" }}
           contentContainerStyle={{ flexGrow: 1, paddingBottom: 120 }}
           keyboardShouldPersistTaps="handled"
         >
           <View style={containerStyles.content}>
-            <WalletHeader />
             <WalletBalanceCard
               walletData={walletData}
-              avatarUrl={user?.picture}
+              avatarUrl={user?.profile_picture_url}
             />
             {/* Preferencias de pago */}
             <PaymentPreferences

@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   ScrollView,
 } from "react-native";
+import { ThemedHeader } from "src/components/shared/headers/Header";
 
 interface DashboardWrapperProps {
   title: string;
@@ -20,9 +21,7 @@ const DashboardWrapper: React.FC<DashboardWrapperProps> = ({
 }) => {
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{title}</Text>
-      </View>
+      <ThemedHeader title={title} canGoBack />
       <ScrollView style={styles.content}>
         {isLoading ? (
           <View style={styles.loadingContainer}>
@@ -40,7 +39,6 @@ const DashboardWrapper: React.FC<DashboardWrapperProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f0f2f5",
   },
   header: {
     padding: 20,

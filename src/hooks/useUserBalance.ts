@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { PaymentService } from "@services/core";
-import { useAuthTokenStore } from "../stores/useAuthTokenStore";
+import { useAuth } from "src/context";
 import { useBeCoinsStore } from "../stores/useBeCoinsStore";
 
 export const useUserBalance = () => {
   const [balance, setBalance] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { user } = useAuthTokenStore();
+  const { user } = useAuth();
   const { setBalance: setStoreBalance } = useBeCoinsStore();
 
   const fetchBalance = async () => {

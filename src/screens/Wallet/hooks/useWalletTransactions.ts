@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "../../../hooks/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import { PaymentService } from "@services/core";
 import { Transaction as BackendTransaction } from "@services/core";
 import { Transaction } from "../types";

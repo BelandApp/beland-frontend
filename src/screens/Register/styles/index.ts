@@ -6,13 +6,15 @@ const { width, height } = Dimensions.get("window");
 export const styles = StyleSheet.create({
   scroll: {
     flex: 1,
+    position:"relative"
   },
   container: {
     flexDirection: "column",
-    margin: "auto",
+    justifyContent: "center",
+    marginHorizontal: "auto",
+    marginBottom: 20,
     padding: 20,
     borderRadius: 20,
-    alignItems: "center",
     width: width > 500 ? 400 : width * 0.9,
     gap: 5,
     backgroundColor: colors.belandOrange,
@@ -25,6 +27,14 @@ export const styles = StyleSheet.create({
     borderRadius: 5,
     paddingVertical: 12,
     width: "100%",
+  },
+  backButton: {
+    position: "absolute",
+    top: 40,
+    left: 10,
+    backgroundColor: colors.belandOrange,
+    borderRadius: 50,
+    padding:10
   },
   buttonLink: {
     color: "white",

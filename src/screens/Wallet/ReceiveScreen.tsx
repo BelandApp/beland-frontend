@@ -14,7 +14,7 @@ import {
 import * as Clipboard from "expo-clipboard";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { useAuth } from "../../hooks/AuthContext";
+import { useAuth } from "src/context";
 import { useWalletData } from "../Wallet/hooks/useWalletData";
 import { WalletService } from "@services/core";
 

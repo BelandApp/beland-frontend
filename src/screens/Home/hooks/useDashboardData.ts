@@ -1,6 +1,6 @@
 import { Activity } from "../types";
 import { useBeCoinsStore } from "../../../stores/useBeCoinsStore";
-import { useAuth } from "../../../hooks/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 
 export const useDashboardData = () => {
   const { balance } = useBeCoinsStore();

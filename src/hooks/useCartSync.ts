@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { useCart } from "./useCart";
 import { useCartStore } from "../stores/useCartStore";
-import { useAuth } from "./AuthContext";
-import { CartService } from "@services/core";
+import { useAuth } from "@/context/AuthContext";
 
 export const useCartSync = () => {
   const [isSyncing, setIsSyncing] = useState(false);

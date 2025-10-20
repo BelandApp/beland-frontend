@@ -5,7 +5,7 @@ import type {
   CreateAddressRequest,
   UpdateAddressRequest,
 } from "../services/addressService";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "src/context";
 
 // Hook para manejar direcciones del usuario
 export const useAddresses = () => {

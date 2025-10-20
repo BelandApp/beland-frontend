@@ -1,10 +1,11 @@
 import { create } from "zustand";
 
+// TODO VER SI TIENE QUE SER REMPLAZADO
 interface AuthUser {
   id: string;
   email: string;
   full_name: string;
-  picture?: string;
+  profile_picture_url?: string;
   auth0_id?: string;
   role?: string;
   role_name?: string;

@@ -1,8 +1,3 @@
-/**
- * Resource Service - Consolidated recycling and resource management
- * Handles resource types, recycling transactions, and environmental impact
- */
-
 import { CoreApiService, PaginatedResponse } from "./core/ApiService";
 
 // Resource Types

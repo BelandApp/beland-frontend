@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { View, Text, ScrollView, Dimensions } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  Dimensions,
+  TouchableOpacity,
+} from "react-native";
 import { CustomAlert } from "../../components/ui/CustomAlert";
 import { LoginWave } from "src/components/ui/waves/Login.wave";
 import BelandLogo from "src/components/icons/BelandLogo";
@@ -8,9 +14,13 @@ import { Button } from "src/components/ui";
 import { useNavigation } from "@react-navigation/native";
 import { styles } from "./styles";
 import { SocialButton } from "src/components/shared";
+import { useAuth } from "src/context";
+import { CircleArrowLeftIcon } from "lucide-react-native";
 
 export default function LoginScreen() {
   const navigation = useNavigation<any>();
+  const { handleAuth0Login, loginWithEmail, user, isAuthenticated, isLoading } =
+    useAuth();
   const { width, height } = Dimensions.get("window");
   const [alert, setAlert] = useState<{
     visible: boolean;
@@ -22,9 +32,7 @@ export default function LoginScreen() {
     email: "",
     password: "",
   });
-
-  // TODO HANDLE AUTH
-  const isLoading = false;
+  if (isAuthenticated) navigation.navigate("MainTabs");
   const handleLogin = async () => {
     if (!FormData.email.trim() || !FormData.password.trim()) {
       setAlert({
@@ -36,10 +44,8 @@ export default function LoginScreen() {
       return;
     }
     try {
-      const success = true;
-      // await loginWithEmailPassword(email, password);
-      console.log("[LOGIN] Resultado loginWithEmailPassword:", success);
-      if (!success) {
+      await loginWithEmail(FormData.email, FormData.password);
+      if (!user) {
         setAlert({
           visible: true,
           title: "Error",
@@ -47,7 +53,6 @@ export default function LoginScreen() {
           type: "error",
         });
       }
-      // Si es exitoso, la navegación se maneja por el AuthContext
     } catch (error) {
       setAlert({
         visible: true,
@@ -59,14 +64,9 @@ export default function LoginScreen() {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    // TODO HANDLE AUTH
-    setAlert({
-      visible: true,
-      title: "Error de Google Authentication",
-      message: "Hay un problema con la configuración de Auth0.",
-      type: "error",
-    });
+  const handleLoginAuth0 = async () => {
+    await handleAuth0Login();
+    navigation.navigate("MainTabs");
   };
 
   return (
@@ -74,6 +74,12 @@ export default function LoginScreen() {
       contentContainerStyle={styles.scroll}
       showsVerticalScrollIndicator={false}
     >
+      <TouchableOpacity
+        onPress={() => navigation.navigate("MainTabs" as never)}
+        style={styles.backButton}
+      >
+        <CircleArrowLeftIcon size={32} color="#FFF" />
+      </TouchableOpacity>
       <BelandLogo
         width={width * 0.5}
         height={height * 0.2}
@@ -81,23 +87,8 @@ export default function LoginScreen() {
       />
       <LoginWave />
       <View style={styles.container}>
-        <Text style={styles.title}>INGRESAR</Text>
-        <SocialButton
-          title="Google"
-          iconName="google"
-          onPress={handleGoogleLogin}
-        />
-        <SocialButton
-          title="Facebook"
-          iconName="facebook"
-          onPress={handleGoogleLogin}
-        />
-        <SocialButton
-          title="Apple"
-          iconName="apple"
-          onPress={handleGoogleLogin}
-        />
-        <Text style={styles.subtitle}>O inicia sesión con:</Text>
+        <SocialButton onPress={handleLoginAuth0} />
+        <View style={styles.container} />
         <CustomInput
           label="Correo Electrónico"
           onChangeText={(email) => setFormData({ ...FormData, email })}
@@ -119,7 +110,7 @@ export default function LoginScreen() {
         <View style={styles.containerRow}>
           <Text style={styles.subtitle}>¿Eres nuevo? </Text>
           <Button
-            variant="none"
+            variant="ghost"
             title="Registrarse"
             textStyle={styles.buttonLink}
             onPress={() => navigation.navigate("Register")}

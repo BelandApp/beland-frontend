@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { CartService } from "@services/core";
 import type { Cart } from "@services/core";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "@/context/AuthContext";
 
 export const useCart = () => {
   const [cart, setCart] = useState<Cart | null>(null);
