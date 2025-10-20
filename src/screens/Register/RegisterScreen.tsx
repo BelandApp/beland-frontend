@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { View, Text, ScrollView, Dimensions } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  Dimensions,
+  TouchableOpacity,
+} from "react-native";
 import { CustomAlert } from "../../components/ui/CustomAlert";
 import { LoginWave } from "src/components/ui/waves/Login.wave";
 import BelandLogo2 from "src/components/icons/BelandLogo2";
@@ -8,9 +14,20 @@ import { Button } from "src/components/ui";
 import { useNavigation } from "@react-navigation/native";
 import { styles } from "./styles";
 import { SocialButton } from "src/components/shared";
-
+import { CircleArrowLeftIcon } from "lucide-react-native";
+import { authService } from "src/services/auth/auth.service";
+export type RegisterFormData = {
+  full_name: string;
+  phone: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  address: string;
+  country: string;
+  city: string;
+}
 export default function RegisterScreen() {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation();
   const { width, height } = Dimensions.get("window");
   const [alert, setAlert] = useState<{
     visible: boolean;
@@ -18,12 +35,18 @@ export default function RegisterScreen() {
     message: string;
     type?: "success" | "error" | "info";
   }>({ visible: false, title: "", message: "", type: "error" });
-  const [FormData, setFormData] = useState({
-    name: "",
-    phone:"",
-    email: "",
-    password: "",
-  });
+  const [FormData, setFormData] =
+    useState <
+    RegisterFormData>({
+      full_name: "",
+      phone: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      address: "Belgrano",
+      country: "Argentina",
+      city: "Posadas",
+    });
 
   // TODO HANDLE AUTH
   const isLoading = false;
@@ -37,9 +60,9 @@ export default function RegisterScreen() {
       });
       return;
     }
+   FormData.confirmPassword = FormData.password
     try {
-      const success = true;
-      // await loginWithEmailPassword(email, password);
+      const success = await authService.registerUser(FormData);
       if (!success) {
         setAlert({
           visible: true,
@@ -48,7 +71,8 @@ export default function RegisterScreen() {
           type: "error",
         });
       }
-      // Si es exitoso, la navegación se maneja por el AuthContext
+      await authService.loginWithEmail(FormData.email, FormData.password);
+      navigation.navigate("MainTabs" as never);
     } catch (error) {
       setAlert({
         visible: true,
@@ -70,13 +94,19 @@ export default function RegisterScreen() {
         height={height * 0.2}
         style={styles.logo}
       />
+      <TouchableOpacity
+        onPress={() => navigation.navigate("MainTabs" as never)}
+        style={styles.backButton}
+      >
+        <CircleArrowLeftIcon size={32} color="#FFF" />
+      </TouchableOpacity>
       <LoginWave />
       <View style={styles.container}>
         <Text style={styles.title}>REGISTRARSE</Text>
         <CustomInput
           label="Nombre completo"
-          onChangeText={(name) => setFormData({ ...FormData, name })}
-          value={FormData.name}
+          onChangeText={(full_name) => setFormData({ ...FormData, full_name })}
+          value={FormData.full_name}
         />
         <CustomInput
           label="Teléfono"
@@ -108,7 +138,7 @@ export default function RegisterScreen() {
             variant="none"
             title="Ingresar"
             textStyle={styles.buttonLink}
-            onPress={() => navigation.navigate("Login")}
+            onPress={() => navigation.navigate("Login" as never)}
           />
         </View>
       </View>

@@ -10,7 +10,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from "react-native";
-import { useAuth } from "../../hooks/AuthContext";
+import { useAuth } from "src/context";
 import { useBeCoinsStore } from "../../stores/useBeCoinsStore";
 import { convertBeCoinsToUSD, formatUSDPrice } from "../../constants/currency";
 import {

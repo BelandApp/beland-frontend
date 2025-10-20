@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   Alert,
   StyleSheet,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -24,11 +25,10 @@ import { useProducts } from "../../hooks/useProducts";
 import { useCartSync } from "../../hooks/useCartSync";
 import { categoryService } from "../../services/categoryService";
 import { ProductCardType } from "./components/ProductCard";
-import { useAuth } from "../../hooks/AuthContext";
+import { useAuth } from "src/context";
 import { useCustomAlert } from "../../hooks/useCustomAlert";
 
 // Components
-import { AppHeader } from "../../components/layout/AppHeader";
 import { SearchBar, FilterPanel, ProductGrid } from "./components";
 import { OrderDeliveryModal } from "./components/OrderDeliveryModal";
 import { CustomAlert } from "../../components/ui/CustomAlert";
@@ -43,10 +43,11 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 // Community Main Component
 import CatalogCommunitySection from "./mainComponents/CatalogCommunitySection";
 import { useGroupedProducts } from "./mainHooks/useGroupedProducts";
+import { ThemedHeader } from "src/components/shared/headers/Header";
 
 export const CatalogScreen = () => {
   const navigation = useNavigation();
-  const { canPerformAction, loginWithAuth0, isAuthenticated } = useAuth();
+  const { canPerformAction, handleAuth0Login, isAuthenticated } = useAuth();
   const { showAlert, alertConfig, showCustomAlert, hideAlert } =
     useCustomAlert();
 
@@ -187,265 +188,252 @@ export const CatalogScreen = () => {
 
   return (
     <>
-      <AppHeader />
-      <SafeAreaView style={containerStyles.container}>
-        {/* Header */}
-        <View style={containerStyles.headerContainer}>
-          <View style={containerStyles.headerRow}>
-            <View style={containerStyles.headerLeft}>
-              <View style={containerStyles.headerTitles}>
-                <Text style={containerStyles.headerTitle}>Catálogo</Text>
-                <Text style={containerStyles.headerSubtitle}>
-                  Productos disponibles para entrega
-                </Text>
-              </View>
-            </View>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <BeCoinsBalance
-                size="medium"
-                variant="header"
-                style={containerStyles.coinsContainer}
-                showLockedBalance={true}
-              />
-              {isAuthenticated && (
-                <TouchableOpacity
-                  style={styles.headerCartBtn}
-                  onPress={() => setShowCart(true)}
-                  activeOpacity={0.8}
-                >
-                  <MaterialCommunityIcons
-                    name={isSyncing ? "sync" : "cart-variant"}
-                    size={32}
-                    color={isSyncing ? "#FFA500" : "#FF6B35"}
-                    style={[
-                      styles.headerCartIcon,
-                      isSyncing && styles.syncingIcon,
-                    ]}
-                  />
-                  {cartProducts.length > 0 && !isSyncing && (
-                    <View style={styles.headerBadge}>
-                      <Text style={styles.headerBadgeText}>
-                        {cartProducts.length}
-                      </Text>
-                    </View>
-                  )}
-                  {isSyncing && (
-                    <View style={styles.syncIndicator}>
-                      <Text style={styles.syncText}>⟳</Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-              )}
-              <UserMenu style={{ marginLeft: 12 }} />
-            </View>
-          </View>
-        </View>
-
-        {/* Content */}
-        <ScrollView
-          style={containerStyles.container}
-          contentContainerStyle={containerStyles.contentContainer}
-          showsVerticalScrollIndicator={false}
-        >
-          <SearchBar searchQuery={searchText} onSearchChange={setSearchText} />
-
-          {showFilters && (
-            <FilterPanel
-              filters={filters}
-              onFiltersChange={setFilters}
-              categories={allCategories.map((cat) => cat.name)}
-              brands={brands}
+      {/* Header */}
+      <ThemedHeader
+        title="Catalogo"
+        buttons={
+          <>
+            <BeCoinsBalance
+              size="medium"
+              variant="header"
+              style={containerStyles.coinsContainer}
             />
-          )}
-
-          <TouchableOpacity
-            style={{ marginBottom: 16, alignSelf: "flex-end" }}
-            onPress={() => setShowFilters(!showFilters)}
-          >
-            <Text style={{ color: "#FF6B35", fontWeight: "600" }}>
-              {showFilters ? "Ocultar filtros" : "Mostrar filtros"}
-            </Text>
-          </TouchableOpacity>
-
-          {/* Sección Comunidad integrada dentro del Catálogo
-            Mostrar solo si hay recursos o si está cargando (para evitar mostrar
-            un título vacío cuando no existan beneficios). */}
-          <CatalogCommunitySection />
-
-          {/* Productos - título y separación para mayor coherencia visual */}
-          <View
-            style={{
-              width: "100%",
-              paddingHorizontal: 8,
-              marginTop: 8,
-              marginBottom: 4,
-            }}
-          >
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-                paddingHorizontal: 8,
-              }}
-            >
-              <Text style={{ fontSize: 18, fontWeight: "700", color: "#333" }}>
-                Productos
-              </Text>
-              {/* Puedes mantener un botón 'Ver más' aquí si se desea */}
-            </View>
-            <View style={{ height: 8 }} />
-          </View>
-
-          {loading ? (
-            <Text style={{ textAlign: "center", marginTop: 32 }}>
-              Cargando productos...
-            </Text>
-          ) : error ? (
-            <Text style={{ color: "red", textAlign: "center", marginTop: 32 }}>
-              {error}
-            </Text>
-          ) : (
-            // Revertido a grilla de productos (estilizada)
-            <View style={{ paddingVertical: 8 }}>
-              {products && products.length > 0 ? (
-                // Renderizar una sección por categoría
-                displayGroups.map((g) => (
-                  <View key={g.category} style={{ marginBottom: 18 }}>
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        paddingHorizontal: 8,
-                        marginBottom: 8,
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontSize: 16,
-                          fontWeight: "700",
-                          color: "#333",
-                        }}
-                      >
-                        {g.category}
-                      </Text>
-                      {/* opcional: botón 'Ver todo' para categoría */}
-                    </View>
-                    <ProductGrid
-                      products={g.products}
-                      onAddToCart={handleAddProduct}
-                      addingProductId={addingProductId}
-                    />
+            {isAuthenticated && (
+              <TouchableOpacity
+                style={styles.headerCartBtn}
+                onPress={() => setShowCart(true)}
+                activeOpacity={0.8}
+              >
+                <MaterialCommunityIcons
+                  name={isSyncing ? "sync" : "cart-variant"}
+                  size={29}
+                  color={isSyncing ? "#FFA500" : "#FF6B35"}
+                  style={[
+                    styles.headerCartIcon,
+                    isSyncing && styles.syncingIcon,
+                  ]}
+                />
+                {cartProducts.length > 0 && !isSyncing && (
+                  <View style={styles.headerBadge}>
+                    <Text style={styles.headerBadgeText}>
+                      {cartProducts.length}
+                    </Text>
                   </View>
-                ))
-              ) : (
-                <View style={productStyles.emptyState}>
-                  <Text style={productStyles.emptyStateText}>
-                    No se encontraron productos
-                  </Text>
-                </View>
-              )}
-            </View>
-          )}
-        </ScrollView>
+                )}
+                {isSyncing && (
+                  <View style={styles.syncIndicator}>
+                    <Text style={styles.syncText}>⟳</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            )}
+          </>
+        }
+      />
+      
+      {/* Content */}
+      <ScrollView
+        style={containerStyles.container}
+        contentContainerStyle={containerStyles.contentContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        <SearchBar searchQuery={searchText} onSearchChange={setSearchText} />
 
-        {isAuthenticated && (
-          <CartBottomSheet
-            visible={showCart}
-            onClose={() => setShowCart(false)}
-            onNavigateToRecharge={() => {
-              setShowCart(false);
-              (navigation as any).navigate("RechargeScreen");
-            }}
-            onCheckout={async () => {
-              setShowCart(false);
-
-              if (cartProducts.length === 0) {
-                Alert.alert(
-                  "Carrito vacío",
-                  "Agrega productos antes de continuar"
-                );
-                return;
-              }
-
-              try {
-                // Mostrar loading si es necesario
-
-                // Aquí es donde ahora procesamos el carrito al backend
-                // Pero por ahora, como aún no tienes la pantalla de direcciones,
-                // vamos a usar el modal de delivery existente
-                const firstProduct = cartProducts[0];
-                const fullProduct = products.find(
-                  (p) => p.id === firstProduct.id
-                );
-
-                if (fullProduct) {
-                  openDeliveryModal(fullProduct);
-                } else {
-                  Alert.alert(
-                    "Producto no disponible",
-                    "El producto seleccionado ya no está disponible en el catálogo.",
-                    [{ text: "OK" }]
-                  );
-                }
-              } catch (error) {
-                console.error("Error en checkout:", error);
-                Alert.alert(
-                  "Error",
-                  "Hubo un problema al procesar tu carrito. Inténtalo de nuevo.",
-                  [{ text: "OK" }]
-                );
-              }
-            }}
+        {showFilters && (
+          <FilterPanel
+            filters={filters}
+            onFiltersChange={setFilters}
+            categories={allCategories.map((cat) => cat.name)}
+            brands={brands}
           />
         )}
 
-        <OrderDeliveryModal
-          visible={showDeliveryModal}
-          onClose={closeDeliveryModal}
-          onOrderCreated={(orderId: string) => {
-            // Navigate to Orders tab to see the created order
-            (navigation as any).navigate("Orders");
-          }}
-        />
+        <TouchableOpacity
+          style={{ marginBottom: 16, alignSelf: "flex-end" }}
+          onPress={() => setShowFilters(!showFilters)}
+        >
+          <Text style={{ color: "#FF6B35", fontWeight: "600" }}>
+            {showFilters ? "Ocultar filtros" : "Mostrar filtros"}
+          </Text>
+        </TouchableOpacity>
 
-        {/* Custom Alert para autenticación */}
-        <CustomAlert
-          visible={showAuthAlert}
-          title="¡Inicia sesión para comprar!"
-          message="Para agregar productos al carrito, necesitas tener una cuenta activa. Es rápido y seguro."
-          type="info"
-          onClose={() => setShowAuthAlert(false)}
-          primaryButton={{
-            text: "Iniciar sesión",
-            onPress: () => {
-              setShowAuthAlert(false);
-              loginWithAuth0();
-            },
-          }}
-          secondaryButton={{
-            text: "Más tarde",
-            onPress: () => setShowAuthAlert(false),
-          }}
-        />
+        {/* Sección Comunidad integrada dentro del Catálogo
+            Mostrar solo si hay recursos o si está cargando (para evitar mostrar
+            un título vacío cuando no existan beneficios). */}
+        <CatalogCommunitySection />
 
-        {/* Alert del hook useCustomAlert para otros mensajes */}
-        <CustomAlert
-          visible={showAlert}
-          title={alertConfig.title}
-          message={alertConfig.message}
-          type={alertConfig.type}
-          onClose={hideAlert}
+        {/* Productos - título y separación para mayor coherencia visual */}
+        <View
+          style={{
+            width: "100%",
+            paddingHorizontal: 8,
+            marginTop: 8,
+            marginBottom: 4,
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              paddingHorizontal: 8,
+            }}
+          >
+            <Text style={{ fontSize: 18, fontWeight: "700", color: "#333" }}>
+              Productos
+            </Text>
+            {/* Puedes mantener un botón 'Ver más' aquí si se desea */}
+          </View>
+          <View style={{ height: 8 }} />
+        </View>
+
+        {loading ? (
+          <Text style={{ textAlign: "center", marginTop: 32 }}>
+            Cargando productos...
+          </Text>
+        ) : error ? (
+          <Text style={{ color: "red", textAlign: "center", marginTop: 32 }}>
+            {error}
+          </Text>
+        ) : (
+          // Revertido a grilla de productos (estilizada)
+          <View style={{ paddingVertical: 8 }}>
+            {products && products.length > 0 ? (
+              // Renderizar una sección por categoría
+              displayGroups.map((g) => (
+                <View key={g.category} style={{ marginBottom: 18 }}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      paddingHorizontal: 8,
+                      marginBottom: 8,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: "700",
+                        color: "#333",
+                      }}
+                    >
+                      {g.category}
+                    </Text>
+                    {/* opcional: botón 'Ver todo' para categoría */}
+                  </View>
+                  <ProductGrid
+                    products={g.products}
+                    onAddToCart={handleAddProduct}
+                    addingProductId={addingProductId}
+                  />
+                </View>
+              ))
+            ) : (
+              <View style={productStyles.emptyState}>
+                <Text style={productStyles.emptyStateText}>
+                  No se encontraron productos
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
+      </ScrollView>
+
+      {isAuthenticated && (
+        <CartBottomSheet
+          visible={showCart}
+          onClose={() => setShowCart(false)}
+          onNavigateToRecharge={() => {
+            setShowCart(false);
+            (navigation as any).navigate("RechargeScreen");
+          }}
+          onCheckout={async () => {
+            setShowCart(false);
+
+            if (cartProducts.length === 0) {
+              Alert.alert(
+                "Carrito vacío",
+                "Agrega productos antes de continuar"
+              );
+              return;
+            }
+
+            try {
+              // Mostrar loading si es necesario
+
+              // Aquí es donde ahora procesamos el carrito al backend
+              // Pero por ahora, como aún no tienes la pantalla de direcciones,
+              // vamos a usar el modal de delivery existente
+              const firstProduct = cartProducts[0];
+              const fullProduct = products.find(
+                (p) => p.id === firstProduct.id
+              );
+
+              if (fullProduct) {
+                openDeliveryModal(fullProduct);
+              } else {
+                Alert.alert(
+                  "Producto no disponible",
+                  "El producto seleccionado ya no está disponible en el catálogo.",
+                  [{ text: "OK" }]
+                );
+              }
+            } catch (error) {
+              console.error("Error en checkout:", error);
+              Alert.alert(
+                "Error",
+                "Hubo un problema al procesar tu carrito. Inténtalo de nuevo.",
+                [{ text: "OK" }]
+              );
+            }
+          }}
         />
-      </SafeAreaView>
+      )}
+
+      <OrderDeliveryModal
+        visible={showDeliveryModal}
+        onClose={closeDeliveryModal}
+        onOrderCreated={(orderId: string) => {
+          // Navigate to Orders tab to see the created order
+          (navigation as any).navigate("Orders");
+        }}
+      />
+
+      {/* Custom Alert para autenticación */}
+      <CustomAlert
+        visible={showAuthAlert}
+        title="¡Inicia sesión para comprar!"
+        message="Para agregar productos al carrito, necesitas tener una cuenta activa. Es rápido y seguro."
+        type="info"
+        onClose={() => setShowAuthAlert(false)}
+        primaryButton={{
+          text: "Iniciar sesión",
+          onPress: () => {
+            setShowAuthAlert(false);
+            handleAuth0Login();
+          },
+        }}
+        secondaryButton={{
+          text: "Más tarde",
+          onPress: () => setShowAuthAlert(false),
+        }}
+      />
+
+      {/* Alert del hook useCustomAlert para otros mensajes */}
+      <CustomAlert
+        visible={showAlert}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        onClose={hideAlert}
+      />
     </>
   );
 };
 
 const styles = StyleSheet.create({
   headerCartBtn: {
-    marginLeft: 12,
     padding: 6,
     position: "relative",
     backgroundColor: "#fff",
@@ -457,8 +445,10 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.15,
     shadowRadius: 2,
+    justifyContent: "center",
   },
-  headerCartIcon: {},
+  headerCartIcon: {
+  },
   syncingIcon: {
     transform: [{ rotate: "45deg" }],
   },

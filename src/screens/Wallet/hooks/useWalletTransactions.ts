@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "../../../hooks/AuthContext";
+import { useAuth } from "src/context";
 import { transactionService } from "../../../services/transactionService";
 import { walletService } from "../../../services/walletService";
 import { Transaction as BackendTransaction } from "../../../services/transactionService";

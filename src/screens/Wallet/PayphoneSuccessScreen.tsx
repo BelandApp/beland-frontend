@@ -4,7 +4,8 @@ import { colors } from "../../styles/colors";
 import CryptoJS from "crypto-js";
 import { v4 as uuidv4 } from "uuid";
 import { walletService } from "../../services/walletService";
-import { useAuth } from "../../hooks/AuthContext";
+import { useAuth } from "src/context";
+
 
 export default function PayphoneSuccessScreen() {
   const { user } = useAuth();

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useCart } from "./useCart";
 import { useCartStore } from "../stores/useCartStore";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "src/context";
 import { cartService } from "../services/cartService";
 
 export const useCartSync = () => {

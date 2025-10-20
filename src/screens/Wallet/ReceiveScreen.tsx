@@ -14,7 +14,7 @@ import {
 import * as Clipboard from "expo-clipboard";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { useAuth } from "../../hooks/AuthContext";
+import { useAuth } from "src/context";
 import { useWalletData } from "../Wallet/hooks/useWalletData";
 import { walletService } from "../../services/walletService";
 
@@ -49,7 +49,7 @@ const ReceiveScreen = () => {
   }, [alias]);
   const handleShare = async () => {
     try {
-      const userName = user?.name || "Usuario";
+      const userName = user?.full_name || "Usuario";
       await Share.share({
         message: `¡Hola! Soy ${userName} y este es mi alias para recibir pagos en Beland: ${alias}`,
       });

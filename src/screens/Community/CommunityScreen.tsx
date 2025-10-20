@@ -18,11 +18,10 @@ import { walletService } from "../../services/walletService";
 import { useCustomAlert } from "../../hooks/useCustomAlert";
 import { useUserBalance } from "../../hooks/useUserBalance";
 import { calculateResourcePrice } from "../../utils/priceHelpers";
-import { useAuth } from "../../hooks/AuthContext";
+import { useAuth } from "src/context";
 
 // Components
 import {
-  CommunityHeader,
   ResourcesGrid,
   InsufficientBalanceModal,
 } from "./components";
@@ -30,10 +29,12 @@ import { PurchaseModal } from "./components/PurchaseModal";
 
 // Styles
 import { containerStyles } from "./styles";
+import { ThemedHeader } from "src/components/shared/headers/Header";
+import { BeCoinsBalance } from "src/components/ui";
 
 export const CommunityScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  const { isAuthenticated, loginWithAuth0, canPerformAction } = useAuth();
+  const { isAuthenticated, handleAuth0Login, canPerformAction } = useAuth();
 
   // Estado para recursos
   const [resources, setResources] = useState<Resource[]>([]);
@@ -199,7 +200,8 @@ export const CommunityScreen = () => {
       console.log("[BACKEND RESPUESTA COMPRA]", response);
 
       // Considerar como éxito si backend devolvió objeto o un marcador nullResponse
-      const isSuccess = response && (response.nullResponse === true || response);
+      const isSuccess =
+        response && (response.nullResponse === true || response);
 
       if (!isSuccess) {
         console.warn(
@@ -266,8 +268,7 @@ export const CommunityScreen = () => {
   if (!isAuthenticated) {
     return (
       <View style={containerStyles.container}>
-        <CommunityHeader balance={balance} />
-
+        <ThemedHeader title="Comunidad" />
         <View
           style={[
             containerStyles.scrollView,
@@ -309,7 +310,7 @@ export const CommunityScreen = () => {
             text: "Iniciar sesión",
             onPress: () => {
               setShowLoginRequiredAlert(false);
-              loginWithAuth0();
+              handleAuth0Login();
             },
           }}
           secondaryButton={{
@@ -323,8 +324,12 @@ export const CommunityScreen = () => {
 
   return (
     <View style={containerStyles.container}>
-      <CommunityHeader balance={balance} />
-
+      <ThemedHeader
+        title="Comunidad"
+        buttons={
+          <BeCoinsBalance variant="header" size="medium" balance={balance} />
+        }
+      />
       <ScrollView
         style={containerStyles.scrollView}
         showsVerticalScrollIndicator={false}
@@ -441,7 +446,7 @@ export const CommunityScreen = () => {
           text: "Iniciar sesión",
           onPress: () => {
             setShowAuthAlert(false);
-            loginWithAuth0();
+            handleAuth0Login();
           },
         }}
         secondaryButton={{

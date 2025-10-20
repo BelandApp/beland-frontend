@@ -1,9 +1,15 @@
 import React from "react";
 import { View, Text, StyleSheet, Animated, Easing } from "react-native";
-import { useAuth } from "src/hooks/AuthContext";
+import { useAuth } from "src/context/AuthContext";
 
 const SocketStatus = () => {
-  const { socketData } = useAuth();
+  // const { socketData } = useSocket()
+  // TODO VER SI ES NECESARIO ESTE COMPONENTE
+  const socketData = {
+    success:true,
+    message: "",
+    amount: 0
+  }
   const [visible, setVisible] = React.useState(false);
   const [localData, setLocalData] = React.useState(socketData);
   const fadeAnim = React.useRef(new Animated.Value(0)).current;

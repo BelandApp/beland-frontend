@@ -18,6 +18,9 @@ import PayphoneSuccessScreen from "../../screens/Wallet/PayphoneSuccessScreen";
 import { CatalogScreen } from "src/screens/Catalog";
 import { LoginScreen } from "src/screens/Login";
 import { RegisterScreen } from "src/screens/Register";
+import { OrdersStackNavigator } from "./OrdersStackNavigator";
+import { RewardsScreen } from "src/screens/Rewards";
+import { EventModal } from "src/screens/Community/components/event/Event.modal";
 
 // 1. Define el tipo de tu Root Stack con los nombres correctos
 export type RootStackParamList = {
@@ -46,6 +49,7 @@ export type RootStackParamList = {
   Groups: undefined;
   UserDashboardScreen: undefined;
   UserResources: undefined;
+  Orders: undefined;
   PaymentScreen: {
     paymentData: {
       amount: number;
@@ -62,9 +66,11 @@ export type RootStackParamList = {
     amount_to_payment_id?: string | null;
   };
   PayphoneSuccess: { toWalletId: string; amountPaymentId: string };
-  // Añade aquí cualquier otra ruta que falte.
   Login: undefined;
   Register: undefined;
+  // Chequear si es necesario
+  Rewards: undefined;
+  EventModal: { id: string };
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -143,6 +149,11 @@ export const RootStackNavigator = () => {
         options={{ headerShown: false }}
       />
       <Stack.Screen
+        name="Orders"
+        component={OrdersStackNavigator}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
         name="Login"
         component={LoginScreen}
         options={{ headerShown: false }}
@@ -151,6 +162,21 @@ export const RootStackNavigator = () => {
         name="Register"
         component={RegisterScreen}
         options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Rewards"
+        component={RewardsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="EventModal"
+        component={EventModal}
+        options={{
+          headerShown: false,
+          gestureEnabled: true,
+          presentation: "transparentModal",
+          animation: "slide_from_bottom",
+        }}
       />
     </Stack.Navigator>
   );

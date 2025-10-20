@@ -1,6 +1,7 @@
 import React from "react";
 import { UserResource } from "../types/resource";
 import { commonStyles } from "../styles";
+import { ScrollView, View } from "react-native";
 
 // Tipos locales para el modal
 type Resource = {
@@ -171,9 +172,9 @@ export const DiscountsModal: React.FC<DiscountsModalProps> = ({
     (userResources?.length || 0);
 
   return (
-    <div
+    <View
       style={{
-        position: "fixed",
+        position: "static" as const,
         top: 0,
         left: 0,
         width: "100%",
@@ -184,20 +185,19 @@ export const DiscountsModal: React.FC<DiscountsModalProps> = ({
         alignItems: "center",
         zIndex: 1000,
       }}
-      onClick={onClose}
+      // onPress={onClose}
     >
-      <div
+      <ScrollView
         style={{
           backgroundColor: "white",
           borderRadius: 16,
           padding: 24,
           maxWidth: "90%",
           maxHeight: "80%",
-          overflowY: "auto",
           minWidth: 350,
           boxShadow: "0 20px 40px rgba(0, 0, 0, 0.3)",
         }}
-        onClick={(e) => e.stopPropagation()}
+        // onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div
@@ -541,8 +541,8 @@ export const DiscountsModal: React.FC<DiscountsModalProps> = ({
             </div>
           </div>
         )}
-      </div>
-    </div>
+      </ScrollView>
+    </View>
   );
 };
 

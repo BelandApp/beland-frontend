@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { cartService, Cart, CartItem } from "../services/cartService";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "src/context";
 
 // Hook para manejar carrito con API
 export const useCart = () => {

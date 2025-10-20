@@ -16,6 +16,7 @@ import { useOrders } from "../../hooks/useOrdersAPI";
 import { Order } from "../../types/Order";
 import { colors } from "../../styles/colors";
 import { deliveryStyles } from "./styles/deliveryStyles";
+import { ThemedHeader } from "src/components/shared/headers/Header";
 
 export const DeliveryScreen = () => {
   const navigation = useNavigation();
@@ -271,54 +272,43 @@ export const DeliveryScreen = () => {
   return (
     <SafeAreaView style={deliveryStyles.container}>
       {/* Header */}
-      <View style={deliveryStyles.header}>
-        <View style={deliveryStyles.headerContent}>
-          <TouchableOpacity
-            style={deliveryStyles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <MaterialCommunityIcons name="arrow-left" size={24} color="white" />
-          </TouchableOpacity>
-
-          <View style={deliveryStyles.headerTitles}>
-            <Text style={deliveryStyles.headerTitle}>Delivery</Text>
-            <Text style={deliveryStyles.headerSubtitle}>
-              Órdenes listas para entrega
-            </Text>
-          </View>
-
-          <View style={deliveryStyles.headerStats}>
-            <Text style={deliveryStyles.statsNumber}>
-              {deliverableOrders.length}
-            </Text>
-            <Text style={deliveryStyles.statsLabel}>Pendientes</Text>
-          </View>
-        </View>
-
-        {/* Search Bar */}
-        <View style={deliveryStyles.searchContainer}>
-          <MaterialCommunityIcons
-            name="magnify"
-            size={20}
-            color={colors.textSecondary}
-          />
-          <TextInput
-            style={deliveryStyles.searchInput}
-            placeholder="Buscar por ID de orden o dirección..."
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery("")}>
+      <ThemedHeader
+        title="Delivery"
+        canGoBack
+        buttons={
+          <>
+            <View style={deliveryStyles.searchContainer}>
               <MaterialCommunityIcons
-                name="close"
+                name="magnify"
                 size={20}
                 color={colors.textSecondary}
               />
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
+              <TextInput
+                style={deliveryStyles.searchInput}
+                placeholder="Buscar"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+              {searchQuery.length > 0 && (
+                <TouchableOpacity onPress={() => setSearchQuery("")}>
+                  <MaterialCommunityIcons
+                    name="close"
+                    size={20}
+                    color={colors.textSecondary}
+                  />
+                </TouchableOpacity>
+              )}
+            </View>
+            <View style={deliveryStyles.headerStats}>
+              <Text style={deliveryStyles.statsNumber}>
+                {deliverableOrders.length}
+              </Text>
+              <Text style={deliveryStyles.statsLabel}>Pendientes</Text>
+            </View>
+          </>
+        }
+      />
+      
 
       {/* Content */}
       <ScrollView
