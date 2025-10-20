@@ -4,5 +4,11 @@ export type User = {
   email: string;
   full_name: string;
   profile_picture_url?: string;
-  role_name?: "USER" | "LEADER" | "EMPRESA" | "ADMIN" | "SUPERADMIN";
+  role_name?:
+    | "USER"
+    | "LEADER"
+    | "COMMERCE"
+    | "EMPRESA"
+    | "ADMIN"
+    | "SUPERADMIN";
 };

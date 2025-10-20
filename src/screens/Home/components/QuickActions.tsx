@@ -89,15 +89,20 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
 
   // Agregar botón Cobrar solo para roles permitidos
   const actions = [...baseActions];
+
   const shouldShowCollect =
     (typeof user?.role_name === "string" &&
-      ["COMMERCE", "ADMIN"].includes(user.role_name.toUpperCase())) ||
+      ["COMMERCE", "ADMIN", "SUPERADMIN", "EMPRESA"].includes(
+        user.role_name.toUpperCase()
+      )) ||
     (user?.role &&
       typeof user.role === "object" &&
       user.role !== null &&
       "name" in user.role &&
       typeof (user.role as any).name === "string" &&
-      (user.role as any).name !== "USER");
+      ["COMMERCE", "ADMIN", "SUPERADMIN", "EMPRESA"].includes(
+        (user.role as any).name.toUpperCase()
+      ));
 
   if (shouldShowCollect) {
     // Insertar Cobrar antes de Canjear

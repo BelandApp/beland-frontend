@@ -48,11 +48,16 @@ export const useWalletActions = (
   // Agregar botón Cobrar solo para roles permitidos
   if (
     (typeof user?.role_name === "string" &&
-      ["COMMERCE", "ADMIN"].includes(user.role_name.toUpperCase())) ||
+      ["COMMERCE", "ADMIN", "SUPERADMIN", "EMPRESA"].includes(
+        user.role_name.toUpperCase()
+      )) ||
     (user?.role &&
       typeof user.role === "object" &&
       user.role.name &&
-      user.role.name.toUpperCase() !== "USER")
+      typeof user.role.name === "string" &&
+      ["COMMERCE", "ADMIN", "SUPERADMIN", "EMPRESA"].includes(
+        user.role.name.toUpperCase()
+      ))
   ) {
     mainWalletActions.push({
       id: "cobrar",

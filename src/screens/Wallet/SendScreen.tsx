@@ -226,10 +226,20 @@ const SendScreen = () => {
 
         {/* Información del saldo */}
         <View style={styles.balanceInfo}>
-          <Text style={styles.balanceLabel}>Saldo disponible:</Text>
-          <Text style={styles.balanceAmount}>
-            {Math.floor(walletData.balance)} BECOINS
-          </Text>
+          <View style={styles.balanceRow}>
+            <Text style={styles.balanceLabel}>Saldo disponible:</Text>
+            <Text style={styles.balanceAmount}>
+              {Math.floor(walletData.balance)} BECOINS
+            </Text>
+          </View>
+          {walletData.locked_balance && walletData.locked_balance > 0 && (
+            <View style={styles.lockedBalanceInfo}>
+              <Text style={styles.lockedBalanceLabel}>Balance bloqueado:</Text>
+              <Text style={styles.lockedBalanceAmount}>
+                {Math.floor(walletData.locked_balance)} BECOINS
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Botón enviar */}
@@ -367,9 +377,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#f0f9ff",
   },
   balanceInfo: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: "column",
+    justifyContent: "flex-start",
+    alignItems: "stretch",
     backgroundColor: "#fff",
     margin: 16,
     padding: 16,
@@ -380,6 +390,11 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  balanceRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   balanceLabel: {
     fontSize: 14,
     color: "#666",
@@ -388,6 +403,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#4ecdc4",
+  },
+  lockedBalanceInfo: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: "#e5e7eb",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+  },
+  lockedBalanceLabel: {
+    fontSize: 12,
+    color: "#9ca3af",
+  },
+  lockedBalanceAmount: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#9ca3af",
+    fontStyle: "italic",
   },
   sendButton: {
     backgroundColor: "#4ecdc4",

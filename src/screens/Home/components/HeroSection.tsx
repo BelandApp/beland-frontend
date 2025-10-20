@@ -11,12 +11,14 @@ import { TreesIcon, CommunityIcon } from "../../../components/icons";
 
 interface HeroSectionProps {
   balance: number;
+  locked_balance?: number;
   estimatedValue: string;
   onGetStarted?: () => void;
 }
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
   balance,
+  locked_balance,
   estimatedValue,
   onGetStarted,
 }) => {
@@ -38,6 +40,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 {balance.toLocaleString()}
               </Text>
               <Text style={styles.balanceLabel}>BeCoins</Text>
+              {locked_balance && locked_balance > 0 && (
+                <Text style={styles.lockedBalanceLabel}>
+                  {locked_balance.toLocaleString()} bloqueados
+                </Text>
+              )}
             </View>
             <View style={styles.usdValue}>
               <Text style={styles.usdAmount}>${estimatedValue}</Text>
@@ -143,6 +150,13 @@ const styles = StyleSheet.create({
     color: "#CBD5E1",
     marginTop: 2,
     fontWeight: "500",
+  },
+  lockedBalanceLabel: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    marginTop: 1,
+    fontWeight: "400",
+    fontStyle: "italic",
   },
   usdValue: {
     alignItems: "flex-end",

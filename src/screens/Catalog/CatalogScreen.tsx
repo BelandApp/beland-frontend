@@ -47,7 +47,7 @@ import { ThemedHeader } from "src/components/shared/headers/Header";
 
 export const CatalogScreen = () => {
   const navigation = useNavigation();
-  const { canPerformAction, loginWithAuth0, isAuthenticated } = useAuth();
+  const { canPerformAction, handleAuth0Login, isAuthenticated } = useAuth();
   const { showAlert, alertConfig, showCustomAlert, hideAlert } =
     useCustomAlert();
 
@@ -411,7 +411,7 @@ export const CatalogScreen = () => {
           text: "Iniciar sesión",
           onPress: () => {
             setShowAuthAlert(false);
-            loginWithAuth0();
+            handleAuth0Login();
           },
         }}
         secondaryButton={{

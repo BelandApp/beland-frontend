@@ -139,12 +139,15 @@ export default function WalletSettingsScreen() {
           </Text>
         </View>
 
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Balance Bloqueado</Text>
-          <Text style={styles.infoValue}>
-            {Math.floor(fullWalletData?.locked_balance || 0)} BeCoins
-          </Text>
-        </View>
+        {fullWalletData?.locked_balance &&
+          fullWalletData.locked_balance > 0 && (
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Balance Bloqueado</Text>
+              <Text style={styles.infoValue}>
+                {Math.floor(fullWalletData.locked_balance)} BeCoins
+              </Text>
+            </View>
+          )}
       </View>
 
       {/* Configuración del alias */}

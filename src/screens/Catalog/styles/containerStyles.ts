@@ -61,7 +61,7 @@ export const containerStyles = StyleSheet.create({
     color: "#FFFFFF",
   },
   headerSubtitle: {
-    fontSize: 14,
+    fontSize: 13, // Reducido de 14 a 13
     color: "#FFFFFF", // Color blanco por defecto para el fondo naranja
     fontWeight: "500" as const,
     opacity: 0.9,
