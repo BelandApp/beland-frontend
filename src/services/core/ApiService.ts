@@ -59,10 +59,10 @@ export class CoreApiService {
    */
   protected async getAuthToken(): Promise<string | null> {
     if (typeof window !== "undefined" && window.localStorage) {
-      return window.localStorage.getItem("auth_token");
+      return window.localStorage.getItem("access_token");
     } else {
       try {
-        return await AsyncStorage.getItem("auth_token");
+        return await AsyncStorage.getItem("access_token");
       } catch {
         return null;
       }

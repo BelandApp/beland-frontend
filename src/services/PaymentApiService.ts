@@ -125,7 +125,7 @@ class PaymentServiceClass extends CoreApiService {
     PAYMENT_METHODS: "payment-methods",
     PAYMENTS: "payments",
     TRANSACTIONS: "transactions",
-    WALLET: "wallet",
+    WALLET: "wallets/user",
     WITHDRAWALS: "withdrawals",
     REFUNDS: "refunds",
   } as const;

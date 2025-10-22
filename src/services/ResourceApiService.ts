@@ -120,7 +120,7 @@ class ResourceServiceClass extends CoreApiService {
   private readonly ENDPOINTS = {
     RESOURCE_TYPES: "resource-type",
     RECYCLING_TRANSACTIONS: "recycling-transactions",
-    USER_RESOURCES: "users/resources",
+    USER_RESOURCES: "user-resources",
     RECYCLING_GOALS: "recycling-goals",
     ENVIRONMENTAL_IMPACT: "environmental-impact",
     UPLOAD_EVIDENCE: "recycling-transactions/evidence",
@@ -239,10 +239,28 @@ class ResourceServiceClass extends CoreApiService {
 
   // User Resource Summary
   /**
-   * Get user's recycling summary
+   * Get user's resource summary
    */
   async getUserResourceSummary(): Promise<UserResourceSummary> {
     return this.get<UserResourceSummary>(this.ENDPOINTS.USER_RESOURCES);
+  }
+
+  /**
+   * Get user's resources with pagination
+   */
+  async getUserResources(
+    params: {
+      page?: number;
+      limit?: number;
+      resource_id?: string;
+    } = {}
+  ): Promise<PaginatedResponse<any>> {
+    const queryString = this.buildQueryString(params);
+    const endpoint = queryString
+      ? `${this.ENDPOINTS.USER_RESOURCES}?${queryString}`
+      : this.ENDPOINTS.USER_RESOURCES;
+
+    return this.get<PaginatedResponse<any>>(endpoint);
   }
 
   /**

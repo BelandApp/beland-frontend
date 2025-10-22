@@ -34,8 +34,11 @@ export interface Cart {
 }
 
 export interface AddToCartDto {
+  cart_id: string;
   product_id: string;
   quantity: number;
+  unit_price: number;
+  unit_becoin?: number;
 }
 
 export interface UpdateCartItemDto {
@@ -68,13 +71,13 @@ export interface CartSummary {
 
 class CartServiceClass extends CoreApiService {
   private readonly ENDPOINTS = {
-    CART: "cart",
-    CART_ITEMS: "cart/items",
-    CART_SUMMARY: "cart/summary",
-    APPLY_COUPON: "cart/coupon",
-    REMOVE_COUPON: "cart/coupon",
-    CLEAR_CART: "cart/clear",
-    SYNC_CART: "cart/sync",
+    CART: "carts/user",
+    CART_ITEMS: "cart-items",
+    CART_SUMMARY: "carts/summary",
+    APPLY_COUPON: "carts/coupon",
+    REMOVE_COUPON: "carts/coupon",
+    CLEAR_CART: "carts/clear",
+    SYNC_CART: "carts/sync",
   } as const;
 
   /**
@@ -82,6 +85,29 @@ class CartServiceClass extends CoreApiService {
    */
   async getCart(): Promise<Cart> {
     return this.get<Cart>(this.ENDPOINTS.CART);
+  }
+
+  /**
+   * Create a new cart for user
+   */
+  async createCart(data: { user_id: string }): Promise<Cart> {
+    return this.post<Cart>("carts", data);
+  }
+
+  /**
+   * Get product information by ID
+   */
+  async getProduct(productId: string): Promise<Product> {
+    return this.get<Product>(`products/${productId}`);
+  }
+
+  /**
+   * Get current user ID from authentication context
+   */
+  private async getCurrentUserId(): Promise<string> {
+    // Get user info from auth context or make a request to get current user
+    const userInfo = await this.get<{ id: string; email: string }>("auth/me");
+    return userInfo.id;
   }
 
   /**
@@ -94,8 +120,33 @@ class CartServiceClass extends CoreApiService {
   /**
    * Add item to cart
    */
-  async addToCart(data: AddToCartDto): Promise<CartItem> {
-    return this.post<CartItem>(this.ENDPOINTS.CART_ITEMS, data);
+  async addToCart(data: {
+    product_id: string;
+    quantity: number;
+  }): Promise<CartItem> {
+    // 1. Get or create user cart
+    let cart: Cart;
+    try {
+      cart = await this.getCart();
+    } catch (error) {
+      // If no cart exists, create one
+      const userId = await this.getCurrentUserId();
+      cart = await this.createCart({ user_id: userId });
+    }
+
+    // 2. Get product information to obtain price
+    const product = await this.getProduct(data.product_id);
+
+    // 3. Create the cart item with all required fields
+    const cartItemData: AddToCartDto = {
+      cart_id: cart.id,
+      product_id: data.product_id,
+      quantity: data.quantity,
+      unit_price: product.price,
+      unit_becoin: product.price_becoin,
+    };
+
+    return this.post<CartItem>(this.ENDPOINTS.CART_ITEMS, cartItemData);
   }
 
   /**
@@ -158,9 +209,12 @@ class CartServiceClass extends CoreApiService {
 
   /**
    * Sync cart with server (useful for offline/online sync)
+   * Note: Backend doesn't have sync endpoint, so we just return current cart
    */
   async syncCart(localCartItems: Omit<AddToCartDto, "id">[]): Promise<Cart> {
-    return this.post<Cart>(this.ENDPOINTS.SYNC_CART, { items: localCartItems });
+    // TODO: Implement proper sync when backend supports it
+    // For now, just return the current cart
+    return this.getCart();
   }
 
   /**

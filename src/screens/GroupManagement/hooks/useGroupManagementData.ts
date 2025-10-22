@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Alert } from "react-native";
 import { Group } from "../../../types/Group";
 import { useGroups } from "../../Groups/hooks/useGroups";
-import { useAuth } from "../../../hooks/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 
 export const useGroupManagementData = (groupId: string, navigation: any) => {
   const { getGroupById, refreshKey } = useGroups();

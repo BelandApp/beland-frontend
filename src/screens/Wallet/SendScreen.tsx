@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { useAuth } from "../../hooks/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import { PaymentService, WalletService } from "@services/core";
 import Constants from "expo-constants";
 import { useWalletData } from "../Wallet/hooks/useWalletData";

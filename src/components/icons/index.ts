@@ -1,4 +1,5 @@
 export { CommunityIcon } from "./CommunityIcon";
+export { CobrarIcon } from "./CobrarIcon";
 
 export { TreesIcon } from "./TreesIcon";
 export { WaterIcon } from "./WaterIcon";

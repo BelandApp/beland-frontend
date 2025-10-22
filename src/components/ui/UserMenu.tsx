@@ -9,7 +9,7 @@ import {
   Pressable,
   ActivityIndicator,
 } from "react-native";
-import { useAuth } from "@/context";
+import { useAuth } from "src/context";
 import {
   LogOut,
   LayoutDashboard,
@@ -22,8 +22,8 @@ import {
   Percent,
 } from "lucide-react-native";
 import { useNavigation } from "@react-navigation/native";
-import { showSuccessAlert, showErrorAlert } from "@/utils/alertHelpers";
-import { authService } from "@/services/auth/auth.service";
+import { showSuccessAlert, showErrorAlert } from "../../utils/alertHelpers";
+import { authService } from "../../services/auth/auth.service";
 
 interface UserMenuProps {
   style?: any;
@@ -59,9 +59,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   const handleChangeRoleToCommerce = async () => {
     setIsChangingRole(true);
     try {
-      // TODO: Migrate to UserService.updateProfile() or similar
-      // const resp = await authService.changeRoleToCommerce();
-      const resp = { success: true }; // Temporary placeholder
+      const resp = await authService.changeRoleToCommerce();
       setShowCommerceAlert(false);
       showSuccessAlert(
         "¡Ya eres comerciante!",

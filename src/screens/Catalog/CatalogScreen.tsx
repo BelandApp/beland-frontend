@@ -118,6 +118,7 @@ export const CatalogScreen = () => {
   const displayGroups = useMemo(() => {
     if (groupedProducts && groupedProducts.length > 0) {
       return groupedProducts.map((g) => ({
+        categoryId: g.category_id,
         category: g.category_name,
         products: g.products,
       }));
@@ -126,13 +127,18 @@ export const CatalogScreen = () => {
     if (products && products.length > 0) {
       return [
         {
+          categoryId: "all_products",
           category: "Todos",
           products: products as ProductCardType[],
         },
       ];
     }
 
-    return [] as { category: string; products: ProductCardType[] }[];
+    return [] as {
+      categoryId: string;
+      category: string;
+      products: ProductCardType[];
+    }[];
   }, [groupedProducts, products]);
 
   const lastProductsQueryRef = useRef<string | null>(null);
@@ -298,7 +304,7 @@ export const CatalogScreen = () => {
             {products && products.length > 0 ? (
               // Renderizar una sección por categoría
               displayGroups.map((g) => (
-                <View key={g.category} style={{ marginBottom: 18 }}>
+                <View key={g.categoryId} style={{ marginBottom: 18 }}>
                   <View
                     style={{
                       flexDirection: "row",

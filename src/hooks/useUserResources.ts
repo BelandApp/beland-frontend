@@ -12,78 +12,97 @@ export const useUserResources = () => {
       setLoading(true);
       setError(null);
 
-      const response = await ResourceService.getRecyclingTransactions({
+      // Use the correct endpoint for user resources
+      const response = await ResourceService.getUserResources({
         limit: 50,
         page: 1,
       });
 
-      const availableResources: UserResource[] = (response.data || [])
-        .filter((transaction: any) => {
-          if (!transaction.resource) return false;
+      console.log("User resources response:", response);
 
-          const isNotRedeemed = !transaction.is_redeemed;
+      // Handle response structure [items[], count] or direct items
+      let resourceData: any[] = [];
+      if (Array.isArray(response)) {
+        if (response.length === 2 && Array.isArray(response[0])) {
+          // Paginated response: [items[], total]
+          resourceData = response[0];
+        } else {
+          // Direct array
+          resourceData = response;
+        }
+      } else if (response && response.data) {
+        // Standard paginated response with data property
+        resourceData = response.data;
+      }
+
+      const availableResources: UserResource[] = resourceData
+        .filter((userResource: any) => {
+          if (!userResource.resource) return false;
+
+          const isNotRedeemed = !userResource.is_redeemed;
           const hasQuantityLeft =
-            transaction.quantity - transaction.quantity_redeemed > 0;
-          const isNotExpired = transaction.resource.expires_at
-            ? new Date(transaction.resource.expires_at) > new Date()
+            userResource.quantity - userResource.quantity_redeemed > 0;
+          const isNotExpired = userResource.resource.expires_at
+            ? new Date(userResource.resource.expires_at) > new Date()
             : true;
 
           return isNotRedeemed && hasQuantityLeft && isNotExpired;
         })
-        .map((transaction: any) => ({
-          id: transaction.id,
-          user_id: transaction.user_id || "",
-          resource_id: transaction.resource.id,
-          quantity: transaction.quantity,
-          quantity_redeemed: transaction.quantity_redeemed,
-          hash_id: transaction.hash_id || "",
-          qr_code: transaction.qr_code,
-          is_redeemed: transaction.is_redeemed,
-          redeemed_at: transaction.redeemed_at
-            ? new Date(transaction.redeemed_at)
+        .map((userResource: any) => ({
+          id: userResource.id,
+          user_id: userResource.user_id || "",
+          resource_id: userResource.resource.id,
+          quantity: userResource.quantity,
+          quantity_redeemed: userResource.quantity_redeemed,
+          hash_id: userResource.hash_id || "",
+          qr_code: userResource.qr_code,
+          is_redeemed: userResource.is_redeemed,
+          redeemed_at: userResource.redeemed_at
+            ? new Date(userResource.redeemed_at)
             : null,
-          expires_at: transaction.resource.expires_at
-            ? new Date(transaction.resource.expires_at)
+          expires_at: userResource.resource.expires_at
+            ? new Date(userResource.resource.expires_at)
             : null,
-          created_at: new Date(transaction.created_at),
+          created_at: new Date(userResource.created_at),
           updated_at: new Date(
-            transaction.updated_at || transaction.created_at
+            userResource.updated_at || userResource.created_at
           ),
-          resource: transaction.resource
+          resource: userResource.resource
             ? {
-                id: transaction.resource.id,
-                code: transaction.resource.code || "",
-                name: transaction.resource.name,
-                description: transaction.resource.description || "",
-                url_image: transaction.resource.url_image,
-                becoin_value: transaction.resource.becoin_value || 0,
-                discount: transaction.resource.discount || 0,
-                limit_user: transaction.resource.limit_user || 0,
-                limit_app: transaction.resource.limit_app || 0,
-                used_account: transaction.resource.used_account || 0,
-                is_expired: transaction.resource.is_expired || false,
-                expires_at: transaction.resource.expires_at
-                  ? new Date(transaction.resource.expires_at)
+                id: userResource.resource.id,
+                code: userResource.resource.code || "",
+                name: userResource.resource.name,
+                description: userResource.resource.description || "",
+                url_image: userResource.resource.url_image,
+                becoin_value: userResource.resource.becoin_value || 0,
+                discount: userResource.resource.discount || 0,
+                limit_user: userResource.resource.limit_user || 0,
+                limit_app: userResource.resource.limit_app || 0,
+                used_account: userResource.resource.used_account || 0,
+                is_expired: userResource.resource.is_expired || false,
+                expires_at: userResource.resource.expires_at
+                  ? new Date(userResource.resource.expires_at)
                   : null,
                 created_at: new Date(
-                  transaction.resource.created_at || transaction.created_at
+                  userResource.resource.created_at || userResource.created_at
                 ),
-                resource_type_id: transaction.resource.resource_type_id || "",
-                user_commerce_id: transaction.resource.user_commerce_id || "",
+                resource_type_id: userResource.resource.resource_type_id || "",
+                user_commerce_id: userResource.resource.user_commerce_id || "",
               }
             : null,
-          user: transaction.user
+          user: userResource.user
             ? {
-                id: transaction.user.id,
-                full_name: transaction.user.full_name || "",
-                email: transaction.user.email || "",
-                profile_picture_url: transaction.user.profile_picture_url,
+                id: userResource.user.id,
+                full_name: userResource.user.full_name || "",
+                email: userResource.user.email || "",
+                profile_picture_url: userResource.user.profile_picture_url,
               }
             : null,
         }));
 
       setUserResources(availableResources);
     } catch (err: any) {
+      console.error("Error fetching user resources:", err);
       setError("Error al obtener descuentos y promociones");
       setUserResources([]);
     } finally {

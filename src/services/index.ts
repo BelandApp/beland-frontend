@@ -1,7 +1,6 @@
 export * from "./groupStorage";
 export * from "./locationService";
 export * from "./addressService";
-<<<<<<< HEAD
 
 // API Services
 export { UserService } from "./UserApiService";
@@ -15,7 +14,7 @@ export { WalletService } from "./WalletApiService";
 export { WithdrawService } from "./withdrawService";
 
 // Other services
-export * from "./authService";
+export * from "./auth";
 export * from "./api";
 export * from "./supabaseClient";
 export * from "./SocketService";
@@ -25,10 +24,3 @@ export * from "./groupApis";
 
 // Core services - export specific items to avoid conflicts
 export { CoreApiService } from "./core";
-=======
-export * from "./orderService";
-export * from "./paymentTypesService";
-export * from "./resourceService"
-export * from "./walletService"
-export * from "./auth"
->>>>>>> develop

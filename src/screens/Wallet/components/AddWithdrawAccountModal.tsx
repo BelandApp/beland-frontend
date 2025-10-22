@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import {
-  withdrawService,
+  WithdrawService,
   WithdrawAccountType,
 } from "../../../services/withdrawService";
 
@@ -79,7 +79,24 @@ export const AddWithdrawAccountModal: React.FC<
   const loadAccountTypes = async () => {
     try {
       setLoading(true);
-      const types = await withdrawService.getWithdrawAccountTypes();
+      const response = await WithdrawService.getWithdrawAccountTypes();
+      console.log("Account types response:", response);
+
+      // Handle both direct array and paginated response [items[], total]
+      let types: WithdrawAccountType[] = [];
+      if (Array.isArray(response)) {
+        if (response.length === 2 && Array.isArray(response[0])) {
+          // Paginated response: [items[], total]
+          types = response[0];
+        } else {
+          // Direct array
+          types = response;
+        }
+      } else {
+        // Fallback to empty array
+        types = [];
+      }
+
       setAccountTypes(types);
     } catch (error) {
       console.error("Error cargando tipos de cuenta:", error);
@@ -500,7 +517,7 @@ export const AddWithdrawAccountModal: React.FC<
 
       console.log("Creando cuenta con datos:", accountData);
 
-      await withdrawService.createWithdrawAccount(accountData);
+      await WithdrawService.createWithdrawAccount(accountData);
 
       // Actualizar la lista de cuentas inmediatamente
       onAdd();
@@ -596,7 +613,11 @@ export const AddWithdrawAccountModal: React.FC<
               }}
               style={styles.picker}
             >
-              <Picker.Item label="Seleccionar tipo de cuenta" value="" />
+              <Picker.Item
+                key="empty-type"
+                label="Seleccionar tipo de cuenta"
+                value=""
+              />
               {accountTypes.map((type) => (
                 <Picker.Item key={type.id} label={type.name} value={type.id} />
               ))}
@@ -628,16 +649,38 @@ export const AddWithdrawAccountModal: React.FC<
                   style={styles.picker}
                   mode={Platform.OS === "ios" ? "dropdown" : "dropdown"}
                 >
-                  <Picker.Item label="Seleccionar proveedor" value="" />
-                  <Picker.Item label="Payphone" value="Payphone" />
-                  <Picker.Item label="MercadoPago" value="MercadoPago" />
-                  <Picker.Item label="Produbanco" value="Produbanco" />
-                  <Picker.Item label="Pichincha Bank" value="Pichincha Bank" />
                   <Picker.Item
+                    key="empty-provider"
+                    label="Seleccionar proveedor"
+                    value=""
+                  />
+                  <Picker.Item
+                    key="payphone"
+                    label="Payphone"
+                    value="Payphone"
+                  />
+                  <Picker.Item
+                    key="mercadopago"
+                    label="MercadoPago"
+                    value="MercadoPago"
+                  />
+                  <Picker.Item
+                    key="produbanco"
+                    label="Produbanco"
+                    value="Produbanco"
+                  />
+                  <Picker.Item
+                    key="pichincha"
+                    label="Pichincha Bank"
+                    value="Pichincha Bank"
+                  />
+                  <Picker.Item
+                    key="guayaquil"
                     label="Banco Guayaquil"
                     value="Banco Guayaquil"
                   />
                   <Picker.Item
+                    key="pacifico"
                     label="Banco del Pacífico"
                     value="Banco del Pacífico"
                   />

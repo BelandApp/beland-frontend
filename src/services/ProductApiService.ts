@@ -12,6 +12,7 @@ export interface Product {
   description?: string;
   price: number;
   cost?: number;
+  price_becoin?: number;
   image_url?: string;
   category_id?: string;
   category?: Category;

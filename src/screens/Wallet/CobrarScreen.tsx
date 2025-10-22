@@ -42,7 +42,7 @@ const CobrarScreen = () => {
   const [presetName, setPresetName] = useState("");
   const [presetMessage, setPresetMessage] = useState("");
   const IS_WEB = Platform.OS && String(Platform.OS).toLowerCase() === "web";
-  
+
   // Helper para formatear monto USD
   const formatUSD = (value: string | number) => {
     if (!value) return "$0.00";
@@ -95,11 +95,7 @@ const CobrarScreen = () => {
       setQrLoading(true);
       setQrError(null);
       try {
-        // Obtener el token desde el store o localStorage
-        let token = await TokenService.getToken();
-        if (!token && typeof window !== "undefined") {
-          token = localStorage.getItem("auth_token");
-        }
+        const token = await TokenService.getToken();
         if (!token) {
           setQrError(
             "No hay token de autenticación. El usuario debe iniciar sesión."
@@ -107,14 +103,17 @@ const CobrarScreen = () => {
           setQrLoading(false);
           return;
         }
-        // Llamar al servicio pasando el token
-        const resp =
-          await require("../../services/walletService").WalletService.getWalletQRWithToken(
-            token
-          );
-        setQrImage(resp);
+
+        // Usar el método correcto del WalletService
+        const response = await WalletService.getWalletQR();
+        if (response && response.qr) {
+          setQrImage(response.qr);
+        } else {
+          setQrError("No se pudo obtener el código QR");
+        }
       } catch (err) {
-        setQrError("Error al obtener el QR");
+        console.error("Error al obtener QR:", err);
+        setQrError("Error al obtener el QR. Verifica tu conexión.");
       } finally {
         setQrLoading(false);
       }
@@ -126,8 +125,19 @@ const CobrarScreen = () => {
     setLoadingAmounts(true);
     try {
       const res = await WalletService.getAmountsToPayment();
-      setAmounts(Array.isArray(res) ? res[0] : res || []);
+      console.log("Amounts response:", res);
+
+      // Si es una tupla [items[], total], tomar el primer elemento
+      if (Array.isArray(res) && res.length === 2 && Array.isArray(res[0])) {
+        setAmounts(res[0]);
+      } else if (Array.isArray(res)) {
+        setAmounts(res);
+      } else {
+        setAmounts([]);
+      }
     } catch (err) {
+      console.error("Error fetching amounts:", err);
+      setAmounts([]);
       Alert.alert("Error", "No se pudieron cargar los montos");
     } finally {
       setLoadingAmounts(false);
@@ -143,9 +153,19 @@ const CobrarScreen = () => {
     setLoadingPresets(true);
     try {
       const res = await WalletService.getPresetAmounts();
-      setPresets(Array.isArray(res) ? res[0] : res || []);
+      console.log("Presets response:", res);
+
+      // Si es una tupla [items[], total], tomar el primer elemento
+      if (Array.isArray(res) && res.length === 2 && Array.isArray(res[0])) {
+        setPresets(res[0]);
+      } else if (Array.isArray(res)) {
+        setPresets(res);
+      } else {
+        setPresets([]);
+      }
     } catch (err) {
-      // No alert, solo log
+      console.error("Error fetching presets:", err);
+      setPresets([]);
     } finally {
       setLoadingPresets(false);
     }

@@ -19,7 +19,6 @@ export interface Wallet {
 }
 
 export interface RechargeRequest {
-  wallet_id: string;
   amountUsd: number;
   referenceCode: string;
   clientTransactionId: string;
@@ -42,6 +41,56 @@ export interface WalletCreateRequest {
 
 class WalletServiceClass extends CoreApiService {
   protected basePath = "/wallets";
+
+  /**
+   * Make request to wallet-specific endpoints
+   */
+  protected async walletRequest<T = any>(
+    endpoint: string,
+    options: any = {}
+  ): Promise<T> {
+    const walletEndpoint = endpoint.startsWith("/")
+      ? `/wallets${endpoint}`
+      : `/wallets/${endpoint}`;
+    return this.request<T>(walletEndpoint, options);
+  }
+
+  /**
+   * Override get method to use wallet endpoints
+   */
+  protected get<T = any>(endpoint: string, options: any = {}): Promise<T> {
+    return this.walletRequest<T>(endpoint, { ...options, method: "GET" });
+  }
+
+  /**
+   * Override post method to use wallet endpoints
+   */
+  protected post<T = any>(
+    endpoint: string,
+    data?: any,
+    options: any = {}
+  ): Promise<T> {
+    return this.walletRequest<T>(endpoint, {
+      ...options,
+      method: "POST",
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
+  /**
+   * Override put method to use wallet endpoints
+   */
+  protected put<T = any>(
+    endpoint: string,
+    data?: any,
+    options: any = {}
+  ): Promise<T> {
+    return this.walletRequest<T>(endpoint, {
+      ...options,
+      method: "PUT",
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  }
 
   // Wallet Management
   /**
@@ -134,10 +183,25 @@ class WalletServiceClass extends CoreApiService {
   /**
    * Create recharge (buy BeCoins)
    */
-  async createRecharge(
-    rechargeData: RechargeRequest
-  ): Promise<{ wallet: Wallet }> {
+  async createRecharge(rechargeData: RechargeRequest): Promise<any> {
     return this.post("recharge", rechargeData);
+  }
+
+  /**
+   * Purchase and Recharge (for QR payments)
+   */
+  async createPurchaseRecharge(
+    walletId: string,
+    purchaseData: {
+      amountUsd: number;
+      referenceCode: string;
+      payphone_transactionId: number;
+      clientTransactionId: string;
+      wallet_id: string;
+      amount_payment_id?: string;
+    }
+  ): Promise<any> {
+    return this.post(`purchase-recharge/${walletId}`, purchaseData);
   }
 
   /**
@@ -165,10 +229,76 @@ class WalletServiceClass extends CoreApiService {
   // Payment Data
   /**
    * Get payment data by identifier (for QR scans)
+   * Accepts string (UUID/alias/address) or object (with wallet_id, id, alias, etc.)
    */
-  async getDataPayment(identifier: string): Promise<any> {
-    const safeId = encodeURIComponent(identifier);
-    return this.get(`data-Payment/${safeId}`);
+  async getDataPayment(rawIdentifier: any): Promise<any> {
+    try {
+      // Normalizar identificador: puede venir como JSON-stringified desde algunos QR
+      let identifier: any = rawIdentifier;
+
+      if (typeof identifier === "string") {
+        // Intentar decodeURIComponent en caso venga url-encoded
+        try {
+          const decoded = decodeURIComponent(identifier);
+          if (decoded && decoded !== identifier) {
+            identifier = decoded;
+          }
+        } catch (e) {
+          // ignore
+        }
+
+        // Si es un JSON string, parsearlo
+        const trimmed = (identifier || "").toString().trim();
+        if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+          try {
+            const obj = JSON.parse(trimmed);
+            identifier = obj;
+          } catch (e) {
+            // no es JSON válido, mantener string
+          }
+        }
+      }
+
+      // Si ahora es objeto, extraer campos relevantes
+      if (identifier && typeof identifier === "object") {
+        // Priorizar wallet_id/id, luego alias, luego address
+        identifier =
+          identifier.wallet_id ||
+          identifier.id ||
+          identifier.walletId ||
+          identifier.alias ||
+          identifier.address ||
+          identifier.amount_to_payment_id ||
+          null;
+      }
+
+      if (!identifier) {
+        throw new Error("Identificador de wallet inválido");
+      }
+
+      let walletId: string;
+
+      // Verificar si el identificador es un UUID válido
+      const uuidRegex =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+      if (uuidRegex.test(identifier)) {
+        // Es un UUID, usarlo directamente
+        walletId = identifier;
+      } else {
+        // Es un alias, necesitamos obtener el wallet primero
+        console.log("🔍 Buscando wallet por alias:", identifier);
+        const wallet = await this.findWalletByAlias(identifier);
+        walletId = wallet.id;
+        console.log("✅ Wallet encontrado por alias:", walletId);
+      }
+
+      // Ahora llamar al endpoint data-Payment con el wallet_id UUID
+      return this.get(`data-Payment/${walletId}`);
+    } catch (error) {
+      console.error("Error al obtener datos de pago:", error);
+      throw error;
+    }
   }
 
   // Preset Amount Methods (via direct request to different endpoints)
@@ -280,11 +410,10 @@ class WalletServiceClass extends CoreApiService {
         : `${Date.now()}-tx-uuid`;
 
     const rechargeData: RechargeRequest = {
-      wallet_id: wallet.id,
       amountUsd: amountUsd,
       referenceCode: referenceCode,
       payphone_transactionId: Date.now(),
-      clientTransactionId,
+      clientTransactionId: clientTransactionId,
     };
 
     return this.createRecharge(rechargeData);
@@ -315,14 +444,54 @@ class WalletServiceClass extends CoreApiService {
       : `${Date.now()}-fake-uuid-frontend`;
 
     const payload: RechargeRequest = {
-      wallet_id: data.userId,
       amountUsd: amountNum,
       referenceCode: `RCH-${Date.now()}`,
-      clientTransactionId,
       payphone_transactionId: Date.now(),
+      clientTransactionId: clientTransactionId,
     };
 
     return this.createRecharge(payload);
+  }
+
+  /**
+   * Get wallet transactions (uses transactions endpoint, not wallets)
+   */
+  async getTransactions(
+    page: number = 1,
+    limit: number = 20,
+    walletId?: string
+  ): Promise<any> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+
+    if (walletId) {
+      params.append("wallet_id", walletId);
+    }
+
+    // Use direct API call since transactions endpoint is not under /wallets
+    return this.directApiCall(`transactions?${params.toString()}`);
+  }
+
+  /**
+   * Direct API call without wallet prefix
+   */
+  private async directApiCall(endpoint: string): Promise<any> {
+    const token = await this.getAuthToken();
+    const response = await fetch(`${this.baseUrl}/${endpoint}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
   }
 
   /**

@@ -1,5 +1,6 @@
 import Constants from "expo-constants";
 import { RegisterFormData } from "src/screens/Register/RegisterScreen";
+import { TokenService } from "./token.service";
 
 // === CONFIGURACIÓN ===
 const auth0Domain = Constants.expoConfig?.extra?.auth0Domain as string;
@@ -33,7 +34,6 @@ export const authService = {
     return data.token;
   },
 
- 
   async exchangeAuth0Token(auth0Token: string) {
     const res = await fetch(`${API_URL}/auth/exchange-auth0-token`, {
       method: "POST",
@@ -57,11 +57,20 @@ export const authService = {
   },
 
   async changeRoleToCommerce() {
+    const token = await TokenService.getToken();
+    if (!token) {
+      throw new Error("No hay token de autenticación disponible");
+    }
+
     const res = await fetch(`${API_URL}/users/changeRoleToCommerce`, {
       method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
     });
     if (res.status !== 200) {
-      throw new Error("Error en la solicitud de obtener el usuario");
+      throw new Error("Error en la solicitud de cambio de rol");
     }
     const data = await res.json();
     return data;

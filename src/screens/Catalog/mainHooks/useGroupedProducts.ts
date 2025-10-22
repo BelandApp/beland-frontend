@@ -25,14 +25,22 @@ export const useGroupedProducts = (
     const groups: Record<string, GroupedProduct> = {};
 
     for (const product of products) {
-      const categoryId = product.category_id || "uncategorized";
+      let categoryId = product.category_id || "uncategorized";
       let categoryName = "Sin categoría";
 
       if (product.category_id) {
         const categoryInfo = allCategories.find((c) => c.id === categoryId);
         if (categoryInfo?.name) {
           categoryName = categoryInfo.name;
+        } else {
+          // Si no encontramos la categoría en allCategories, usar el product.category como fallback
+          categoryName = (product as any).category || "Sin categoría";
+          categoryId = `fallback_${product.category_id}`;
         }
+      } else if ((product as any).category) {
+        // Si no hay category_id pero sí hay category string
+        categoryName = (product as any).category;
+        categoryId = `string_${(product as any).category}`;
       }
 
       if (!groups[categoryId]) {
@@ -43,7 +51,7 @@ export const useGroupedProducts = (
         };
       }
 
-      groups[categoryId].products.push(product);
+      groups[categoryId].products.push(product as unknown as ProductCardType);
     }
 
     const sortedGroups = Object.values(groups).sort((a, b) => {

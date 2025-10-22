@@ -8,9 +8,8 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { CircleArrowLeftIcon } from "lucide-react-native";
-import BelandLogo2 from "src/components/icons/BelandLogo2";
+import BelandLogo from "src/components/icons/BelandLogo";
 import { UserMenu } from "src/components/ui/UserMenu";
-import { colors } from "src/styles";
 import { HeaderStyles } from "./header.styles";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "src/components/layout/RootStackNavigator";
@@ -39,7 +38,7 @@ export const ThemedHeader: React.FC<HeaderProps> = ({
           style={HeaderStyles.logoContainer}
           onPress={() => navigation.navigate("MainTabs")}
         >
-          <BelandLogo2 width={120} height={32} />
+          <BelandLogo width={120} height={32} />
         </TouchableOpacity>
       );
     }

@@ -100,9 +100,9 @@ export function usePaymentSocket(onPaymentSuccess: (data: any) => void) {
       let token: string | null = null;
       try {
         if (Platform.OS === "web") {
-          token = localStorage.getItem("auth_token");
+          token = localStorage.getItem("access_token");
         } else {
-          token = await AsyncStorage.getItem("auth_token");
+          token = await AsyncStorage.getItem("access_token");
         }
       } catch (err) {
         console.error("[Socket] Error getting token:", err);
