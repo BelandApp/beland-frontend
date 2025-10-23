@@ -6,8 +6,7 @@ const API_URL = Constants.expoConfig?.extra?.apiUrl as string;
 export const eventsService = {
   getEvents: async () => {
     const response = await apiRequest("/event-pass?is_active=true");
-    const data = await response.json();
-    return data;
+    return response.data; 
   },
   getEvent: async (eventId: string) => {
     const response = await apiRequest(`${API_URL}/event-pass/${eventId}`);

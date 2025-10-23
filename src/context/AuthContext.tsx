@@ -45,6 +45,7 @@ WebBrowser.maybeCompleteAuthSession();
 // === CONFIGURACIÓN ===
 const auth0Domain = Constants.expoConfig?.extra?.auth0Domain as string;
 const clientWebId = Constants.expoConfig?.extra?.auth0WebClientId as string;
+const clientNativeId = Constants.expoConfig?.extra?.auth0MobileClientId as string;
 const scheme = Constants.expoConfig?.scheme as string;
 const auth0Audience = Constants.expoConfig?.extra?.auth0Audience as string;
 const apiBaseUrl = Constants.expoConfig?.extra?.apiUrl as string;
@@ -83,19 +84,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const discovery = useAutoDiscovery(`https://${auth0Domain}`);
-
+  
   const [request, response, promptAsync] = useAuthRequest(
     {
-      clientId: clientWebId,
+      clientId: Platform.OS === "web" ? clientWebId : clientNativeId,
       redirectUri: makeRedirectUri({
         scheme: scheme,
         path: Platform.select({ web: undefined, default: "callback" }),
+        preferLocalhost: true,
       }),
       scopes: ["openid", "profile", "email", "offline_access"],
       usePKCE: true,
       extraParams: {
         audience: auth0Audience,
         prompt: "login", // Fuerza a que Auth0 muestre la pantalla de login
+
       },
     },
     discovery
@@ -125,7 +128,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               discovery
             );
             if (tokenResponse.accessToken) {
-              console.log("Token recibido:", tokenResponse.accessToken);
+             
               await TokenService.saveToken(tokenResponse.accessToken);
               let me = await authService.getCurrentUser(tokenResponse.accessToken);
               setToken(tokenResponse.accessToken);
