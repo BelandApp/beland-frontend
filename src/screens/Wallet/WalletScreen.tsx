@@ -113,10 +113,10 @@ export const WalletScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             />
             {/* Preferencias de pago */}
             <PaymentPreferences
-              methods={paymentPreferences.methods}
-              onAddMethod={addPaymentMethod}
-              onDeleteMethod={deletePaymentMethod}
-              onSetDefault={setDefaultPaymentMethod}
+              // methods={paymentPreferences.methods}
+              // onAddMethod={addPaymentMethod}
+              // onDeleteMethod={deletePaymentMethod}
+              // onSetDefault={setDefaultPaymentMethod}
             />
             <WalletActions actions={mainWalletActions} />
 

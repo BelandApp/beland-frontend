@@ -16,6 +16,7 @@ import { Event, useEventStore } from "src/stores/Event";
 import { colors } from "src/styles";
 import { EventCard } from "../Community/components/event/Event.card";
 import { useUserBalance } from "src/hooks";
+import { Ticket } from "lucide-react-native";
 
 const EventsScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
@@ -24,11 +25,9 @@ const EventsScreen = () => {
   useEffect(() => {
     fetchEvents();
   }, []);
-
   const fetchEvents = async () => {
     try {
       const data = await eventsService.getEvents();
-      console.log(data);
       setEvents(data);
       refetchBalance();
     } catch (error) {
@@ -41,7 +40,7 @@ const EventsScreen = () => {
     setRefreshing(false);
   };
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.content}>
       <ThemedHeader
         title="Eventos"
         buttons={
@@ -59,13 +58,18 @@ const EventsScreen = () => {
           />
         }
       >
-        <View style={{ flexWrap: "wrap", flexDirection: "row", gap: 16 }}>
-          {Object.values(events).length > 0 ? (
-            Object.values(events).map((event) => (
+        <View style={styles.wrapperContainer}>
+          {events.length > 0 ? (
+            events.map((event) => (
               <EventCard key={event.id} {...event} />
             ))
           ) : (
-            <Text>Vaya parece que estamos sin eventos próximos</Text>
+            <View style={styles.noEventsContainer}>
+              <Ticket color={colors.textSecondary} size={48} />
+              <Text style={styles.noEventsText}>
+                Vaya parece que estamos sin eventos próximos
+              </Text>
+            </View>
           )}
         </View>
       </ScrollView>
@@ -74,9 +78,23 @@ const EventsScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  content: { flex: 1 },
   scrollView: {
     flex: 1,
     padding: 16,
+  },
+  wrapperContainer: { flexWrap: "wrap", flexDirection: "row", gap: 16 },
+  noEventsContainer: {
+    flexDirection: "row",
+    gap: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    width: "100%",
+  },
+  noEventsText: {
+    fontSize: 25,
+    color: colors.textSecondary,
+    textAlign: "center",
   },
 });
 

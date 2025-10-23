@@ -174,6 +174,7 @@ export const RootStackNavigator = () => {
           gestureEnabled: true,
           presentation: "transparentModal",
           animation: "slide_from_bottom",
+          animationTypeForReplace: "push",
         }}
       />
     </Stack.Navigator>
