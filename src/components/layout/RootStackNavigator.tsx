@@ -20,7 +20,7 @@ import { LoginScreen } from "src/screens/Login";
 import { RegisterScreen } from "src/screens/Register";
 import { OrdersStackNavigator } from "./OrdersStackNavigator";
 import { RewardsScreen } from "src/screens/Rewards";
-import { EventModal } from "src/screens/Community/components/event/Event.modal";
+import { EventModal } from "src/screens/Events/Event.modal";
 
 export type RootStackParamList = {
   Home: undefined;
