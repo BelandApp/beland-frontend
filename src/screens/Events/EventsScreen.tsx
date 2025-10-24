@@ -59,7 +59,7 @@ const EventsScreen = () => {
         }
       >
         <View style={styles.wrapperContainer}>
-          {events.length > 0 ? (
+          {events &&events.length > 0 ? (
             events.map((event) => (
               <EventCard key={event.id} {...event} />
             ))
