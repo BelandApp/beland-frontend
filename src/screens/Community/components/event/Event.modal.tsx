@@ -24,6 +24,12 @@ import { useAuth } from "src/context";
 
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "src/components/layout/RootStackNavigator";
+import { convertBeCoinsToUSD, convertUSDToBeCoins } from "src/constants";
+import { useWalletData } from "src/screens/Wallet";
+import { WalletService } from "src/services";
+import { discountService } from "src/services/discounts";
+import { CustomAlert } from "src/components/ui";
+import { useCustomAlert } from "src/hooks";
 export const EventModal = ({ route }: { route: any }) => {
   const { id } = route.params;
   const { getEvent } = useEventStore();
@@ -31,6 +37,7 @@ export const EventModal = ({ route }: { route: any }) => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [visibleImage, setVisibleImage] = useState(0);
   const { canPerformAction } = useAuth();
+  const {showCustomAlert, alertConfig, showAlert, hideAlert} = useCustomAlert()
   if (!event) return null;
   const {
     description,
@@ -64,15 +71,40 @@ export const EventModal = ({ route }: { route: any }) => {
     setVisibleImage((prev) => (prev + 1) % allImages.length);
   };
 
-  const handleBuy = () => {
+  const handleBuy = async () => {
     if (!canPerformAction) {
       alert("Debes iniciar sesión para comprar");
       return;
     }
+    const wallet = await WalletService.getCurrentUserWallet();
+    if (!wallet) {
+      alert("No tenemos tu wallet id, refresca tu pagina");
+      return;
+    }
+    const discounts = await discountService.getDiscounts();
+    showCustomAlert(
+       "Cargando descuentos",
+      "",
+       "info"
+    )
     navigation.navigate("PaymentScreen", {
       paymentData: {
-        amount: Number(price_becoin),
-        wallet_id: "",
+        amount: convertBeCoinsToUSD(Number(price_becoin)),
+        commerce_name: name,
+        commerce_img: image_url,
+        wallet_id: wallet.id,
+        redemptions: discounts.length > 0
+          ? discounts
+          : [
+              {
+                id: "prueba",
+                code: "descuentoDePrueba",
+                type: "DISCOUNT",
+                value: 100,
+                is_redeemed: false,
+                description: "descuento de prueba",
+              },
+            ],
       },
       amount_to_payment_id: id,
     });
@@ -150,6 +182,13 @@ export const EventModal = ({ route }: { route: any }) => {
           </View>
         </ScrollView>
       </View>
+      <CustomAlert
+        visible={showAlert}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        onClose={hideAlert}
+      />
     </View>
   );
 };
