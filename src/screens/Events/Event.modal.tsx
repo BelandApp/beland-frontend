@@ -2,13 +2,18 @@ import React, { useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
-  Image,
   Pressable,
   ScrollView,
   StyleSheet,
-  Platform,
-  Animated,
 } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSequence,
+  interpolate,
+  Extrapolate,
+} from "react-native-reanimated";
 import {
   ArrowLeftRight,
   Calendar,
@@ -67,11 +72,35 @@ export const EventModal = ({ route }: { route: any }) => {
       ];
     return [image_url, ...images_urls];
   }, [image_url, images_urls]);
-
+  console.log("Fecha", event_date)
+  const fadeAnim = useSharedValue(1);
+  const translateAnim = useSharedValue(0);
   const handleNextImage = () => {
+    fadeAnim.value = withSequence(
+      withTiming(0, { duration: 200 }),
+      withTiming(1, { duration: 250 })
+    );
+
+    translateAnim.value = withSequence(
+      withTiming(-20, { duration: 200 }),
+      withTiming(0, { duration: 250 })
+    );
     setVisibleImage((prev) => (prev + 1) % allImages.length);
-    fadeIn()
   };
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: fadeAnim.value,
+    transform: [
+      {
+        translateX: interpolate(
+          translateAnim.value,
+          [-20, 0],
+          [-20, 0],
+          Extrapolate.CLAMP
+        ),
+      },
+    ],
+  }));
 
   const handleClose = () => navigation.goBack();
 
@@ -113,14 +142,7 @@ export const EventModal = ({ route }: { route: any }) => {
   })();
 
   const ticketsLeft = limit_tickets - sold_tickets;
-  const fadeInOpacity = useRef(new Animated.Value(0)).current;
-  const fadeIn = () => {
-    Animated.timing(fadeInOpacity, {
-      toValue: 1,
-      duration: 500,
-      useNativeDriver: true,
-    }).start();
-  };
+
   return (
     <View style={styles.modal}>
       <View style={styles.container}>
@@ -133,7 +155,7 @@ export const EventModal = ({ route }: { route: any }) => {
             <View style={styles.imageContainer}>
               <Animated.Image
                 source={{ uri: allImages[visibleImage] }}
-                style={[styles.image, { opacity: fadeInOpacity }]}
+                style={[styles.image, animatedStyle]}
               />
               {allImages.length > 1 && (
                 <Pressable

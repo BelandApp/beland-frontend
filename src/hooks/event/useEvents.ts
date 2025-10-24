@@ -4,7 +4,7 @@ import { useAuth } from "src/context";
 import { Event, useEventStore } from "src/stores/Event";
 
 export const useEvents = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { events, setEvents } = useEventStore();
   const [refreshing, setRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -13,8 +13,8 @@ export const useEvents = () => {
     try {
       setIsLoading(true);
       const allEvents = await eventsService.getAllEvents();
-      if (isAuthenticated && user?.id) {
-        const userEvents = await eventsService.getUserEvents(user.id);
+      if (isAuthenticated) {
+        const userEvents = await eventsService.getUserEvents();
         const combined = mergeEvents(allEvents, userEvents);
         setEvents(combined);
       } else {

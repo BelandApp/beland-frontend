@@ -8,8 +8,8 @@ export const eventsService = {
     const response = await apiRequest("/event-pass?is_active=true");
     return response.data;
   },
-  getUserEvents: async (userId: string) => {
-    const response = await apiRequest(`/user-event-pass/${userId}`);
+  getUserEvents: async () => {
+    const response = await apiRequest(`/user-event-passes/user`);
     return response.data;
   },
   getOneEvent: async (eventId: string) => {
