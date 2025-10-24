@@ -9,7 +9,7 @@ import WalletHistoryScreen from "../../screens/Wallet/WalletHistoryScreen";
 import RechargeScreen from "../../screens/Wallet/RechargeScreen";
 import WalletSettingsScreen from "../../screens/Wallet/WalletSettingsScreen";
 import { QRScannerScreen } from "../../screens/QRScannerScreen";
-import PaymentScreen from "../../screens/Payment/PaymentScreen";
+import PaymentScreen, { PaymentScreenProps } from "../../screens/Payment/PaymentScreen";
 import { HistoryScreen, RecyclingMapScreen } from "../../screens";
 import UserDashboardScreen from "src/screens/UserDashboardScreen";
 import UserResourcesScreen from "src/screens/UserResources/UserResourcesScreen";
@@ -48,21 +48,7 @@ export type RootStackParamList = {
   UserDashboardScreen: undefined;
   UserResources: undefined;
   Orders: undefined;
-  PaymentScreen: {
-    paymentData: {
-      amount: number;
-      message?: string;
-      resource?: {
-        id: string;
-        resource_name: string;
-        resource_desc: string;
-        resource_quanity: number;
-        resource_discount: number;
-      }[];
-      wallet_id?: string;
-    };
-    amount_to_payment_id?: string | null;
-  };
+  PaymentScreen: PaymentScreenProps;
   PayphoneSuccess: { toWalletId: string; amountPaymentId: string };
   Login: undefined;
   Register: undefined;
