@@ -1,11 +1,5 @@
 import React, { useMemo, useRef, useState } from "react";
-import {
-  View,
-  Text,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-} from "react-native";
+import { View, Text, Pressable, ScrollView, StyleSheet } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -72,7 +66,7 @@ export const EventModal = ({ route }: { route: any }) => {
       ];
     return [image_url, ...images_urls];
   }, [image_url, images_urls]);
-  console.log("Fecha", event_date)
+
   const fadeAnim = useSharedValue(1);
   const translateAnim = useSharedValue(0);
   const handleNextImage = () => {
@@ -113,23 +107,34 @@ export const EventModal = ({ route }: { route: any }) => {
       );
       return;
     }
-    navigation.navigate("PaymentScreen", {
-      paymentData: {
-        amount: convertBeCoinsToUSD(Number(price_becoin)),
-        commerce_name: name,
+    navigation.navigate("NewPaymentScreen", {
+      company: {
+        id: name,
+        name: name,
+        img: image_url,
       },
-      amount_to_payment_id: id,
+      product: {
+        id: id,
+        name: name,
+        quantity: 1,
+        price: Number(price_becoin),
+        condition:"Llevar elementos reciclables al evento"
+      },
+      // TODO onSuccessEndpoint a mis eventos adquiridos
+      onSuccessEndpoint: "",
+      total_amount: Number(price_becoin),
+      canBuyForOthers: true,
     });
   };
 
   const handleUse = async () => {
     showCustomAlert("Usando entrada", "Redirigiendo...", "info");
-    // navigation.navigate("UseEventScreen", { eventId: id });
+    navigation.navigate("UseEventScreen", { eventId: id });
   };
 
   const handleRefund = async () => {
     showCustomAlert("Procesando reembolso...", "", "info");
-    // lógica del refund acá
+    //TODO lógica del refund acá
   };
 
   const eventStatus = (() => {

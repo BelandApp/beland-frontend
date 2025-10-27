@@ -26,6 +26,7 @@ const EventsScreen = () => {
         }
       />
       <ScrollView
+        showsVerticalScrollIndicator={false}
         style={styles.scroll}
         refreshControl={
           <RefreshControl
@@ -35,11 +36,17 @@ const EventsScreen = () => {
           />
         }
       >
-        {isLoading? <View><Text>Cargando...</Text></View> :<EventsTabs
-          availableEvents={availableEvents}
-          acquiredEvents={acquiredEvents}
-          onRefreshBalance={refetchBalance}
-        />}
+        {isLoading ? (
+          <View>
+            <Text>Cargando...</Text>
+          </View>
+        ) : (
+          <EventsTabs
+            availableEvents={availableEvents}
+            acquiredEvents={acquiredEvents}
+            onRefreshBalance={refetchBalance}
+          />
+        )}
       </ScrollView>
     </View>
   );
