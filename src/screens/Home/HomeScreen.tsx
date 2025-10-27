@@ -91,7 +91,7 @@ export const HomeScreen = () => {
     return (
       <View style={webStyles.container}>
         <ThemedHeader title="Inicio" logo />
-        <ScrollView style={webStyles.scrollView}>
+        <ScrollView style={webStyles.scrollView} showsVerticalScrollIndicator={false}>
           <View style={dynamicStyles.content}>
             <HeroSection
               balance={balance}
