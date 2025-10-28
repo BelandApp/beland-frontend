@@ -1,3 +1,9 @@
+/* Eliminar padding y margin en React Native Web */
+html body #root {
+  padding: 0 !important;
+  margin: 0 !important;
+  max-width: 100vw !important;
+}
 /* Eliminar borde negro de TextInput en focus en React Native Web */
 textarea:focus,
 input:focus,

@@ -4,11 +4,15 @@ import { apiRequest } from "../api";
 const API_URL = Constants.expoConfig?.extra?.apiUrl as string;
 
 export const eventsService = {
-  getEvents: async () => {
+  getAllEvents: async () => {
     const response = await apiRequest("/event-pass?is_active=true");
-    return response.data; 
+    return response.data;
   },
-  getEvent: async (eventId: string) => {
+  getUserEvents: async () => {
+    const response = await apiRequest(`/user-event-passes/user`);
+    return response.data;
+  },
+  getOneEvent: async (eventId: string) => {
     const response = await apiRequest(`${API_URL}/event-pass/${eventId}`);
     const data = await response.json();
     return data;
@@ -38,5 +42,4 @@ export const eventsService = {
     const data = await response.json();
     return data;
   },
-
 };

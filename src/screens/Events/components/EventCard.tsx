@@ -24,14 +24,14 @@ import { useNavigation } from "@react-navigation/native";
 import { RootStackParamList } from "src/components/layout/RootStackNavigator";
 
 import { StackNavigationProp } from "@react-navigation/stack";
-import { Event, useEventStore } from "src/stores/Event";
+import { EventCardProps } from "src/stores/Event";
 import { colors } from "src/styles";
 
 type EventScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   "EventModal"
 >;
-export const EventCard: React.FC<Event> = ({
+export const EventCard: React.FC<EventCardProps> = ({
   id,
   name,
   image_url,
@@ -40,6 +40,7 @@ export const EventCard: React.FC<Event> = ({
   event_city,
   price_becoin,
   end_sale_date,
+  user_attended,
 }) => {
   const navigation = useNavigation<EventScreenNavigationProp>();
   if (!id) return null;
@@ -51,9 +52,16 @@ export const EventCard: React.FC<Event> = ({
       style={styles.card}
     >
       {/* Badges */}
-      {end_sale_date && new Date(end_sale_date).getTime() < Date.now() && (
+      {/* No deberian superponerse, si ya fue adquirido solo mostramos ese */}
+      {!user_attended && end_sale_date &&
+        new Date(end_sale_date).getTime() < Date.now() && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>Finalizado</Text>
+          </View>
+        )}
+      {user_attended && (
         <View style={styles.badge}>
-          <Text style={styles.badgeText}>Finalizado</Text>
+          <Text style={styles.badgeText}>Usado</Text>
         </View>
       )}
       {/* Main Image */}
