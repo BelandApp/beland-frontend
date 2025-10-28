@@ -21,6 +21,8 @@ import { RegisterScreen } from "src/screens/Register";
 import { OrdersStackNavigator } from "./OrdersStackNavigator";
 import { RewardsScreen } from "src/screens/Rewards";
 import { EventModal } from "src/screens/Community/components/event/Event.modal";
+import EventsManagementScreen from "src/screens/DashboardUser/EventsManagementScreen";
+import UsersManagementScreen from "src/screens/DashboardUser/UsersManagementScreen";
 
 export type RootStackParamList = {
   Home: undefined;
@@ -48,6 +50,10 @@ export type RootStackParamList = {
   UserDashboardScreen: undefined;
   UserResources: undefined;
   Orders: undefined;
+  // Admin Management Screens
+  EventsManagement: undefined;
+  UsersManagement: undefined;
+  ProductsManagement: undefined;
   PaymentScreen: {
     paymentData: {
       amount: number;
@@ -159,6 +165,16 @@ export const RootStackNavigator = () => {
       <Stack.Screen
         name="Register"
         component={RegisterScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="EventsManagement"
+        component={EventsManagementScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="UsersManagement"
+        component={UsersManagementScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen
