@@ -9,7 +9,9 @@ import WalletHistoryScreen from "../../screens/Wallet/WalletHistoryScreen";
 import RechargeScreen from "../../screens/Wallet/RechargeScreen";
 import WalletSettingsScreen from "../../screens/Wallet/WalletSettingsScreen";
 import { QRScannerScreen } from "../../screens/QRScannerScreen";
-import PaymentScreen, { PaymentScreenProps } from "../../screens/Payment/PaymentScreen";
+import PaymentScreen, {
+  PaymentScreenProps,
+} from "../../screens/Payment/PaymentScreen";
 import { HistoryScreen, RecyclingMapScreen } from "../../screens";
 import UserDashboardScreen from "src/screens/UserDashboardScreen";
 import UserResourcesScreen from "src/screens/UserResources/UserResourcesScreen";
@@ -20,8 +22,12 @@ import { LoginScreen } from "src/screens/Login";
 import { RegisterScreen } from "src/screens/Register";
 import { OrdersStackNavigator } from "./OrdersStackNavigator";
 import { RewardsScreen } from "src/screens/Rewards";
+
 import { EventModal } from "src/screens/Events/Event.modal";
 import { NewPaymentScreen, PaymentScreenRoute } from "src/screens/NewPayment/NewPaymentScreen";
+import EventsManagementScreen from "src/screens/DashboardUser/EventsManagementScreen";
+import UsersManagementScreen from "src/screens/DashboardUser/UsersManagementScreen";
+
 
 export type RootStackParamList = {
   Home: undefined;
@@ -49,7 +55,25 @@ export type RootStackParamList = {
   UserDashboardScreen: undefined;
   UserResources: undefined;
   Orders: undefined;
-  PaymentScreen: PaymentScreenProps;
+  // Admin Management Screens
+  EventsManagement: undefined;
+  UsersManagement: undefined;
+  ProductsManagement: undefined;
+  PaymentScreen: {
+    paymentData: {
+      amount: number;
+      message?: string;
+      resource?: {
+        id: string;
+        resource_name: string;
+        resource_desc: string;
+        resource_quanity: number;
+        resource_discount: number;
+      }[];
+      wallet_id?: string;
+    };
+    amount_to_payment_id?: string | null;
+  };
   PayphoneSuccess: { toWalletId: string; amountPaymentId: string };
   Login: undefined;
   Register: undefined;
@@ -149,6 +173,16 @@ export const RootStackNavigator = () => {
       <Stack.Screen
         name="Register"
         component={RegisterScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="EventsManagement"
+        component={EventsManagementScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="UsersManagement"
+        component={UsersManagementScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen

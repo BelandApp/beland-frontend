@@ -302,6 +302,27 @@ export class CoreApiService {
   }
 
   /**
+   * POST request with FormData (for file uploads)
+   */
+  protected async postFormData<T = any>(
+    endpoint: string,
+    formData: FormData,
+    options: RequestOptions = {}
+  ): Promise<T> {
+    // For FormData, we need to remove the Content-Type header
+    // to let the browser set it with the boundary
+    const headers = await this.buildHeaders(options);
+    delete (headers as any)["Content-Type"];
+
+    return this.request<T>(endpoint, {
+      ...options,
+      method: "POST",
+      body: formData,
+      headers,
+    });
+  }
+
+  /**
    * Build query string from parameters
    */
   protected buildQueryString(params: Record<string, any>): string {
