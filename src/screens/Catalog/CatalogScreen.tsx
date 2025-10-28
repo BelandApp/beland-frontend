@@ -187,6 +187,10 @@ export const CatalogScreen = () => {
       setShowAuthAlert(true);
       return;
     }
+
+    setAddingProductId(product.id);
+    addProductToCart({...product, quantity: 1});
+    setAddingProductId(null);
   };
 
   return (
@@ -265,31 +269,6 @@ export const CatalogScreen = () => {
             un título vacío cuando no existan beneficios). */}
         <CatalogCommunitySection />
 
-        {/* Productos - título y separación para mayor coherencia visual */}
-        <View
-          style={{
-            width: "100%",
-            paddingHorizontal: 8,
-            marginTop: 8,
-            marginBottom: 4,
-          }}
-        >
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              paddingHorizontal: 8,
-            }}
-          >
-            <Text style={{ fontSize: 18, fontWeight: "700", color: "#333" }}>
-              Productos
-            </Text>
-            {/* Puedes mantener un botón 'Ver más' aquí si se desea */}
-          </View>
-          <View style={{ height: 8 }} />
-        </View>
-
         {loading ? (
           <Text style={{ textAlign: "center", marginTop: 32 }}>
             Cargando productos...
@@ -300,7 +279,7 @@ export const CatalogScreen = () => {
           </Text>
         ) : (
           // Revertido a grilla de productos (estilizada)
-          <View style={{ paddingVertical: 8 }}>
+          <View style={{ paddingVertical: 0 }}>
             {products && products.length > 0 ? (
               // Renderizar una sección por categoría
               displayGroups.map((g) => (

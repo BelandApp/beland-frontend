@@ -51,24 +51,24 @@ type Redemption = {
   description?: string;
 };
 
-type PaymentData = {
-  commerce_name?: string;
-  commerce_img?: string;
+export type PaymentData = {
   amount: number;
   message?: string;
   resource?: Resource[];
+  wallet_id?: string;
+  commerce_name?: string;
+  commerce_img?: string;
   redemptions?: Redemption[];
   user_resources?: RealUserResource[];
-  wallet_id?: string;
   amount_to_payment_id?: string | null;
   noHidden?: boolean;
 };
-
-type PaymentScreenParamList = {
-  PaymentScreen: {
-    paymentData: PaymentData;
-    amount_to_payment_id?: string | null;
-  };
+export type PaymentScreenProps = {
+  paymentData: PaymentData;
+  amount_to_payment_id?: string | null;
+};
+export type PaymentScreenParamList = {
+  PaymentScreen: PaymentScreenProps;
 };
 
 type PaymentScreenRouteProp = RouteProp<

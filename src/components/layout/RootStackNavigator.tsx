@@ -9,7 +9,9 @@ import WalletHistoryScreen from "../../screens/Wallet/WalletHistoryScreen";
 import RechargeScreen from "../../screens/Wallet/RechargeScreen";
 import WalletSettingsScreen from "../../screens/Wallet/WalletSettingsScreen";
 import { QRScannerScreen } from "../../screens/QRScannerScreen";
-import PaymentScreen from "../../screens/Payment/PaymentScreen";
+import PaymentScreen, {
+  PaymentScreenProps,
+} from "../../screens/Payment/PaymentScreen";
 import { HistoryScreen, RecyclingMapScreen } from "../../screens";
 import UserDashboardScreen from "src/screens/UserDashboardScreen";
 import UserResourcesScreen from "src/screens/UserResources/UserResourcesScreen";
@@ -190,6 +192,7 @@ export const RootStackNavigator = () => {
           gestureEnabled: true,
           presentation: "transparentModal",
           animation: "slide_from_bottom",
+          animationTypeForReplace: "push",
         }}
       />
     </Stack.Navigator>
