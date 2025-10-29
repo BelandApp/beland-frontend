@@ -24,14 +24,14 @@ import { useNavigation } from "@react-navigation/native";
 import { RootStackParamList } from "src/components/layout/RootStackNavigator";
 
 import { StackNavigationProp } from "@react-navigation/stack";
-import { EventCardProps } from "src/stores/Event";
+import { Event } from "src/stores/Event";
 import { colors } from "src/styles";
 
 type EventScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   "EventModal"
 >;
-export const EventCard: React.FC<EventCardProps> = ({
+export const EventCard: React.FC<Event> = ({
   id,
   name,
   image_url,
@@ -53,7 +53,8 @@ export const EventCard: React.FC<EventCardProps> = ({
     >
       {/* Badges */}
       {/* No deberian superponerse, si ya fue adquirido solo mostramos ese */}
-      {!user_attended && end_sale_date &&
+      {!user_attended &&
+        end_sale_date &&
         new Date(end_sale_date).getTime() < Date.now() && (
           <View style={styles.badge}>
             <Text style={styles.badgeText}>Finalizado</Text>
@@ -74,7 +75,7 @@ export const EventCard: React.FC<EventCardProps> = ({
           </Text>
           <View style={styles.infoContainer}>
             <Tickets color={"white"} />
-            <Text style={styles.eventText}>{name.split(" ")[0]}</Text>
+            <Text style={styles.eventText}>{name}</Text>
           </View>
           <View style={styles.infoContainer}>
             <Calendar color={"white"} />
