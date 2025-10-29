@@ -24,10 +24,15 @@ import { OrdersStackNavigator } from "./OrdersStackNavigator";
 import { RewardsScreen } from "src/screens/Rewards";
 
 import { EventModal } from "src/screens/Events/Event.modal";
-import { NewPaymentScreen, PaymentScreenRoute } from "src/screens/NewPayment/NewPaymentScreen";
+import {
+  NewPaymentScreen,
+  PaymentScreenRoute,
+} from "src/screens/NewPayment/NewPaymentScreen";
 import EventsManagementScreen from "src/screens/DashboardUser/EventsManagementScreen";
 import UsersManagementScreen from "src/screens/DashboardUser/UsersManagementScreen";
 
+import { UseEventScreen } from "src/screens/UseEventScreen/UseEventScreen";
+import { QRUseEventScreen } from "src/screens/UseEventScreen/QrEvent.scanner";
 
 export type RootStackParamList = {
   Home: undefined;
@@ -78,8 +83,8 @@ export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   EventModal: { id: string };
-  UseEventScreen: { eventId: string };
-  QrEventScreen: { eventId: string };
+  UseEventScreen: { id: string };
+  QrUseEventScreen: { id: string };
   // Chequear si es necesario
   Rewards: undefined;
   NewPaymentScreen: PaymentScreenRoute;
@@ -193,6 +198,16 @@ export const RootStackNavigator = () => {
       <Stack.Screen
         name="NewPaymentScreen"
         component={NewPaymentScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="UseEventScreen"
+        component={UseEventScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="QrUseEventScreen"
+        component={QRUseEventScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen

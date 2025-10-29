@@ -5,11 +5,12 @@ import { payWithPayphone } from "../services/payphoneService";
 import { convertBeCoinsToUSD } from "src/constants";
 import { User } from "src/context";
 import { PaymentMethod } from "../components/PaymentMehotdSelector";
+import { useNavigation } from "@react-navigation/native";
 
 export const usePaymentHandler = (user?: User) => {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<"methods" | "payment">("methods");
-
+const navigation = useNavigation<any>();
   const changeStatus = (newStatus: "methods" | "payment") => setStatus(newStatus);
   const handlePayment = async ({
     method,
@@ -40,12 +41,13 @@ export const usePaymentHandler = (user?: User) => {
     }
   };
 
-  const handleFreeAcquisition = async (productId: string) => {
+  const handleFreeAcquisition = async (eventDto: any) => {
     if (!user) return Alert.alert("Error", "Usuario no autenticado");
     try {
       setLoading(true);
-      await becoinService.acquireFreeProduct(productId, user);
+      await becoinService.acquireFreeProduct(eventDto);
       Alert.alert("Éxito", "Adquisición completada con éxito 🎉");
+      navigation.navigate("Home");
     } catch {
       Alert.alert("Error", "No se pudo procesar la adquisición");
     } finally {

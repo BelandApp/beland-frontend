@@ -1,6 +1,5 @@
 import React from "react";
-import { View, StyleSheet, Pressable, Text } from "react-native";
-import MapView, { Marker } from "react-native-maps";
+import { View, StyleSheet, Pressable, Text, Platform } from "react-native";
 import * as Location from "expo-location";
 import { colors } from "src/styles";
 import { MapPin } from "lucide-react-native";
@@ -12,6 +11,17 @@ interface Props {
 }
 
 export const EventMap: React.FC<Props> = ({ latitude, longitude, name }) => {
+  if (Platform.OS === "web") {
+    return (
+      <View style={styles.webPlaceholder}>
+        <Text style={{ textAlign: "center", color: "#777" }}>
+          El mapa no está disponible en versión web
+        </Text>
+      </View>
+    );
+  }
+  const MapView = require("react-native-maps").default;
+  const { Marker } = require("react-native-maps");
   const [region, setRegion] = React.useState({
     latitude,
     longitude,
@@ -50,6 +60,13 @@ const styles = StyleSheet.create({
     height: 250,
     borderRadius: 16,
     overflow: "hidden",
+  },
+  webPlaceholder: {
+    height: 250,
+    borderRadius: 16,
+    backgroundColor: "#f0f0f0",
+    justifyContent: "center",
+    alignItems: "center",
   },
   map: {
     flex: 1,

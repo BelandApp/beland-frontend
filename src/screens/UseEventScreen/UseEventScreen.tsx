@@ -1,76 +1,94 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
-import MapView, { Marker } from "react-native-maps";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Platform,
+  ScrollView,
+  Linking,
+  Pressable,
+  Image,
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "src/components/layout/RootStackNavigator";
 import { colors } from "src/styles";
 import { CountdownTimer } from "./components/CountdownTimer";
 import { UseTicketButton } from "./components/UseTicketButton";
 import { EventMap } from "./components/EventMap";
+import { useEventStore } from "src/stores/Event";
+import { ThemedHeader } from "src/components/shared/headers/Header";
+import { OpenInGoogleMaps } from "./components/OpenInGoogleMaps";
+import Animated from "react-native-reanimated";
+import { ArrowLeftRight } from "lucide-react-native";
 
 type Navigation = StackNavigationProp<RootStackParamList>;
 type RouteParams = { id: string };
 
-export const UseEventScreen = () => {
-  const navigation = useNavigation<Navigation>();
-  const route = useRoute();
-  const { id } = route.params as RouteParams;
-
-  // Supongamos que ya tenemos este evento en el store o hacemos fetch por ID
-  const event = {
-    id,
-    name: "Festival de Música",
-    event_place: "Parque Central",
-    event_city: "Quito",
-    event_date: "2025-11-20T06:00:00.000Z",
-    latitude: -0.1807,
-    longitude: -78.4678,
-  };
-
-  const [isReadyToUse, setIsReadyToUse] = useState(false);
-
+export const UseEventScreen = ({ route }: { route: any }) => {
+  const { id } = route.params;
+  const { getEvent } = useEventStore();
+  const event = getEvent(id)
+  if (!event) return null;
+  const { name, event_date, event_place, event_city, image_url, user_pass_id } =
+    event;
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const [isReadyToUse, setIsReadyToUse] = useState(true);
+  const latitude = 456
+  const longitude = 456
   const eventDate = useMemo(
-    () => new Date(event.event_date),
-    [event.event_date]
+    () => new Date(event_date),
+    [event_date]
   );
-
-  useEffect(() => {
-    const checkTime = () => {
-      const now = new Date();
-      const diff = eventDate.getTime() - now.getTime();
-      // habilitado una hora antes
-      setIsReadyToUse(diff <= 60 * 60 * 1000);
-    };
-    checkTime();
-    const interval = setInterval(checkTime, 60 * 1000);
-    return () => clearInterval(interval);
-  }, [eventDate]);
+  
+  // useEffect(() => {
+  //   const checkTime = () => {
+  //     const now = new Date();
+  //     const diff = eventDate.getTime() - now.getTime();
+  //     // habilitado una hora antes
+  //     setIsReadyToUse(diff <= 60 * 60 * 1000);
+  //   };
+  //   checkTime();
+  //   const interval = setInterval(checkTime, 60 * 1000);
+  //   return () => clearInterval(interval);
+  // }, [eventDate]);
 
   const handleNavigateToScanner = () => {
-    navigation.navigate("QrEventScreen", { eventId: id });
+    console.log("user_pass_id",user_pass_id)
+    if (!user_pass_id) return alert("Falta id de compra");
+    navigation.navigate("QrUseEventScreen", { id: user_pass_id });
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{event.name}</Text>
+      <ThemedHeader canGoBack />
+      <ScrollView
+      showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.content}>
+          <Text style={styles.title}>{name}</Text>
 
-      <CountdownTimer eventDate={eventDate} />
+          <View style={styles.imageContainer}>
+            <Image source={{ uri: image_url }} style={styles.image} />
+          </View>
+          <CountdownTimer eventDate={eventDate} />
+          <Text style={styles.subtitle}>
+            {event_place}, {event_city}
+          </Text>
+          <View style={styles.buttonContainer}>
+            <OpenInGoogleMaps
+              latitude={latitude}
+              longitude={longitude}
+              name={name}
+            />
 
-      <Text style={styles.subtitle}>
-        {event.event_place}, {event.event_city}
-      </Text>
-
-      <EventMap
-        latitude={event.latitude}
-        longitude={event.longitude}
-        name={event.name}
-      />
-
-      <UseTicketButton
-        isReadyToUse={isReadyToUse}
-        onPress={handleNavigateToScanner}
-      />
+            <UseTicketButton
+              isReadyToUse={isReadyToUse}
+              onPress={handleNavigateToScanner}
+            />
+          </View>
+        </View>
+      </ScrollView>
     </View>
   );
 };
@@ -78,9 +96,24 @@ export const UseEventScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  content: {
+    width: Platform.OS === "web" ? 600 : "100%",
+    padding: 16,
     backgroundColor: colors.background,
-    padding: 20,
-    gap: 20,
+    marginVertical: 8,
+    marginHorizontal: "auto",
+    borderRadius: 32,
+    gap: 16,
+  },
+  imageContainer: {
+    alignItems: "center",
+  },
+  image: {
+    width: "90%",
+    height: 220,
+    borderRadius: 16,
+    resizeMode: "cover",
   },
   title: {
     fontSize: 26,
@@ -93,4 +126,9 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: colors.textSecondary,
   },
+  buttonContainer: {
+    marginHorizontal:"auto",
+    width: "60%",
+    gap: 8
+  }
 });

@@ -39,7 +39,6 @@ export const EventModal = ({ route }: { route: any }) => {
   const [visibleImage, setVisibleImage] = useState(0);
 
   if (!event) return null;
-
   const {
     name,
     description,
@@ -60,10 +59,7 @@ export const EventModal = ({ route }: { route: any }) => {
 
   const allImages = useMemo(() => {
     if (!images_urls || images_urls.length === 0)
-      return [
-        "https://imgs.search.brave.com/rvuSZtq9O2zbSiueU6yoc2QNSmkTyLd0jyXB0sCzInQ/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9tZWRp/YS5nZXR0eWltYWdl/cy5jb20vaWQvMTAy/MzE1MTY2MC9waG90/by9mcmllbmRzLWRh/bmNpbmctYW1vbmct/Y29uZmV0dGktYXQt/dGhlLW11c2ljLWZl/c3RpdmFsLmpwZz9z/PTYxMng2MTImdz0w/Jms9MjAmYz1Wa1A5/clJuYjRNV2t2VWV6/QXYwQldJX28zOHFa/RnA4NHZvbzJqank5/OXJVPQ",
-        image_url,
-      ];
+      return [image_url];
     return [image_url, ...images_urls];
   }, [image_url, images_urls]);
 
@@ -118,7 +114,7 @@ export const EventModal = ({ route }: { route: any }) => {
         name: name,
         quantity: 1,
         price: Number(price_becoin),
-        condition:"Llevar elementos reciclables al evento"
+        condition: "Llevar elementos reciclables al evento",
       },
       // TODO onSuccessEndpoint a mis eventos adquiridos
       onSuccessEndpoint: "",
@@ -128,8 +124,7 @@ export const EventModal = ({ route }: { route: any }) => {
   };
 
   const handleUse = async () => {
-    showCustomAlert("Usando entrada", "Redirigiendo...", "info");
-    navigation.navigate("UseEventScreen", { eventId: id });
+    navigation.navigate("UseEventScreen", { id});
   };
 
   const handleRefund = async () => {
@@ -205,18 +200,22 @@ export const EventModal = ({ route }: { route: any }) => {
               <Text style={styles.description}>{description}</Text>
 
               {/* Precio y disponibilidad */}
-              <View style={styles.section}>
-                <View style={styles.infoRow}>
-                  <DollarSign size={18} color={colors.primary} />
-                  <Text style={styles.infoStrong}>{price_becoin} Becoins</Text>
+              {!user_acquired && (
+                <View style={styles.section}>
+                  <View style={styles.infoRow}>
+                    <DollarSign size={18} color={colors.primary} />
+                    <Text style={styles.infoStrong}>
+                      {price_becoin} Becoins
+                    </Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <Ticket size={18} color={colors.textSecondary} />
+                    <Text style={styles.infoText}>
+                      {ticketsLeft} tickets disponibles
+                    </Text>
+                  </View>
                 </View>
-                <View style={styles.infoRow}>
-                  <Ticket size={18} color={colors.textSecondary} />
-                  <Text style={styles.infoText}>
-                    {ticketsLeft} tickets disponibles
-                  </Text>
-                </View>
-              </View>
+              )}
 
               {/* Reembolso */}
               {is_refundable && (

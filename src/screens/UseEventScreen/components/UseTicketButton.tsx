@@ -15,7 +15,7 @@ export const UseTicketButton: React.FC<Props> = ({ isReadyToUse, onPress }) => {
       onPress={onPress}
     >
       <Text style={styles.buttonText}>
-        {isReadyToUse ? "Usar Entrada" : "Disponible 1h antes del evento"}
+        {isReadyToUse ? "Usar Entrada" : "Uso disponible 1h antes del evento"}
       </Text>
     </Pressable>
   );

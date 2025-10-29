@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   TextInput,
   StyleSheet,
+  Platform,
 } from "react-native";
 import { colors } from "src/design-system";
 
@@ -22,7 +23,7 @@ export enum PaymentMethod {
   BeCoins = "BeCoins",
   Transferencia = "Transferencia",
 }
-export const methods = ["Tarjetas","BeCoins", "Transferencia"];
+export const methods = ["Tarjetas", "BeCoins", "Transferencia"];
 
 export const PaymentMethodsSelector = ({
   method,
@@ -33,7 +34,7 @@ export const PaymentMethodsSelector = ({
   onConfirm,
   loading,
 }: Props) => (
-  <View>
+  <View style={styles.container}>
     {canEditAmount && (
       <TextInput
         value={customAmount}
@@ -67,6 +68,15 @@ export const PaymentMethodsSelector = ({
 );
 
 const styles = StyleSheet.create({
+  container: {
+    width: Platform.OS === "web" ? 600 : "100%",
+    alignSelf: "center",
+    padding: 16,
+    backgroundColor: colors.background.primary,
+    borderRadius: 32,
+    gap: 16,
+    marginBottom: 8,
+  },
   input: {
     backgroundColor: "#f2f2f2",
     padding: 10,
@@ -79,7 +89,13 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
     marginVertical: 16,
   },
-  method: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, color: "#777", fontWeight: "600" },
+  method: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
+    color: "#777",
+    fontWeight: "600",
+  },
   methodActive: { backgroundColor: colors.brand.orange[500], color: "white" },
   button: {
     backgroundColor: "#1E90FF",

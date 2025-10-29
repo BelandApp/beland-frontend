@@ -14,7 +14,10 @@ export const useEvents = () => {
       setIsLoading(true);
       const allEvents = await eventsService.getAllEvents();
       if (isAuthenticated) {
-        const userEvents = await eventsService.getUserEvents();
+        const userEventsResponse = await eventsService.getUserEvents();
+        console.log("Data raw:", userEventsResponse);
+        const userEvents = adaptUserEvents(userEventsResponse);
+        console.log("Data procesada", userEvents);
         const combined = mergeEvents(allEvents, userEvents);
         setEvents(combined);
       } else {
@@ -22,8 +25,7 @@ export const useEvents = () => {
       }
     } catch (error) {
       console.log("Error fetching events:", error);
-    }
-    finally {
+    } finally {
       setIsLoading(false);
     }
   }, [isAuthenticated, user]);
@@ -53,28 +55,35 @@ export const useEvents = () => {
     acquiredEvents,
     refreshing,
     onRefresh,
-    isLoading
+    isLoading,
   };
 };
+// NORMALIZAR PROVISORIAMENTE EVENTOS USER RECIBIDOS DEL BACK
+const adaptUserEvents = (data: any[]): Event[] => {
+  console.log("Procesando Raw:", data);
+  return data.map((item) => ({
+    ...item.event_pass, // base del evento
+    user_acquired: true,
+    event_pass_id: item.event_pass_id,
+    user_pass_id:item.id,
+    user_attended: item.is_consumed ?? false,
+    holder_name: item.holder_name,
+    holder_email: item.holder_email,
+    holder_phone: item.holder_phone,
+    holder_instagram_tiktok: item.holder_instagram_tiktok,
+    purchase_date: item.purchase_date,
+    is_consumed: item.is_consumed,
+    is_refunded: item.is_refunded,
+  }));
+};
+// UNIR LOS EVENTOS DEL USUARIO CON LOS GENERALES
+const mergeEvents = (all: Event[], userEvents: Event[]): Event[] => {
+  const map = new Map(all.map((e) => [e.id, { ...e }]));
 
-const mergeEvents = (all: Event[], userEvents: Event[]) => {
-  const userIds = userEvents.map((ue) => ue.id);
-  const combined = [
-    ...all.map((e) => ({
-      ...e,
-      user_acquired: userIds.includes(e.id),
-      user_attended: userEvents.find((ue) => ue.id === e.id)?.user_attended,
-    })),
-  ];
-
+  // Si el usuario compró un evento, reemplazamos su info con la del userEvent
   userEvents.forEach((ue) => {
-    if (!combined.find((c) => c.id === ue.id)) {
-      combined.push({
-        ...ue,
-        user_acquired: true,
-        user_attended: ue.user_attended ?? false,
-      });
-    }
+    map.set(ue.id, { ...map.get(ue.id), ...ue });
   });
-  return combined;
+
+  return Array.from(map.values());
 };
