@@ -22,9 +22,17 @@ import { LoginScreen } from "src/screens/Login";
 import { RegisterScreen } from "src/screens/Register";
 import { OrdersStackNavigator } from "./OrdersStackNavigator";
 import { RewardsScreen } from "src/screens/Rewards";
-import { EventModal } from "src/screens/Community/components/event/Event.modal";
+
+import { EventModal } from "src/screens/Events/Event.modal";
+import {
+  NewPaymentScreen,
+  PaymentScreenRoute,
+} from "src/screens/NewPayment/NewPaymentScreen";
 import EventsManagementScreen from "src/screens/DashboardUser/EventsManagementScreen";
 import UsersManagementScreen from "src/screens/DashboardUser/UsersManagementScreen";
+
+import { UseEventScreen } from "src/screens/UseEventScreen/UseEventScreen";
+import { QRUseEventScreen } from "src/screens/UseEventScreen/QrEvent.scanner";
 
 export type RootStackParamList = {
   Home: undefined;
@@ -74,9 +82,12 @@ export type RootStackParamList = {
   PayphoneSuccess: { toWalletId: string; amountPaymentId: string };
   Login: undefined;
   Register: undefined;
+  EventModal: { id: string };
+  UseEventScreen: { id: string };
+  QrUseEventScreen: { id: string };
   // Chequear si es necesario
   Rewards: undefined;
-  EventModal: { id: string };
+  NewPaymentScreen: PaymentScreenRoute;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -182,6 +193,21 @@ export const RootStackNavigator = () => {
       <Stack.Screen
         name="Rewards"
         component={RewardsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="NewPaymentScreen"
+        component={NewPaymentScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="UseEventScreen"
+        component={UseEventScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="QrUseEventScreen"
+        component={QRUseEventScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen

@@ -597,7 +597,7 @@ const PaymentScreen: React.FC = () => {
       setIsLoading(true);
       const effectiveAmount = getEffectiveAmount();
       const beCoinsAmount = isFreeEntry ? 0 : usdToBeCoins(effectiveAmount);
-
+      console.log("Prueba:", paymentData.wallet_id);
       const purchaseData: any = {
         toWalletId: paymentData.wallet_id,
         amountBecoin: beCoinsAmount,

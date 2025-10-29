@@ -4,11 +4,15 @@ import { apiRequest } from "../api";
 const API_URL = Constants.expoConfig?.extra?.apiUrl as string;
 
 export const eventsService = {
-  getEvents: async () => {
+  getAllEvents: async () => {
     const response = await apiRequest("/event-pass?is_active=true");
-    return response.data; 
+    return response.data;
   },
-  getEvent: async (eventId: string) => {
+  getUserEvents: async () => {
+    const response = await apiRequest(`/user-event-passes/user`);
+    return response.data;
+  },
+  getOneEvent: async (eventId: string) => {
     const response = await apiRequest(`${API_URL}/event-pass/${eventId}`);
     const data = await response.json();
     return data;
@@ -38,5 +42,21 @@ export const eventsService = {
     const data = await response.json();
     return data;
   },
-
+  consumeQr: async (eventId: string, userEvent_id: string) => {
+    const response = await apiRequest(
+      `${API_URL}/User-event-pass/consume?user_eventpass_id=${userEvent_id}&eventpass_id=${eventId}`,
+      {
+        method: "POST",
+      }
+    );
+    console.log(response);
+    return response
+  },
+  refundEvent: async (eventId: string) => {
+    const response = await apiRequest(`${API_URL}/user-event-passes/refund/${eventId}`, {
+      method: "POST",
+    });
+    const data = await response.json();
+    return data;
+  },
 };

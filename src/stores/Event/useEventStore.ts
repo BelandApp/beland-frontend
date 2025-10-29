@@ -3,7 +3,7 @@ const { persist, createJSONStorage } = require("zustand/middleware");
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
 
-export type Event = {
+export type BasicEvent ={
   id: string;
   name: string;
   image_url: string;
@@ -30,7 +30,19 @@ export type Event = {
   created_at: Date;
   updated_at: Date;
 };
-
+export interface Event extends BasicEvent {
+  // Info del holder (solo si fue adquirido)
+  user_acquired?: boolean;
+  user_attended?: boolean;
+  holder_name?: string;
+  holder_email?: string;
+  holder_phone?: string;
+  holder_instagram_tiktok?: string;
+  purchase_date?: string;
+  event_pass_id?: string;
+  user_pass_id?: string;
+  purchase_price?: string;
+}
 type EventStore = {
   events: Event[];
   setEvents: (list: Event[]) => void;
