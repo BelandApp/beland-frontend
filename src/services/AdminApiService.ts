@@ -31,16 +31,32 @@ export interface EventPass {
   code: string;
   name: string;
   description?: string;
+  message?: string;
   image_url?: string;
+  images_urls?: string[];
+  qr?: string;
   event_place?: string;
   event_city?: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
   event_date: string;
-  price_becoin: number;
+  start_sale_date?: string;
+  end_sale_date?: string;
   limit_tickets: number;
   sold_tickets: number;
+  available: boolean;
+  attended_count: number;
+  price_becoin: string;
+  discount: string;
+  total_becoin: string;
+  is_refundable: boolean;
+  refund_days_limit: number;
   is_active: boolean;
+  type_id?: string;
   created_by_id: string;
   created_at: string;
+  updated_at: string;
 }
 
 export interface CreateEventPassDto {
@@ -307,21 +323,9 @@ export class AdminApiService extends CoreApiService {
       });
     }
 
-    // Compatibilidad backend: si solo hay una imagen y el backend espera always an images_urls array,
-    // enviamos la misma imagen también en images_urls para que files.images_urls exista como array
-    // (esto evita errores en backends que no manejan undefined en files.images_urls).
-    if (mainImage && additionalImages.length === 0) {
-      // Si el usuario originalmente no envió images_urls como array con elementos, duplicamos
-      const hadImagesUrlsArray =
-        Array.isArray((eventData as any).images_urls) &&
-        (eventData as any).images_urls.length > 0;
-      if (!hadImagesUrlsArray) {
-        formData.append("images_urls", mainImage);
-        console.log(
-          `📎 Compatibilidad: duplicando imagen en images_urls para backend (single image case)`
-        );
-      }
-    }
+    // Nota: ya no duplicamos la imagen principal en `images_urls` para compatibilidad.
+    // El backend debe aceptar `image_url` como imagen principal incluso cuando hay una sola imagen.
+    // Si el backend exige otra convención, ajustar aquí o en el servidor según corresponda.
 
     // Debugging: Inspeccionar contenido del FormData
     console.log("🔍 Inspeccionando FormData antes del envío:");
@@ -402,6 +406,43 @@ export class AdminApiService extends CoreApiService {
       console.error("Error in postFormDataDirect:", error);
       throw error;
     }
+  }
+
+  private async putFormDataDirect<T>(
+    endpoint: string,
+    formData: FormData
+  ): Promise<T> {
+    const token = await this.getAuthToken();
+    const url = this.buildUrl(endpoint);
+
+    try {
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: {
+          Authorization: token ? `Bearer ${token}` : "",
+          // NO establecer Content-Type - let browser set it with boundary
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Error response:", errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Error in putFormDataDirect:", error);
+      throw error;
+    }
+  }
+
+  async updateEventPassFormData(
+    eventId: string,
+    formData: FormData
+  ): Promise<EventPass> {
+    return this.putFormDataDirect<EventPass>(`event-pass/${eventId}`, formData);
   }
 
   async updateEventPass(
