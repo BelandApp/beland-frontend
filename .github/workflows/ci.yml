@@ -17,41 +17,36 @@ on:
 
 env:
   NODE_VERSION: 20
-  DEPLOY_BRANCH: ${{ github.event.inputs.branch || github.ref_name }}
 
 jobs:
   build:
     name: Build project
     runs-on: ubuntu-latest
-
     steps:
-      - name: 🧩 Checkout code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: ⚙️ Setup Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
-      - name: 📁 Copy environment file
+      - name: Copy environment file
         run: |
-          BRANCH=${{ env.DEPLOY_BRANCH }}
-          echo "Using branch: $BRANCH"
-          if [ -f "$BRANCH.env" ]; then
-            cp "$BRANCH.env" .env
-            echo "✅ Copied environment file for $BRANCH"
+          if [ -f "${{ github.event.inputs.branch }}.env" ]; then
+            cp ${{ github.event.inputs.branch }}.env .env
           else
-            echo "⚠️ No env file found for $BRANCH"
+            echo "⚠️ No env file found for ${{ github.event.inputs.branch }}"
           fi
 
-      - name: 📦 Install dependencies
+      - name: Install dependencies
         run: npm ci --legacy-peer-deps
 
-      - name: 🏗️ Build project
-        run: npm run build --quiet
+      - name: Build project
+        run: npm run build
 
-      - name: 📤 Save dist as artifact
+      - name: Save dist as artifact
         uses: actions/upload-artifact@v4
         with:
           name: dist
@@ -59,38 +54,38 @@ jobs:
           retention-days: 1
 
   deploy:
-    name: 🚀 Deploy to AWS S3
+    name: Deploy to AWS S3
     runs-on: ubuntu-latest
-    environment: ${{ env.DEPLOY_BRANCH }}
+    environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch || github.ref_name }}
     needs: build
-
     steps:
-      - name: 📥 Download build artifact
+      - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist
+      
+      - name: List downloaded dist content (debug)
+        run: |
+          echo "Verificando que el contenido de 'dist' esté completo:"
+          find dist -type f
 
-      - name: 🔐 Configure AWS credentials
+
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: 🧪 Test access to S3
+      - name: Sync files to S3
         run: |
-          echo "Checking access to bucket beland-admin-${{ env.DEPLOY_BRANCH }}"
-          aws s3 ls s3://beland-admin-${{ env.DEPLOY_BRANCH }}
-
-      - name: 🌐 Sync files to S3
+          echo "Deploying files to S3 bucket beland-admin-${{ github.event.inputs.branch }}"
+          aws s3 sync dist s3://beland-admin-${{ github.event.inputs.branch }} \
+            --delete \
+            --exact-timestamps
+      
+      - name: Invalidate CloudFront cache
         run: |
-          echo "Deploying files to S3 bucket beland-admin-${{ env.DEPLOY_BRANCH }}"
-          aws s3 sync dist s3://beland-admin-${{ env.DEPLOY_BRANCH }} --delete --cache-control "no-cache"
-
-      - name: 🧹 Invalidate CloudFront cache
-        run: |
-          echo "Creating CloudFront invalidation..."
           aws cloudfront create-invalidation \
-            --distribution-id ${{  secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
             --paths "/*"
