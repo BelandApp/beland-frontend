@@ -1,10 +1,10 @@
 import React from "react";
-import { useAuth } from "src/hooks/AuthContext";
+import { useAuth } from "src/context";
 import SuperAdminPanel from "./components/SuperAdminPanel";
 import AdminPanel from "./components/AdminPanel";
 import LeaderPanel from "./components/LeaderPanel";
 import EmpresaPanel from "./components/EmpresaPanel";
-import UserPanel from "./components/UserPanel";
+import {UserPanel }from "./components/panels";
 import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 
 const UserDashboard: React.FC = () => {

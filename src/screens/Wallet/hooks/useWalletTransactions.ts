@@ -1,34 +1,39 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "../../../hooks/AuthContext";
-import { transactionService } from "../../../services/transactionService";
-import { walletService } from "../../../services/walletService";
-import { Transaction as BackendTransaction } from "../../../services/transactionService";
+import { useAuth } from "@/context/AuthContext";
+import { WalletService } from "@services/core";
 import { Transaction } from "../types";
 import { convertBackendTransactionAmount } from "../../../utils/balanceConverter";
 
 // Función para mapear transacciones del backend al formato del frontend
 const mapBackendTransactionToFrontend = (
-  backendTransaction: BackendTransaction
+  backendTransaction: any
 ): Transaction => {
   // Mapear tipo de transacción según el backend
   let type: Transaction["type"] = "exchange";
   const typeName = (
     backendTransaction.type?.name ||
-    backendTransaction.transaction_type?.name ||
+    backendTransaction.type?.code ||
     ""
   ).toLowerCase();
+
   console.log(
     "[Transacción] typeName recibido:",
     typeName,
-    "id:",
-    backendTransaction.id
+    "estructura completa:",
+    backendTransaction
   );
 
   if (typeName.includes("recarga") || typeName.includes("recharge")) {
     type = "recharge";
-  } else if (typeName.includes("transferencia enviada")) {
+  } else if (
+    typeName.includes("transferencia enviada") ||
+    typeName.includes("transfer_send")
+  ) {
     type = "transfer";
-  } else if (typeName.includes("transferencia recibida")) {
+  } else if (
+    typeName.includes("transferencia recibida") ||
+    typeName.includes("transfer_received")
+  ) {
     type = "receive";
   } else if (typeName.includes("compra") || typeName.includes("purchase")) {
     type = "payment";
@@ -42,15 +47,8 @@ const mapBackendTransactionToFrontend = (
 
   // Mapear estado
   let status: Transaction["status"] = "completed";
-  if (
-    backendTransaction.status?.name ||
-    backendTransaction.transaction_state?.name
-  ) {
-    const stateName = (
-      backendTransaction.status?.name ||
-      backendTransaction.transaction_state?.name ||
-      ""
-    ).toLowerCase();
+  if (backendTransaction.status?.name) {
+    const stateName = backendTransaction.status.name.toLowerCase();
     if (stateName.includes("pendiente") || stateName.includes("pending")) {
       status = "pending";
     } else if (
@@ -95,68 +93,27 @@ const mapBackendTransactionToFrontend = (
     });
   }
 
-  // Si es transferencia recibida, forzar monto positivo y descripción
-  const isReceive = type === "receive";
+  // Obtener el monto de amount_becoin
+  const amount = Number(backendTransaction.amount_becoin || 0);
+
   return {
     id: backendTransaction.id,
     type,
-    // Normalizar montos: preferir `amount_becoin` (nuevo), luego `amount_beicon`, luego `amount`
-    amount: isReceive
-      ? Math.abs(
-          (backendTransaction as any).amount_becoin !== undefined
-            ? convertBackendTransactionAmount(
-                (backendTransaction as any).amount_becoin
-              )
-            : backendTransaction.amount_beicon !== undefined
-            ? convertBackendTransactionAmount(backendTransaction.amount_beicon)
-            : convertBackendTransactionAmount(backendTransaction.amount)
-        )
-      : (backendTransaction as any).amount_becoin !== undefined
-      ? convertBackendTransactionAmount(
-          (backendTransaction as any).amount_becoin
-        )
-      : backendTransaction.amount_beicon !== undefined
-      ? convertBackendTransactionAmount(backendTransaction.amount_beicon)
-      : convertBackendTransactionAmount(backendTransaction.amount),
-    // Mantener campo legacy `amount_beicon` para compatibilidad con componentes que lo usen
-    amount_beicon:
-      (backendTransaction as any).amount_becoin !== undefined
-        ? convertBackendTransactionAmount(
-            (backendTransaction as any).amount_becoin
-          )
-        : backendTransaction.amount_beicon !== undefined
-        ? convertBackendTransactionAmount(backendTransaction.amount_beicon)
-        : convertBackendTransactionAmount(backendTransaction.amount),
-    // Nuevo campo explícito (opcional)
-    amount_becoin:
-      (backendTransaction as any).amount_becoin !== undefined
-        ? convertBackendTransactionAmount(
-            (backendTransaction as any).amount_becoin
-          )
-        : undefined,
-    description: isReceive
-      ? getTransactionDescription(type, backendTransaction)
-      : getTransactionDescription(type, backendTransaction),
+    amount: Math.abs(amount),
+    amount_beicon: Math.abs(amount), // Para compatibilidad
+    amount_becoin: Math.abs(amount),
+    description: getTransactionDescription(type, backendTransaction),
     date: formattedDate,
     status,
-    from: isReceive
-      ? backendTransaction.reference ||
-        backendTransaction.reference_number ||
-        "Usuario"
-      : undefined,
-    to:
-      type === "transfer"
-        ? backendTransaction.reference ||
-          backendTransaction.reference_number ||
-          "Usuario"
-        : undefined,
+    from: backendTransaction.reference || "Sistema",
+    to: backendTransaction.reference || "Usuario",
   };
 };
 
 // Función helper para generar descripción de transacción
 const getTransactionDescription = (
   type: Transaction["type"],
-  backendTransaction: BackendTransaction
+  backendTransaction: any
 ): string => {
   switch (type) {
     case "recharge":
@@ -172,7 +129,7 @@ const getTransactionDescription = (
     case "exchange":
       return "Canjeado por premio";
     default:
-      return backendTransaction.description || "Transacción";
+      return backendTransaction.reference || "Transacción";
   }
 };
 
@@ -188,10 +145,7 @@ export const useWalletTransactions = () => {
     const fetchWalletId = async () => {
       if (!user?.email || !user?.id) return;
       try {
-        const wallet = await walletService.getWalletByUserId(
-          user.email,
-          user.id
-        );
+        const wallet = await WalletService.getCurrentUserWallet();
         setWalletId(wallet.id);
         // Guardar el wallet_id en localStorage para el mapeo
         if (typeof window !== "undefined") {
@@ -219,22 +173,27 @@ export const useWalletTransactions = () => {
 
       if (!isDemoMode) {
         try {
-          // Modo producción: intentar usar API real
-          // Filtrar por wallet_id del usuario actual
-          const response = await transactionService.getTransactions({
-            wallet_id: walletId,
-            limit: 20,
-            page: 1,
-          });
+          // Modo producción: usar API real de transacciones de wallet
+          console.log("🔄 Obteniendo transacciones del wallet:", walletId);
+
+          const response = await WalletService.getTransactions(1, 20, walletId);
+
+          console.log("📦 Respuesta del backend:", response);
+
+          // La respuesta viene en formato [transacciones[], total]
+          const transactionsData = Array.isArray(response[0])
+            ? response[0]
+            : response;
 
           // Mapear transacciones del backend al formato del frontend
-          const mappedTransactions = response.transactions.map(
+          const mappedTransactions = transactionsData.map(
             mapBackendTransactionToFrontend
           );
 
           console.log(
-            "✅ Transacciones obtenidas del backend:",
-            mappedTransactions.length
+            "✅ Transacciones mapeadas:",
+            mappedTransactions.length,
+            mappedTransactions
           );
           setTransactions(mappedTransactions);
         } catch (apiError: any) {

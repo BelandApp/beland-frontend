@@ -10,7 +10,7 @@ type Props = {
   renderItem: (item: any) => React.ReactNode;
 };
 
-const CatalogCommunityCarouselWeb: React.FC<Props> = ({
+export const CatalogCommunityCarouselWeb: React.FC<Props> = ({
   items,
   renderItem,
 }) => {
@@ -120,5 +120,3 @@ const CatalogCommunityCarouselWeb: React.FC<Props> = ({
     </div>
   );
 };
-
-export default CatalogCommunityCarouselWeb;

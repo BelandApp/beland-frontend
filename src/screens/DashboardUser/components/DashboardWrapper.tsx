@@ -1,11 +1,12 @@
 import React from "react";
 import {
   View,
-  Text,
   StyleSheet,
   ActivityIndicator,
   ScrollView,
+  Text,
 } from "react-native";
+import { ThemedHeader } from "src/components/shared/headers/Header";
 
 interface DashboardWrapperProps {
   title: string;
@@ -20,17 +21,25 @@ const DashboardWrapper: React.FC<DashboardWrapperProps> = ({
 }) => {
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{title}</Text>
-      </View>
-      <ScrollView style={styles.content}>
+      <ThemedHeader title={title} canGoBack />
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={true}
+        scrollEnabled={true}
+        alwaysBounceVertical={true}
+        bounces={true}
+        keyboardShouldPersistTaps="handled"
+        nestedScrollEnabled={true}
+        removeClippedSubviews={false}
+      >
         {isLoading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#007AFF" />
             <Text style={styles.loadingText}>Cargando datos...</Text>
           </View>
         ) : (
-          children
+          <View style={styles.content}>{children}</View>
         )}
       </ScrollView>
     </View>
@@ -40,24 +49,20 @@ const DashboardWrapper: React.FC<DashboardWrapperProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f0f2f5",
+    backgroundColor: "#f8f9fa",
   },
-  header: {
-    padding: 20,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
-    alignItems: "center",
-    justifyContent: "center",
+  scrollView: {
+    flex: 1,
+    backgroundColor: "transparent",
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#333",
+  contentContainer: {
+    flexGrow: 1,
+    minHeight: "150%", // Forzar altura mínima
+    paddingBottom: 200,
   },
   content: {
-    flex: 1,
     padding: 20,
+    minHeight: 1000, // Altura mínima forzada
   },
   loadingContainer: {
     flex: 1,

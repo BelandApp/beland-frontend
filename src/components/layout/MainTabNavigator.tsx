@@ -1,5 +1,5 @@
 import React from "react";
-import { View, StyleSheet, Platform } from "react-native";
+import { View, Platform } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { colors } from "../../styles/colors";
 import { HomeScreen } from "../../screens/HomeScreen";
@@ -7,17 +7,18 @@ import { WalletScreen } from "../../screens/WalletScreen";
 import { GroupsStackNavigator } from "./GroupsStackNavigator";
 import { CatalogScreen } from "../../screens/CatalogScreen";
 import { OrdersStackNavigator } from "./OrdersStackNavigator";
-import { useAuth } from "src/hooks/AuthContext";
+import { useAuth } from "src/context";
 
 import {
   HomeIcon,
   QRIcon,
   WalletIcon,
   CatalogIcon,
-  GiftIcon,
   OrderIcon,
   CommunityIcon,
 } from "../icons";
+import { CommunityScreen } from "src/screens";
+import EventsScreen from "src/screens/Events/EventsScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -86,7 +87,6 @@ export const MainTabNavigator = () => {
               left: 0,
               right: 0,
               height: 90, // Altura aumentada para dejar más espacio
-              paddingBottom: 0,
               zIndex: 9999,
             };
           }
@@ -127,9 +127,9 @@ export const MainTabNavigator = () => {
         options={{ tabBarLabel: "Catálogo" }}
       />
       <Tab.Screen
-        name="Orders"
-        component={OrdersStackNavigator}
-        options={{ tabBarLabel: "Órdenes" }}
+        name="Community"
+        component={EventsScreen}
+        options={{ tabBarLabel: "Comunidad" }}
       />
 
       <Tab.Screen

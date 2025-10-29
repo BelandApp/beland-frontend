@@ -1,5 +1,6 @@
 import { apiRequest } from "./api";
-import { resourceService } from "./resourceService";
+import { TokenService } from "./auth/token.service";
+import { ResourceService } from "./ResourceApiService";
 
 // Tipos para Wallet según el backend
 export interface Wallet {
@@ -108,11 +109,7 @@ class WalletService {
             if (attempt > 1) {
               await new Promise((res) => setTimeout(res, 200));
             }
-            const resp = await resourceService.getUserResources(
-              resourceId,
-              1,
-              1
-            );
+            const resp = await ResourceService.getUserResourceSummary();
             verification = resp;
             if (
               resp &&
@@ -604,9 +601,7 @@ class WalletService {
   // Obtener QR de la wallet del usuario/comercio
   async getWalletQR(): Promise<string | null> {
     console.log("getWalletQR called");
-    const { token } =
-      require("../stores/useAuthTokenStore").useAuthTokenStore.getState();
-    console.log("Token actual:", token);
+    const token = await TokenService.getToken();
     if (!token) {
       console.error(
         "No hay token de autenticación. El usuario debe iniciar sesión."

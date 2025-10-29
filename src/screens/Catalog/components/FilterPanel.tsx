@@ -41,7 +41,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
     });
   };
 
-  const setSortBy = (sortBy: "name" | "price" | "brand") => {
+  const setSortBy = (sortBy: "name" | "price" | "created_at") => {
     onFiltersChange({
       ...filters,
       sortBy,
@@ -126,7 +126,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
             [
               { key: "name", label: "Nombre" },
               { key: "price", label: "Precio" },
-              { key: "brand", label: "Marca" },
+              { key: "created_at", label: "Fecha" },
             ] as const
           ).map(({ key, label }) => (
             <TouchableOpacity

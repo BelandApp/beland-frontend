@@ -1,9 +1,10 @@
-import { SocketService } from "src/services/SocketService";
-import { useAuth } from "src/hooks/AuthContext";
-import { useNotification } from "src/hooks/NotificationContext";
+import { SocketService } from "@/services/SocketService";
+import { useAuth } from "@/context";
+import { useNotification } from "@/hooks/NotificationContext";
 import { useEffect, useRef } from "react";
+import { Platform } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// Storage para contexto de transacciones recientes
 interface RecentTransaction {
   timestamp: number;
   amount: number;
@@ -20,25 +21,17 @@ class TransactionContextManager {
   private recentTransactions: RecentTransaction[] = [];
 
   static getInstance() {
-    if (!this.instance) {
-      this.instance = new TransactionContextManager();
-    }
+    if (!this.instance) this.instance = new TransactionContextManager();
     return this.instance;
   }
 
   addTransaction(transaction: RecentTransaction) {
     this.recentTransactions.unshift(transaction);
-    // Mantener solo las últimas 10 transacciones y limpiar las de más de 5 minutos
+
     const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
     this.recentTransactions = this.recentTransactions
       .filter((t) => t.timestamp > fiveMinutesAgo)
       .slice(0, 10);
-
-    console.log("[TransactionContext] Transacción agregada:", transaction);
-    console.log(
-      "[TransactionContext] Total transacciones recientes:",
-      this.recentTransactions.length
-    );
   }
 
   findRecentTransaction(
@@ -55,79 +48,44 @@ class TransactionContextManager {
   }
 }
 
-// Función para crear mensaje detallado con información adicional
-function createDetailedMessage(data: {
-  amount?: number;
-  message?: string;
-  resource_name?: string;
-  resource_quantity?: number;
-  transaction_type?: string;
-  redemption_code?: string;
-  becoins_used?: number;
-  commerce_name?: string;
-  [key: string]: any;
-}): string {
+// --- createDetailedMessage ---
+function createDetailedMessage(data: Record<string, any>): string {
   let message = data?.message || `Pago exitoso de $${data?.amount || 0}`;
 
-  // Intentar enriquecer con contexto local si no viene información detallada
   if (!data.resource_name && data.amount) {
     const contextManager = TransactionContextManager.getInstance();
     const recentTx = contextManager.findRecentTransaction(data.amount);
     if (recentTx) {
-      console.log(
-        "[PaymentSocket] Enriqueciendo notificación con contexto local:",
-        recentTx
-      );
       data = { ...data, ...recentTx };
       message = `${data.message || "Pago exitoso"} - Contexto local aplicado`;
     }
   }
 
-  // Agregar información adicional si está disponible
-  const details = [];
-
-  if (data.resource_name || data.resourceName) {
+  const details: string[] = [];
+  if (data.resource_name || data.resourceName)
     details.push(`📦 ${data.resource_name || data.resourceName}`);
-  }
-
-  if (
-    (data.resource_quantity || data.resourceQuantity) &&
-    (data.resource_quantity || data.resourceQuantity) > 1
-  ) {
+  if ((data.resource_quantity || data.resourceQuantity) > 1)
     details.push(
       `📊 Cantidad: ${data.resource_quantity || data.resourceQuantity}`
     );
-  }
-
   if (
     (data.transaction_type === "redemption_applied" ||
       data.type === "redemption_applied") &&
     (data.redemption_code || data.redemptionCode)
-  ) {
+  )
     details.push(`🎫 Cupón: ${data.redemption_code || data.redemptionCode}`);
-  }
-
-  if (
-    (data.becoins_used || data.becoinsUsed) &&
-    (data.becoins_used || data.becoinsUsed) > 0
-  ) {
+  if ((data.becoins_used || data.becoinsUsed) > 0)
     details.push(
       `🪙 ${(data.becoins_used || data.becoinsUsed).toLocaleString()} BeCoins`
     );
-  }
-
-  if (data.transaction_type === "free_entry" || data.type === "free_entry") {
+  if (data.transaction_type === "free_entry" || data.type === "free_entry")
     details.push(`🆓 Entrada gratuita`);
-  }
 
-  // Si hay detalles adicionales, agregarlos al mensaje
-  if (details.length > 0) {
-    message += `\n\n${details.join(" • ")}`;
-  }
-
+  if (details.length) message += `\n\n${details.join(" • ")}`;
   return message;
 }
 
+// --- usePaymentSocket ---
 export function usePaymentSocket(onPaymentSuccess: (data: any) => void) {
   const { user } = useAuth();
   const { showNotification } = useNotification();
@@ -135,95 +93,109 @@ export function usePaymentSocket(onPaymentSuccess: (data: any) => void) {
 
   useEffect(() => {
     if (!user?.id) return;
-    const token = localStorage.getItem("auth_token");
-    if (!token) return;
-    socketService.current = new SocketService();
-    socketService.current.connect(token);
 
-    // Escuchar eventos de transacción recibida (nuevo pago)
-    socketService.current.onTransactionReceived(
-      (data: {
-        amount: number;
-        message?: string;
-        wallet_id?: string;
-        resource_name?: string;
-        resource_quantity?: number;
-        transaction_type?: string;
-        redemption_code?: string;
-        becoins_used?: number;
-        commerce_name?: string;
-        [key: string]: any;
-      }) => {
-        console.log("Transacción recibida:", data);
+    let isMounted = true;
 
-        const detailedMessage = createDetailedMessage(data);
-        showNotification({
-          title: "¡Venta recibida!",
-          message: detailedMessage,
-          amount: data?.amount,
-          persistent: true, // Notificación persistente con botón OK
-        });
-        onPaymentSuccess(data);
+    const initSocket = async () => {
+      let token: string | null = null;
+      try {
+        if (Platform.OS === "web") {
+          token = localStorage.getItem("access_token");
+        } else {
+          token = await AsyncStorage.getItem("access_token");
+        }
+      } catch (err) {
+        console.error("[Socket] Error getting token:", err);
+        return;
       }
-    );
 
-    // También escuchar actualizaciones de balance para compatibilidad
-    socketService.current.onBalanceUpdated(
-      (data: {
-        amount: number;
-        message?: string;
-        success?: boolean;
-        resource_name?: string;
-        resource_quantity?: number;
-        transaction_type?: string;
-        [key: string]: any;
-      }) => {
-        console.log("Balance actualizado:", data);
-        if (data.success && data.amount > 0) {
+      if (!token) return;
+
+      socketService.current = new SocketService();
+      socketService.current.connect(token);
+
+      // Escuchar eventos de transacción recibida (nuevo pago)
+      socketService.current.onTransactionReceived(
+        (data: {
+          amount: number;
+          message?: string;
+          wallet_id?: string;
+          resource_name?: string;
+          resource_quantity?: number;
+          transaction_type?: string;
+          redemption_code?: string;
+          becoins_used?: number;
+          commerce_name?: string;
+          [key: string]: any;
+        }) => {
           const detailedMessage = createDetailedMessage(data);
           showNotification({
             title: "¡Pago recibido!",
+            message: detailedMessage,
+            amount: data?.amount,
+            persistent: true,
+          });
+          onPaymentSuccess(data);
+        }
+      );
+
+      // También escuchar actualizaciones de balance para compatibilidad
+      socketService.current.onBalanceUpdated(
+        (data: {
+          amount: number;
+          message?: string;
+          success?: boolean;
+          resource_name?: string;
+          resource_quantity?: number;
+          transaction_type?: string;
+          [key: string]: any;
+        }) => {
+          if (data.success && data.amount > 0) {
+            const detailedMessage = createDetailedMessage(data);
+            showNotification({
+              title: "¡Pago recibido!",
+              message: detailedMessage,
+              amount: data?.amount,
+              persistent: true, // Notificación persistente con botón OK
+            });
+            onPaymentSuccess(data);
+          }
+        }
+      );
+
+      // Mantener compatibilidad con el evento original
+      socketService.current.onPaymentSuccess(
+        (data: {
+          amount: number;
+          message?: string;
+          resource_name?: string;
+          resource_quantity?: number;
+          transaction_type?: string;
+          redemption_code?: string;
+          becoins_used?: number;
+          commerce_name?: string;
+          [key: string]: any;
+        }) => {
+          const detailedMessage = createDetailedMessage(data);
+          showNotification({
+            title: "¡Venta recibida!",
             message: detailedMessage,
             amount: data?.amount,
             persistent: true, // Notificación persistente con botón OK
           });
           onPaymentSuccess(data);
         }
-      }
-    );
+      );
+    };
 
-    // Mantener compatibilidad con el evento original
-    socketService.current.onPaymentSuccess(
-      (data: {
-        amount: number;
-        message?: string;
-        resource_name?: string;
-        resource_quantity?: number;
-        transaction_type?: string;
-        redemption_code?: string;
-        becoins_used?: number;
-        commerce_name?: string;
-        [key: string]: any;
-      }) => {
-        console.log("Notificación payment-success recibida:", data);
-
-        const detailedMessage = createDetailedMessage(data);
-        showNotification({
-          title: "¡Venta recibida!",
-          message: detailedMessage,
-          amount: data?.amount,
-          persistent: true, // Notificación persistente con botón OK
-        });
-        onPaymentSuccess(data);
-      }
-    );
+    initSocket();
 
     return () => {
+      isMounted = false;
       socketService.current?.disconnect();
       socketService.current = null;
     };
-  }, [user?.id]);
+  }, [user?.id, onPaymentSuccess, showNotification]);
 }
 
-// Exportar también el manager para uso en PaymentScreen
 export { TransactionContextManager };

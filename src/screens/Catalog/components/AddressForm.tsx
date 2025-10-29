@@ -171,8 +171,6 @@ export const AddressForm: React.FC<AddressFormProps> = ({
     const newErrors: Partial<Record<keyof DeliveryAddress, string | null>> = {};
     let isValid = true;
 
-    // Validate required fields
-    // Only additionalInfo may be empty; enforce validation on other fields
     const requiredFields: (keyof DeliveryAddress)[] = [
       "street",
       "city",

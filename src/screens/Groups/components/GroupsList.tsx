@@ -1,7 +1,7 @@
 import React from "react";
 import { View } from "react-native";
-import { Group } from "../../../types";
-import { GroupCard } from "./GroupCard";
+import { Group } from "../../../types/Group";
+import { SimpleGroupCard } from "./SimpleGroupCard";
 import { EmptyState } from "./EmptyState";
 import { groupCardStyles } from "../styles";
 
@@ -23,7 +23,7 @@ export const GroupsList: React.FC<GroupsListProps> = ({
   return (
     <View style={groupCardStyles.groupsList}>
       {groups.map((group) => (
-        <GroupCard key={group.id} group={group} onPress={onGroupPress} />
+        <SimpleGroupCard key={group.id} group={group} onPress={onGroupPress} />
       ))}
     </View>
   );

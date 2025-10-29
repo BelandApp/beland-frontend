@@ -2,30 +2,39 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  Image,
-  TextInput,
-  TouchableOpacity,
   ScrollView,
+  Dimensions,
+  TouchableOpacity,
 } from "react-native";
 import { CustomAlert } from "../../components/ui/CustomAlert";
-import { SafeAreaView } from "react-native-safe-area-context";
-import BackgroundWaves from "../../components/ui/BackgroundWaves";
-import { useAuth } from "../../hooks/AuthContext";
+import { LoginWave } from "src/components/ui/waves/Login.wave";
+import BelandLogo from "src/components/icons/BelandLogo";
+import { CustomInput } from "src/components/shared/input";
+import { Button } from "src/components/ui";
+import { useNavigation } from "@react-navigation/native";
 import { styles } from "./styles";
+import { SocialButton } from "src/components/shared";
+import { useAuth } from "src/context";
+import { CircleArrowLeftIcon } from "lucide-react-native";
 
-export default function LoginScreen({ navigation }: any) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const { loginAsDemo, loginWithEmailPassword, isLoading } = useAuth();
+export default function LoginScreen() {
+  const navigation = useNavigation<any>();
+  const { handleAuth0Login, loginWithEmail, user, isAuthenticated, isLoading } =
+    useAuth();
+  const { width, height } = Dimensions.get("window");
   const [alert, setAlert] = useState<{
     visible: boolean;
     title: string;
     message: string;
     type?: "success" | "error" | "info";
   }>({ visible: false, title: "", message: "", type: "error" });
-
+  const [FormData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+  if (isAuthenticated) navigation.navigate("MainTabs");
   const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) {
+    if (!FormData.email.trim() || !FormData.password.trim()) {
       setAlert({
         visible: true,
         title: "Error",
@@ -34,15 +43,9 @@ export default function LoginScreen({ navigation }: any) {
       });
       return;
     }
-
-    // Log de los inputs antes de enviar
-    console.log("[LOGIN] Email:", email);
-    console.log("[LOGIN] Password:", password);
-
     try {
-      const success = await loginWithEmailPassword(email, password);
-      console.log("[LOGIN] Resultado loginWithEmailPassword:", success);
-      if (!success) {
+      await loginWithEmail(FormData.email, FormData.password);
+      if (!user) {
         setAlert({
           visible: true,
           title: "Error",
@@ -50,7 +53,6 @@ export default function LoginScreen({ navigation }: any) {
           type: "error",
         });
       }
-      // Si es exitoso, la navegación se maneja por el AuthContext
     } catch (error) {
       setAlert({
         visible: true,
@@ -62,107 +64,59 @@ export default function LoginScreen({ navigation }: any) {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setAlert({
-      visible: true,
-      title: "Error de Google Authentication",
-      message:
-        "Hay un problema con la configuración de Auth0. Para el demo, puedes usar el botón 'Acceso Demo' que está abajo.",
-      type: "error",
-    });
-  };
-
-  const handleDemoLogin = async () => {
-    setAlert({
-      visible: true,
-      title: "Demo Login",
-      message:
-        "¿Quieres ingresar como usuario demo para probar todas las funcionalidades?",
-      type: "info",
-    });
-  };
-
-  // Acción para el botón de demo dentro del CustomAlert
-  const handleDemoConfirm = async () => {
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    loginAsDemo();
-    setAlert({
-      visible: true,
-      title: "¡Bienvenido!",
-      message:
-        "Has ingresado como usuario demo. ¡Explora todas las funcionalidades!",
-      type: "success",
-    });
+  const handleLoginAuth0 = async () => {
+    await handleAuth0Login();
+    navigation.navigate("MainTabs");
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
+    <ScrollView
+      contentContainerStyle={styles.scroll}
+      showsVerticalScrollIndicator={false}
+    >
+      <TouchableOpacity
+        onPress={() => navigation.navigate("MainTabs" as never)}
+        style={styles.backButton}
       >
-        <BackgroundWaves />
-        <View style={styles.container}>
-          <Text style={styles.title}>beland</Text>
-          <Text style={styles.subtitle}>Inicia sesión en tu cuenta</Text>
-          <TextInput
-            placeholder="Correo electrónico"
-            style={styles.input}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={email}
-            onChangeText={setEmail}
+        <CircleArrowLeftIcon size={32} color="#FFF" />
+      </TouchableOpacity>
+      <BelandLogo
+        width={width * 0.5}
+        height={height * 0.2}
+        style={styles.logo}
+      />
+      <LoginWave />
+      <View style={styles.container}>
+        <SocialButton onPress={handleLoginAuth0} />
+        <View style={styles.container} />
+        <CustomInput
+          label="Correo Electrónico"
+          onChangeText={(email) => setFormData({ ...FormData, email })}
+          value={FormData.email}
+          keyboardType="email-address"
+        />
+        <CustomInput
+          label="Contraseña"
+          onChangeText={(password) => setFormData({ ...FormData, password })}
+          value={FormData.password}
+          secureTextEntry
+        />
+        <Button
+          title={isLoading ? "Cargando..." : "Entrar"}
+          onPress={handleLogin}
+          style={styles.button}
+          textStyle={styles.buttonText}
+        />
+        <View style={styles.containerRow}>
+          <Text style={styles.subtitle}>¿Eres nuevo? </Text>
+          <Button
+            variant="ghost"
+            title="Registrarse"
+            textStyle={styles.buttonLink}
+            onPress={() => navigation.navigate("Register")}
           />
-          <TextInput
-            placeholder="Contraseña"
-            style={styles.input}
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
-          <TouchableOpacity
-            style={[styles.button, isLoading && styles.buttonDisabled]}
-            onPress={handleLogin}
-            disabled={isLoading}
-          >
-            <Text style={styles.buttonText}>
-              {isLoading ? "Iniciando sesión..." : "Ingresar"}
-            </Text>
-          </TouchableOpacity>
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>O inicia sesión con</Text>
-            <View style={styles.dividerLine} />
-          </View>
-          <TouchableOpacity
-            style={styles.googleButton}
-            onPress={handleGoogleLogin}
-          >
-            <View style={styles.googleButtonContent}>
-              <Image
-                source={{
-                  uri: "https://developers.google.com/identity/images/g-logo.png",
-                }}
-                style={styles.googleLogo}
-              />
-              <Text style={styles.googleButtonText}>Continuar con Google</Text>
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.demoButton} onPress={handleDemoLogin}>
-            <Text style={styles.demoButtonText}>
-              🎯 Acceso Demo (Para pruebas)
-            </Text>
-          </TouchableOpacity>
-          <View style={styles.registerPrompt}>
-            <Text style={styles.registerPromptText}>
-              ¿No tienes una cuenta?{" "}
-            </Text>
-            <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-              <Text style={styles.registerLink}>Regístrate</Text>
-            </TouchableOpacity>
-          </View>
         </View>
-      </ScrollView>
+      </View>
       {/* CustomAlert para errores y demo */}
       <CustomAlert
         visible={alert.visible}
@@ -170,20 +124,7 @@ export default function LoginScreen({ navigation }: any) {
         message={alert.message}
         type={alert.type}
         onClose={() => setAlert({ ...alert, visible: false })}
-        primaryButton={
-          alert.title === "Demo Login"
-            ? { text: "Sí, ingresar", onPress: handleDemoConfirm }
-            : undefined
-        }
-        secondaryButton={
-          alert.title === "Demo Login"
-            ? {
-                text: "Cancelar",
-                onPress: () => setAlert({ ...alert, visible: false }),
-              }
-            : undefined
-        }
       />
-    </SafeAreaView>
+    </ScrollView>
   );
 }

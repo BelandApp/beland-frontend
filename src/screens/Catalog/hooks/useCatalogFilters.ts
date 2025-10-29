@@ -5,7 +5,7 @@ export interface FilterOptions {
   brands: string[];
   minPrice: string;
   maxPrice: string;
-  sortBy: "name" | "price" | "brand";
+  sortBy: "name" | "price" | "created_at";
   order: "ASC" | "DESC";
 }
 

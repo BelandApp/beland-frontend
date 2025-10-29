@@ -14,9 +14,9 @@ import {
 import * as Clipboard from "expo-clipboard";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { useAuth } from "../../hooks/AuthContext";
+import { useAuth } from "src/context";
 import { useWalletData } from "../Wallet/hooks/useWalletData";
-import { walletService } from "../../services/walletService";
+import { WalletService } from "@services/core";
 
 const ReceiveScreen = () => {
   const navigation = useNavigation();
@@ -49,7 +49,7 @@ const ReceiveScreen = () => {
   }, [alias]);
   const handleShare = async () => {
     try {
-      const userName = user?.name || "Usuario";
+      const userName = user?.email?.split("@")[0] || "Usuario";
       await Share.share({
         message: `¡Hola! Soy ${userName} y este es mi alias para recibir pagos en Beland: ${alias}`,
       });
@@ -64,9 +64,9 @@ const ReceiveScreen = () => {
         setQrLoading(true);
         setQrError(null);
         try {
-          const qr = await walletService.getWalletQR();
-          if (qr) {
-            setQrImage(qr);
+          const qrResponse = await WalletService.getWalletQR();
+          if (qrResponse?.qr) {
+            setQrImage(qrResponse.qr);
           } else {
             setQrError("No se pudo obtener el QR");
           }

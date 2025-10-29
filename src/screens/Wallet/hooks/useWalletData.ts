@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { WalletData } from "../types";
 import { formatUSDPrice } from "../../../constants";
 import { useBeCoinsStore } from "../../../stores/useBeCoinsStore";
-import { useAuth } from "../../../hooks/AuthContext";
-import { walletService, Wallet } from "../../../services/walletService";
+import { useAuth } from "@/context/AuthContext";
+import { PaymentService, Wallet } from "@services/core";
 
 export const useWalletData = () => {
   const { user } = useAuth();
@@ -21,9 +21,9 @@ export const useWalletData = () => {
     setError(null);
 
     try {
-      const wallet = await walletService.getWalletByUserId(user.email, user.id);
+      const wallet = await PaymentService.getWallet();
 
-      // Convertir el balance del backend (string) a número
+      // Convertir el balance del backend (string) a número - usando propiedades reales del backend
       const backendBalance =
         typeof wallet.becoin_balance === "string"
           ? isNaN(parseFloat(wallet.becoin_balance))
@@ -33,7 +33,7 @@ export const useWalletData = () => {
           ? 0
           : wallet.becoin_balance || 0;
 
-      // Convertir el balance bloqueado del backend (string) a número
+      // Convertir el balance bloqueado del backend (string) a número - usando propiedades reales del backend
       const backendLockedBalance =
         typeof wallet.locked_balance === "string"
           ? isNaN(parseFloat(wallet.locked_balance))
@@ -67,9 +67,9 @@ export const useWalletData = () => {
 
   const walletData: WalletData = {
     balance: balance, // Balance del store (actualizado desde backend o demo)
-    locked_balance: fullWalletData?.locked_balance ?? 0, // Balance bloqueado del backend
+    locked_balance: fullWalletData?.locked_balance ?? 0, // Balance bloqueado del backend (propiedades reales)
     estimatedValue: formatUSDPrice(balance * 0.05), // Valor estimado en USD (solo conversión directa)
-    alias: fullWalletData?.alias ?? undefined,
+    alias: fullWalletData?.alias ?? undefined, // Alias real del backend
   };
 
   return {

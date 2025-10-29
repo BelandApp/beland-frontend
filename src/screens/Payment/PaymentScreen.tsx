@@ -6,7 +6,7 @@ import { Alert } from "react-native";
 import { CustomAlert } from "../../components/ui/CustomAlert";
 import { TransactionContextManager } from "../../hooks/usePaymentSocket";
 import { useUserResources } from "../../hooks/useUserResources";
-import { walletService } from "../../services/walletService";
+import { WalletService } from "@services/core";
 import DiscountsButton from "./components/DiscountsButton";
 import DiscountsModal from "./components/DiscountsModal";
 
@@ -51,24 +51,24 @@ type Redemption = {
   description?: string;
 };
 
-type PaymentData = {
-  commerce_name?: string;
-  commerce_img?: string;
+export type PaymentData = {
   amount: number;
   message?: string;
   resource?: Resource[];
+  wallet_id?: string;
+  commerce_name?: string;
+  commerce_img?: string;
   redemptions?: Redemption[];
   user_resources?: RealUserResource[];
-  wallet_id?: string;
   amount_to_payment_id?: string | null;
   noHidden?: boolean;
 };
-
-type PaymentScreenParamList = {
-  PaymentScreen: {
-    paymentData: PaymentData;
-    amount_to_payment_id?: string | null;
-  };
+export type PaymentScreenProps = {
+  paymentData: PaymentData;
+  amount_to_payment_id?: string | null;
+};
+export type PaymentScreenParamList = {
+  PaymentScreen: PaymentScreenProps;
 };
 
 type PaymentScreenRouteProp = RouteProp<
@@ -466,21 +466,44 @@ const PaymentScreen: React.FC = () => {
             paymentData.resource[0].resource_quanity;
         }
 
-        freeEntryData.transaction_type = "free_entry";
+        // Preparar datos adicionales para notificación (no van al backend)
+        const notificationData: {
+          transaction_type:
+            | "payphone"
+            | "becoin"
+            | "redemption_applied"
+            | "free_entry";
+          commerce_name: string;
+          becoins_used: number;
+          resource_name: any;
+          resource_quantity: any;
+          redemption_code?: string;
+        } = {
+          transaction_type: appliedRedemption
+            ? "redemption_applied"
+            : "free_entry",
+          commerce_name: paymentData.commerce_name || "Comercio Beland",
+          becoins_used: 0,
+          resource_name: freeEntryData.resource_name,
+          resource_quantity: freeEntryData.resource_quantity,
+        };
+
         if (appliedRedemption) {
-          freeEntryData.transaction_type = "redemption_applied";
-          freeEntryData.redemption_code =
+          notificationData.redemption_code =
             "code" in appliedRedemption
               ? appliedRedemption.code
               : appliedRedemption.resource?.name || "Descuento";
         }
-        freeEntryData.commerce_name =
-          paymentData.commerce_name || "Comercio Beland";
-        freeEntryData.becoins_used = 0;
 
-        const response = await walletService.createPurchaseBecoin(
-          freeEntryData
-        );
+        // Solo enviar campos que acepta el backend DTO
+        const backendData = {
+          toWalletId: freeEntryData.toWalletId,
+          amountBecoin: freeEntryData.amountBecoin,
+          amount_payment_id: freeEntryData.amount_payment_id,
+          user_resource_id: freeEntryData.user_resource_id,
+        };
+
+        const response = await WalletService.createPurchaseBecoin(backendData);
         setBackendResponse(response);
 
         // Guardar contexto de transacción para enriquecer notificaciones
@@ -488,15 +511,12 @@ const PaymentScreen: React.FC = () => {
         contextManager.addTransaction({
           timestamp: Date.now(),
           amount: 0,
-          type: appliedRedemption ? "redemption_applied" : "free_entry",
-          resourceName: freeEntryData.resource_name,
-          resourceQuantity: freeEntryData.resource_quantity,
-          redemptionCode:
-            "code" in (appliedRedemption || {})
-              ? (appliedRedemption as Redemption)?.code
-              : undefined,
-          becoinsUsed: 0,
-          commerceName: freeEntryData.commerce_name,
+          type: notificationData.transaction_type,
+          resourceName: notificationData.resource_name,
+          resourceQuantity: notificationData.resource_quantity,
+          redemptionCode: notificationData.redemption_code,
+          becoinsUsed: notificationData.becoins_used,
+          commerceName: notificationData.commerce_name,
         });
 
         // Mostrar alerta según noHidden del backend o del paymentData
@@ -577,7 +597,7 @@ const PaymentScreen: React.FC = () => {
       setIsLoading(true);
       const effectiveAmount = getEffectiveAmount();
       const beCoinsAmount = isFreeEntry ? 0 : usdToBeCoins(effectiveAmount);
-
+      console.log("Prueba:", paymentData.wallet_id);
       const purchaseData: any = {
         toWalletId: paymentData.wallet_id,
         amountBecoin: beCoinsAmount,
@@ -618,34 +638,55 @@ const PaymentScreen: React.FC = () => {
           paymentData.resource[0].resource_quanity;
       }
 
-      purchaseData.transaction_type = isFreeEntry ? "free_entry" : "paid_entry";
+      // Preparar datos adicionales para notificación (no van al backend)
+      const notificationData: {
+        transaction_type:
+          | "payphone"
+          | "becoin"
+          | "redemption_applied"
+          | "free_entry";
+        commerce_name: string;
+        becoins_used: number;
+        resource_name: any;
+        resource_quantity: any;
+        redemption_code?: string;
+      } = {
+        transaction_type: isFreeEntry ? "free_entry" : "becoin",
+        commerce_name: paymentData.commerce_name || "Comercio Beland",
+        becoins_used: beCoinsAmount,
+        resource_name: purchaseData.resource_name,
+        resource_quantity: purchaseData.resource_quantity,
+      };
+
       if (appliedRedemption) {
-        purchaseData.transaction_type = "redemption_applied";
-        purchaseData.redemption_code =
+        notificationData.transaction_type = "redemption_applied";
+        notificationData.redemption_code =
           "code" in appliedRedemption
             ? appliedRedemption.code
             : appliedRedemption.resource?.name || "Descuento";
       }
-      purchaseData.commerce_name =
-        paymentData.commerce_name || "Comercio Beland";
-      purchaseData.becoins_used = beCoinsAmount;
 
-      const response = await walletService.createPurchaseBecoin(purchaseData);
+      // Solo enviar campos que acepta el backend DTO
+      const backendData = {
+        toWalletId: purchaseData.toWalletId,
+        amountBecoin: purchaseData.amountBecoin,
+        amount_payment_id: purchaseData.amount_payment_id,
+        user_resource_id: purchaseData.user_resource_id,
+      };
+
+      const response = await WalletService.createPurchaseBecoin(backendData);
 
       // Guardar contexto de transacción para enriquecer notificaciones
       const contextManager = TransactionContextManager.getInstance();
       contextManager.addTransaction({
         timestamp: Date.now(),
         amount: effectiveAmount,
-        type: appliedRedemption ? "redemption_applied" : "becoin",
-        resourceName: purchaseData.resource_name,
-        resourceQuantity: purchaseData.resource_quantity,
-        redemptionCode:
-          "code" in (appliedRedemption || {})
-            ? (appliedRedemption as Redemption)?.code
-            : undefined,
-        becoinsUsed: beCoinsAmount,
-        commerceName: purchaseData.commerce_name,
+        type: notificationData.transaction_type,
+        resourceName: notificationData.resource_name,
+        resourceQuantity: notificationData.resource_quantity,
+        redemptionCode: notificationData.redemption_code,
+        becoinsUsed: notificationData.becoins_used,
+        commerceName: notificationData.commerce_name,
       });
 
       setBackendResponse(response);
@@ -689,12 +730,24 @@ const PaymentScreen: React.FC = () => {
           paymentData.resource[0].resource_quanity;
       }
 
-      purchaseData.transaction_type = "free_entry";
-      purchaseData.commerce_name =
-        paymentData.commerce_name || "Comercio Beland";
-      purchaseData.becoins_used = 0;
+      // Preparar datos adicionales para notificación (no van al backend)
+      const notificationData = {
+        transaction_type: "free_entry" as const,
+        commerce_name: paymentData.commerce_name || "Comercio Beland",
+        becoins_used: 0,
+        resource_name: purchaseData.resource_name,
+        resource_quantity: purchaseData.resource_quantity,
+      };
 
-      const response = await walletService.createPurchaseBecoin(purchaseData);
+      // Solo enviar campos que acepta el backend DTO
+      const backendData = {
+        toWalletId: purchaseData.toWalletId,
+        amountBecoin: purchaseData.amountBecoin,
+        amount_payment_id: purchaseData.amount_payment_id,
+        user_resource_id: purchaseData.user_resource_id,
+      };
+
+      const response = await WalletService.createPurchaseBecoin(backendData);
       setBackendResponse(response);
 
       // Guardar contexto de transacción
@@ -702,11 +755,11 @@ const PaymentScreen: React.FC = () => {
       contextManager.addTransaction({
         timestamp: Date.now(),
         amount: 0,
-        type: "free_entry",
-        resourceName: purchaseData.resource_name,
-        resourceQuantity: purchaseData.resource_quantity,
-        becoinsUsed: 0,
-        commerceName: purchaseData.commerce_name,
+        type: notificationData.transaction_type,
+        resourceName: notificationData.resource_name,
+        resourceQuantity: notificationData.resource_quantity,
+        becoinsUsed: notificationData.becoins_used,
+        commerceName: notificationData.commerce_name,
       });
 
       setShowFreeAlert(true);

@@ -9,17 +9,21 @@ import {
   Pressable,
   ActivityIndicator,
 } from "react-native";
-import { useAuth } from "../../hooks/AuthContext";
+import { useAuth } from "src/context";
 import {
   LogOut,
   LayoutDashboard,
   Store,
   Gift,
   User,
+  Settings,
+  PackageIcon,
+  GiftIcon,
+  Percent,
 } from "lucide-react-native";
 import { useNavigation } from "@react-navigation/native";
 import { showSuccessAlert, showErrorAlert } from "../../utils/alertHelpers";
-import { authService } from "../../services/authService";
+import { authService } from "../../services/auth/auth.service";
 
 interface UserMenuProps {
   style?: any;
@@ -33,27 +37,11 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   iconColor = "#fff",
 }) => {
   const navigation = useNavigation();
-  const { user, isLoading, loginWithAuth0, logout, setUser, fetchWithAuth } =
-    useAuth();
+  const { user, isLoading, handleAuth0Login, logout } = useAuth();
 
   const [menuVisible, setMenuVisible] = useState(false);
   const [showCommerceAlert, setShowCommerceAlert] = useState(false);
   const [isChangingRole, setIsChangingRole] = useState(false);
-
-  const getProfile = async () => {
-    try {
-      const response = await fetchWithAuth(
-        `${process.env.EXPO_PUBLIC_API_URL}/auth/me`
-      );
-      if (!response.ok) return;
-      const data = await response.json();
-      setUser({ ...data, picture: data.profile_picture_url });
-    } catch {}
-  };
-
-  const handleLogin = async () => {
-    await loginWithAuth0();
-  };
 
   const handleLogout = async () => {
     setMenuVisible(false);
@@ -68,7 +56,6 @@ export const UserMenu: React.FC<UserMenuProps> = ({
     setMenuVisible(false);
     (navigation as any).navigate("UserDashboardScreen");
   };
-
   const handleChangeRoleToCommerce = async () => {
     setIsChangingRole(true);
     try {
@@ -79,7 +66,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
         "Tu perfil ha sido actualizado y ahora puedes recibir pagos por QR.",
         "OK"
       );
-      await getProfile();
+      await authService.getCurrentUser(resp.token);
     } catch (err) {
       setShowCommerceAlert(false);
       showErrorAlert(
@@ -91,19 +78,21 @@ export const UserMenu: React.FC<UserMenuProps> = ({
       setIsChangingRole(false);
     }
   };
-
   if (isLoading) {
     return (
-      <View style={[styles.container, style]}>
+      <TouchableOpacity
+        onPress={handleLogout}
+        style={[styles.container, style]}
+      >
         <ActivityIndicator size="small" color={iconColor} />
-      </View>
+      </TouchableOpacity>
     );
   }
 
   if (!user) {
     return (
       <TouchableOpacity
-        onPress={handleLogin}
+        onPress={() => navigation.navigate("Login" as never)}
         style={[styles.loginButton, style]}
       >
         <User size={20} color={iconColor} />
@@ -121,7 +110,9 @@ export const UserMenu: React.FC<UserMenuProps> = ({
       <TouchableOpacity onPress={toggleMenu} style={styles.avatarContainer}>
         <Image
           source={{
-            uri: user.picture || "https://ui-avatars.com/api/?name=User",
+            uri:
+              user.profile_picture_url ||
+              "https://ui-avatars.com/api/?name=User",
           }}
           style={styles.avatar}
         />
@@ -138,7 +129,9 @@ export const UserMenu: React.FC<UserMenuProps> = ({
             <View style={styles.menuHeader}>
               <Image
                 source={{
-                  uri: user.picture || "https://ui-avatars.com/api/?name=User",
+                  uri:
+                    user.profile_picture_url ||
+                    "https://ui-avatars.com/api/?name=User",
                 }}
                 style={styles.menuAvatar}
               />
@@ -179,6 +172,16 @@ export const UserMenu: React.FC<UserMenuProps> = ({
               <LayoutDashboard size={18} color="#333" />
               <Text style={styles.menuItemText}>Dashboard</Text>
             </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setMenuVisible(false);
+                (navigation as any).navigate("Rewards");
+              }}
+            >
+              <GiftIcon size={18} color="#333" />
+              <Text style={styles.menuItemText}>Mis Premios</Text>
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.menuItem}
@@ -187,8 +190,28 @@ export const UserMenu: React.FC<UserMenuProps> = ({
                 (navigation as any).navigate("UserResources");
               }}
             >
-              <Gift size={18} color="#333" />
+              <Percent size={18} color="#333" />
               <Text style={styles.menuItemText}>Mis Beneficios</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setMenuVisible(false);
+                (navigation as any).navigate("Orders");
+              }}
+            >
+              <PackageIcon size={18} color="#333" />
+              <Text style={styles.menuItemText}>Mis Ordenes</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => {
+                setMenuVisible(false);
+                (navigation as any).navigate("WalletSettingsScreen");
+              }}
+            >
+              <Settings size={18} color="#333" />
+              <Text style={styles.menuItemText}>Wallet</Text>
             </TouchableOpacity>
 
             {/* Mostrar opción solo si el usuario NO es comerciante */}
@@ -276,6 +299,7 @@ const styles = StyleSheet.create({
   loginButton: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     backgroundColor: "rgba(255, 255, 255, 0.15)",
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -291,9 +315,9 @@ const styles = StyleSheet.create({
   },
 
   avatarContainer: {
-    width: 50,
+    width: 45,
     height: 40,
-    borderRadius: 20,
+    borderRadius: 50,
     backgroundColor: "rgba(255, 255, 255, 0.15)",
     justifyContent: "center",
     alignItems: "center",
@@ -302,9 +326,9 @@ const styles = StyleSheet.create({
   },
 
   avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 30,
+    width: 45,
+    height: 45,
+    borderRadius: 50,
   },
 
   modalOverlay: {

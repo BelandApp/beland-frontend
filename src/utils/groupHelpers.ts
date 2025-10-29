@@ -1,10 +1,10 @@
-import { CURRENT_USER_ID } from "../data/user";
-import { Group } from "../types";
-export function isUserAdminOfGroup(group: Group): boolean {
-  return group.createdBy === CURRENT_USER_ID;
-}
+import { Group } from "../types/Group";
 import { GroupStatus } from "../types";
 import { colors } from "../styles/colors";
+
+export function isUserAdminOfGroup(group: Group, userId: string): boolean {
+  return group.leader_id === userId;
+}
 
 export const getStatusColor = (status: GroupStatus): string => {
   switch (status) {

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,9 +6,14 @@ import {
   StyleSheet,
   Platform,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { formatUSDPrice } from "../../constants/currency";
+import {
+  WithdrawService,
+  WithdrawAccountType,
+} from "../../services/withdrawService";
 
 interface WithdrawMethodScreenProps {
   navigation: any;
@@ -25,26 +30,83 @@ const WithdrawMethodScreen: React.FC<WithdrawMethodScreenProps> = ({
   route,
 }) => {
   const { beCoinsAmount, usdAmount } = route.params;
-  const [selectedMethod, setSelectedMethod] = useState<
-    "mercadopago" | "bank" | null
-  >(null);
+  const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
+  const [accountTypes, setAccountTypes] = useState<WithdrawAccountType[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const withdrawMethods = [
-    {
-      id: "mercadopago",
-      title: "Cuenta de Mercado Pago",
-      icon: "💳",
-      available: true,
-    },
-    {
-      id: "bank",
-      title: "Cuenta Bancaria",
-      icon: "🏦",
-      available: true,
-    },
-  ];
+  // Fetch available account types from backend
+  useEffect(() => {
+    const fetchAccountTypes = async () => {
+      try {
+        setLoading(true);
+        const response = await WithdrawService.getWithdrawAccountTypes();
+        console.log("Account types response:", response);
 
-  const handleMethodSelect = (methodId: "mercadopago" | "bank") => {
+        // Handle both direct array and paginated response
+        const types = Array.isArray(response)
+          ? response
+          : Array.isArray(response[0])
+          ? response[0]
+          : [];
+
+        setAccountTypes(types);
+      } catch (err) {
+        console.error("Error fetching account types:", err);
+        setError("No se pudieron cargar los tipos de cuenta");
+        // Fallback to default options
+        setAccountTypes([
+          {
+            id: "fallback-bank",
+            code: "BANK",
+            name: "Cuenta Bancaria",
+            description: "Cuenta bancaria tradicional",
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+          {
+            id: "fallback-wallet",
+            code: "WALLET",
+            name: "Billetera Virtual",
+            description: "MercadoPago, Payphone, etc.",
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAccountTypes();
+  }, []);
+
+  // Map account types to display format
+  const withdrawMethods = accountTypes.map((type) => ({
+    id: type.id,
+    code: type.code,
+    title: type.name,
+    description: type.description,
+    icon: getIconForAccountType(type.code),
+    available: true,
+  }));
+
+  function getIconForAccountType(code: string): string {
+    switch (code.toUpperCase()) {
+      case "BANK":
+        return "🏦";
+      case "WALLET":
+        return "💳";
+      case "MERCADOPAGO":
+        return "💙";
+      case "PAYPHONE":
+        return "📱";
+      default:
+        return "💰";
+    }
+  }
+
+  const handleMethodSelect = (methodId: string) => {
     setSelectedMethod(methodId);
   };
 
@@ -57,15 +119,38 @@ const WithdrawMethodScreen: React.FC<WithdrawMethodScreenProps> = ({
       return;
     }
 
-    // Aquí puedes navegar a la pantalla específica según el método seleccionado
-    Alert.alert(
-      "Funcionalidad en desarrollo",
-      `Pronto podrás retirar dinero a tu ${
-        selectedMethod === "mercadopago"
-          ? "cuenta de Mercado Pago"
-          : "cuenta bancaria"
-      }`
+    const selectedType = accountTypes.find(
+      (type) => type.id === selectedMethod
     );
+    if (!selectedType) {
+      Alert.alert("Error", "Tipo de cuenta no válido");
+      return;
+    }
+
+    // Navigate to specific form based on account type
+    switch (selectedType.code.toUpperCase()) {
+      case "BANK":
+        navigation.navigate("CreateBankAccount", {
+          beCoinsAmount,
+          usdAmount,
+          accountTypeId: selectedType.id,
+          accountTypeName: selectedType.name,
+        });
+        break;
+      case "WALLET":
+        navigation.navigate("CreateWalletAccount", {
+          beCoinsAmount,
+          usdAmount,
+          accountTypeId: selectedType.id,
+          accountTypeName: selectedType.name,
+        });
+        break;
+      default:
+        Alert.alert(
+          "Funcionalidad en desarrollo",
+          `Pronto podrás retirar dinero a tu ${selectedType.name.toLowerCase()}`
+        );
+    }
   };
 
   return (
@@ -83,85 +168,124 @@ const WithdrawMethodScreen: React.FC<WithdrawMethodScreenProps> = ({
       </View>
 
       <View style={styles.content}>
-        {/* Resumen del canje */}
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryQuestion}>
-            ¿Cuántas BeCoins querés cambiar?
-          </Text>
-          <View style={styles.summaryRow}>
-            <View style={styles.summaryAmountContainer}>
-              <Text style={styles.summaryAmount}>{beCoinsAmount}</Text>
-            </View>
-            <Text style={styles.summaryLabel}>BeCoins</Text>
+        {/* Loading State */}
+        {loading && (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#F88D2A" />
+            <Text style={styles.loadingText}>
+              Cargando opciones de retiro...
+            </Text>
           </View>
-        </View>
+        )}
 
-        {/* Recibirás */}
-        <View style={styles.receiveCard}>
-          <Text style={styles.receiveLabel}>Recibirás</Text>
-          <View style={styles.receiveRow}>
-            <View style={styles.receiveAmountContainer}>
-              <Text style={styles.receiveAmount}>
-                {formatUSDPrice(usdAmount)}
-              </Text>
-            </View>
-            <Text style={styles.receiveLabel}>Pesos</Text>
-          </View>
-        </View>
-
-        {/* Selección de método */}
-        <View style={styles.methodCard}>
-          <Text style={styles.methodQuestion}>
-            ¿Dónde querés recibir tu dinero?
-          </Text>
-
-          {withdrawMethods.map((method) => (
+        {/* Error State */}
+        {error && !loading && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
             <TouchableOpacity
-              key={method.id}
-              style={[
-                styles.methodOption,
-                selectedMethod === method.id && styles.methodOptionSelected,
-              ]}
-              onPress={() =>
-                handleMethodSelect(method.id as "mercadopago" | "bank")
-              }
+              style={styles.retryButton}
+              onPress={() => {
+                setError(null);
+                setLoading(true);
+                // Re-fetch data
+              }}
             >
-              <View style={styles.methodIcon}>
-                <Text style={styles.methodIconText}>{method.icon}</Text>
-              </View>
-              <Text
-                style={[
-                  styles.methodTitle,
-                  selectedMethod === method.id && styles.methodTitleSelected,
-                ]}
-              >
-                {method.title}
-              </Text>
-              <View
-                style={[
-                  styles.methodRadio,
-                  selectedMethod === method.id && styles.methodRadioSelected,
-                ]}
-              >
-                {selectedMethod === method.id && (
-                  <View style={styles.methodRadioInner} />
-                )}
-              </View>
+              <Text style={styles.retryButtonText}>Reintentar</Text>
             </TouchableOpacity>
-          ))}
-        </View>
+          </View>
+        )}
 
-        {/* Botón continuar */}
-        <TouchableOpacity
-          style={[
-            styles.continueButton,
-            !selectedMethod && styles.continueButtonDisabled,
-          ]}
-          onPress={handleContinue}
-          disabled={!selectedMethod}
-        >
-          <Text style={styles.continueButtonText}>Retirar dinero</Text>
-        </TouchableOpacity>
+        {/* Content - only show when not loading */}
+        {!loading && (
+          <>
+            {/* Resumen del canje */}
+            <View style={styles.summaryCard}>
+              <Text style={styles.summaryQuestion}>
+                ¿Cuántas BeCoins querés cambiar?
+              </Text>
+              <View style={styles.summaryRow}>
+                <View style={styles.summaryAmountContainer}>
+                  <Text style={styles.summaryAmount}>{beCoinsAmount}</Text>
+                </View>
+                <Text style={styles.summaryLabel}>BeCoins</Text>
+              </View>
+            </View>
+
+            {/* Recibirás */}
+            <View style={styles.receiveCard}>
+              <Text style={styles.receiveLabel}>Recibirás</Text>
+              <View style={styles.receiveRow}>
+                <View style={styles.receiveAmountContainer}>
+                  <Text style={styles.receiveAmount}>
+                    {formatUSDPrice(usdAmount)}
+                  </Text>
+                </View>
+                <Text style={styles.receiveLabel}>Pesos</Text>
+              </View>
+            </View>
+
+            {/* Selección de método */}
+            <View style={styles.methodCard}>
+              <Text style={styles.methodQuestion}>
+                ¿Dónde querés recibir tu dinero?
+              </Text>
+
+              {withdrawMethods.map((method) => (
+                <TouchableOpacity
+                  key={method.id}
+                  style={[
+                    styles.methodOption,
+                    selectedMethod === method.id && styles.methodOptionSelected,
+                  ]}
+                  onPress={() => handleMethodSelect(method.id)}
+                >
+                  <View style={styles.methodIcon}>
+                    <Text style={styles.methodIconText}>{method.icon}</Text>
+                  </View>
+                  <View style={styles.methodInfo}>
+                    <Text
+                      style={[
+                        styles.methodTitle,
+                        selectedMethod === method.id &&
+                          styles.methodTitleSelected,
+                      ]}
+                    >
+                      {method.title}
+                    </Text>
+                    {method.description && (
+                      <Text style={styles.methodDescription}>
+                        {method.description}
+                      </Text>
+                    )}
+                  </View>
+                  <View
+                    style={[
+                      styles.methodRadio,
+                      selectedMethod === method.id &&
+                        styles.methodRadioSelected,
+                    ]}
+                  >
+                    {selectedMethod === method.id && (
+                      <View style={styles.methodRadioInner} />
+                    )}
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Botón continuar */}
+            <TouchableOpacity
+              style={[
+                styles.continueButton,
+                !selectedMethod && styles.continueButtonDisabled,
+              ]}
+              onPress={handleContinue}
+              disabled={!selectedMethod}
+            >
+              <Text style={styles.continueButtonText}>Retirar dinero</Text>
+            </TouchableOpacity>
+          </>
+        )}
       </View>
     </View>
   );
@@ -372,6 +496,54 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     color: "#FFFFFF",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 40,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: "#6B7280",
+    marginTop: 16,
+    textAlign: "center",
+  },
+  errorContainer: {
+    backgroundColor: "#FEF2F2",
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#FECACA",
+  },
+  errorText: {
+    fontSize: 16,
+    color: "#DC2626",
+    textAlign: "center",
+    marginBottom: 12,
+  },
+  retryButton: {
+    backgroundColor: "#DC2626",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignSelf: "center",
+  },
+  retryButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  methodInfo: {
+    flex: 1,
+    marginRight: 12,
+  },
+  methodDescription: {
+    fontSize: 14,
+    color: "#6B7280",
+    marginTop: 4,
+    lineHeight: 18,
   },
 });
 

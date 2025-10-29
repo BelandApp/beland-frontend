@@ -9,22 +9,37 @@ import WalletHistoryScreen from "../../screens/Wallet/WalletHistoryScreen";
 import RechargeScreen from "../../screens/Wallet/RechargeScreen";
 import WalletSettingsScreen from "../../screens/Wallet/WalletSettingsScreen";
 import { QRScannerScreen } from "../../screens/QRScannerScreen";
-import PaymentScreen from "../../screens/Payment/PaymentScreen";
+import PaymentScreen, {
+  PaymentScreenProps,
+} from "../../screens/Payment/PaymentScreen";
 import { HistoryScreen, RecyclingMapScreen } from "../../screens";
 import UserDashboardScreen from "src/screens/UserDashboardScreen";
 import UserResourcesScreen from "src/screens/UserResources/UserResourcesScreen";
 
 import PayphoneSuccessScreen from "../../screens/Wallet/PayphoneSuccessScreen";
 import { CatalogScreen } from "src/screens/Catalog";
+import { LoginScreen } from "src/screens/Login";
+import { RegisterScreen } from "src/screens/Register";
+import { OrdersStackNavigator } from "./OrdersStackNavigator";
+import { RewardsScreen } from "src/screens/Rewards";
 
-// 1. Define el tipo de tu Root Stack con los nombres correctos
+import { EventModal } from "src/screens/Events/Event.modal";
+import {
+  NewPaymentScreen,
+  PaymentScreenRoute,
+} from "src/screens/NewPayment/NewPaymentScreen";
+import EventsManagementScreen from "src/screens/DashboardUser/EventsManagementScreen";
+import UsersManagementScreen from "src/screens/DashboardUser/UsersManagementScreen";
+
+import { UseEventScreen } from "src/screens/UseEventScreen/UseEventScreen";
+import { QRUseEventScreen } from "src/screens/UseEventScreen/QrEvent.scanner";
+
 export type RootStackParamList = {
-  Home: undefined; // Añadido
+  Home: undefined;
   MainTabs: undefined;
   CobrarScreen: undefined;
   Dashboard: undefined;
-  CommerceDashboard: undefined; // Corregido: 'CommerceDashboard' para coincidir con el AppHeader
-  // Asegúrate de que todas las demás rutas están aquí, tal como las tenías
+  CommerceDashboard: undefined;
   Wallet: undefined;
   Community: undefined;
   QR: { pendingRedemption?: any } | undefined;
@@ -44,6 +59,11 @@ export type RootStackParamList = {
   Groups: undefined;
   UserDashboardScreen: undefined;
   UserResources: undefined;
+  Orders: undefined;
+  // Admin Management Screens
+  EventsManagement: undefined;
+  UsersManagement: undefined;
+  ProductsManagement: undefined;
   PaymentScreen: {
     paymentData: {
       amount: number;
@@ -60,7 +80,14 @@ export type RootStackParamList = {
     amount_to_payment_id?: string | null;
   };
   PayphoneSuccess: { toWalletId: string; amountPaymentId: string };
-  // Añade aquí cualquier otra ruta que falte.
+  Login: undefined;
+  Register: undefined;
+  EventModal: { id: string };
+  UseEventScreen: { id: string };
+  QrUseEventScreen: { id: string };
+  // Chequear si es necesario
+  Rewards: undefined;
+  NewPaymentScreen: PaymentScreenRoute;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -137,6 +164,62 @@ export const RootStackNavigator = () => {
         name="UserResources"
         component={UserResourcesScreen}
         options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Orders"
+        component={OrdersStackNavigator}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Login"
+        component={LoginScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Register"
+        component={RegisterScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="EventsManagement"
+        component={EventsManagementScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="UsersManagement"
+        component={UsersManagementScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Rewards"
+        component={RewardsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="NewPaymentScreen"
+        component={NewPaymentScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="UseEventScreen"
+        component={UseEventScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="QrUseEventScreen"
+        component={QRUseEventScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="EventModal"
+        component={EventModal}
+        options={{
+          headerShown: false,
+          gestureEnabled: true,
+          presentation: "transparentModal",
+          animation: "slide_from_bottom",
+          animationTypeForReplace: "push",
+        }}
       />
     </Stack.Navigator>
   );

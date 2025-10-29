@@ -38,7 +38,6 @@ export const AddressMapPicker: React.FC<AddressMapPickerProps> = ({
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const debounceRef = useRef<number | null>(null);
 
-  // lazy load geocodingService here to avoid circular deps
   const geocoding = require("../../../services/geocodingService").default;
 
   const handleMessage = (event: any) => {
@@ -54,7 +53,6 @@ export const AddressMapPicker: React.FC<AddressMapPickerProps> = ({
   };
 
   const centerMap = (lat: number, lng: number) => {
-    // Web iframe: postMessage to iframe contentWindow
     if (Platform.OS === "web") {
       try {
         if (iframeRef.current && iframeRef.current.contentWindow) {

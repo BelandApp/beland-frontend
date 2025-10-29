@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
 import { Alert } from "react-native";
-import { Group } from "../../../types";
+import { Group } from "../../../types/Group";
 import { useGroups } from "../../Groups/hooks/useGroups";
-import { CURRENT_USER_ID } from "../../../data/user";
+import { useAuth } from "@/context/AuthContext";
 
 export const useGroupManagementData = (groupId: string, navigation: any) => {
   const { getGroupById, refreshKey } = useGroups();
+  const { user } = useAuth();
   const [currentGroup, setCurrentGroup] = useState<Group | null>(null);
 
   // Determinar si el usuario actual es el administrador del grupo
-  const isGroupAdmin = currentGroup?.createdBy === CURRENT_USER_ID;
+  // Usar el ID del usuario autenticado del contexto y comparar con leader_id
+  const isGroupAdmin = currentGroup?.leader_id === user?.id;
 
   useEffect(() => {
     const group = getGroupById(groupId);

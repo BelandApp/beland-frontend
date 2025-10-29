@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StatusBar } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Group } from "../../../types";
+import { Group } from "../../../types/Group";
 import { colors } from "../../../styles/colors";
 import { headerStyles } from "../styles";
 import { formatUSDPrice, CURRENCY_CONFIG } from "../../../constants";
@@ -50,32 +50,22 @@ export const GroupManagementHeader: React.FC<GroupManagementHeaderProps> = ({
         </View>
 
         <View style={headerStyles.groupDetailsContainer}>
-          {currentGroup?.description && (
-            <View style={headerStyles.detailItemFull}>
-              <Text style={headerStyles.detailIcon}>📝</Text>
-              <Text
-                style={headerStyles.groupDescription}
-                numberOfLines={2}
-                ellipsizeMode="tail"
-              >
-                {currentGroup.description}
-              </Text>
-            </View>
-          )}
           <View style={headerStyles.detailItemFull}>
-            <Text style={headerStyles.detailIcon}>📍</Text>
+            <Text style={headerStyles.detailIcon}>�</Text>
             <Text
               style={headerStyles.groupLocation}
               numberOfLines={2}
               ellipsizeMode="tail"
             >
-              {currentGroup?.location}
+              {currentGroup?.location || "Sin ubicación"}
             </Text>
           </View>
           <View style={headerStyles.detailItemFull}>
-            <Text style={headerStyles.detailIcon}>🕐</Text>
+            <Text style={headerStyles.detailIcon}>�</Text>
             <Text style={headerStyles.groupDelivery}>
-              {currentGroup?.deliveryTime}
+              {currentGroup?.date_time
+                ? new Date(currentGroup.date_time).toLocaleDateString()
+                : "Sin fecha definida"}
             </Text>
           </View>
         </View>
@@ -88,7 +78,7 @@ export const GroupManagementHeader: React.FC<GroupManagementHeaderProps> = ({
             <Text style={headerStyles.statIcon}>👥</Text>
           </View>
           <Text style={headerStyles.statValue} numberOfLines={1}>
-            {currentGroup?.totalParticipants}
+            {/* TODO: Obtener número real de participantes del API */}0
           </Text>
           <Text style={headerStyles.statLabel} numberOfLines={1}>
             Participantes
@@ -101,7 +91,8 @@ export const GroupManagementHeader: React.FC<GroupManagementHeaderProps> = ({
           </View>
           <Text style={headerStyles.statValue} numberOfLines={1}>
             {CURRENCY_CONFIG.CURRENCY_DISPLAY_SYMBOL}
-            {formatUSDPrice(currentGroup?.totalAmount || 0)}
+            {/* TODO: Calcular total del grupo desde productos/órdenes */}
+            {formatUSDPrice(0)}
           </Text>
           <Text style={headerStyles.statLabel} numberOfLines={1}>
             Total
@@ -114,7 +105,8 @@ export const GroupManagementHeader: React.FC<GroupManagementHeaderProps> = ({
           </View>
           <Text style={headerStyles.statValue} numberOfLines={1}>
             {CURRENCY_CONFIG.CURRENCY_DISPLAY_SYMBOL}
-            {formatUSDPrice(currentGroup?.myConsumption || 0)}
+            {/* TODO: Calcular consumo del usuario actual */}
+            {formatUSDPrice(0)}
           </Text>
           <Text style={headerStyles.statLabel} numberOfLines={1}>
             Tu parte

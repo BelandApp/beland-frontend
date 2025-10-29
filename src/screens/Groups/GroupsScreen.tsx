@@ -1,17 +1,13 @@
 import React from "react";
-import { View, ScrollView, Dimensions } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { StackScreenProps } from "@react-navigation/stack";
+import { View, ScrollView, Dimensions, TouchableOpacity, Text } from "react-native";
 import { GroupsStackParamList } from "../../types/navigation";
 import { WaveBottomGray } from "../../components/icons";
-import { AppHeader } from "../../components/layout/AppHeader";
-import { UserMenu } from "../../components/ui/UserMenu";
 
 // Hooks
 import {
   useGroupsTabs,
   useGroupsNavigation,
-  useGroupsData,
+  useGroups,
   useGroupTypeFilter,
 } from "./hooks";
 
@@ -24,21 +20,19 @@ import {
 } from "./components";
 
 // Styles
-import { containerStyles } from "./styles";
+import { buttonStyles, containerStyles } from "./styles";
+import { ThemedHeader } from "src/components/shared/headers/Header";
 
 export const GroupsScreen: React.FC<any> = (props) => {
   // Hooks personalizados
   const { selectedTab, setSelectedTab, isActiveTab } = useGroupsTabs();
   const { navigateToCreateGroup, navigateToGroupManagement } =
     useGroupsNavigation();
-  const {
-    activeGroups,
-    completedGroups,
-    hasActiveGroups,
-    hasCompletedGroups,
-    totalActiveGroups,
-    totalCompletedGroups,
-  } = useGroupsData();
+  const { getActiveGroups, getCompletedGroups } = useGroups();
+
+  // Obtener los grupos
+  const activeGroups = getActiveGroups();
+  const completedGroups = getCompletedGroups();
 
   // Determinar qué grupos mostrar según la pestaña seleccionada
   const baseGroups = isActiveTab ? activeGroups : completedGroups;
@@ -56,19 +50,31 @@ export const GroupsScreen: React.FC<any> = (props) => {
   const currentGroups = filteredGroups;
 
   return (
-    <SafeAreaView style={containerStyles.container} edges={[]}>
-      <AppHeader />
+    <>
+      <ThemedHeader
+        title="Mis Grupos"
+        buttons={
+          <>
+            <TouchableOpacity
+              style={buttonStyles.createButton}
+              activeOpacity={0.8}
+              onPress={navigateToCreateGroup}
+            >
+              <Text style={buttonStyles.createButtonText}>+ Grupo</Text>
+            </TouchableOpacity>
+          </>
+        }
+      />
       <ScrollView style={containerStyles.scrollView}>
         <View style={containerStyles.content}>
           {/* Header con título y botón crear */}
-          <GroupsHeader onCreateGroup={navigateToCreateGroup} />
 
           {/* Pestañas de navegación */}
           <GroupTabs
             selectedTab={selectedTab}
             onTabChange={setSelectedTab}
-            activeCount={totalActiveGroups}
-            historyCount={totalCompletedGroups}
+            activeCount={activeGroups.length}
+            historyCount={completedGroups.length}
           />
 
           {/* Filtro por tipo de grupo */}
@@ -93,6 +99,6 @@ export const GroupsScreen: React.FC<any> = (props) => {
       <View style={containerStyles.waveContainer}>
         <WaveBottomGray width={Dimensions.get("window").width} height={120} />
       </View>
-    </SafeAreaView>
+    </>
   );
 };

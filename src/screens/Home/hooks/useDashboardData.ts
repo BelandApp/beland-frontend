@@ -1,18 +1,20 @@
-import { RECENT_ACTIVITIES } from "../types/constants";
 import { Activity } from "../types";
 import { useBeCoinsStore } from "../../../stores/useBeCoinsStore";
+import { useAuth } from "@/context/AuthContext";
 
 export const useDashboardData = () => {
   const { balance } = useBeCoinsStore();
+  const { user } = useAuth();
 
   const userStats = {
-    userName: "Zaire",
+    userName: user?.full_name || user?.email?.split("@")[0] || "Usuario",
     coinsAmount: balance,
-    bottlesRecycled: 0, // Inicial para producción
+    bottlesRecycled: 0, // TODO: Implementar conteo real de botellas recicladas
   };
 
   const getRecentActivities = (): Activity[] => {
-    return []; // Inicial para producción
+    // TODO: Implementar con datos reales de transacciones
+    return [];
   };
 
   return {

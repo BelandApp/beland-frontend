@@ -7,6 +7,7 @@ import {
   CobrarIcon,
 } from "../../../components/icons";
 import { useNavigation } from "@react-navigation/native";
+import { useAuth } from "src/context";
 
 export const useWalletActions = (
   showCustomAlert?: (
@@ -17,7 +18,7 @@ export const useWalletActions = (
 ) => {
   const navigation = useNavigation();
   // Obtener rol del usuario
-  const { user } = require("../../../hooks/AuthContext").useAuth();
+  const { user } = useAuth();
 
   // Acciones principales del wallet
   const mainWalletActions: WalletAction[] = [

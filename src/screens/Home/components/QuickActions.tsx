@@ -15,7 +15,7 @@ import {
 import { RechargeIcon } from "../../../components/icons/WalletIcons";
 import { useCustomAlert } from "../../../hooks/useCustomAlert";
 import { CustomAlert } from "../../../components/ui/CustomAlert";
-import { useAuth } from "../../../hooks/AuthContext";
+import { useAuth } from "src/context";
 import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
 
 interface QuickAction {

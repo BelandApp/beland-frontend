@@ -1,19 +1,27 @@
 import React from "react";
 import { View, Text, StyleSheet, Animated, Easing } from "react-native";
-import { useAuth } from "src/hooks/AuthContext";
+import { useAuth } from "src/context/AuthContext";
+import { useNotification } from "src/hooks/NotificationContext";
 
 const SocketStatus = () => {
-  const { socketData } = useAuth();
+  // const { socketData } = useSocket()
+  // TODO VER SI ES NECESARIO ESTE COMPONENTE
+  const socketData = {
+    success: true,
+    message: "",
+    amount: 0,
+  };
+  const { notification } = useNotification();
   const [visible, setVisible] = React.useState(false);
-  const [localData, setLocalData] = React.useState(socketData);
+  const [localData, setLocalData] = React.useState(notification);
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
   const slideAnim = React.useRef(new Animated.Value(-60)).current;
   const [progress, setProgress] = React.useState(0);
   const duration = 4000;
 
   React.useEffect(() => {
-    if (socketData) {
-      setLocalData(socketData);
+    if (notification && notification.visible && !notification.persistent) {
+      setLocalData(notification);
       setVisible(true);
       setProgress(0);
       // Animación de entrada
@@ -65,7 +73,7 @@ const SocketStatus = () => {
         clearInterval(interval);
       };
     }
-  }, [socketData]);
+  }, [notification]);
 
   if (!localData || !visible) return null;
 
@@ -80,13 +88,14 @@ const SocketStatus = () => {
       ]}
     >
       <View style={styles.iconWrap}>
-        <Text style={localData.success ? styles.iconSuccess : styles.iconError}>
-          {localData.success ? "✔" : "✖"}
-        </Text>
+        <Text style={styles.iconSuccess}>✔</Text>
       </View>
       <View style={styles.textWrap}>
-        <Text style={styles.title}>{localData.message}</Text>
-        <Text style={styles.amount}>Monto: {localData.amount}</Text>
+        <Text style={styles.title}>{localData.title}</Text>
+        <Text style={styles.message}>{localData.message}</Text>
+        {localData.amount && (
+          <Text style={styles.amount}>Monto: ${localData.amount}</Text>
+        )}
       </View>
       <View style={styles.progressBarWrap}>
         <View style={styles.progressBarBg}>
@@ -174,8 +183,8 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   message: {
-    fontSize: 16,
-    color: "#388e3c",
+    fontSize: 14,
+    color: "#666",
     marginBottom: 4,
   },
   amount: {

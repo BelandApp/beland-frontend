@@ -3,8 +3,9 @@ import React, { useEffect, useState } from "react";
 import { colors } from "../../styles/colors";
 import CryptoJS from "crypto-js";
 import { v4 as uuidv4 } from "uuid";
-import { walletService } from "../../services/walletService";
-import { useAuth } from "../../hooks/AuthContext";
+import { WalletService } from "@services/core";
+import { TokenService } from "@services/auth/token.service";
+import { useAuth } from "@/context/AuthContext";
 
 export default function PayphoneSuccessScreen() {
   const { user } = useAuth();
@@ -45,7 +46,6 @@ export default function PayphoneSuccessScreen() {
         finalAmountPaymentId
       );
       try {
-        const jwtToken = localStorage.getItem("auth_token");
         const payphoneToken = localStorage.getItem("payphone_token");
         if (!payphoneToken) {
           setStatus("No se encontró el token de Payphone en localStorage.");
@@ -82,7 +82,7 @@ export default function PayphoneSuccessScreen() {
           }
           let walletId;
           try {
-            const wallet = await walletService.getWalletByUserId(
+            const wallet = await WalletService.getWalletByUserId(
               user.email,
               user.id
             );
@@ -102,7 +102,7 @@ export default function PayphoneSuccessScreen() {
             setLoading(false);
             return;
           }
-          let backendRes, backendResult;
+          let backendResult;
           if (finalToWalletId) {
             console.log("[PayphoneSuccess] Payload pago QR:", {
               amountUsd,
@@ -144,22 +144,20 @@ export default function PayphoneSuccessScreen() {
               }
             }
 
-            backendRes = await fetch(
-              `${process.env.EXPO_PUBLIC_API_URL}/wallets/purchase-recharge/${finalToWalletId}`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  ...(jwtToken ? { Authorization: `Bearer ${jwtToken}` } : {}),
-                },
-                body: JSON.stringify(payload),
-              }
-            );
-            backendResult = await backendRes.json().catch(() => null);
-            console.log(
-              "[PayphoneSuccess] Respuesta backend pago QR:",
-              backendResult
-            );
+            try {
+              backendResult = await WalletService.createPurchaseRecharge(
+                finalToWalletId,
+                payload
+              );
+              console.log(
+                "[PayphoneSuccess] Respuesta backend pago QR:",
+                backendResult
+              );
+            } catch (error) {
+              console.error("[PayphoneSuccess] Error en pago QR:", error);
+              backendResult = null;
+            }
+
             if (typeof window !== "undefined" && window.sessionStorage) {
               try {
                 window.sessionStorage.setItem(
@@ -179,24 +177,22 @@ export default function PayphoneSuccessScreen() {
             localStorage.removeItem("payphone_is_qr_payment");
           } else {
             // Recarga
-            const payload = {
+            const rechargeData = {
               amountUsd,
               referenceCode: payphoneData.reference,
               payphone_transactionId: payphoneData.transactionId,
               clientTransactionId: generatedClientTxId,
             };
-            backendRes = await fetch(
-              `${process.env.EXPO_PUBLIC_API_URL}/wallets/recharge`,
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  ...(jwtToken ? { Authorization: `Bearer ${jwtToken}` } : {}),
-                },
-                body: JSON.stringify(payload),
-              }
-            );
-            backendResult = await backendRes.json().catch(() => null);
+            try {
+              backendResult = await WalletService.createRecharge(rechargeData);
+              console.log(
+                "[PayphoneSuccess] Respuesta backend recarga:",
+                backendResult
+              );
+            } catch (error) {
+              console.error("[PayphoneSuccess] Error en recarga:", error);
+              backendResult = null;
+            }
           }
 
           if (
@@ -244,11 +240,12 @@ export default function PayphoneSuccessScreen() {
               // Error encriptando el nombre del titular
             }
 
+            const authToken = await TokenService.getToken();
             await fetch(`${process.env.EXPO_PUBLIC_API_URL}/user-cards`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                ...(jwtToken ? { Authorization: `Bearer ${jwtToken}` } : {}),
+                ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
               },
               body: JSON.stringify({
                 user_id: user?.id,

@@ -1,15 +1,12 @@
 import { useState } from "react";
-import { AVAILABLE_PRODUCTS, AvailableProduct } from "../../../data/products";
-import { Product } from "../../../services/productsService";
+import { Product } from "@services/core";
 
 export const useCatalogModals = () => {
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
   const [showProductAddedModal, setShowProductAddedModal] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<
-    AvailableProduct | Product | null
-  >(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
-  const openDeliveryModal = (product: AvailableProduct | Product) => {
+  const openDeliveryModal = (product: Product) => {
     setSelectedProduct(product);
     setShowDeliveryModal(true);
   };
@@ -19,7 +16,7 @@ export const useCatalogModals = () => {
     setSelectedProduct(null);
   };
 
-  const openProductAddedModal = (product: AvailableProduct | Product) => {
+  const openProductAddedModal = (product: Product) => {
     setSelectedProduct(product);
     setShowProductAddedModal(true);
   };

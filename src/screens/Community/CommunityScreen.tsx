@@ -12,17 +12,18 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../../components/layout/RootStackNavigator";
 import { CustomAlert } from "../../components/ui/CustomAlert";
 import { colors } from "../../styles/colors";
+import { ResourceType } from "@services/core";
 import { Resource } from "../../types/resource";
-import { resourceService } from "../../services/resourceService";
-import { walletService } from "../../services/walletService";
+import { ResourceService } from "@services/core";
+import { PaymentService } from "@services/core";
+import { WalletService } from "@services/core";
 import { useCustomAlert } from "../../hooks/useCustomAlert";
 import { useUserBalance } from "../../hooks/useUserBalance";
 import { calculateResourcePrice } from "../../utils/priceHelpers";
-import { useAuth } from "../../hooks/AuthContext";
+import { useAuth } from "src/context";
 
 // Components
 import {
-  CommunityHeader,
   ResourcesGrid,
   InsufficientBalanceModal,
 } from "./components";
@@ -30,10 +31,26 @@ import { PurchaseModal } from "./components/PurchaseModal";
 
 // Styles
 import { containerStyles } from "./styles";
+import { ThemedHeader } from "src/components/shared/headers/Header";
+import { BeCoinsBalance } from "src/components/ui";
+
+// Helper function to map ResourceType to Resource
+const mapResourceTypeToResource = (resourceType: ResourceType): Resource => ({
+  id: resourceType.id,
+  resource_name: resourceType.name,
+  resource_desc: resourceType.description || "",
+  resource_img: resourceType.image_url || "",
+  resource_price: resourceType.price_per_unit,
+  resource_quanity: 100, // Default stock
+  resource_discount: 0, // Default no discount
+  category_id: resourceType.category,
+  created_at: resourceType.created_at,
+  updated_at: resourceType.updated_at,
+});
 
 export const CommunityScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  const { isAuthenticated, loginWithAuth0, canPerformAction } = useAuth();
+  const { isAuthenticated, handleAuth0Login, canPerformAction } = useAuth();
 
   // Estado para recursos
   const [resources, setResources] = useState<Resource[]>([]);
@@ -41,6 +58,9 @@ export const CommunityScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<
+    ResourceType["category"] | undefined
+  >(undefined);
 
   // Estado para modal de compra
   const [purchaseModalVisible, setPurchaseModalVisible] = useState(false);
@@ -63,18 +83,20 @@ export const CommunityScreen = () => {
         setLoading(true);
       }
 
-      const response = await resourceService.getResources({
-        page: pageNum,
-        limit: 20,
+      const response = await ResourceService.getResourceTypes({
+        category: selectedCategory,
+        active_only: true,
       });
 
+      const mappedResources = (response || []).map(mapResourceTypeToResource);
+
       if (reset || pageNum === 1) {
-        setResources(response.resources);
+        setResources(mappedResources);
       } else {
-        setResources((prev) => [...prev, ...response.resources]);
+        setResources((prev) => [...prev, ...mappedResources]);
       }
 
-      setHasMore(pageNum < response.totalPages);
+      setHasMore(false);
       setPage(pageNum);
     } catch (error: any) {
       console.error("Error cargando recursos:", error);
@@ -192,14 +214,14 @@ export const CommunityScreen = () => {
     try {
       // Calcular el precio con descuento usando la utilidad
       const priceCalc = calculateResourcePrice(selectedResource);
-      const response = await walletService.purchaseResource(
+      const response = await WalletService.purchaseResource(
         selectedResource.id,
         quantity
       );
-      console.log("[BACKEND RESPUESTA COMPRA]", response);
 
       // Considerar como éxito si backend devolvió objeto o un marcador nullResponse
-      const isSuccess = response && (response.nullResponse === true || response);
+      const isSuccess =
+        response && (response.nullResponse === true || response);
 
       if (!isSuccess) {
         console.warn(
@@ -266,8 +288,7 @@ export const CommunityScreen = () => {
   if (!isAuthenticated) {
     return (
       <View style={containerStyles.container}>
-        <CommunityHeader balance={balance} />
-
+        <ThemedHeader title="Comunidad" />
         <View
           style={[
             containerStyles.scrollView,
@@ -309,7 +330,7 @@ export const CommunityScreen = () => {
             text: "Iniciar sesión",
             onPress: () => {
               setShowLoginRequiredAlert(false);
-              loginWithAuth0();
+              handleAuth0Login();
             },
           }}
           secondaryButton={{
@@ -323,8 +344,12 @@ export const CommunityScreen = () => {
 
   return (
     <View style={containerStyles.container}>
-      <CommunityHeader balance={balance} />
-
+      <ThemedHeader
+        title="Comunidad"
+        buttons={
+          <BeCoinsBalance variant="header" size="medium" balance={balance} />
+        }
+      />
       <ScrollView
         style={containerStyles.scrollView}
         showsVerticalScrollIndicator={false}
@@ -441,7 +466,7 @@ export const CommunityScreen = () => {
           text: "Iniciar sesión",
           onPress: () => {
             setShowAuthAlert(false);
-            loginWithAuth0();
+            handleAuth0Login();
           },
         }}
         secondaryButton={{

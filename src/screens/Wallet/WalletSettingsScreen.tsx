@@ -11,8 +11,8 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useAuth } from "../../hooks/AuthContext";
-import { walletService, Wallet } from "../../services/walletService";
+import { useAuth } from "@/context/AuthContext";
+
 import { useWalletData } from "./hooks/useWalletData";
 
 export default function WalletSettingsScreen() {
@@ -46,9 +46,11 @@ export default function WalletSettingsScreen() {
     setIsLoading(true);
 
     try {
-      await walletService.updateWallet(fullWalletData.id, {
-        alias: alias.trim(),
-      });
+      // TODO: Implement updateWallet in PaymentService
+      throw new Error("updateWallet not yet implemented in new PaymentService");
+      // await PaymentService.updateWallet(fullWalletData.id, {
+      //   alias: alias.trim(),
+      // });
 
       Alert.alert("Éxito", "Alias actualizado correctamente");
       await refetch();

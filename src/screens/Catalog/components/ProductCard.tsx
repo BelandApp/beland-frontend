@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, Image } from "react-native";
 import { productStyles } from "../styles";
-import { Product } from "../../../types/Products";
+import { Product } from "@services/core";
 import { CartProduct } from "../../../stores/useCartStore";
 import {
   convertUSDToBeCoins,
@@ -22,7 +22,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onAddToCart,
   isAdding = false,
 }) => {
-  // Soporta Product (backend) o CartProduct (carrito)
   const image = (product as any).image_url || (product as any).image || "";
   const category =
     typeof (product as any).category === "object"

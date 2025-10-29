@@ -10,11 +10,11 @@ import {
   ScrollView,
   ActivityIndicator,
 } from "react-native";
-import { useAuth } from "../../hooks/AuthContext";
+import { useAuth } from "src/context";
 import { useBeCoinsStore } from "../../stores/useBeCoinsStore";
 import { convertBeCoinsToUSD, formatUSDPrice } from "../../constants/currency";
 import {
-  withdrawService,
+  WithdrawService,
   WithdrawAccount,
 } from "../../services/withdrawService";
 import { CustomAlert } from "../../components/ui/CustomAlert";
@@ -63,9 +63,9 @@ const CanjearScreen: React.FC<{
   const loadWithdrawAccounts = async () => {
     try {
       setLoadingAccounts(true);
-      const response = await withdrawService.getWithdrawAccounts();
-      const activeAccounts = response.accounts.filter(
-        (account) => account.is_active
+      const response = await WithdrawService.getWithdrawAccounts();
+      const activeAccounts = response.data.filter(
+        (account: WithdrawAccount) => account.is_active
       );
       setWithdrawAccounts(activeAccounts);
 
@@ -128,7 +128,7 @@ const CanjearScreen: React.FC<{
       };
 
       console.log("💰 Solicitando retiro:", withdrawRequest);
-      const response = await withdrawService.requestWithdraw(withdrawRequest);
+      const response = await WithdrawService.requestWithdraw(withdrawRequest);
 
       if (response) {
         // Actualizar balance local
@@ -275,7 +275,9 @@ const CanjearScreen: React.FC<{
           </Text>
           <TouchableOpacity
             style={styles.addAccountButton}
-            onPress={() => navigation.navigate("WalletScreen")}
+            onPress={() =>
+              navigation.navigate("MainTabs", { screen: "Wallet" })
+            }
           >
             <Text style={styles.addAccountButtonText}>Agregar cuenta</Text>
           </TouchableOpacity>

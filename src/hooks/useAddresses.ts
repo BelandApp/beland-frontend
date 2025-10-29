@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
-import {
-  addressService,
+import { addressService } from "../services/addressService";
+import type {
   UserAddress,
   CreateAddressRequest,
   UpdateAddressRequest,
 } from "../services/addressService";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "src/context";
 
 // Hook para manejar direcciones del usuario
 export const useAddresses = () => {

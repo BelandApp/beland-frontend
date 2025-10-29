@@ -6,7 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { CustomAlert } from "../../components/ui/CustomAlert";
 import { ConfirmationAlert } from "../../components/ui/ConfirmationAlert";
 import { WaveBottomGray } from "../../components/icons";
-import { GroupService } from "../../services/groupService";
+import { GroupService } from "@services/core";
 import { InstagramUser } from "../../services/instagramService";
 import { Participant } from "../../types";
 import { useCreateGroupStore } from "../../stores/useCreateGroupStore";
@@ -264,6 +264,7 @@ export const CreateGroupScreen = ({ navigation, route }: any) => {
     const newParticipant: Participant = {
       id: Date.now().toString(),
       name: formatPersonName(newParticipantName),
+      consumption: 0, // Default consumption
       instagramUsername: usernameToAdd || undefined,
       instagramProfilePic: undefined,
       instagramFullName: undefined,
@@ -336,11 +337,11 @@ export const CreateGroupScreen = ({ navigation, route }: any) => {
     try {
       const newGroup = await GroupService.createGroup({
         name: groupName,
-        type: groupType,
+        type: groupType as "recycling" | "community" | "purchase",
         description: description,
         location: location,
-        deliveryTime: deliveryTime,
-        participants: participants,
+        delivery_time: deliveryTime,
+        // Note: participants will be added separately if needed
       });
 
       setAlertConfig({

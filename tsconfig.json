@@ -5,11 +5,20 @@
     "baseUrl": "./src",
     "paths": {
       "src/*": ["*"],
-      "@styles/*": ["styles/*"],
-      "@constants/*": ["constants/*"],
-      "@types/*": ["types/*"],
+      "@/*": ["*"],
+      "@components/*": ["components/*"],
+      "@screens/*": ["screens/*"],
+      "@hooks/*": ["hooks/*"],
       "@services/*": ["services/*"],
-      "@screens/*": ["screens/*"]
+      "@stores/*": ["stores/*"],
+      "@styles/*": ["styles/*"],
+      "@types/*": ["types/*"],
+      "@constants/*": ["constants/*"],
+      "@utils/*": ["utils/*"],
+      "@business/*": ["business/*"],
+      "@data/*": ["data/*"],
+      "@design-system/*": ["design-system/*"],
+      "@api/*": ["services/core/*"]
     }
   }
 }

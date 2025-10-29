@@ -17,25 +17,23 @@ export const GroupsHeader: React.FC<GroupsHeaderProps> = ({
           flexDirection: "row",
           justifyContent: "space-between",
           alignItems: "flex-start",
-          marginBottom: 16,
+          gap: 12,
+          width: "100%",
         }}
       >
         <View style={{ flex: 1 }}>
           <Text style={containerStyles.sectionTitle}>Mis Grupos</Text>
-          <Text style={containerStyles.subtitle}>
-            Gestiona tus compras grupales
-          </Text>
         </View>
-        <UserMenu />
-      </View>
-
       <TouchableOpacity
         style={buttonStyles.createButton}
         activeOpacity={0.8}
         onPress={onCreateGroup}
       >
-        <Text style={buttonStyles.createButtonText}>+ Crear Nuevo Grupo</Text>
+        <Text style={buttonStyles.createButtonText}>+ Grupo</Text>
       </TouchableOpacity>
+        <UserMenu />
+      </View>
+
     </View>
   );
 };

@@ -7,13 +7,14 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
-import { resourceService } from "src/services/resourceService";
+import { ResourceService } from "@services/core";
 import UserResourceCard from "./components/UserResourceCard";
 import { useCustomAlert } from "src/hooks/useCustomAlert";
 import { useNavigation } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
 import type { RootStackParamList } from "src/components/layout/RootStackNavigator";
 import { Gift, Filter } from "lucide-react-native";
+import { ThemedHeader } from "src/components/shared/headers/Header";
 
 const UserResourcesScreen: React.FC = () => {
   const [items, setItems] = useState<any[]>([]);
@@ -25,8 +26,29 @@ const UserResourcesScreen: React.FC = () => {
   const load = async () => {
     setLoading(true);
     try {
-      const resp = await resourceService.getUserResources(undefined, 50, 1);
-      setItems(resp.userResources || []);
+      const resp = await ResourceService.getUserResources({
+        limit: 50,
+        page: 1,
+      });
+
+      console.log("UserResourcesScreen response:", resp);
+
+      // Handle response structure [items[], count] or direct items
+      let resourceData: any[] = [];
+      if (Array.isArray(resp)) {
+        if (resp.length === 2 && Array.isArray(resp[0])) {
+          // Paginated response: [items[], total]
+          resourceData = resp[0];
+        } else {
+          // Direct array
+          resourceData = resp;
+        }
+      } else if (resp && resp.data) {
+        // Standard paginated response with data property
+        resourceData = resp.data;
+      }
+
+      setItems(resourceData || []);
     } catch (err) {
       console.error("Error cargando beneficios del usuario:", err);
       showCustomAlert("Error", "No se pudieron cargar tus beneficios", "error");
@@ -58,35 +80,27 @@ const UserResourcesScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerRow}>
-        <View style={styles.headerLeft}>
-          <Gift size={22} color="#FF6B35" />
-          <Text style={styles.header}>Mis Beneficios</Text>
-        </View>
+      <ThemedHeader title="Mis Beneficios" canGoBack />
 
-        <View style={styles.filterRow}>
-          <Filter size={18} color="#6B7280" />
-          <View style={styles.filterOptions}>
-            {FILTERS.map((f) => (
-              <TouchableOpacity
-                key={f}
+      <View style={styles.filterRow}>
+        <Filter size={18} color="#6B7280" />
+        <View style={styles.filterOptions}>
+          {FILTERS.map((f) => (
+            <TouchableOpacity
+              key={f}
+              style={[styles.filterBtn, filter === f && styles.filterBtnActive]}
+              onPress={() => setFilter(f)}
+            >
+              <Text
                 style={[
-                  styles.filterBtn,
-                  filter === f && styles.filterBtnActive,
+                  styles.filterText,
+                  filter === f && styles.filterTextActive,
                 ]}
-                onPress={() => setFilter(f)}
               >
-                <Text
-                  style={[
-                    styles.filterText,
-                    filter === f && styles.filterTextActive,
-                  ]}
-                >
-                  {f}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+                {f}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
       </View>
 
@@ -135,7 +149,13 @@ const styles = StyleSheet.create({
   },
   headerLeft: { flexDirection: "row", alignItems: "center" },
   header: { fontSize: 20, fontWeight: "700", marginLeft: 8 },
-  filterRow: { flexDirection: "row", alignItems: "center" },
+  filterRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    paddingTop: 16,
+  },
   filterOptions: { flexDirection: "row", marginLeft: 8 },
   filterBtn: {
     paddingVertical: 6,

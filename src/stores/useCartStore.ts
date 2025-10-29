@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { CartService } from "@services/core";
 
 // Import dinámico de AsyncStorage solo en mobile
 let AsyncStorage: any = undefined;
@@ -124,15 +125,11 @@ export const useCartStore = create<CartState>((set, get) => ({
 
       const state = get();
 
-      // Importar dinámicamente para evitar circular dependency
-      const { cartService } = await import("../services/cartService");
-
-      // Agregar al servidor
-      const cartItem = await cartService.addCartItem(
-        product.id,
-        product.quantity,
-        product.price
-      );
+      // Usar el nuevo CartService consolidado
+      const cartItem = await CartService.addToCart({
+        product_id: product.id,
+        quantity: product.quantity,
+      });
 
       console.log(
         "✅ CartStore: Product added to server successfully:",
@@ -223,9 +220,8 @@ export const useCartStore = create<CartState>((set, get) => ({
           product.cart_item_id
         );
 
-        // Importar dinámicamente para evitar circular dependency
-        const { cartService } = await import("../services/cartService");
-        await cartService.removeCartItem(product.cart_item_id);
+        // Usar el nuevo CartService consolidado
+        await CartService.removeFromCart(product.cart_item_id);
 
         console.log("✅ CartStore: Product removed from server successfully");
       } else {
@@ -281,9 +277,8 @@ export const useCartStore = create<CartState>((set, get) => ({
           product.cart_item_id
         );
 
-        // Importar dinámicamente para evitar circular dependency
-        const { cartService } = await import("../services/cartService");
-        await cartService.updateCartItem(product.cart_item_id, { quantity });
+        // Usar el nuevo CartService consolidado
+        await CartService.updateCartItem(product.cart_item_id, { quantity });
 
         console.log(
           "✅ CartStore: Product quantity updated on server successfully"

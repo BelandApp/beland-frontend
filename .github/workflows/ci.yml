@@ -32,12 +32,22 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
+      - name: Set deploy branch
+        id: vars
+        run: |
+          if [ -n "${{ github.event.inputs.branch }}" ]; then
+            echo "branch=${{ github.event.inputs.branch }}" >> $GITHUB_OUTPUT
+          else
+            # Usa la rama actual cuando no viene de un dispatch manual
+            echo "branch=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Copy environment file
         run: |
-          if [ -f "${{ github.event.inputs.branch }}.env" ]; then
-            cp ${{ github.event.inputs.branch }}.env .env
+          if [ -f "${{ steps.vars.outputs.branch }}.env" ]; then
+            cp ${{ steps.vars.outputs.branch }}.env .env
           else
-            echo "⚠️ No env file found for ${{ github.event.inputs.branch }}"
+            echo "⚠️ No env file found for ${{ steps.vars.outputs.branch }}"
           fi
 
       - name: Install dependencies
@@ -56,7 +66,6 @@ jobs:
   deploy:
     name: Deploy to AWS S3
     runs-on: ubuntu-latest
-    environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.branch || github.ref_name }}
     needs: build
     steps:
       - name: Download build artifact
@@ -77,18 +86,22 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Set deploy branch
+        id: vars
+        run: |
+          if [ -n "${{ github.event.inputs.branch }}" ]; then
+            echo "branch=${{ github.event.inputs.branch }}" >> $GITHUB_OUTPUT
+          else
+            echo "branch=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Test access to S3
+        run: |
+          echo "Checking access to bucket beland-admin-${{ steps.vars.outputs.branch }}"
+          aws s3 ls s3://beland-admin-${{ steps.vars.outputs.branch }}
+
       - name: Sync files to S3
         run: |
-          echo "Deploying files to S3 bucket beland-admin-${{ github.event.inputs.branch }}"
-          aws s3 sync dist s3://beland-admin-${{ github.event.inputs.branch }} \
-            --delete \
-            --exact-timestamps
-      
-      - name: Invalidate CloudFront cache
-        run: |
-          aws cloudfront create-invalidation \
-            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
-            --paths "/*"
-
-
-     
+          echo "Deploying files to S3 bucket beland-admin-${{ steps.vars.outputs.branch }}"
+          aws s3 sync dist s3://beland-admin-${{ steps.vars.outputs.branch }} --delete

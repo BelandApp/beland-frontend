@@ -49,11 +49,6 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
   const handleRemoveProduct = async (productId: string) => {
     try {
       const success = await removeProductFromServer(productId);
-      if (!success) {
-        console.log(
-          "⚠️ CartBottomSheet: Could not remove from server, but removed locally"
-        );
-      }
     } catch (error) {
       console.error("❌ CartBottomSheet: Error removing product:", error);
       // En caso de error, aún eliminar localmente
@@ -67,11 +62,6 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
   ) => {
     try {
       const success = await updateQuantityOnServer(productId, newQuantity);
-      if (!success) {
-        console.log(
-          "⚠️ CartBottomSheet: Could not update quantity on server, but updated locally"
-        );
-      }
     } catch (error) {
       console.error("❌ CartBottomSheet: Error updating quantity:", error);
       // En caso de error, aún actualizar localmente

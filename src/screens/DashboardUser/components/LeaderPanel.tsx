@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, Image } from "react-native";
-import { useAuth } from "src/hooks/AuthContext";
+import { useAuth } from "src/context";
 import DashboardWrapper from "./DashboardWrapper";
 
 // Datos simulados para el rol de LEADER
@@ -22,14 +22,15 @@ const LeaderPanel: React.FC = () => {
   return (
     <DashboardWrapper
       title={`Panel de ${user?.full_name || "Líder"}`}
-      isLoading={isLoading}>
+      isLoading={isLoading}
+    >
       {user ? (
         <View style={styles.container}>
           <View style={styles.profileCard}>
             <Image
               source={{
                 uri:
-                  user.profile_picture_url ||
+                  user.picture ||
                   "https://ui-avatars.com/api/?name=Leader&background=random",
               }}
               style={styles.profileImage}

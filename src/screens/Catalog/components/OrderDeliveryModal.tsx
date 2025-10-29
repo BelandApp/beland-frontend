@@ -16,13 +16,13 @@ import {
   addressService,
   CreateAddressRequest,
 } from "../../../services/addressService";
-import { cartService, getUserCartId } from "../../../services/cartService";
+import { CartService } from "@services/core";
 import { apiRequest } from "../../../services/api";
 import { useOrdersStoreAPI } from "../../../stores/useOrdersStoreAPI";
 import { useCartStore, CartProduct } from "../../../stores/useCartStore";
 import { useCustomAlert } from "../../../hooks/useCustomAlert";
 import { CustomAlert } from "../../../components/ui/CustomAlert";
-import { useAuth } from "../../../hooks/AuthContext";
+import { useAuth } from "src/context";
 import {
   DeliveryAddress,
   OrderItem,
@@ -71,19 +71,15 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
     })();
   }, [visible]);
 
-  // Reset state when modal closes
   React.useEffect(() => {
     if (!visible) {
       setCurrentStep("address_form");
     }
   }, [visible]);
 
-  // Convert cart products to order items
   const convertCartToOrderItems = (
     cartProducts: CartProduct[]
   ): OrderItem[] => {
-    // converting cart products to order items
-
     const orderItems = cartProducts.map((product) => {
       const orderItem: OrderItem = {
         id: `${product.id}-${Date.now()}-${Math.random()}`, // Unique ID for order item
@@ -95,22 +91,16 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
         subtotal: product.price * product.quantity,
       };
 
-      // product converted to order item
       return orderItem;
     });
 
-    // final order items prepared
     return orderItems;
   };
 
   const handleAddressSubmit = (address: DeliveryAddress) => {
-    // Cuando el AddressForm envía, si estamos en modo 'agregar nueva dirección'
-    // primero guardamos la dirección en el endpoint /user-address y luego
-    // procedemos a crear la orden con la dirección resultante.
     if (addingNewAddress) {
       (async () => {
         try {
-          // Mapear DeliveryAddress -> CreateAddressRequest
           const payload: CreateAddressRequest = {
             addressLine1: address.street,
             addressLine2: address.additionalInfo || undefined,
@@ -124,10 +114,9 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
           };
 
           const created = await addressService.createAddress(payload);
-          // Añadir a la lista local y usarla
+
           setUserAddresses((prev) => [created, ...prev]);
 
-          // Mapear el UserAddress creado a DeliveryAddress para la orden
           const toOrderAddress: DeliveryAddress = {
             street: created.addressLine1,
             city: created.city,
@@ -166,7 +155,6 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
     addressId?: string
   ) => {
     try {
-      // starting order creation process
       setCurrentStep("processing");
 
       if (cartProducts.length === 0) {
@@ -189,21 +177,11 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
         notes: "Orden para envío a domicilio",
       };
 
-      // Antes de crear la orden, actualizar el carrito con la dirección seleccionada
       if (addressId) {
         try {
-          const cartId = await getUserCartId();
-          // Diagnostic: log that we're updating cart with address
-          console.log(
-            "[OrderDeliveryModal] Updating cart with addressId:",
-            addressId,
-            "cartId:",
-            cartId
-          );
+          const cart = await CartService.getCart();
+          const cartId = cart.id;
 
-          // updating cart with address before order
-
-          // PUT /carts/address/{cartId}?address_id={addressId}
           await apiRequest(`/carts/address/${cartId}?address_id=${addressId}`, {
             method: "PUT",
           });
@@ -220,26 +198,8 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
 
       // Usar requireAuth para proteger la creación de la orden
       await requireAuth(async () => {
-        // Diagnostic: log the orderRequest being sent
-        console.log(
-          "[OrderDeliveryModal] Creating order with request:",
-          orderRequest,
-          "addressId:",
-          addressId
-        );
-
         let newOrder = await createOrder(orderRequest);
 
-        // Diagnostic: log the order returned by createOrder
-        console.log("[OrderDeliveryModal] createOrder returned:", newOrder);
-        // Diagnostic: log available userAddresses and addressId
-        try {
-          console.log("[OrderDeliveryModal] userAddresses:", userAddresses);
-          console.log("[OrderDeliveryModal] selected addressId:", addressId);
-        } catch (e) {}
-
-        // If backend didn't return a deliveryAddress (or GET failed), force-attach
-        // the address we used to create the order so the UI can display it.
         try {
           const hasDelivery =
             newOrder &&
@@ -248,23 +208,13 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
 
           const shouldForceAttach =
             !!(newOrder as any).__get_failed || !hasDelivery;
-          console.log(
-            "[OrderDeliveryModal] newOrder hasDelivery:",
-            !!hasDelivery,
-            "__get_failed:",
-            !!(newOrder as any).__get_failed,
-            "shouldForceAttach:",
-            shouldForceAttach
-          );
 
           if (shouldForceAttach) {
-            // Prefer address selected by id
             let fallbackAddress: any = undefined;
             if (addressId) {
               fallbackAddress = userAddresses.find((a) => a.id === addressId);
             }
 
-            // If not found by id, use the deliveryAddress object passed to this function
             if (!fallbackAddress && deliveryAddress) {
               fallbackAddress = {
                 addressLine1: deliveryAddress.street,
@@ -279,7 +229,6 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
               };
             }
 
-            // As final fallback, if orderRequest.deliveryAddress exists, use it (force attach)
             if (!fallbackAddress && (orderRequest as any).deliveryAddress) {
               const od = (orderRequest as any).deliveryAddress;
               fallbackAddress = {
@@ -296,13 +245,6 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
             }
 
             if (fallbackAddress) {
-              try {
-                console.log(
-                  "[OrderDeliveryModal] fallbackAddress chosen:",
-                  fallbackAddress
-                );
-              } catch (e) {}
-
               const normalized = {
                 street:
                   fallbackAddress.addressLine1 ||
@@ -332,15 +274,8 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
               patched.delivery_address = normalized;
               try {
                 patched.__attached_fallback = true;
-                console.log(
-                  "[OrderDeliveryModal] Forced attach of deliveryAddress to newOrder (__attached_fallback = true)"
-                );
               } catch (e) {}
               newOrder = patched as any;
-            } else {
-              console.log(
-                "[OrderDeliveryModal] shouldForceAttach true but no fallbackAddress available to attach"
-              );
             }
           }
         } catch (attachErr) {
@@ -350,13 +285,10 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
           );
         }
 
-        // Clear the cart after successful order creation
         clearCart();
 
-        // Close modal first, then show success alert
         onClose();
 
-        // Show success message using CustomAlert after modal closes
         setTimeout(() => {
           showCustomAlert(
             "¡Orden creada exitosamente!",
@@ -390,14 +322,12 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
 
   const handleAlertClose = () => {
     hideAlert();
-    // Don't close modal here since it's already closed
   };
 
   const renderAddressForm = () => (
     <AddressForm
       onSubmit={handleAddressSubmit}
       onCancel={() => {
-        // volver a la lista de direcciones en lugar de cerrar el modal
         setAddingNewAddress(false);
       }}
       isLoading={currentStep === "processing"}
@@ -563,7 +493,6 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
   return (
     <>
       {Platform.OS === "web" ? (
-        // On web, AddressForm already renders a full-screen overlay. Avoid using Modal to prevent double overlays.
         <>
           {visible &&
             (currentStep === "address_form" ? (

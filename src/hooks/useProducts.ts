@@ -1,10 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import {
-  productsService,
-  ProductQuery,
-  ProductsResponse,
-} from "../services/productsService";
-import { Product } from "src/types/Products";
+import { ProductService, ProductQuery, Product } from "@services/core";
 
 export function useProducts(initialQuery: ProductQuery = {}) {
   const [products, setProducts] = useState<Product[]>([]);
@@ -21,8 +16,8 @@ export function useProducts(initialQuery: ProductQuery = {}) {
       setError(null);
       try {
         const q = { ...query, ...overrideQuery };
-        const res: ProductsResponse = await productsService.getProducts(q);
-        setProducts(res.products);
+        const res = await ProductService.getProducts(q);
+        setProducts(res.data);
         setTotal(res.total);
         setPage(res.page);
         setLimit(res.limit);
@@ -37,29 +32,28 @@ export function useProducts(initialQuery: ProductQuery = {}) {
 
   useEffect(() => {
     fetchProducts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
   const goToNextPage = useCallback(() => {
     if (page * limit < total) {
-      setQuery(prev => ({ ...prev, page: prev.page ? prev.page + 1 : 2 }));
+      setQuery((prev) => ({ ...prev, page: prev.page ? prev.page + 1 : 2 }));
     }
   }, [page, limit, total]);
 
   const goToPreviousPage = useCallback(() => {
     if (page > 1) {
-      setQuery(prev => ({ ...prev, page: prev.page ? prev.page - 1 : 1 }));
+      setQuery((prev) => ({ ...prev, page: prev.page ? prev.page - 1 : 1 }));
     }
   }, [page]);
 
   const updateQuery = useCallback((newQuery: Partial<ProductQuery>) => {
-    setQuery(prev => {
+    setQuery((prev) => {
       const merged = {
         ...prev,
         ...newQuery,
         page: 1,
       };
-      // 👇 Evita el loop si el query no cambia realmente
+
       if (JSON.stringify(prev) === JSON.stringify(merged)) {
         return prev;
       }

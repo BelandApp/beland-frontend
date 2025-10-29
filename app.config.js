@@ -11,7 +11,7 @@ export default {
     newArchEnabled: true,
     scheme: "belandnative",
     owner: "beland",
-    plugins: ["expo-secure-store"],
+    plugins: ["expo-secure-store", "expo-web-browser"],
     extra: {
       auth0Domain: process.env.EXPO_PUBLIC_AUTH0_DOMAIN,
       auth0MobileClientId: process.env.EXPO_PUBLIC_AUTH0_MOBILE_CLIENT_ID,
@@ -21,6 +21,7 @@ export default {
       useDemoMode: process.env.EXPO_PUBLIC_USE_DEMO_MODE,
       supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
       supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+      scheme: process.env.EXPO_PUBLIC_SCHEME,
     },
     splash: {
       image: "./assets/splash-icon.png",
