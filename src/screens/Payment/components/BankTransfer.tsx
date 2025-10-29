@@ -68,6 +68,7 @@ export const BankTransfer: React.FC = () => {
           <Copy />
         </TouchableOpacity>
       </View>
+      <Text style={styles.footerText}>Guarde el comprobante, el pago puede tardar hasta 72hs en impactar</Text>
     </View>
   );
 };
@@ -106,4 +107,7 @@ const styles = StyleSheet.create({
     color: "#6b7280",
     lineHeight: 1.3,
   },
+  footerText: {
+    textAlign: "right",
+  }
 });

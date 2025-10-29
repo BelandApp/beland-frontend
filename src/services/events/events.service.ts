@@ -44,12 +44,19 @@ export const eventsService = {
   },
   consumeQr: async (eventId: string, userEvent_id: string) => {
     const response = await apiRequest(
-      `${API_URL}User-event-pass/consume?user_eventpass_id=${userEvent_id}&eventpass_id=${eventId}`,
+      `${API_URL}/User-event-pass/consume?user_eventpass_id=${userEvent_id}&eventpass_id=${eventId}`,
       {
         method: "POST",
       }
     );
     console.log(response);
     return response
-  }
+  },
+  refundEvent: async (eventId: string) => {
+    const response = await apiRequest(`${API_URL}/user-event-passes/refund/${eventId}`, {
+      method: "POST",
+    });
+    const data = await response.json();
+    return data;
+  },
 };

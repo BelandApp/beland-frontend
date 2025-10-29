@@ -1,13 +1,13 @@
 import React, { useMemo, useRef, useState } from "react";
-import { View, Text, Pressable, ScrollView, StyleSheet } from "react-native";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withSequence,
-  interpolate,
-  Extrapolate,
-} from "react-native-reanimated";
+import {
+  View,
+  Text,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Animated,
+  Alert,
+} from "react-native";
 import {
   ArrowLeftRight,
   Calendar,
@@ -25,8 +25,8 @@ import { RootStackParamList } from "src/components/layout/RootStackNavigator";
 import { colors } from "src/styles";
 import { useAuth } from "src/context";
 import { useCustomAlert } from "src/hooks";
-import { convertBeCoinsToUSD } from "src/constants";
 import { CustomAlert } from "src/components/ui";
+import { eventsService } from "src/services/events";
 
 export const EventModal = ({ route }: { route: any }) => {
   const { id } = route.params;
@@ -37,8 +37,9 @@ export const EventModal = ({ route }: { route: any }) => {
     useCustomAlert();
   const { canPerformAction } = useAuth();
   const [visibleImage, setVisibleImage] = useState(0);
-
+  
   if (!event) return null;
+
   const {
     name,
     description,
@@ -55,43 +56,38 @@ export const EventModal = ({ route }: { route: any }) => {
     images_urls,
     user_acquired,
     user_attended,
+    purchase_price,
+    user_pass_id,
   } = event;
 
   const allImages = useMemo(() => {
-    if (!images_urls || images_urls.length === 0)
-      return [image_url];
+    if (!images_urls || images_urls.length === 0) return [image_url];
     return [image_url, ...images_urls];
   }, [image_url, images_urls]);
 
-  const fadeAnim = useSharedValue(1);
-  const translateAnim = useSharedValue(0);
+  const translateAnim = useRef(new Animated.Value(0)).current;
+
   const handleNextImage = () => {
-    fadeAnim.value = withSequence(
-      withTiming(0, { duration: 200 }),
-      withTiming(1, { duration: 250 })
-    );
-
-    translateAnim.value = withSequence(
-      withTiming(-20, { duration: 200 }),
-      withTiming(0, { duration: 250 })
-    );
-    setVisibleImage((prev) => (prev + 1) % allImages.length);
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(translateAnim, {
+          toValue: -20,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.parallel([
+        Animated.timing(translateAnim, {
+          toValue: 0,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start(() => {
+      setVisibleImage((prev) => (prev + 1) % allImages.length);
+    });
   };
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: fadeAnim.value,
-    transform: [
-      {
-        translateX: interpolate(
-          translateAnim.value,
-          [-20, 0],
-          [-20, 0],
-          Extrapolate.CLAMP
-        ),
-      },
-    ],
-  }));
-
+  // const canRefund = new Date() -;
   const handleClose = () => navigation.goBack();
 
   const handleBuy = async () => {
@@ -104,32 +100,29 @@ export const EventModal = ({ route }: { route: any }) => {
       return;
     }
     navigation.navigate("NewPaymentScreen", {
-      company: {
-        id: name,
-        name: name,
-        img: image_url,
-      },
+      company: { id: name, name, img: image_url },
       product: {
-        id: id,
-        name: name,
+        id,
+        name,
         quantity: 1,
         price: Number(price_becoin),
         condition: "Llevar elementos reciclables al evento",
       },
-      // TODO onSuccessEndpoint a mis eventos adquiridos
       onSuccessEndpoint: "",
       total_amount: Number(price_becoin),
       canBuyForOthers: true,
     });
   };
 
-  const handleUse = async () => {
-    navigation.navigate("UseEventScreen", { id});
-  };
-
+  const handleUse = () => navigation.navigate("UseEventScreen", { id });
   const handleRefund = async () => {
     showCustomAlert("Procesando reembolso...", "", "info");
-    //TODO lógica del refund acá
+    if (!purchase_price || !user_pass_id)
+      return Alert.alert("Error", "No se pudo procesar el reembolso");
+    if (purchase_price === "0.00") {
+      const response = await eventsService.refundEvent(user_pass_id);
+      alert(response.message);
+    }
   };
 
   const eventStatus = (() => {
@@ -149,13 +142,20 @@ export const EventModal = ({ route }: { route: any }) => {
         <Pressable style={styles.closeButton} onPress={handleClose}>
           <SquareChevronDown color={colors.textSecondary} />
         </Pressable>
+
         <ScrollView showsVerticalScrollIndicator={false}>
           <View style={{ marginHorizontal: "auto", paddingTop: 20 }}>
             {/* Imagen principal */}
             <View style={styles.imageContainer}>
               <Animated.Image
                 source={{ uri: allImages[visibleImage] }}
-                style={[styles.image, animatedStyle]}
+                style={[
+                  styles.image,
+                  {
+                    opacity: 1,
+                    transform: [{ translateX: translateAnim }],
+                  },
+                ]}
               />
               {allImages.length > 1 && (
                 <Pressable
@@ -165,7 +165,6 @@ export const EventModal = ({ route }: { route: any }) => {
                   <ArrowLeftRight color="white" size={20} />
                 </Pressable>
               )}
-              {/* Badge de estado */}
               <View
                 style={[
                   styles.statusBadge,
@@ -177,10 +176,7 @@ export const EventModal = ({ route }: { route: any }) => {
             </View>
 
             <View style={styles.content}>
-              {/* Nombre */}
               <Text style={styles.name}>{name}</Text>
-
-              {/* Datos básicos */}
               <View style={styles.infoRow}>
                 <Calendar size={18} color={colors.textSecondary} />
                 <Text style={styles.infoText}>
@@ -196,10 +192,8 @@ export const EventModal = ({ route }: { route: any }) => {
                 </Text>
               </View>
 
-              {/* Descripción */}
               <Text style={styles.description}>{description}</Text>
 
-              {/* Precio y disponibilidad */}
               {!user_acquired && (
                 <View style={styles.section}>
                   <View style={styles.infoRow}>
@@ -217,7 +211,6 @@ export const EventModal = ({ route }: { route: any }) => {
                 </View>
               )}
 
-              {/* Reembolso */}
               {is_refundable && (
                 <View style={[styles.refundBox]}>
                   <RotateCcw color={colors.primary} size={18} />
@@ -228,7 +221,6 @@ export const EventModal = ({ route }: { route: any }) => {
                 </View>
               )}
 
-              {/* Botones */}
               <View style={styles.actions}>
                 {!user_acquired && !user_attended && (
                   <Pressable

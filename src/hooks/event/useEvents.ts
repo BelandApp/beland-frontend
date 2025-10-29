@@ -15,9 +15,7 @@ export const useEvents = () => {
       const allEvents = await eventsService.getAllEvents();
       if (isAuthenticated) {
         const userEventsResponse = await eventsService.getUserEvents();
-        console.log("Data raw:", userEventsResponse);
         const userEvents = adaptUserEvents(userEventsResponse);
-        console.log("Data procesada", userEvents);
         const combined = mergeEvents(allEvents, userEvents);
         setEvents(combined);
       } else {
@@ -74,6 +72,7 @@ const adaptUserEvents = (data: any[]): Event[] => {
     purchase_date: item.purchase_date,
     is_consumed: item.is_consumed,
     is_refunded: item.is_refunded,
+    purchase_price: item.purchase_price
   }));
 };
 // UNIR LOS EVENTOS DEL USUARIO CON LOS GENERALES

@@ -1,10 +1,12 @@
+import { BadgeDollarSign } from "lucide-react-native";
 import React from "react";
 import { Image, Platform, StyleSheet, View, Text } from "react-native";
 import { colors } from "src/design-system";
 type Props = {
   company: { id: string; name: string; img: string };
+  total_amount: number;
 }
-const CompanyHeader: React.FC<Props> = ({ company }) => {
+const CompanyHeader: React.FC<Props> = ({ company,total_amount }) => {
   return (
     <View style={styles.companyContainer}>
       <Image
@@ -16,6 +18,14 @@ const CompanyHeader: React.FC<Props> = ({ company }) => {
         style={styles.companyImage}
       />
       <Text style={styles.companyName}>{company.name}</Text>
+      <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+        <BadgeDollarSign color={"#f88d2a"} />
+        {total_amount === 0 ? (
+          <Text style={{ fontSize: 16, color: "#f88d2a", fontWeight: "bold" }}>Gratis</Text>
+        ) : (
+          <Text style={{ fontSize: 16 }}>${total_amount} BeCoins</Text>
+        )}
+      </View>
     </View>
   );
 };

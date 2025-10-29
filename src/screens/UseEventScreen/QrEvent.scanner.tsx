@@ -135,7 +135,7 @@ export const QRUseEventScreen = ({ route }: { route: any }) => {
       {loading && (
         <View style={styles.loaderOverlay}>
           <View style={styles.loaderCard}>
-            <Text style={styles.loaderText}>Procesando pago...</Text>
+            <Text style={styles.loaderText}>Validando...</Text>
           </View>
         </View>
       )}
