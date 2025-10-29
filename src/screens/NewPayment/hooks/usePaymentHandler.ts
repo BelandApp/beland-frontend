@@ -6,12 +6,15 @@ import { convertBeCoinsToUSD } from "src/constants";
 import { User } from "src/context";
 import { PaymentMethod } from "../components/PaymentMehotdSelector";
 import { useNavigation } from "@react-navigation/native";
+import { RootStackParamList } from "src/components/layout/RootStackNavigator";
+import { StackNavigationProp } from "@react-navigation/stack";
 
 export const usePaymentHandler = (user?: User) => {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<"methods" | "payment">("methods");
-const navigation = useNavigation<any>();
-  const changeStatus = (newStatus: "methods" | "payment") => setStatus(newStatus);
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const changeStatus = (newStatus: "methods" | "payment") =>
+    setStatus(newStatus);
   const handlePayment = async ({
     method,
     productId,
@@ -46,10 +49,8 @@ const navigation = useNavigation<any>();
     try {
       setLoading(true);
       await becoinService.acquireFreeProduct(eventDto);
-      Alert.alert("Éxito", "Adquisición completada con éxito 🎉");
-      navigation.navigate("Home");
+      navigation.navigate("MainTabs");
     } catch {
-      Alert.alert("Error", "No se pudo procesar la adquisición");
     } finally {
       setLoading(false);
     }

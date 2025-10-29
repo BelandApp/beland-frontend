@@ -19,7 +19,6 @@ import { EventMap } from "./components/EventMap";
 import { useEventStore } from "src/stores/Event";
 import { ThemedHeader } from "src/components/shared/headers/Header";
 import { OpenInGoogleMaps } from "./components/OpenInGoogleMaps";
-import Animated from "react-native-reanimated";
 import { ArrowLeftRight } from "lucide-react-native";
 
 type Navigation = StackNavigationProp<RootStackParamList>;
@@ -40,7 +39,8 @@ export const UseEventScreen = ({ route }: { route: any }) => {
     () => new Date(event_date),
     [event_date]
   );
-  
+  // TODO Desabilitado para pruebas
+
   // useEffect(() => {
   //   const checkTime = () => {
   //     const now = new Date();

@@ -12,8 +12,7 @@ export const becoinService = {
         holder_document: "",
       }),
     });
-    const data = await res.json();
-    return data;
+    return res;
   },
   acquireFreeProduct: async (eventDto: {
     holder_name: string;
@@ -23,7 +22,7 @@ export const becoinService = {
     event_pass_id: string;
   }) => {
     const {holder_email,holder_instagram_tiktok,holder_name,holder_phone, event_pass_id} = eventDto;
-    const res = await apiRequest("User-event-passes/purchase", {
+    await apiRequest("User-event-passes/purchase", {
       method: "POST",
       body: JSON.stringify({
         holder_email,
@@ -33,7 +32,5 @@ export const becoinService = {
         event_pass_id,
       }),
     });
-    const data = await res.json();
-    return data;
   },
 };
