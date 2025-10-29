@@ -179,17 +179,33 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
         code: editingEvent.code,
         name: editingEvent.name,
         description: editingEvent.description || "",
-        type_id: eventTypes[0]?.id || "", // Usar el primer tipo disponible ya que EventPass no tiene type_id
+        // Usar el type_id que ya tenga el evento si existe, si no caer al primer tipo disponible
+        type_id: (editingEvent as any).type_id || eventTypes[0]?.id || "",
         event_place: editingEvent.event_place || "",
         event_city: editingEvent.event_city || "",
         event_date: new Date(editingEvent.event_date),
         limit_tickets: editingEvent.limit_tickets,
-        price_becoin: editingEvent.price_becoin,
+        // editingEvent.price_becoin puede venir como string desde el backend -> convertir a number
+        price_becoin:
+          parseFloat((editingEvent as any).price_becoin as any) || 0,
         discount: 0, // Valor por defecto ya que no está en EventPass
         is_refundable: true, // Valor por defecto ya que no está en EventPass
         refund_days_limit: 3, // Valor por defecto ya que no está en EventPass
         is_active: editingEvent.is_active,
       });
+      // Cargar imágenes existentes del evento en el preview (image_url primero, luego images_urls)
+      const existingImages: string[] = [];
+      if ((editingEvent as any).image_url)
+        existingImages.push((editingEvent as any).image_url);
+      if (
+        Array.isArray((editingEvent as any).images_urls) &&
+        (editingEvent as any).images_urls.length > 0
+      ) {
+        existingImages.push(
+          ...(editingEvent as any).images_urls.filter(Boolean)
+        );
+      }
+      setSelectedImages(existingImages);
     } else {
       resetForm();
     }
@@ -348,94 +364,148 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
 
     setLoading(true);
     try {
-      // Preparar datos del evento
-      const eventDataToSubmit: CreateEventPassDto = {
+      // Preparar datos del evento base (sin archivos)
+      const baseEventData: any = {
         ...formData,
-        // Si no hay tipos disponibles, enviar type_id vacío
         type_id: eventTypes.length > 0 ? formData.type_id : "",
       };
 
-      // Convertir y comprimir imágenes si hay seleccionadas
-      if (selectedImages.length > 0) {
-        console.log(`📸 Procesando ${selectedImages.length} imágenes...`);
-        const imageFiles: File[] = [];
+      // Separar imágenes nuevas (locales) de las existentes (URLs remotas o data:)
+      const isRemote = (uri: string) => {
+        return /^https?:\/\//.test(uri) || uri.startsWith("data:");
+      };
 
-        // Convertir URIs a Files
-        for (const imageUri of selectedImages) {
-          try {
-            const response = await fetch(imageUri);
-            const blob = await response.blob();
-            const fileName = `event_image_${Date.now()}_${Math.random()
-              .toString(36)
-              .substr(2, 9)}.jpg`;
-            const file = new File([blob], fileName, { type: "image/jpeg" });
-            imageFiles.push(file);
-          } catch (error) {
-            console.error("Error converting image to file:", error);
-          }
+      const existingUrls: string[] = selectedImages.filter((u) => isRemote(u));
+      const newUris: string[] = selectedImages.filter((u) => !isRemote(u));
+
+      // Si no hay imágenes nuevas (archivos), enviar JSON normal: usar URLs existentes como strings
+      if (newUris.length === 0) {
+        const eventDataToSubmit: CreateEventPassDto = {
+          ...baseEventData,
+          // Asignar image_url e images_urls como strings si existen
+          image_url: existingUrls[0] || undefined,
+          images_urls:
+            existingUrls.length > 1 ? existingUrls.slice(1) : undefined,
+        };
+
+        let result: EventPass;
+        if (editingEvent) {
+          result = await adminApiService.updateEventPass(
+            editingEvent.id,
+            eventDataToSubmit
+          );
+        } else {
+          result = await adminApiService.createEventPass(eventDataToSubmit);
         }
 
-        // Comprimir imágenes
+        onSuccess(result);
+        onClose();
+
+        showCustomAlert(
+          "Éxito",
+          editingEvent
+            ? "Evento actualizado correctamente"
+            : "Evento creado correctamente",
+          "success"
+        );
+
+        return;
+      }
+
+      // Si hay imágenes nuevas, procesarlas (convertir a File, comprimir) y enviar FormData con archivos + URLs existentes
+      console.log(`📸 Procesando ${newUris.length} imágenes nuevas...`);
+      const imageFiles: File[] = [];
+
+      for (const imageUri of newUris) {
         try {
-          console.log("🔄 Comprimiendo imágenes...");
-          const compressionResults = await compressImages(imageFiles, {
-            maxWidth: 800,
-            maxHeight: 600,
-            quality: 0.7,
-            maxSizeKB: 300, // Límite de 300KB por imagen
-          });
-
-          // Extraer archivos comprimidos
-          const compressedFiles = compressionResults.map(
-            (result) => result.compressedFile
-          );
-
-          // Asignar primera imagen como imagen principal y resto como adicionales
-          if (compressedFiles.length > 0) {
-            eventDataToSubmit.image_url = compressedFiles[0];
-            if (compressedFiles.length > 1) {
-              eventDataToSubmit.images_urls = compressedFiles.slice(1);
-            }
-          }
-
-          // Log de resultados
-          const totalOriginalSize = compressionResults.reduce(
-            (sum, result) => sum + result.originalSize,
-            0
-          );
-          const totalCompressedSize = compressionResults.reduce(
-            (sum, result) => sum + result.compressedSize,
-            0
-          );
-          console.log(
-            `✅ Compresión completada: ${(totalOriginalSize / 1024).toFixed(
-              1
-            )}KB → ${(totalCompressedSize / 1024).toFixed(1)}KB`
-          );
-        } catch (compressionError) {
-          console.warn(
-            "⚠️ Error al comprimir imágenes, usando originales:",
-            compressionError
-          );
-
-          // Asignar primera imagen como imagen principal y resto como adicionales (sin comprimir)
-          if (imageFiles.length > 0) {
-            eventDataToSubmit.image_url = imageFiles[0];
-            if (imageFiles.length > 1) {
-              eventDataToSubmit.images_urls = imageFiles.slice(1);
-            }
-          }
+          const response = await fetch(imageUri);
+          const blob = await response.blob();
+          const fileName = `event_image_${Date.now()}_${Math.random()
+            .toString(36)
+            .substr(2, 9)}.jpg`;
+          const file = new File([blob], fileName, { type: "image/jpeg" });
+          imageFiles.push(file);
+        } catch (error) {
+          console.error("Error converting image to file:", error);
         }
       }
 
+      // Comprimir imágenes nuevas
+      let compressedFiles: File[] = [];
+      try {
+        console.log("🔄 Comprimiendo imágenes nuevas...");
+        const compressionResults = await compressImages(imageFiles, {
+          maxWidth: 800,
+          maxHeight: 600,
+          quality: 0.7,
+          maxSizeKB: 300,
+        });
+        compressedFiles = compressionResults.map((r) => r.compressedFile);
+      } catch (compressionError) {
+        console.warn(
+          "⚠️ Error al comprimir imágenes, usando originales:",
+          compressionError
+        );
+        compressedFiles = imageFiles;
+      }
+
+      // Construir FormData: agregar campos de texto y tanto URLs existentes (como strings) como archivos nuevos
+      const fd = new FormData();
+
+      Object.keys(baseEventData).forEach((key) => {
+        const value = (baseEventData as any)[key];
+        if (value !== undefined && value !== null) {
+          if (value instanceof Date) {
+            fd.append(key, value.toISOString());
+          } else if (
+            typeof value === "string" ||
+            typeof value === "number" ||
+            typeof value === "boolean"
+          ) {
+            fd.append(key, value.toString());
+          }
+        }
+      });
+
+      // Agregar URLs existentes como strings: la primera como image_url y el resto como images_urls
+      if (existingUrls.length > 0) {
+        fd.append("image_url", existingUrls[0]);
+        for (let i = 1; i < existingUrls.length; i++) {
+          fd.append("images_urls", existingUrls[i]);
+        }
+      }
+
+      // Agregar archivos nuevos: si hay, ponemos el primero como image_url (principal) y el resto en images_urls
+      if (compressedFiles.length > 0) {
+        // Si no hay existing principal o preferimos que la nueva primera reemplace, usamos compressedFiles[0]
+        fd.append("image_url", compressedFiles[0]);
+        for (let i = 1; i < compressedFiles.length; i++) {
+          fd.append("images_urls", compressedFiles[i]);
+        }
+      }
+
+      // Compatibilidad: si no hay archivos adicionales y no había array original, duplicar la principal
+      // (mirar lógica de createEventPass si es necesario)
+
+      // Enviar:
+      // - Si estamos editando: usar PUT multipart con FormData (fd)
+      // - Si estamos creando: reutilizar createEventPass pasando los Files para que la función arme su propio FormData
       let result: EventPass;
       if (editingEvent) {
-        result = await adminApiService.updateEventPass(
+        result = await adminApiService.updateEventPassFormData(
           editingEvent.id,
-          eventDataToSubmit
+          fd
         );
       } else {
-        result = await adminApiService.createEventPass(eventDataToSubmit);
+        // Construir payload para creación con archivos nuevos
+        const eventDataForCreate: CreateEventPassDto = {
+          ...baseEventData,
+          image_url: compressedFiles[0],
+          images_urls:
+            compressedFiles.length > 1 ? compressedFiles.slice(1) : undefined,
+        };
+
+        result = await adminApiService.createEventPass(eventDataForCreate);
       }
 
       onSuccess(result);

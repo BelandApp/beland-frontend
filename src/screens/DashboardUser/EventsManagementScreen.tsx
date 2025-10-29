@@ -9,6 +9,9 @@ import {
   Switch,
   TextInput,
   ScrollView,
+  Image,
+  Modal,
+  Dimensions,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import DashboardWrapper from "./components/DashboardWrapper";
@@ -49,9 +52,24 @@ const EventsManagementScreen: React.FC = () => {
   const [eventTypes, setEventTypes] = useState<EventPassType[]>([]);
   const [eventTypesError, setEventTypesError] = useState<string | null>(null);
 
+  // Modal de QR
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [selectedQr, setSelectedQr] = useState<string | null>(null);
+  const [windowWidth, setWindowWidth] = useState<number>(
+    Dimensions.get("window").width
+  );
+
   useEffect(() => {
     loadInitialData();
     loadEventTypes();
+
+    const onChange = ({ window }: { window: any }) => {
+      setWindowWidth(window.width);
+    };
+    const sub = Dimensions.addEventListener?.("change", onChange);
+    return () => {
+      if (sub && typeof sub.remove === "function") sub.remove();
+    };
   }, []);
 
   const loadEventTypes = async () => {
@@ -181,6 +199,11 @@ const EventsManagementScreen: React.FC = () => {
     setShowEditModal(true);
   };
 
+  const openQrModal = (qrUrl: string) => {
+    setSelectedQr(qrUrl);
+    setShowQrModal(true);
+  };
+
   const filteredEvents = events.filter(
     (event) =>
       event.name.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -198,75 +221,116 @@ const EventsManagementScreen: React.FC = () => {
     });
   };
 
-  const renderEventCard = (event: EventPass) => (
-    <View key={event.id} style={styles.eventCard}>
-      <View style={styles.eventHeader}>
-        <View style={styles.eventInfo}>
-          <Text style={styles.eventName}>{event.name}</Text>
-          <Text style={styles.eventCode}>Código: {event.code}</Text>
+  const renderEventCard = (event: EventPass) => {
+    const mainImage =
+      event.image_url ||
+      (Array.isArray(event.images_urls) ? event.images_urls[0] : undefined);
+    const isNarrow = windowWidth < 700;
+
+    return (
+      <View key={event.id} style={styles.eventCard}>
+        <View style={[styles.cardRow, isNarrow && styles.cardRowMobile]}>
+          {mainImage ? (
+            <Image
+              source={{ uri: mainImage }}
+              style={[styles.leftImage, isNarrow && styles.leftImageMobile]}
+            />
+          ) : (
+            <View
+              style={[
+                styles.leftImagePlaceholder,
+                isNarrow && styles.leftImagePlaceholderMobile,
+              ]}
+            />
+          )}
+
+          <View style={[styles.rightContent, isNarrow && { marginTop: 12 }]}>
+            <View style={styles.eventHeaderInline}>
+              <View style={styles.eventInfo}>
+                <Text style={styles.eventName}>{event.name}</Text>
+                <Text style={styles.eventCode}>Código: {event.code}</Text>
+              </View>
+
+              <Switch
+                value={event.is_active}
+                onValueChange={() =>
+                  handleToggleEventStatus(event.id, event.is_active)
+                }
+                trackColor={{ false: "#767577", true: "#81b0ff" }}
+                thumbColor={event.is_active ? "#007AFF" : "#f4f3f4"}
+              />
+            </View>
+
+            {event.description && (
+              <Text style={styles.eventDescription}>{event.description}</Text>
+            )}
+
+            <View style={styles.eventDetailsInline}>
+              <View style={styles.eventDetailRow}>
+                <Text style={styles.eventDetailLabel}>📍 Lugar:</Text>
+                <Text style={styles.eventDetailValue}>
+                  {event.event_place || "No especificado"},{" "}
+                  {event.event_city || "N/A"}
+                </Text>
+              </View>
+
+              <View style={styles.eventDetailRow}>
+                <Text style={styles.eventDetailLabel}>📅 Fecha:</Text>
+                <Text style={styles.eventDetailValue}>
+                  {formatDate(event.event_date)}
+                </Text>
+              </View>
+
+              <View style={styles.eventDetailRow}>
+                <Text style={styles.eventDetailLabel}>💰 Precio:</Text>
+                <Text style={styles.eventDetailValue}>
+                  {event.price_becoin} BeCoins
+                </Text>
+              </View>
+
+              <View style={styles.eventDetailRow}>
+                <Text style={styles.eventDetailLabel}>🎫 Tickets:</Text>
+                <Text style={styles.eventDetailValue}>
+                  {event.sold_tickets} / {event.limit_tickets} vendidos
+                </Text>
+              </View>
+
+              <View style={styles.eventDetailRow}>
+                <Text style={styles.eventDetailLabel}>🎭 Tipo:</Text>
+                <Text style={styles.eventDetailValue}>
+                  {eventTypes.find((t) => t.id === event.type_id)?.name ||
+                    "Sin tipo"}
+                </Text>
+              </View>
+            </View>
+          </View>
         </View>
-        <Switch
-          value={event.is_active}
-          onValueChange={() =>
-            handleToggleEventStatus(event.id, event.is_active)
-          }
-          trackColor={{ false: "#767577", true: "#81b0ff" }}
-          thumbColor={event.is_active ? "#007AFF" : "#f4f3f4"}
-        />
+
+        <View style={styles.eventActions}>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.editButton]}
+            onPress={() => openEditModal(event)}
+          >
+            <Text style={styles.actionButtonText}>Editar</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionButton, styles.qrButton]}
+            onPress={() => openQrModal(event.qr || "")}
+          >
+            <Text style={styles.actionButtonText}>QR</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.actionButton, styles.deleteButton]}
+            onPress={() => handleDeleteEvent(event)}
+          >
+            <Text style={styles.actionButtonText}>Eliminar</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-
-      {event.description && (
-        <Text style={styles.eventDescription}>{event.description}</Text>
-      )}
-
-      <View style={styles.eventDetails}>
-        <View style={styles.eventDetailRow}>
-          <Text style={styles.eventDetailLabel}>📍 Lugar:</Text>
-          <Text style={styles.eventDetailValue}>
-            {event.event_place || "No especificado"},{" "}
-            {event.event_city || "N/A"}
-          </Text>
-        </View>
-
-        <View style={styles.eventDetailRow}>
-          <Text style={styles.eventDetailLabel}>📅 Fecha:</Text>
-          <Text style={styles.eventDetailValue}>
-            {formatDate(event.event_date)}
-          </Text>
-        </View>
-
-        <View style={styles.eventDetailRow}>
-          <Text style={styles.eventDetailLabel}>💰 Precio:</Text>
-          <Text style={styles.eventDetailValue}>
-            {event.price_becoin} BeCoins
-          </Text>
-        </View>
-
-        <View style={styles.eventDetailRow}>
-          <Text style={styles.eventDetailLabel}>🎫 Tickets:</Text>
-          <Text style={styles.eventDetailValue}>
-            {event.sold_tickets} / {event.limit_tickets} vendidos
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.eventActions}>
-        <TouchableOpacity
-          style={[styles.actionButton, styles.editButton]}
-          onPress={() => openEditModal(event)}
-        >
-          <Text style={styles.actionButtonText}>Editar</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.actionButton, styles.deleteButton]}
-          onPress={() => handleDeleteEvent(event)}
-        >
-          <Text style={styles.actionButtonText}>Eliminar</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <DashboardWrapper title="Gestión de Eventos" isLoading={loading}>
@@ -413,6 +477,29 @@ const EventsManagementScreen: React.FC = () => {
         eventTypes={eventTypes}
         eventTypesError={eventTypesError}
       />
+
+      {/* Modal para QR */}
+      <Modal
+        visible={showQrModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowQrModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Código QR del Evento</Text>
+            {selectedQr && (
+              <Image source={{ uri: selectedQr }} style={styles.qrImage} />
+            )}
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setShowQrModal(false)}
+            >
+              <Text style={styles.closeButtonText}>Cerrar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </DashboardWrapper>
   );
 };
@@ -608,6 +695,158 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 14,
     fontWeight: "600",
+  },
+  eventImage: {
+    width: 300,
+    height: 150,
+    borderRadius: 8,
+    resizeMode: "cover",
+    marginRight: 10,
+  },
+  imagesScrollView: {
+    height: 150,
+    marginBottom: 15,
+  },
+  qrButton: {
+    backgroundColor: "#FF9500",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 20,
+    alignItems: "center",
+    width: "80%",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 20,
+  },
+  qrImage: {
+    width: 200,
+    height: 200,
+    marginBottom: 20,
+  },
+  closeButton: {
+    backgroundColor: "#007AFF",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  closeButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  /* Carrusel / thumbnails */
+  imageWrapper: {
+    position: "relative",
+    marginBottom: 10,
+  },
+  arrowButton: {
+    position: "absolute",
+    top: "45%",
+    zIndex: 10,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  arrowText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 16,
+  },
+  thumbnailsContainer: {
+    marginTop: 8,
+  },
+  thumbnailWrap: {
+    marginRight: 8,
+    borderRadius: 6,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "transparent",
+  },
+  thumbnailActiveWrap: {
+    marginRight: 8,
+    borderRadius: 6,
+    overflow: "hidden",
+    borderWidth: 2,
+    borderColor: "#007AFF",
+  },
+  thumbnail: {
+    width: 80,
+    height: 50,
+    resizeMode: "cover",
+  },
+  dotsContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 8,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#ddd",
+    marginHorizontal: 4,
+  },
+  dotActive: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#007AFF",
+    marginHorizontal: 4,
+  },
+  /* Layout inline: imagen izquierda + contenido */
+  cardRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 16,
+  },
+  cardRowMobile: {
+    flexDirection: "column",
+    alignItems: "center",
+  },
+  leftImage: {
+    width: 220,
+    height: 200,
+    borderRadius: 10,
+    resizeMode: "cover",
+    backgroundColor: "#f0f0f0",
+  },
+  leftImageMobile: {
+    width: "100%",
+    height: 180,
+    borderRadius: 10,
+  },
+  leftImagePlaceholder: {
+    width: 220,
+    height: 140,
+    borderRadius: 10,
+    backgroundColor: "#f5f5f5",
+  },
+  leftImagePlaceholderMobile: {
+    width: "100%",
+    height: 140,
+    borderRadius: 10,
+  },
+  rightContent: {
+    flex: 1,
+  },
+  eventHeaderInline: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 8,
+  },
+  eventDetailsInline: {
+    marginTop: 6,
   },
 });
 
