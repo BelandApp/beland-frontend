@@ -172,7 +172,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
               <LayoutDashboard size={18} color="#333" />
               <Text style={styles.menuItemText}>Dashboard</Text>
             </TouchableOpacity>
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={styles.menuItem}
               onPress={() => {
                 setMenuVisible(false);
@@ -181,7 +181,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
             >
               <GiftIcon size={18} color="#333" />
               <Text style={styles.menuItemText}>Mis Premios</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             <TouchableOpacity
               style={styles.menuItem}
