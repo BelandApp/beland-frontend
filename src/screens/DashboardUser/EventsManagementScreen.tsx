@@ -12,6 +12,7 @@ import {
   Image,
   Modal,
   Dimensions,
+  Platform,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import DashboardWrapper from "./components/DashboardWrapper";
@@ -202,6 +203,44 @@ const EventsManagementScreen: React.FC = () => {
   const openQrModal = (qrUrl: string) => {
     setSelectedQr(qrUrl);
     setShowQrModal(true);
+  };
+
+  const handleDownloadQr = async () => {
+    if (!selectedQr) return;
+    const filename = `qr-evento-${Date.now()}.png`;
+
+    if (Platform.OS === "web") {
+      try {
+        // Create an anchor and trigger download
+        const res = await fetch(selectedQr);
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error("Error descargando QR (web):", err);
+        Alert.alert("Error", "No se pudo descargar el QR");
+      }
+    } else {
+      try {
+        // Usar expo-file-system en nativo (mejor esfuerzo, puede requerir permisos)
+        const FileSystem = require("expo-file-system");
+        const downloadRes = await FileSystem.downloadAsync(
+          selectedQr,
+          FileSystem.documentDirectory + filename
+        );
+        console.log("QR descargado en:", downloadRes.uri);
+        Alert.alert("Descarga exitosa", "El QR se guardó en tus archivos.");
+      } catch (err) {
+        console.error("Error descargando QR (nativo):", err);
+        Alert.alert("Error", "No se pudo descargar el QR");
+      }
+    }
   };
 
   const filteredEvents = events.filter(
@@ -491,6 +530,15 @@ const EventsManagementScreen: React.FC = () => {
             {selectedQr && (
               <Image source={{ uri: selectedQr }} style={styles.qrImage} />
             )}
+
+            {/* Botón para descargar el QR */}
+            <TouchableOpacity
+              style={styles.downloadButton}
+              onPress={handleDownloadQr}
+            >
+              <Text style={styles.downloadButtonText}>Descargar</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setShowQrModal(false)}
@@ -740,6 +788,17 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   closeButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  downloadButton: {
+    backgroundColor: "#34C759",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  downloadButtonText: {
     color: "#fff",
     fontWeight: "600",
   },
