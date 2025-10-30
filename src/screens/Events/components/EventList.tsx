@@ -28,7 +28,7 @@ export const EventsList = ({ events, tab }: any) => {
 };
 
 const styles = StyleSheet.create({
-  list: { flexWrap: "wrap", flexDirection: "row", gap: 16 },
+  list: { flexWrap: "wrap", flexDirection: "row", gap: 16, paddingHorizontal: 8, justifyContent: "center" },
   emptyContainer: {
     flexDirection: "row",
     justifyContent: "center",
