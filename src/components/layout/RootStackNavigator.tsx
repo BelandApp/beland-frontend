@@ -9,9 +9,7 @@ import WalletHistoryScreen from "../../screens/Wallet/WalletHistoryScreen";
 import RechargeScreen from "../../screens/Wallet/RechargeScreen";
 import WalletSettingsScreen from "../../screens/Wallet/WalletSettingsScreen";
 import { QRScannerScreen } from "../../screens/QRScannerScreen";
-import PaymentScreen, {
-  PaymentScreenProps,
-} from "../../screens/Payment/PaymentScreen";
+import PaymentScreen from "../../screens/Payment/PaymentScreen";
 import { HistoryScreen, RecyclingMapScreen } from "../../screens";
 import UserDashboardScreen from "src/screens/UserDashboardScreen";
 import UserResourcesScreen from "src/screens/UserResources/UserResourcesScreen";
@@ -33,6 +31,7 @@ import UsersManagementScreen from "src/screens/DashboardUser/UsersManagementScre
 
 import { UseEventScreen } from "src/screens/UseEventScreen/UseEventScreen";
 import { QRUseEventScreen } from "src/screens/UseEventScreen/QrEvent.scanner";
+import { ConsumedEventScreen } from "src/screens/UseEventScreen/ConsumeEvent";
 
 export type RootStackParamList = {
   Home: undefined;
@@ -85,6 +84,7 @@ export type RootStackParamList = {
   EventModal: { id: string };
   UseEventScreen: { id: string };
   QrUseEventScreen: { id: string };
+  ConsumedEventScreen: { id: string };
   // Chequear si es necesario
   Rewards: undefined;
   NewPaymentScreen: PaymentScreenRoute;
@@ -208,6 +208,11 @@ export const RootStackNavigator = () => {
       <Stack.Screen
         name="QrUseEventScreen"
         component={QRUseEventScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ConsumedEventScreen"
+        component={ConsumedEventScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen
