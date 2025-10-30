@@ -8,6 +8,8 @@ import {
   TextInput,
   RefreshControl,
   Modal,
+  Platform,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -26,6 +28,11 @@ export const DeliveryScreen = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [deliveryNotes, setDeliveryNotes] = useState("");
+  const { width } = useWindowDimensions();
+
+  // Decide if search should be rendered inside the header.
+  // Show inside header only on web and when there's enough horizontal space.
+  const showSearchInHeader = Platform.OS === "web" && width >= 420;
 
   // Cargar órdenes pendientes al montar
   useEffect(() => {
@@ -272,33 +279,37 @@ export const DeliveryScreen = () => {
   return (
     <SafeAreaView style={deliveryStyles.container}>
       {/* Header */}
+      {/* Show search inside header on wide web views, else render it below the header to avoid overlap on mobile */}
       <ThemedHeader
         title="Delivery"
         canGoBack
         buttons={
           <>
-            <View style={deliveryStyles.searchContainer}>
-              <MaterialCommunityIcons
-                name="magnify"
-                size={20}
-                color={colors.textSecondary}
-              />
-              <TextInput
-                style={deliveryStyles.searchInput}
-                placeholder="Buscar"
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-              />
-              {searchQuery.length > 0 && (
-                <TouchableOpacity onPress={() => setSearchQuery("")}>
-                  <MaterialCommunityIcons
-                    name="close"
-                    size={20}
-                    color={colors.textSecondary}
-                  />
-                </TouchableOpacity>
-              )}
-            </View>
+            {showSearchInHeader && (
+              <View style={deliveryStyles.searchContainer}>
+                <MaterialCommunityIcons
+                  name="magnify"
+                  size={20}
+                  color={colors.textSecondary}
+                />
+                <TextInput
+                  style={deliveryStyles.searchInput}
+                  placeholder="Buscar"
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                />
+                {searchQuery.length > 0 && (
+                  <TouchableOpacity onPress={() => setSearchQuery("")}>
+                    <MaterialCommunityIcons
+                      name="close"
+                      size={20}
+                      color={colors.textSecondary}
+                    />
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+
             <View style={deliveryStyles.headerStats}>
               <Text style={deliveryStyles.statsNumber}>
                 {deliverableOrders.length}
@@ -308,7 +319,33 @@ export const DeliveryScreen = () => {
           </>
         }
       />
-      
+
+      {!showSearchInHeader && (
+        <View style={deliveryStyles.searchBarWrapper}>
+          <View style={deliveryStyles.searchContainer}>
+            <MaterialCommunityIcons
+              name="magnify"
+              size={20}
+              color={colors.textSecondary}
+            />
+            <TextInput
+              style={deliveryStyles.searchInput}
+              placeholder="Buscar"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery("")}>
+                <MaterialCommunityIcons
+                  name="close"
+                  size={20}
+                  color={colors.textSecondary}
+                />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      )}
 
       {/* Content */}
       <ScrollView

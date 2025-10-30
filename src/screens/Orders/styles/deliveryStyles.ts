@@ -55,8 +55,9 @@ export const deliveryStyles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "rgba(255, 255, 255, 0.2)",
     borderRadius: 12,
-    paddingHorizontal: 16,
-    height: 45
+    paddingHorizontal: 12,
+    height: 42,
+    marginLeft: 8,
   },
   statsNumber: {
     fontSize: 16,
@@ -75,14 +76,24 @@ export const deliveryStyles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "white",
     borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     gap: 12,
+    flex: 1,
+    minWidth: 0, // allow shrinking on narrow layouts (important on web mobile)
+    maxWidth: 420,
+  },
+  searchBarWrapper: {
+    paddingHorizontal: 20,
+    marginTop: 12,
+    // ensure the search row doesn't overlap header on web
+    zIndex: 1,
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 15,
     color: colors.textPrimary,
+    minWidth: 0,
   },
 
   // Content
