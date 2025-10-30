@@ -106,6 +106,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
+    minWidth: Dimensions.get("window").width > 600 ? 600 : "90%",
     padding: 16,
     backgroundColor: colors.background,
     marginVertical: 8,

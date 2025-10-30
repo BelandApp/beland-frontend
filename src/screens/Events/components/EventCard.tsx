@@ -45,12 +45,11 @@ export const EventCard: React.FC<Event> = ({
 }) => {
   const navigation = useNavigation<EventScreenNavigationProp>();
   if (!id) return null;
-   const { width } = Dimensions.get("window");
   return (
     <Pressable
       key={id}
       onPress={() => navigation.navigate("EventModal", { id: id })}
-      style={[styles.card,{width: width > 600 ? 600 : width-5}]}
+      style={styles.card}
     >
       {/* Badges */}
       {/* No deberian superponerse, si ya fue adquirido solo mostramos ese */}
@@ -123,6 +122,7 @@ export const EventCard: React.FC<Event> = ({
 
 const styles = StyleSheet.create({
   card: {
+    width: Dimensions.get("window").width > 600 ? 600 : "90%",
     flexDirection: "row",
     position: "relative",
     height: Platform.OS === "web" ? 400 : 200,
