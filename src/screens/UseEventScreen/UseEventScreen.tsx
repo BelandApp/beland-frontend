@@ -8,6 +8,7 @@ import {
   Linking,
   Pressable,
   Image,
+  Dimensions,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
@@ -29,12 +30,19 @@ export const UseEventScreen = ({ route }: { route: any }) => {
   const { getEvent } = useEventStore();
   const event = getEvent(id)
   if (!event) return null;
-  const { name, event_date, event_place, event_city, image_url, user_pass_id } =
-    event;
+  const {
+    name,
+    event_date,
+    event_place,
+    event_city,
+    image_url,
+    user_pass_id,
+    latitude,
+    longitude,
+  } = event;
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [isReadyToUse, setIsReadyToUse] = useState(true);
-  const latitude = 456
-  const longitude = 456
+
   const eventDate = useMemo(
     () => new Date(event_date),
     [event_date]
@@ -77,8 +85,8 @@ export const UseEventScreen = ({ route }: { route: any }) => {
           </Text>
           <View style={styles.buttonContainer}>
             <OpenInGoogleMaps
-              latitude={latitude}
-              longitude={longitude}
+              latitude={Number(latitude)}
+              longitude={Number(longitude)}
               name={name}
             />
 
@@ -98,7 +106,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    width: Platform.OS === "web" ? 600 : "100%",
     padding: 16,
     backgroundColor: colors.background,
     marginVertical: 8,
