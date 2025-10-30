@@ -1,5 +1,6 @@
 import React from "react";
 import { StyleSheet, View, Text, ActivityIndicator } from "react-native";
+import { colors } from "src/styles";
 type LoaderProps = {
   title?: string;
 };
@@ -19,7 +20,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 32,
     backgroundColor: "#fff",
-    borderRadius: 12,
+    borderRadius: 50,
+    width: 150,
+    alignSelf: "center",
+    borderWidth: 1,
+    borderColor: colors.belandOrange
   },
   loadingText: {
     fontSize: 14,
