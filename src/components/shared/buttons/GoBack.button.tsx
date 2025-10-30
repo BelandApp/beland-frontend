@@ -5,7 +5,7 @@ import { TouchableOpacity, StyleSheet} from "react-native";
 import { RootStackParamList } from "src/components/layout/RootStackNavigator";
 import { colors } from "src/styles";
 
-const GoBackButton: React.FC = () => {
+export const GoBackButton: React.FC = () => {
    const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   return (
     <TouchableOpacity
@@ -28,4 +28,3 @@ const styles = StyleSheet.create({
       borderRadius: 50,
     },
 });
-export default GoBackButton;
