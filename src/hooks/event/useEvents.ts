@@ -72,7 +72,9 @@ const adaptUserEvents = (data: any[]): Event[] => {
     purchase_date: item.purchase_date,
     is_consumed: item.is_consumed,
     is_refunded: item.is_refunded,
-    purchase_price: item.purchase_price
+    purchase_price: item.purchase_price,
+    longitude: item.longitude,
+    latitude: item.latitude
   }));
 };
 // UNIR LOS EVENTOS DEL USUARIO CON LOS GENERALES

@@ -18,6 +18,7 @@ import {
   Text,
   Image,
   Platform,
+  Dimensions,
 } from "react-native";
 import { Card } from "src/components/ui";
 import { useNavigation } from "@react-navigation/native";
@@ -44,12 +45,12 @@ export const EventCard: React.FC<Event> = ({
 }) => {
   const navigation = useNavigation<EventScreenNavigationProp>();
   if (!id) return null;
-  console.log(new Date());
+   const { width } = Dimensions.get("window");
   return (
     <Pressable
       key={id}
       onPress={() => navigation.navigate("EventModal", { id: id })}
-      style={styles.card}
+      style={[styles.card,{width: width > 600 ? 600 : width-5}]}
     >
       {/* Badges */}
       {/* No deberian superponerse, si ya fue adquirido solo mostramos ese */}
@@ -124,7 +125,6 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
     position: "relative",
-    width: Platform.OS === "web" ? "49%" : "100%",
     height: Platform.OS === "web" ? 400 : 200,
     overflow: "hidden",
     borderRadius: 24,
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
       "rgba(0, 0, 0, 0.1) 4px 4px 6px -1px, rgba(0, 0, 0, 0.06) 0px 2px 4px -1px;",
   },
   image: {
-    width: Platform.OS === "web" ? 250 : 100,
+    width: "35%",
     borderTopLeftRadius: 24,
     borderBottomLeftRadius: 24,
     resizeMode: "cover",

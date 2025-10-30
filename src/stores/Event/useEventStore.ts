@@ -42,6 +42,8 @@ export interface Event extends BasicEvent {
   event_pass_id?: string;
   user_pass_id?: string;
   purchase_price?: string;
+  longitude?: string;
+  latitude?: string;
 }
 type EventStore = {
   events: Event[];
