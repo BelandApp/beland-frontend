@@ -55,7 +55,7 @@ const EventsScreen = () => {
 const styles = StyleSheet.create({
   content: { flex: 1 },
   scroll: {
-    padding: 16,
+    paddingVertical: 16,
   },
 });
 

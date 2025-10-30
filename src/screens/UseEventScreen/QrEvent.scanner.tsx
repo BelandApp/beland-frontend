@@ -32,17 +32,22 @@ export const QRUseEventScreen = ({ route }: { route: any }) => {
     getCameraPermissions();
   }, []);
 
-  const handleBarCodeScanned = async ({ type, data }: BarcodeScanningResult)  => {
+  const handleBarCodeScanned = async ({
+    type,
+    data,
+  }: BarcodeScanningResult) => {
     if (scanned) return;
-    console.log(
-      `Bar code with type ${type} and data ${data} has been scanned!`
-    );
     // QR scanned
-    setScanned(true);
-    setIsActive(false);
-    setLoading(true);
-    // fetcheamos al backend
-    await eventsService.consumeQr(id, data);
+    try {
+      setScanned(true);
+      setIsActive(false);
+      setLoading(true);
+      // fetcheamos al backend
+      await eventsService.consumeQr(data, id);
+      navigation.navigate("ConsumedEventScreen", { id });
+    } catch (error) {
+      alert(error);
+    }
   };
 
   if (hasPermission === null) {
@@ -129,6 +134,11 @@ export const QRUseEventScreen = ({ route }: { route: any }) => {
           variant="secondary"
           style={styles.controlButton}
         />
+        <Pressable
+          onPress={() => navigation.navigate("ConsumedEventScreen", { id })}
+        >
+          <Text>Ir</Text>
+        </Pressable>
       </View>
 
       {/* Loader visual cuando está cargando datos de pago */}
@@ -184,7 +194,7 @@ const styles = StyleSheet.create({
     top: 10,
     left: 10,
     zIndex: 2,
-    borderRadius: 50
+    borderRadius: 50,
   },
   centerContent: {
     flex: 1,
