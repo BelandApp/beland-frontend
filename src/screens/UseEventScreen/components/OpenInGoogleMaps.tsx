@@ -45,6 +45,7 @@ export const OpenInGoogleMaps: React.FC<Props> = ({
         alignItems: "center",
         justifyContent: "center",
       }}
+      disabled={!latitude || !longitude || isNaN(latitude)}
     >
       <Text style={{ color: "white", fontWeight: "600" }}>
         Ver en Google Maps
