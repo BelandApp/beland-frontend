@@ -44,7 +44,7 @@ export const eventsService = {
   },
   consumeQr: async (eventId: string, userEvent_id: string) => {
     const response = await apiRequest(
-      `${API_URL}/User-event-pass/consume?user_eventpass_id=${userEvent_id}&eventpass_id=${eventId}`,
+      `${API_URL}/user-event-passes/consume?user_eventpass_id=${userEvent_id}&eventpass_id=${eventId}`,
       {
         method: "POST",
       }
