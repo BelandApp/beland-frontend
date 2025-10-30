@@ -6,6 +6,7 @@ import {
   TextInput,
   TouchableOpacity,
   Platform,
+  Dimensions,
 } from "react-native";
 import { CustomInput } from "src/components/shared";
 import { useAuth } from "src/context";
@@ -151,12 +152,13 @@ const styles = StyleSheet.create({
   toggleTextActive: { color: "white", fontWeight: "600" },
   form: {
     gap: 10,
-    width: Platform.OS === "web" ? 600 : "100%",
+    width: "90%",
+    maxWidth: 600,
     alignSelf: "center",
     backgroundColor: "white",
     padding: 16,
     borderRadius: 18,
-    marginVertical: 8
+    marginVertical: 8,
   },
   input: {
     backgroundColor: colors.background.secondary,

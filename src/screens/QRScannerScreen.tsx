@@ -8,7 +8,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Camera, CameraView, BarcodeScanningResult } from "expo-camera";
 import { colors } from "../styles/colors";
 import { Button } from "../components/ui/Button";
-import GoBackButton from "src/components/shared/buttons/GoBack.button";
+import { GoBackButton } from "src/components/shared/buttons/GoBack.button";
 
 export const QRScannerScreen = () => {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);

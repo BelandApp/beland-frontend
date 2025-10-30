@@ -6,6 +6,7 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
+  Dimensions,
 } from "react-native";
 import { RouteProp, useRoute } from "@react-navigation/native";
 import { useAuth } from "src/context";
@@ -122,7 +123,8 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   container: {
-    width: Platform.OS === "web" ? 600 : "100%",
+    width: "90%",
+    maxWidth: 600,
     alignSelf: "center",
     padding: 16,
     backgroundColor: colors.background.primary,
@@ -134,7 +136,8 @@ const styles = StyleSheet.create({
   paymentContainer: {
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
-    width: Platform.OS === "web" ? 600 : "100%",
+    width: "90%",
+    maxWidth: 600,
     alignSelf: "center",
     backgroundColor: colors.background.primary,
     padding: 16,
@@ -146,7 +149,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     backgroundColor: colors.brand.orange[500],
     borderColor: colors.brand.orange[500],
-    width:"25%"
+    maxWidth: 150,
   },
-  buttonChangeText: { color: "white", fontWeight: "600" },
+  buttonChangeText: { color: "white", fontWeight: "600", textAlign: "center" },
 });

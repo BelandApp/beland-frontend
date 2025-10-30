@@ -122,10 +122,11 @@ export const EventCard: React.FC<Event> = ({
 
 const styles = StyleSheet.create({
   card: {
-    width: Dimensions.get("window").width > 600 ? 600 : "90%",
+    width: "90%",
+    maxWidth: 600,
     flexDirection: "row",
     position: "relative",
-    height: Platform.OS === "web" ? 400 : 200,
+    height: 400,
     overflow: "hidden",
     borderRadius: 24,
     backgroundColor: "white",
