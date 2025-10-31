@@ -62,7 +62,6 @@ export const UseEventScreen = ({ route }: { route: any }) => {
   // }, [eventDate]);
 
   const handleNavigateToScanner = () => {
-    console.log("user_pass_id",user_pass_id)
     if (!user_pass_id) return alert("Falta id de compra");
     navigation.navigate("QrUseEventScreen", { id: user_pass_id });
   };
