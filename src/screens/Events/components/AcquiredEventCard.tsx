@@ -44,12 +44,12 @@ export const AcquiredEventCard: React.FC<Event> = ({
       {!user_attended &&
         end_sale_date &&
         new Date(end_sale_date).getTime() < Date.now() && (
-          <View style={styles.badge}>
+          <View style={[styles.badge, styles.badgeFinish]}>
             <Text style={styles.badgeText}>Finalizado</Text>
           </View>
         )}
       {user_attended && (
-        <View style={styles.badge}>
+        <View style={[styles.badge,styles.badgeUsed]}>
           <Text style={styles.badgeText}>Usado</Text>
         </View>
       )}
@@ -139,10 +139,15 @@ const styles = StyleSheet.create({
     top: 20,
     right: -35,
     transform: [{ rotate: "45deg" }],
-    backgroundColor: colors.belandOrange,
     paddingHorizontal: 40,
     paddingVertical: 5,
     zIndex: 1,
+  },
+  badgeFinish: {
+    backgroundColor: colors.belandOrange,
+  },
+  badgeUsed: {
+    backgroundColor: colors.error
   },
   badgeText: {
     fontSize: 15,
