@@ -4,6 +4,7 @@ import { Ticket } from "lucide-react-native";
 import { EventCard } from "./EventCard";
 import { colors } from "src/styles";
 import { AcquiredEventCard } from "./AcquiredEventCard";
+import { Event } from "src/stores/Event";
 
 export const EventsList = ({ events, tab }: any) => {
   if (!events?.length) {
@@ -21,11 +22,11 @@ export const EventsList = ({ events, tab }: any) => {
 
   return (
     <View style={styles.list}>
-      {events.map((event: any, index: string) =>
+      {events.map((event: Event) =>
         tab === "available" ? (
           <EventCard key={event.id} {...event} />
         ) : (
-          <AcquiredEventCard key={event.id + index} {...event} />
+          <AcquiredEventCard key={event.user_pass_id} {...event} />
         )
       )}
     </View>
@@ -38,8 +39,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 16,
     paddingHorizontal: 8,
-    paddingVertical: 16,
-    marginBottom: 16,
+    marginBottom: 80, // TODO chequear despues para vista celular
     justifyContent: "center",
   },
   emptyContainer: {
