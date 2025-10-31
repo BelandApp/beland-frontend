@@ -176,6 +176,52 @@ export function usePaymentSocket(onPaymentSuccess: (data: any) => void) {
           commerce_name?: string;
           [key: string]: any;
         }) => {
+          // Detectar notificación de EventPass (consume) por campos específicos
+          const isEventPassNotification =
+            data &&
+            (data.attended_count !== undefined || data.user_name || data.code);
+
+          if (isEventPassNotification) {
+            // Mostrar notificación especial solo para Superadmin (si aplica)
+            // El contexto del usuario está disponible en este hook
+            if ((user as any)?.role_name === "SUPERADMIN") {
+              const attended = data.attended_count ?? "?";
+              const sold = data.sold_tickets ?? "?";
+              const entryName = data.name || data.code || "Entrada";
+
+              const lines: string[] = [];
+              if (data.user_name) lines.push(`Usuario: ${data.user_name}`);
+              if (data.user_phone) lines.push(`Tel: ${data.user_phone}`);
+              if (data.user_email) lines.push(`Email: ${data.user_email}`);
+
+              const message = `${entryName} — ${attended}/${sold} asistencias\n${lines.join(
+                " • "
+              )}`;
+
+              showNotification({
+                title: "Entrada consumida",
+                message,
+                persistent: true,
+                meta: {
+                  code: data.code,
+                  name: data.name,
+                  attended_count: data.attended_count,
+                  sold_tickets: data.sold_tickets,
+                  user_name: data.user_name,
+                  user_instagram_tiktok: data.user_instagram_tiktok,
+                  user_phone: data.user_phone,
+                  user_email: data.user_email,
+                  event_id: data.event_pass_id || data.eventPassId || null,
+                },
+              });
+            }
+
+            // También invocar el callback general
+            onPaymentSuccess(data);
+            return;
+          }
+
+          // Comportamiento original para pagos normales
           const detailedMessage = createDetailedMessage(data);
           showNotification({
             title: "¡Venta recibida!",

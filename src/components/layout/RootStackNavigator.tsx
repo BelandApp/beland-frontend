@@ -32,6 +32,7 @@ import UsersManagementScreen from "src/screens/DashboardUser/UsersManagementScre
 import { UseEventScreen } from "src/screens/UseEventScreen/UseEventScreen";
 import { QRUseEventScreen } from "src/screens/UseEventScreen/QrEvent.scanner";
 import { ConsumedEventScreen } from "src/screens/UseEventScreen/ConsumeEvent";
+import { AcquiredEventModal } from "src/screens/Events/AcquiredEvent.modal";
 
 export type RootStackParamList = {
   Home: undefined;
@@ -82,9 +83,10 @@ export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   EventModal: { id: string };
+  AcquiredEventModal: { id: string };
   UseEventScreen: { id: string };
   QrUseEventScreen: { id: string };
-  ConsumedEventScreen: { id: string, holder?:string };
+  ConsumedEventScreen: { id: string; holder?: string };
   // Chequear si es necesario
   Rewards: undefined;
   NewPaymentScreen: PaymentScreenRoute;
@@ -215,9 +217,21 @@ export const RootStackNavigator = () => {
         component={ConsumedEventScreen}
         options={{ headerShown: false }}
       />
+      {/* Modales */}
       <Stack.Screen
         name="EventModal"
         component={EventModal}
+        options={{
+          headerShown: false,
+          gestureEnabled: true,
+          presentation: "transparentModal",
+          animation: "slide_from_bottom",
+          animationTypeForReplace: "push",
+        }}
+      />
+      <Stack.Screen
+        name="AcquiredEventModal"
+        component={AcquiredEventModal}
         options={{
           headerShown: false,
           gestureEnabled: true,

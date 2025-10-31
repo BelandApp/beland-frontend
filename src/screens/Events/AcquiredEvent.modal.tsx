@@ -26,15 +26,15 @@ import { colors } from "src/styles";
 import { useAuth } from "src/context";
 import { useCustomAlert } from "src/hooks";
 import { CustomAlert } from "src/components/ui";
+import { eventsService } from "src/services/events";
 
-export const EventModal = ({ route }: { route: any }) => {
+export const AcquiredEventModal = ({ route }: { route: any }) => {
   const { id } = route.params;
   const { getEvent } = useEventStore();
   const event = getEvent(id);
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { showCustomAlert, alertConfig, showAlert, hideAlert } =
     useCustomAlert();
-  const { canPerformAction } = useAuth();
   const [visibleImage, setVisibleImage] = useState(0);
 
   if (!event) return null;
@@ -53,6 +53,11 @@ export const EventModal = ({ route }: { route: any }) => {
     refund_days_limit,
     image_url,
     images_urls,
+    user_acquired,
+    user_attended,
+    purchase_price,
+    user_pass_id,
+    holder_name,
   } = event;
 
   const allImages = useMemo(() => {
@@ -85,34 +90,22 @@ export const EventModal = ({ route }: { route: any }) => {
   // const canRefund = new Date() -;
   const handleClose = () => navigation.goBack();
 
-  const handleBuy = async () => {
-    if (!canPerformAction) {
-      showCustomAlert(
-        "Inicia sesión",
-        "Debes iniciar sesión para comprar",
-        "error"
-      );
-      return;
+  const handleUse = () => navigation.navigate("UseEventScreen", { id });
+  const handleRefund = async () => {
+    showCustomAlert("Procesando reembolso...", "", "info");
+    if (!purchase_price || !user_pass_id)
+      return Alert.alert("Error", "No se pudo procesar el reembolso");
+    if (purchase_price === "0.00") {
+      const response = await eventsService.refundEvent(user_pass_id);
+      alert(response.message);
     }
-    navigation.navigate("NewPaymentScreen", {
-      company: { id: name, name, img: image_url },
-      product: {
-        id,
-        name,
-        quantity: 1,
-        price: Number(price_becoin),
-        condition: "Llevar elementos reciclables al evento",
-      },
-      onSuccessEndpoint: "",
-      total_amount: Number(price_becoin),
-      canBuyForOthers: true,
-    });
   };
 
   const eventStatus = (() => {
+    if (user_attended) return { label: "Usado", color: colors.success };
     if (end_sale_date && new Date(end_sale_date) < new Date())
       return { label: "Finalizado", color: colors.textSecondary };
-    return { label: "Disponible", color: colors.primary };
+    return { label: "Adquirido", color: colors.belandOrange };
   })();
 
   const ticketsLeft = limit_tickets - sold_tickets;
@@ -175,20 +168,7 @@ export const EventModal = ({ route }: { route: any }) => {
 
               <Text style={styles.description}>{description}</Text>
 
-              <View style={styles.section}>
-                <View style={styles.infoRow}>
-                  <DollarSign size={18} color={colors.primary} />
-                  <Text style={styles.infoStrong}>{price_becoin} Becoins</Text>
-                </View>
-                <View style={styles.infoRow}>
-                  <Ticket size={18} color={colors.textSecondary} />
-                  <Text style={styles.infoText}>
-                    {ticketsLeft} tickets disponibles
-                  </Text>
-                </View>
-              </View>
-
-              {is_refundable && (
+              {is_refundable && !user_attended && (
                 <View style={[styles.refundBox]}>
                   <RotateCcw color={colors.primary} size={18} />
                   <Text style={styles.refundText}>
@@ -199,12 +179,30 @@ export const EventModal = ({ route }: { route: any }) => {
               )}
 
               <View style={styles.actions}>
-                <Pressable
-                  style={[styles.button, styles.buyButton]}
-                  onPress={handleBuy}
-                >
-                  <Text style={styles.buttonText}>Adquirir</Text>
-                </Pressable>
+                {!user_attended ? (
+                  <>
+                    <Text style={styles.infoText}>Entrada a nombre de: {holder_name}</Text>
+                    <Pressable
+                      style={[styles.button, styles.useButton]}
+                      onPress={handleUse}
+                    >
+                      <CheckCircle2 color="white" size={18} />
+                      <Text style={styles.buttonText}>Usar entrada</Text>
+                    </Pressable>
+
+                    {is_refundable && (
+                      <Pressable
+                        style={[styles.button, styles.refundButton]}
+                        onPress={handleRefund}
+                      >
+                        <RotateCcw color="white" size={18} />
+                        <Text style={styles.buttonText}>Devolver</Text>
+                      </Pressable>
+                    )}
+                  </>
+                ) : (
+                  <Text style={styles.infoStrong}>Ya usaste esta entrada</Text>
+                )}
               </View>
             </View>
           </View>
@@ -292,6 +290,11 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     fontWeight: "600",
     fontSize: 16,
+    textAlign: "center",
+    borderWidth: 1,
+    borderRadius: 50,
+    borderColor: colors.primary,
+     paddingVertical: 8
   },
   description: {
     marginVertical: 16,
@@ -326,9 +329,6 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 12,
     borderRadius: 10,
-  },
-  buyButton: {
-    backgroundColor: colors.primary,
   },
   useButton: {
     backgroundColor: colors.success,

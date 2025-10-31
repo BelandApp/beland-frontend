@@ -6,6 +6,8 @@ interface NotificationData {
   amount?: number;
   visible: boolean;
   persistent?: boolean; // Nueva propiedad para notificaciones persistentes
+  // Meta opcional para renderizado enriquecido (ej: event-pass)
+  meta?: Record<string, any> | null;
 }
 
 interface NotificationContextType {
