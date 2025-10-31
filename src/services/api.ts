@@ -14,7 +14,13 @@ const defaultHeaders = {
   "Content-Type": "application/json",
 };
 
-
+ const getBackendErrorMessage = (err: any): string => {
+  return (
+    err?.body?.message ||
+    err?.message ||
+    "Ocurrió un error inesperado. Intenta de nuevo."
+  );
+};
 
 // Función auxiliar para hacer requests
 const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
@@ -83,4 +89,4 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
   }
 };
 
-export { apiRequest, API_BASE_URL };
+export { apiRequest, API_BASE_URL, getBackendErrorMessage };

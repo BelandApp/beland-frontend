@@ -84,7 +84,7 @@ export type RootStackParamList = {
   EventModal: { id: string };
   UseEventScreen: { id: string };
   QrUseEventScreen: { id: string };
-  ConsumedEventScreen: { id: string };
+  ConsumedEventScreen: { id: string, holder?:string };
   // Chequear si es necesario
   Rewards: undefined;
   NewPaymentScreen: PaymentScreenRoute;
