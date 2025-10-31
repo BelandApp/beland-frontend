@@ -1,12 +1,19 @@
 import { BadgeDollarSign } from "lucide-react-native";
 import React from "react";
-import { Image, Platform, StyleSheet, View, Text } from "react-native";
+import {
+  Image,
+  Platform,
+  StyleSheet,
+  View,
+  Text,
+  Dimensions,
+} from "react-native";
 import { colors } from "src/design-system";
 type Props = {
   company: { id: string; name: string; img: string };
   total_amount: number;
-}
-const CompanyHeader: React.FC<Props> = ({ company,total_amount }) => {
+};
+const CompanyHeader: React.FC<Props> = ({ company, total_amount }) => {
   return (
     <View style={styles.companyContainer}>
       <Image
@@ -18,12 +25,16 @@ const CompanyHeader: React.FC<Props> = ({ company,total_amount }) => {
         style={styles.companyImage}
       />
       <Text style={styles.companyName}>{company.name}</Text>
-      <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+      <View style={{ flexDirection: "row", gap: 4, alignItems: "center" }}>
         <BadgeDollarSign color={"#f88d2a"} />
         {total_amount === 0 ? (
-          <Text style={{ fontSize: 16, color: "#f88d2a", fontWeight: "bold" }}>Gratis</Text>
+          <Text style={{ fontSize: 16, color: "#f88d2a", fontWeight: "bold" }}>
+            Gratis
+          </Text>
         ) : (
-          <Text style={{ fontSize: 16 }}>${total_amount} BeCoins</Text>
+          <Text style={{ fontSize: 16, paddingLeft: 2 }}>
+            ${total_amount} BeCoins
+          </Text>
         )}
       </View>
     </View>
@@ -32,7 +43,8 @@ const CompanyHeader: React.FC<Props> = ({ company,total_amount }) => {
 
 const styles = StyleSheet.create({
   companyContainer: {
-    width: Platform.OS === "web" ? 600 : "100%",
+    width: "90%",
+    maxWidth: 600,
     alignSelf: "center",
     flexDirection: "row",
     alignItems: "center",
@@ -41,11 +53,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.primary,
     borderColor: colors.border.default,
     borderWidth: 1,
-    gap: 16,
+    gap: 8,
   },
   companyImage: {
-    width: 80,
-    height: 80,
+    width: "20%",
+    height: "100%",
+    minHeight: 80,
     borderTopLeftRadius: 32,
     borderBottomLeftRadius: 32,
   },

@@ -6,6 +6,7 @@ import {
   TextInput,
   StyleSheet,
   Platform,
+  Dimensions,
 } from "react-native";
 import { colors } from "src/design-system";
 
@@ -69,7 +70,8 @@ export const PaymentMethodsSelector = ({
 
 const styles = StyleSheet.create({
   container: {
-    width: Platform.OS === "web" ? 600 : "100%",
+    width: "90%",
+    maxWidth: 600,
     alignSelf: "center",
     padding: 16,
     backgroundColor: colors.background.primary,

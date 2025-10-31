@@ -42,15 +42,19 @@ export const EventCard: React.FC<Event> = ({
   price_becoin,
   end_sale_date,
   user_attended,
+  user_acquired,
 }) => {
   const navigation = useNavigation<EventScreenNavigationProp>();
   if (!id) return null;
-   const { width } = Dimensions.get("window");
+  const handleNavigation = () => {
+    if (user_acquired) return navigation.navigate("AcquiredEventModal", { id });
+    return navigation.navigate("EventModal", { id });
+  }
   return (
     <Pressable
       key={id}
-      onPress={() => navigation.navigate("EventModal", { id: id })}
-      style={[styles.card,{width: width > 600 ? 600 : width-5}]}
+      onPress={handleNavigation}
+      style={styles.card}
     >
       {/* Badges */}
       {/* No deberian superponerse, si ya fue adquirido solo mostramos ese */}
@@ -123,9 +127,11 @@ export const EventCard: React.FC<Event> = ({
 
 const styles = StyleSheet.create({
   card: {
+    width: "90%",
+    maxWidth: 600,
     flexDirection: "row",
     position: "relative",
-    height: Platform.OS === "web" ? 400 : 200,
+    height: 400,
     overflow: "hidden",
     borderRadius: 24,
     backgroundColor: "white",

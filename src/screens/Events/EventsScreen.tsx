@@ -12,11 +12,13 @@ import { colors } from "src/styles";
 import { useUserBalance } from "src/hooks";
 import { useEvents } from "src/hooks/event/useEvents";
 import { EventsTabs } from "./components/EventTabs";
+import { CustomLoader } from "src/components/shared/loader/Loader";
 
 const EventsScreen = () => {
   const { availableEvents, acquiredEvents, refreshing, onRefresh, isLoading } =
     useEvents();
-    const { balance, refetch: refetchBalance } = useUserBalance();
+  const { balance, refetch: refetchBalance } = useUserBalance();
+  
   return (
     <View style={styles.content}>
       <ThemedHeader
@@ -37,9 +39,7 @@ const EventsScreen = () => {
         }
       >
         {isLoading ? (
-          <View>
-            <Text>Cargando...</Text>
-          </View>
+          <CustomLoader/>
         ) : (
           <EventsTabs
             availableEvents={availableEvents}

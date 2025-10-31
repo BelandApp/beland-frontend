@@ -8,8 +8,8 @@ import { ThemedHeader } from "src/components/shared/headers/Header";
 import { colors } from "src/design-system";
 
 export const ConsumedEventScreen = ({ route }: { route: any }) => {
-  const { id } = route.params;
-   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const { id, holder } = route.params;
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   return (
     <>
       <ThemedHeader title="Entrada" canGoBack />
@@ -24,12 +24,13 @@ export const ConsumedEventScreen = ({ route }: { route: any }) => {
             Tu entrada está validada, enseña esto en la puerta del evento
           </Text>
           <Text>ID Validado: {id}</Text>
-        <Pressable
+          {holder && <Text>Entrada a nombre de {holder}</Text>}
+          <Pressable
             onPress={() => navigation.navigate("MainTabs")}
             style={styles.button}
-        >
-          <Text style={{color: "white", fontWeight: "bold"}}>Inicio</Text>
-        </Pressable>
+          >
+            <Text style={{ color: "white", fontWeight: "bold" }}>Inicio</Text>
+          </Pressable>
         </View>
       </View>
     </>
@@ -61,8 +62,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 24,
     backgroundColor: colors.brand.green[500],
-    shadowColor: "#000", 
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
-  }
+  },
 });
