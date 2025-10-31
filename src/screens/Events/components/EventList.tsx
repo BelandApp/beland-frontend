@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from "react-native";
 import { Ticket } from "lucide-react-native";
 import { EventCard } from "./EventCard";
 import { colors } from "src/styles";
+import { AcquiredEventCard } from "./AcquiredEventCard";
 
 export const EventsList = ({ events, tab }: any) => {
   if (!events?.length) {
@@ -20,9 +21,13 @@ export const EventsList = ({ events, tab }: any) => {
 
   return (
     <View style={styles.list}>
-      {events.map((event: any) => (
-        <EventCard key={event.id} {...event} />
-      ))}
+      {events.map((event: any, index: string) =>
+        tab === "available" ? (
+          <EventCard key={event.id} {...event} />
+        ) : (
+          <AcquiredEventCard key={event.id + index} {...event} />
+        )
+      )}
     </View>
   );
 };

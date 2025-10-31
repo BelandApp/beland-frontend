@@ -1,14 +1,13 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { eventsService } from "src/services/events";
 import { useAuth } from "src/context";
-import { Event, useEventStore } from "src/stores/Event";
+import { useEventStore, Event } from "src/stores/Event";
 
 export const useEvents = () => {
   const { isAuthenticated, user } = useAuth();
-  const { events, setEvents } = useEventStore();
   const [refreshing, setRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
+  const { setAvailableEvents, setAcquiredEvents, availableEvents, acquiredEvents } = useEventStore();
   const fetchEvents = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -16,10 +15,12 @@ export const useEvents = () => {
       if (isAuthenticated) {
         const userEventsResponse = await eventsService.getUserEvents();
         const userEvents = adaptUserEvents(userEventsResponse);
-        const combined = mergeEvents(allEvents, userEvents);
-        setEvents(combined);
+        const uniqueAvailable = removeDuplicatesById(allEvents);
+        setAvailableEvents(uniqueAvailable);
+        setAcquiredEvents(userEvents);
       } else {
-        setEvents(allEvents);
+        setAvailableEvents(removeDuplicatesById(allEvents));
+        setAcquiredEvents([]);
       }
     } catch (error) {
       console.log("Error fetching events:", error);
@@ -38,32 +39,17 @@ export const useEvents = () => {
     fetchEvents();
   }, [fetchEvents]);
 
-  const availableEvents = useMemo(
-    () => events.filter((e: any) => e.is_active),
-    [events]
-  );
 
-  const acquiredEvents = useMemo(
-    () => events.filter((e: any) => e.user_acquired),
-    [events]
-  );
-
-  return {
-    availableEvents,
-    acquiredEvents,
-    refreshing,
-    onRefresh,
-    isLoading,
-  };
+  return { availableEvents, acquiredEvents, refreshing, onRefresh, isLoading };
 };
-// NORMALIZAR PROVISORIAMENTE EVENTOS USER RECIBIDOS DEL BACK
+
+// --- Helpers ---
 const adaptUserEvents = (data: any[]): Event[] => {
-  console.log("Procesando Raw:", data);
   return data.map((item) => ({
-    ...item.event_pass, // base del evento
+    ...item.event_pass,
     user_acquired: true,
     event_pass_id: item.event_pass_id,
-    user_pass_id:item.id,
+    user_pass_id: item.id,
     user_attended: item.is_consumed ?? false,
     holder_name: item.holder_name,
     holder_email: item.holder_email,
@@ -74,17 +60,15 @@ const adaptUserEvents = (data: any[]): Event[] => {
     is_refunded: item.is_refunded,
     purchase_price: item.purchase_price,
     longitude: item.longitude,
-    latitude: item.latitude
+    latitude: item.latitude,
   }));
 };
-// UNIR LOS EVENTOS DEL USUARIO CON LOS GENERALES
-const mergeEvents = (all: Event[], userEvents: Event[]): Event[] => {
-  const map = new Map(all.map((e) => [e.id, { ...e }]));
 
-  // Si el usuario compró un evento, reemplazamos su info con la del userEvent
-  userEvents.forEach((ue) => {
-    map.set(ue.id, { ...map.get(ue.id), ...ue });
+const removeDuplicatesById = (events: Event[]): Event[] => {
+  const seen = new Set();
+  return events.filter((e) => {
+    if (seen.has(e.id)) return false;
+    seen.add(e.id);
+    return true;
   });
-
-  return Array.from(map.values());
 };

@@ -46,24 +46,50 @@ export interface Event extends BasicEvent {
   latitude?: string;
 }
 type EventStore = {
-  events: Event[];
-  setEvents: (list: Event[]) => void;
+  // --- Estados ---
+  availableEvents: Event[];
+  acquiredEvents: Event[];
+
+  // --- Acciones ---
+  setAvailableEvents: (list: Event[]) => void;
+  setAcquiredEvents: (list: Event[]) => void;
+  clearEvents: () => void;
+
+  // --- Utils ---
   getEvent: (id: string) => Event | undefined;
-  setEvent: (event: Event) => void;
+  getAcquiredEvent: (id: string) => Event | undefined;
+  updateEvent: (event: Event) => void;
 };
 
 export const useEventStore = create<EventStore>()(
   persist(
     (set: any, get: any) => ({
-      events: [],
-      setEvents: (list: Event[]) => set({ events: list }),
-      getEvent: (id: string) => get().events.find((event:Event) => event.id === id),
-      setEvent: (updatedEvent: Event) =>
+      availableEvents: [],
+      acquiredEvents: [],
+
+      setAvailableEvents: (list: Event[]) => set({ availableEvents: list }),
+      setAcquiredEvents: (list: Event[]) => set({ acquiredEvents: list }),
+
+      clearEvents: () => set({ availableEvents: [], acquiredEvents: [] }),
+
+      getEvent: (id: string) => {
+        const all = [...get().availableEvents, ...get().acquiredEvents];
+        return all.find((event) => event.id === id);
+      },
+      getAcquiredEvent: (user_pass_id: string) =>
+        get().acquiredEvents.find(
+          (event: Event) => event.user_pass_id === user_pass_id
+        ),
+      updateEvent: (updatedEvent: Event) => {
         set((state: any) => ({
-          events: state.events.map((event:Event) =>
+          availableEvents: state.availableEvents.map((event: Event) =>
             event.id === updatedEvent.id ? updatedEvent : event
           ),
-        })),
+          acquiredEvents: state.acquiredEvents.map((event: Event) =>
+            event.id === updatedEvent.id ? updatedEvent : event
+          ),
+        }));
+      },
     }),
     {
       name: "events-storage",
