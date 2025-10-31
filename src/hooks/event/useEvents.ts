@@ -39,12 +39,12 @@ export const useEvents = () => {
   }, [fetchEvents]);
 
   const availableEvents = useMemo(
-    () => events.filter((e: any) => e.is_active && !e.user_acquired),
+    () => events.filter((e: any) => e.is_active),
     [events]
   );
 
   const acquiredEvents = useMemo(
-    () => events.filter((e: any) => e.user_acquired && !e.user_attended),
+    () => events.filter((e: any) => e.user_acquired),
     [events]
   );
 
