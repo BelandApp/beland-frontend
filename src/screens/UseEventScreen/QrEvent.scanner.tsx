@@ -17,7 +17,7 @@ import { Button } from "src/components/ui";
 import { ThemedHeader } from "src/components/shared/headers/Header";
 import { CircleArrowLeftIcon } from "lucide-react-native";
 import { eventsService } from "src/services/events";
-import GoBackButton from "src/components/shared/buttons/GoBack.button";
+import {GoBackButton} from "src/components/shared/buttons/GoBack.button";
 export const QRUseEventScreen = ({ route }: { route: any }) => {
   const { id } = route.params;
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
