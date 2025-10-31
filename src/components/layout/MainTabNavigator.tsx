@@ -129,7 +129,7 @@ export const MainTabNavigator = () => {
       <Tab.Screen
         name="Community"
         component={EventsScreen}
-        options={{ tabBarLabel: "Comunidad" }}
+        options={{ tabBarLabel: "Eventos" }}
       />
 
       <Tab.Screen
