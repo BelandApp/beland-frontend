@@ -83,7 +83,7 @@ export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   EventModal: { id: string };
-  AcquiredEventModal: { id: string };
+  AcquiredEventModal: { id_modal: string };
   UseEventScreen: { id: string };
   QrUseEventScreen: { id: string };
   ConsumedEventScreen: { id: string; holder?: string };

@@ -7,13 +7,7 @@ import {
   Tickets,
 } from "lucide-react-native";
 import React, { useState } from "react";
-import {
-  Pressable,
-  StyleSheet,
-  View,
-  Text,
-  Image,
-} from "react-native";
+import { Pressable, StyleSheet, View, Text, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { RootStackParamList } from "src/components/layout/RootStackNavigator";
 
@@ -25,7 +19,7 @@ type EventScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   "EventModal"
 >;
-export const EventCard: React.FC<Event> = ({
+export const AcquiredEventCard: React.FC<Event> = ({
   id,
   name,
   image_url,
@@ -35,30 +29,27 @@ export const EventCard: React.FC<Event> = ({
   price_becoin,
   end_sale_date,
   user_attended,
-  event_pass_id
+  holder_name,
+  user_pass_id
 }) => {
   const navigation = useNavigation<EventScreenNavigationProp>();
-  if (!id) return null;
+  if (!id || !user_pass_id) return null;
   const handleNavigation = () => {
-    return navigation.navigate("EventModal", { id });
-  }
+    return navigation.navigate("AcquiredEventModal", { id_modal: user_pass_id });
+  };
   return (
-    <Pressable
-      key={id}
-      onPress={handleNavigation}
-      style={styles.card}
-    >
+    <Pressable key={id} onPress={handleNavigation} style={styles.card}>
       {/* Badges */}
       {/* No deberian superponerse, si ya fue adquirido solo mostramos ese */}
       {!user_attended &&
         end_sale_date &&
         new Date(end_sale_date).getTime() < Date.now() && (
-          <View style={styles.badge}>
+          <View style={[styles.badge, styles.badgeFinish]}>
             <Text style={styles.badgeText}>Finalizado</Text>
           </View>
         )}
       {user_attended && (
-        <View style={styles.badge}>
+        <View style={[styles.badge,styles.badgeUsed]}>
           <Text style={styles.badgeText}>Usado</Text>
         </View>
       )}
@@ -106,10 +97,7 @@ export const EventCard: React.FC<Event> = ({
           </View>
         </View>
         <View style={styles.footer}>
-          <View style={styles.textContainer}>
-            <BadgeDollarSign color={colors.belandOrange} />
-            <Text style={styles.eventPrice}>{price_becoin} Becoin</Text>
-          </View>
+          <Text style={styles.holderText}>A nombre de: {holder_name}</Text>
           <SquareChevronUp />
         </View>
       </View>
@@ -151,10 +139,15 @@ const styles = StyleSheet.create({
     top: 20,
     right: -35,
     transform: [{ rotate: "45deg" }],
-    backgroundColor: colors.belandOrange,
     paddingHorizontal: 40,
     paddingVertical: 5,
     zIndex: 1,
+  },
+  badgeFinish: {
+    backgroundColor: colors.belandOrange,
+  },
+  badgeUsed: {
+    backgroundColor: colors.error
   },
   badgeText: {
     fontSize: 15,
@@ -180,10 +173,11 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "white",
   },
-  eventPrice: {
-    fontSize: 25,
+  holderText: {
+    paddingLeft: 2,
+    fontSize: 18,
     fontWeight: "500",
-    color: colors.belandOrange,
+    color: colors.textSecondary,
   },
   infoContainer: {
     flexDirection: "row",

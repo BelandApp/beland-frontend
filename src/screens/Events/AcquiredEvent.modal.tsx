@@ -23,15 +23,14 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { useEventStore } from "src/stores/Event";
 import { RootStackParamList } from "src/components/layout/RootStackNavigator";
 import { colors } from "src/styles";
-import { useAuth } from "src/context";
 import { useCustomAlert } from "src/hooks";
 import { CustomAlert } from "src/components/ui";
 import { eventsService } from "src/services/events";
 
 export const AcquiredEventModal = ({ route }: { route: any }) => {
-  const { id } = route.params;
-  const { getEvent } = useEventStore();
-  const event = getEvent(id);
+  const { id_modal } = route.params;
+  const { getAcquiredEvent } = useEventStore();
+  const event = getAcquiredEvent(id_modal);
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { showCustomAlert, alertConfig, showAlert, hideAlert } =
     useCustomAlert();
@@ -48,7 +47,6 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
     end_sale_date,
     limit_tickets,
     sold_tickets,
-    price_becoin,
     is_refundable,
     refund_days_limit,
     image_url,
@@ -90,7 +88,8 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
   // const canRefund = new Date() -;
   const handleClose = () => navigation.goBack();
 
-  const handleUse = () => navigation.navigate("UseEventScreen", { id });
+  const handleUse = () =>
+    navigation.navigate("UseEventScreen", { id: id_modal });
   const handleRefund = async () => {
     showCustomAlert("Procesando reembolso...", "", "info");
     if (!purchase_price || !user_pass_id)

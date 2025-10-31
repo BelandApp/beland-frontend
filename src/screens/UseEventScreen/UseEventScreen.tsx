@@ -27,8 +27,8 @@ type RouteParams = { id: string };
 
 export const UseEventScreen = ({ route }: { route: any }) => {
   const { id } = route.params;
-  const { getEvent } = useEventStore();
-  const event = getEvent(id)
+  const { getAcquiredEvent } = useEventStore();
+  const event = getAcquiredEvent(id);
   if (!event) return null;
   const {
     name,
