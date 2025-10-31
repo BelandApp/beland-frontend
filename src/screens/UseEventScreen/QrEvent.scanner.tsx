@@ -8,6 +8,7 @@ import {
   Alert,
   Pressable,
   TouchableOpacity,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Camera, CameraView, BarcodeScanningResult } from "expo-camera";
@@ -18,6 +19,7 @@ import { ThemedHeader } from "src/components/shared/headers/Header";
 import { CircleArrowLeftIcon } from "lucide-react-native";
 import { eventsService } from "src/services/events";
 import {GoBackButton} from "src/components/shared/buttons/GoBack.button";
+import { getBackendErrorMessage } from "src/services";
 export const QRUseEventScreen = ({ route }: { route: any }) => {
   const { id } = route.params;
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
@@ -44,10 +46,16 @@ export const QRUseEventScreen = ({ route }: { route: any }) => {
       setIsActive(false);
       setLoading(true);
       // fetcheamos al backend
-      await eventsService.consumeQr(data, id);
-      navigation.navigate("ConsumedEventScreen", { id });
-    } catch (error) {
-      alert(error);
+      const res = await eventsService.consumeQr(data, id);
+      if (Platform.OS === "web") {
+        localStorage.setItem("consumedEvent", JSON.stringify(res));
+      }
+      navigation.navigate("ConsumedEventScreen", {
+        id,
+        holder: res.userEventPass.holder_name,
+      });
+    } catch (err: any) {
+       alert(getBackendErrorMessage(err));
     } finally {
       setLoading(false);
       setScanned(false);

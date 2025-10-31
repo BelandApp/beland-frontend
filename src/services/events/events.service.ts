@@ -49,7 +49,6 @@ export const eventsService = {
         method: "POST",
       }
     );
-    console.log(response);
     return response
   },
   refundEvent: async (eventId: string) => {
