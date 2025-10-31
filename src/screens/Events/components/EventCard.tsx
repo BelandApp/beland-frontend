@@ -42,13 +42,18 @@ export const EventCard: React.FC<Event> = ({
   price_becoin,
   end_sale_date,
   user_attended,
+  user_acquired,
 }) => {
   const navigation = useNavigation<EventScreenNavigationProp>();
   if (!id) return null;
+  const handleNavigation = () => {
+    if (user_acquired) return navigation.navigate("AcquiredEventModal", { id });
+    return navigation.navigate("EventModal", { id });
+  }
   return (
     <Pressable
       key={id}
-      onPress={() => navigation.navigate("EventModal", { id: id })}
+      onPress={handleNavigation}
       style={styles.card}
     >
       {/* Badges */}
