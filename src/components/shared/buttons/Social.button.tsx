@@ -1,6 +1,10 @@
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
+import { AppleIcon } from "src/components/icons/socials/Apple";
+import { FacebookIcon } from "src/components/icons/socials/Facebook";
+import { GoogleIcon } from "src/components/icons/socials/Google";
+import { colors } from "src/design-system";
 type SocialButtonsProps = {
   onPress: () => void;
 };
@@ -8,22 +12,24 @@ export const SocialButton: React.FC<SocialButtonsProps> = ({ onPress }) => {
   return (
     <TouchableOpacity
       style={{
+        flexDirection: "row",
+        justifyContent: "center",
+        alignItems: "baseline",
+        gap: 12,
         backgroundColor: "white",
         borderWidth: 2,
-        borderColor: "#E5E7EB",
-        paddingHorizontal: 20,
+        borderColor: colors.border.default,
         borderRadius: 24,
-        paddingVertical: 10,
-        alignItems: "center",
-        elevation: 4,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
+        padding: 10,
+        width: "auto",
+        marginHorizontal: "auto",
       }}
       onPress={onPress}
+      aria-label="botón ingresar con redes sociales"
     >
-      <Text>Ingresar con tus Redes</Text>
+      <GoogleIcon />
+      <AppleIcon />
+      <FacebookIcon/>
     </TouchableOpacity>
   );
 };
