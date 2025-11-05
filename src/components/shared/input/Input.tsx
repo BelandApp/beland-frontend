@@ -1,3 +1,4 @@
+import { EyeClosed, EyeOff } from "lucide-react-native";
 import React, { useState, useRef, useEffect } from "react";
 import {
   TextInput,
@@ -22,7 +23,7 @@ interface CustomInputProps {
 // onChangeText: (text: string) => void,
 // --OptionalProps--
 // secureTextEntry?: boolean,
-// keyboardType?: 
+// keyboardType?:
 
 export const CustomInput: React.FC<CustomInputProps> = ({
   label,
@@ -32,6 +33,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
   keyboardType = "default",
 }) => {
   const [isFocused, setIsFocused] = useState(false);
+  const [isSecure, setIsSecure] = useState(secureTextEntry);
 
   const animatedLabel = useRef(new Animated.Value(value ? 1 : 0)).current;
   const animatedBorder = useRef(new Animated.Value(0)).current;
@@ -91,15 +93,21 @@ export const CustomInput: React.FC<CustomInputProps> = ({
       >
         <Animated.Text style={labelStyle}>{label}</Animated.Text>
         <TextInput
-          id={'input-' + label}
+          id={"input-" + label}
           value={value}
           onChangeText={onChangeText}
-          secureTextEntry={secureTextEntry}
+          secureTextEntry={isSecure}
           keyboardType={keyboardType as any}
           style={styles.input}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
         />
+        {secureTextEntry &&
+          (isSecure ? (
+            <EyeOff color="white" onPress={() => setIsSecure(!isSecure)} />
+          ) : (
+            <EyeClosed color="white" onPress={() => setIsSecure(!isSecure)} />
+          ))}
       </Animated.View>
     </TouchableOpacity>
   );
@@ -107,16 +115,17 @@ export const CustomInput: React.FC<CustomInputProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    width: "100%",
     marginBottom: 30,
     position: "relative",
     outlineWidth: 0,
     borderWidth: 0,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   input: {
-    paddingTop: 20,
-    paddingBottom: 10,
-    paddingLeft: 5,
+    paddingTop: 10,
+    paddingBottom: 15,
     fontSize: 17,
     fontWeight: "600",
     color: "white",

@@ -6,7 +6,7 @@ const { width, height } = Dimensions.get("window");
 export const styles = StyleSheet.create({
   scroll: {
     flex: 1,
-    position:"relative"
+    position: "relative",
   },
   container: {
     flexDirection: "column",
@@ -15,12 +15,22 @@ export const styles = StyleSheet.create({
     marginBottom: 20,
     padding: 20,
     borderRadius: 20,
-    width: width > 500 ? 400 : width * 0.9,
+    width: width > 600 ? "auto" : width * 0.9,
     gap: 5,
     backgroundColor: colors.belandOrange,
   },
+  inputsContainer: {
+    width: "100%",
+    flexDirection: width > 600 ? "row" : "column",
+    gap: 10,
+  },
   logo: { margin: "auto" },
-  title: { fontSize: 24, fontWeight: 600, color: "white" },
+  title: {
+    fontSize: 24,
+    fontWeight: 600,
+    color: "white",
+    marginHorizontal: "auto",
+  },
   subtitle: { color: "white" },
   button: {
     backgroundColor: "white",
@@ -34,7 +44,7 @@ export const styles = StyleSheet.create({
     left: 10,
     backgroundColor: colors.belandOrange,
     borderRadius: 50,
-    padding:10
+    padding: 10,
   },
   buttonLink: {
     color: "white",

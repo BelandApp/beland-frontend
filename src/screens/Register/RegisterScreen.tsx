@@ -101,17 +101,21 @@ export default function RegisterScreen() {
       <LoginWave />
       <View style={styles.container}>
         <Text style={styles.title}>REGISTRARSE</Text>
-        <CustomInput
-          label="Nombre completo"
-          onChangeText={(full_name) => setFormData({ ...FormData, full_name })}
-          value={FormData.full_name}
-        />
+        <View style={styles.inputsContainer}>
+          <CustomInput
+            label="Nombre completo"
+            onChangeText={(full_name) =>
+              setFormData({ ...FormData, full_name })
+            }
+            value={FormData.full_name}
+          />
         <CustomInput
           label="Teléfono"
           onChangeText={(phone) => setFormData({ ...FormData, phone })}
           value={FormData.phone}
           keyboardType="phone-pad"
         />
+        </View>
         <CustomInput
           label="Correo Electrónico"
           onChangeText={(email) => setFormData({ ...FormData, email })}
