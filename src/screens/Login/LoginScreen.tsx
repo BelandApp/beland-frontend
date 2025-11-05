@@ -112,7 +112,8 @@ export default function LoginScreen() {
           <Button
             variant="ghost"
             title="Registrarse"
-            textStyle={styles.buttonLink}
+            textStyle={styles.forgetText}
+            style={{ paddingLeft: 0 }}
             onPress={() => navigate("Register")}
           />
         </View>
@@ -120,9 +121,11 @@ export default function LoginScreen() {
           variant="ghost"
           title="Olvide mi contraseña"
           textStyle={styles.forgetText}
+          size="small"
+          style={{ marginRight: "auto", paddingLeft: 0 }}
           onPress={() => navigate("NewPassword")}
         />
-      </View>   
+      </View>
       {/* CustomAlert para errores y demo */}
       <CustomAlert
         visible={alert.visible}

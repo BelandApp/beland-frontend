@@ -48,6 +48,7 @@ export const styles = StyleSheet.create({
   buttonText: { color: colors.belandOrange, fontWeight: "bold" },
   forgetText: {
     color: colors.cardBackground,
+    textDecorationLine: "underline",
   },
   containerRow: {
     flexDirection: "row",
