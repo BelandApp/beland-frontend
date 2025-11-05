@@ -35,35 +35,26 @@ import { ConsumedEventScreen } from "src/screens/UseEventScreen/ConsumeEvent";
 import { AcquiredEventModal } from "src/screens/Events/AcquiredEvent.modal";
 
 export type RootStackParamList = {
+  // Auth Screens
+  Login: undefined;
+  Register: undefined;
+  NewPassword: undefined;
+  // Main Screens
   Home: undefined;
   MainTabs: undefined;
-  CobrarScreen: undefined;
-  Dashboard: undefined;
-  CommerceDashboard: undefined;
-  Wallet: undefined;
   Community: undefined;
-  QR: { pendingRedemption?: any } | undefined;
-  RecyclingMap: undefined;
-  CanjearScreen: undefined;
-  WithdrawMethodScreen: {
-    beCoinsAmount: number;
-    usdAmount: number;
-  };
+  Catalog: undefined;
+  Groups: undefined;
+  Orders: undefined;
+  
+  // Payments
+  CobrarScreen: undefined;
   SendScreen: undefined;
   ReceiveScreen: undefined;
   HistoryScreen: undefined;
   WalletHistoryScreen: undefined;
   RechargeScreen: undefined;
   WalletSettingsScreen: undefined;
-  Catalog: undefined;
-  Groups: undefined;
-  UserDashboardScreen: undefined;
-  UserResources: undefined;
-  Orders: undefined;
-  // Admin Management Screens
-  EventsManagement: undefined;
-  UsersManagement: undefined;
-  ProductsManagement: undefined;
   PaymentScreen: {
     paymentData: {
       amount: number;
@@ -79,17 +70,37 @@ export type RootStackParamList = {
     };
     amount_to_payment_id?: string | null;
   };
+  NewPaymentScreen: PaymentScreenRoute;
   PayphoneSuccess: { toWalletId: string; amountPaymentId: string };
-  Login: undefined;
-  Register: undefined;
+  
+  // Users
+  Dashboard: undefined;
+  UserDashboardScreen: undefined;
+  UserResources: undefined;
+  CommerceDashboard: undefined;
+  Wallet: undefined;
+  QR: { pendingRedemption?: any } | undefined;
+  RecyclingMap: undefined;
+  CanjearScreen: undefined;
+  WithdrawMethodScreen: {
+    beCoinsAmount: number;
+    usdAmount: number;
+  };
+  
+  // Admin Management Screens
+  EventsManagement: undefined;
+  UsersManagement: undefined;
+  ProductsManagement: undefined;
+
+  // Events Screens
   EventModal: { id: string };
   AcquiredEventModal: { id_modal: string };
   UseEventScreen: { id: string };
   QrUseEventScreen: { id: string };
   ConsumedEventScreen: { id: string; holder?: string };
-  // Chequear si es necesario
+
+  // Chequear si son necesarios
   Rewards: undefined;
-  NewPaymentScreen: PaymentScreenRoute;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -179,6 +190,11 @@ export const RootStackNavigator = () => {
       />
       <Stack.Screen
         name="Register"
+        component={RegisterScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="NewPassword"
         component={RegisterScreen}
         options={{ headerShown: false }}
       />
