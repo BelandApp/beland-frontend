@@ -1,6 +1,7 @@
 import Constants from "expo-constants";
 import { RegisterFormData } from "src/screens/Register/RegisterScreen";
 import { TokenService } from "./token.service";
+import { FormCodeCheck, FormResetPassword } from "src/types";
 
 // === CONFIGURACIÓN ===
 const auth0Domain = Constants.expoConfig?.extra?.auth0Domain as string;
@@ -27,8 +28,8 @@ export const authService = {
       },
       body: JSON.stringify({ email, password }),
     });
-    if (res.status !== 200) {
-      throw new Error("Error en la solicitud de inicio de sesión");
+    if (!res.ok) {
+      throw new Error(res.statusText);
     }
     const data = await res.json();
     return data.token;
@@ -40,7 +41,9 @@ export const authService = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ auth0Token }),
     });
-    if (!res.ok) throw new Error("Error intercambiando token Auth0");
+    if (!res.ok) {
+      throw new Error(res.statusText);
+    }
     const data = await res.json();
     return data.token; // solo el token limpio
   },
@@ -48,8 +51,8 @@ export const authService = {
     const res = await fetch(`${API_URL}/auth/me`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (res.status !== 200) {
-      throw new Error("Error en la solicitud de obtener el usuario");
+    if (!res.ok) {
+      throw new Error(res.statusText);
     }
     const data = await res.json();
 
@@ -69,8 +72,8 @@ export const authService = {
         "Content-Type": "application/json",
       },
     });
-    if (res.status !== 200) {
-      throw new Error("Error en la solicitud de cambio de rol");
+    if (!res.ok) {
+      throw new Error(res.statusText);
     }
     const data = await res.json();
     return data;
@@ -84,10 +87,60 @@ export const authService = {
       },
       body: JSON.stringify(FormData),
     });
-    if (res.status !== 200) {
-      throw new Error("Error en la solicitud de registro de usuario");
+    if (!res.ok) {
+      throw new Error(res.statusText);
     }
     const data = await res.json();
     return data.token;
+  },
+  async sendCodeToEmail(email: string) {
+    try {
+      const res = await fetch(`${API_URL}/auth/forgot-password-code/${email}`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        throw new Error(res.statusText);
+      }
+      const data = await res.json();
+      return data.token;
+    } catch (error) {
+      alert(error);
+    }
+  },
+  async checkCode(FormData: FormCodeCheck) {
+    try {
+      const res = await fetch(`${API_URL}/auth/forgot-password-verification-code`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(FormData),
+      });
+      if (!res.ok) {
+        throw new Error(res.statusText);
+      }
+      const data = await res.json();
+      return data.token;
+    } catch (error) {
+      alert(error);
+    }
+  },
+  async resetPassword(FormData: FormResetPassword) {
+    try {
+      const res = await fetch(`${API_URL}/auth/reset-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(FormData),
+      });
+      if (!res.ok) {
+        throw new Error(res.statusText);
+      }
+      const data = await res.json();
+      return data.token;
+    } catch (error) {
+      alert(error);
+    }
   },
 };

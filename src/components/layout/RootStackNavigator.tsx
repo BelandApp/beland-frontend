@@ -33,6 +33,7 @@ import { UseEventScreen } from "src/screens/UseEventScreen/UseEventScreen";
 import { QRUseEventScreen } from "src/screens/UseEventScreen/QrEvent.scanner";
 import { ConsumedEventScreen } from "src/screens/UseEventScreen/ConsumeEvent";
 import { AcquiredEventModal } from "src/screens/Events/AcquiredEvent.modal";
+import NewPasswordScreen from "src/screens/NewPassword/NewPassword.screen";
 
 export type RootStackParamList = {
   // Auth Screens
@@ -195,7 +196,7 @@ export const RootStackNavigator = () => {
       />
       <Stack.Screen
         name="NewPassword"
-        component={RegisterScreen}
+        component={NewPasswordScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen
