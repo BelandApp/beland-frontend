@@ -1,0 +1,165 @@
+import React, { useState, useRef, useEffect } from "react";
+import {
+  Animated,
+  Easing,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  Text,
+  View,
+} from "react-native";
+import { Picker } from "@react-native-picker/picker";
+
+interface PhoneInputProps {
+  value: string;
+  onChange: (text: string) => void;
+  error?: string;
+}
+
+const COUNTRY_CODES = [
+  { code: "+593", name: "ECU" },
+  { code: "+54", name: "ARG" },
+  { code: "+34", name: "ESP" },
+  { code: "+52", name: "MEX" },
+  { code: "+57", name: "COL" },
+  { code: "+1", name: "USA" },
+];
+
+export const PhoneInput: React.FC<PhoneInputProps> = ({
+  value,
+  onChange,
+  error,
+}) => {
+  const [countryCode, setCountryCode] = useState("+54");
+  const [number, setNumber] = useState(value.replace(/^\+\d+/, ""));
+  const [isFocused, setIsFocused] = useState(false);
+
+  const animatedLabel = useRef(new Animated.Value(value ? 1 : 0)).current;
+  const animatedBorder = useRef(new Animated.Value(0)).current;
+
+  // Animaciones del label y borde (idénticas al CustomInput)
+  useEffect(() => {
+    Animated.timing(animatedLabel, {
+      toValue: isFocused || value ? 1 : 0,
+      duration: 200,
+      easing: Easing.ease,
+      useNativeDriver: false,
+    }).start();
+  }, [isFocused, value]);
+
+  useEffect(() => {
+    Animated.timing(animatedBorder, {
+      toValue: isFocused ? 1 : 0,
+      duration: 200,
+      easing: Easing.ease,
+      useNativeDriver: false,
+    }).start();
+  }, [isFocused]);
+
+  const labelStyle = {
+    position: "absolute" as const,
+    left: 90,
+    top: animatedLabel.interpolate({
+      inputRange: [0, 1],
+      outputRange: [18, -10],
+    }),
+    fontSize: animatedLabel.interpolate({
+      inputRange: [0, 1],
+      outputRange: [17, 13],
+    }),
+    color: "#ffffffaa",
+  };
+
+  const borderColor = animatedBorder.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["#ffffff", "#FFD700"],
+  });
+
+  const borderWidth = animatedBorder.interpolate({
+    inputRange: [0, 1],
+    outputRange: [2, 3],
+  });
+
+  const handleChange = (text: string) => {
+    setNumber(text);
+    onChange(`${countryCode}${text}`);
+  };
+
+  return (
+    <TouchableOpacity onPress={() => setIsFocused(true)}>
+      <Animated.View
+        style={[
+          styles.container,
+          {
+            borderBottomColor: borderColor,
+            borderBottomWidth: borderWidth,
+          },
+        ]}
+      >
+        <Animated.Text style={labelStyle}>Teléfono</Animated.Text>
+
+        <View style={styles.row}>
+          <Picker
+            selectedValue={countryCode}
+            onValueChange={(code) => {
+              setCountryCode(code);
+              onChange(`${code}${number}`);
+            }}
+            style={styles.picker}
+            dropdownIconColor="#fff"
+          >
+            {COUNTRY_CODES.map((c) => (
+              <Picker.Item
+                key={c.code}
+                label={`${c.name} ${c.code}`}
+                value={c.code}
+              />
+            ))}
+          </Picker>
+
+          <TextInput
+            keyboardType="phone-pad"
+            value={number}
+            onChangeText={handleChange}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            style={styles.input}
+          />
+        </View>
+      </Animated.View>
+      {error && <Text style={{ color: "red" }}>{error}</Text>}
+    </TouchableOpacity>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    marginBottom: 30,
+    position: "relative",
+    outlineWidth: 0,
+    borderWidth: 0,
+    flexDirection: "column",
+    justifyContent: "center",
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8
+  },
+  picker: {
+    width: 80,
+    height: "100%",
+    backgroundColor: "transparent",
+    borderWidth: 0,
+  },
+  input: {
+    flex: 1,
+    paddingTop: 10,
+    paddingBottom: 15,
+    fontSize: 17,
+    fontWeight: "600",
+    color: "white",
+  },
+});
+
+export default PhoneInput;
