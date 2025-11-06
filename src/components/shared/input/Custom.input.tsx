@@ -5,16 +5,18 @@ import {
   Animated,
   Easing,
   StyleSheet,
-  Pressable,
   TouchableOpacity,
+  Text,
+  TextInputProps,
 } from "react-native";
 
-interface CustomInputProps {
+interface CustomInputProps extends TextInputProps {
   label: string;
   value: string;
   onChangeText: (text: string) => void;
   secureTextEntry?: boolean;
-  keyboardType?: string;
+  error?: string;
+  onBlur?: () => void;
 }
 
 // Componente Input con animaciones, recibe por props:
@@ -31,6 +33,9 @@ export const CustomInput: React.FC<CustomInputProps> = ({
   onChangeText,
   secureTextEntry = false,
   keyboardType = "default",
+  error,
+  onBlur,
+  ...props
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [isSecure, setIsSecure] = useState(secureTextEntry);
@@ -81,7 +86,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
   });
 
   return (
-    <TouchableOpacity onPress={() => setIsFocused(true)}>
+    <TouchableOpacity onPress={() => setIsFocused(true)} style={styles.button}>
       <Animated.View
         style={[
           styles.container,
@@ -97,10 +102,11 @@ export const CustomInput: React.FC<CustomInputProps> = ({
           value={value}
           onChangeText={onChangeText}
           secureTextEntry={isSecure}
-          keyboardType={keyboardType as any}
+          keyboardType={keyboardType}
           style={styles.input}
           onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
+          onBlur={() => { setIsFocused(false); onBlur && onBlur() }}
+          {...props}
         />
         {secureTextEntry &&
           (isSecure ? (
@@ -109,13 +115,18 @@ export const CustomInput: React.FC<CustomInputProps> = ({
             <EyeClosed color="white" onPress={() => setIsSecure(!isSecure)} />
           ))}
       </Animated.View>
+      {error && <Text style={styles.textError}>{error}</Text>}
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  button: {
     marginBottom: 30,
+    flexDirection: "column",
+    gap: 5,
+  },
+  container: {
     position: "relative",
     outlineWidth: 0,
     borderWidth: 0,
@@ -133,6 +144,7 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
     outlineColor: "transparent",
   },
+  textError: { color: "red", fontSize: 12, maxWidth: 300 },
 });
 
 export default CustomInput;
