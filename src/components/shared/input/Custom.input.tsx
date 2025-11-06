@@ -105,7 +105,10 @@ export const CustomInput: React.FC<CustomInputProps> = ({
           keyboardType={keyboardType}
           style={styles.input}
           onFocus={() => setIsFocused(true)}
-          onBlur={() => { setIsFocused(false); onBlur && onBlur() }}
+          onBlur={() => {
+            setIsFocused(false);
+            onBlur && onBlur();
+          }}
           {...props}
         />
         {secureTextEntry &&
