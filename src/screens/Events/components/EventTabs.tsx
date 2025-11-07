@@ -2,55 +2,25 @@ import React, { useState } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { EventsList } from "./EventList";
 import { colors } from "src/styles";
+import ThemedTabs from "src/components/shared/Tabs/ThemedTabs";
 
 export const EventsTabs = ({
   availableEvents,
   acquiredEvents,
   onRefreshBalance,
 }: any) => {
-  const [activeTab, setActiveTab] = useState<"available" | "acquired">(
-    "available"
-  );
+  const [activeTab, setActiveTab] = useState("Disponibles");
 
   return (
     <View style={{ flex: 1 }}>
-      <View style={styles.tabContainer}>
-        <Pressable
-          style={[
-            styles.tabButton,
-            activeTab === "available" && styles.activeTab,
-          ]}
-          onPress={() => setActiveTab("available")}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === "available" && styles.activeText,
-            ]}
-          >
-            Disponibles
-          </Text>
-        </Pressable>
-        <Pressable
-          style={[
-            styles.tabButton,
-            activeTab === "acquired" && styles.activeTab,
-          ]}
-          onPress={() => setActiveTab("acquired")}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === "acquired" && styles.activeText,
-            ]}
-          >
-            Adquiridos
-          </Text>
-        </Pressable>
-      </View>
-
+      <ThemedTabs
+        tabs={["Disponibles", "Adquiridos"]}
+        onTabChange={(tab) => {
+          setActiveTab(tab);
+        }}
+      />
       <EventsList
-        events={activeTab === "available" ? availableEvents : acquiredEvents}
+        events={activeTab === "Disponibles" ? availableEvents : acquiredEvents}
         tab={activeTab}
         onRefreshBalance={onRefreshBalance}
       />

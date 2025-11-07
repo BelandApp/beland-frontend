@@ -23,7 +23,7 @@ export const EventsList = ({ events, tab }: any) => {
   return (
     <View style={styles.list}>
       {events.map((event: Event) =>
-        tab === "available" ? (
+        tab === "Disponibles" ? (
           <EventCard key={event.id} {...event} />
         ) : (
           <AcquiredEventCard key={event.user_pass_id} {...event} />
