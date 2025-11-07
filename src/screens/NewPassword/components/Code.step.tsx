@@ -3,7 +3,6 @@ import { View, Text, TouchableHighlight, StyleSheet } from "react-native";
 import { useEffect, useState } from "react";
 import { CodeStepProps } from "src/types";
 import ThemedButton from "src/components/shared/buttons/Themed.button";
-import { colors } from "src/styles";
 const CodeStep: React.FC<CodeStepProps> = ({
   onSubmit,
   onResendCode,
@@ -58,7 +57,7 @@ const CodeStep: React.FC<CodeStepProps> = ({
           onPress={handleResendCode}
           variant="primary"
           disabled={count != 0}
-          style={{ margin: 0, paddingLeft: 0 }}
+          style={{ marginRight: "auto ", paddingLeft: 0 }}
           isLoading={isLoading}
         />
       </View>

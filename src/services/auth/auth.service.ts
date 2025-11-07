@@ -80,7 +80,21 @@ export const authService = {
   },
 
   async registerUser(FormData: RegisterFormData) {
-    const res = await fetch(`${API_URL}/users`, {
+    const res = await fetch(`${API_URL}/auth/signup-verification`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(FormData),
+    });
+    if (!res.ok) {
+      throw new Error(res.statusText);
+    }
+    const data = await res.json();
+    return data.message;
+  },
+  async checkRegisterCode(FormData: { code: string; email: string }) {
+    const res = await fetch(`${API_URL}/auth/signup-register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -109,13 +123,16 @@ export const authService = {
   },
   async checkCode(FormData: FormCodeCheck) {
     try {
-      const res = await fetch(`${API_URL}/auth/forgot-password-verification-code`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(FormData),
-      });
+      const res = await fetch(
+        `${API_URL}/auth/forgot-password-verification-code`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(FormData),
+        }
+      );
       if (!res.ok) {
         throw new Error(res.statusText);
       }

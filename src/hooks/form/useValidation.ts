@@ -19,7 +19,8 @@ export const useValidation = () => {
     );
 
   /** Número de teléfono: validación sencilla sin prefijo todavía */
-  const validatePhone = (phone: string) => /^[0-9]{6,15}$/.test(phone.trim());
+  const validatePhone = (phone: string) =>
+    /^\+?[1-9]\d{1,3}\d{6,14}$/.test(phone.replace(/\s+/g, ""));
 
   /** Validación genérica de formulario */
   const validateForm = (data: {
@@ -29,7 +30,7 @@ export const useValidation = () => {
     password?: string;
   }) => {
     const newErrors: Record<string, string> = {};
-
+    console.log(data.phone);
     if (data.name !== undefined && !validateName(data.name))
       newErrors.name = "El nombre debe tener al menos 3 letras.";
 

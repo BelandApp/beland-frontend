@@ -101,7 +101,7 @@ export default function LoginScreen() {
           secureTextEntry
         />
         <ThemedButton
-          label="Registrarse"
+          label="Ingresar"
           onPress={handleLogin}
           variant="secondary"
           isLoading={isLoading}
@@ -110,7 +110,7 @@ export default function LoginScreen() {
         <View style={styles.containerRow}>
           <Text style={styles.subtitle}>¿Eres nuevo? </Text>
           <ThemedButton
-            label="Registrarse"
+            label="Registrate"
             onPress={() => navigate("Register")}
             style={{ paddingLeft: 0 }}
           />

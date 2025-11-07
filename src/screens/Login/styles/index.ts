@@ -17,13 +17,13 @@ export const styles = StyleSheet.create({
     marginBottom: 40,
     padding: 20,
     gap: 5,
-    height:"auto",
+    height: "auto",
     borderRadius: 20,
     width: width > 500 ? 400 : width * 0.9,
     // TODO PROBAR RESPONSIVE BACKGROUND
     // backgroundColor: colors.belandOrange,
   },
-  logo: { margin: "auto" },
+  logo: { margin: "auto", marginTop: 20 },
   title: { fontSize: 24, fontWeight: 600, color: "white" },
   subtitle: { color: "white" },
   button: {

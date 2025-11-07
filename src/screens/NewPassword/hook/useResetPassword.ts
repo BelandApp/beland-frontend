@@ -31,7 +31,6 @@ export const useResetPassword = () => {
     });
     setLoading(false);
     if (!res) return;
-
     //  TODO notificar al usuario
     setStep("password");
   };
