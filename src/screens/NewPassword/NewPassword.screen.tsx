@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     padding: 10,
   },
-  logo: { margin: "auto" },
+  logo: { margin: "auto", marginTop: 20 },
 });
 
 export default NewPasswordScreen;
