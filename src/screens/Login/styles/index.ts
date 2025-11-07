@@ -49,6 +49,7 @@ export const styles = StyleSheet.create({
   forgetText: {
     color: colors.cardBackground,
     textDecorationLine: "underline",
+    fontSize: 12,
   },
   containerRow: {
     flexDirection: "row",

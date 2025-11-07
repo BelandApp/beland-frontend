@@ -10,13 +10,12 @@ import { CustomAlert } from "../../components/ui/CustomAlert";
 import { LoginWave } from "src/components/ui/waves/Login.wave";
 import BelandLogo from "src/components/icons/BelandLogo";
 import { CustomInput } from "src/components/shared/input";
-import { Button } from "src/components/ui";
-import { useNavigation } from "@react-navigation/native";
 import { styles } from "./styles";
 import { SocialButton } from "src/components/shared";
 import { useAuth } from "src/context";
 import { CircleArrowLeftIcon } from "lucide-react-native";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
+import ThemedButton from "src/components/shared/buttons/Themed.button";
 
 export default function LoginScreen() {
   const {navigate} = useCustomNavigation();
@@ -101,29 +100,26 @@ export default function LoginScreen() {
           value={FormData.password}
           secureTextEntry
         />
-        <Button
-          title={isLoading ? "Cargando..." : "Entrar"}
+        <ThemedButton
+          label="Registrarse"
           onPress={handleLogin}
-          style={styles.button}
-          textStyle={styles.buttonText}
+          variant="secondary"
+          isLoading={isLoading}
         />
+
         <View style={styles.containerRow}>
           <Text style={styles.subtitle}>¿Eres nuevo? </Text>
-          <Button
-            variant="ghost"
-            title="Registrarse"
-            textStyle={styles.forgetText}
-            style={{ paddingLeft: 0 }}
+          <ThemedButton
+            label="Registrarse"
             onPress={() => navigate("Register")}
+            style={{ paddingLeft: 0 }}
           />
         </View>
-        <Button
-          variant="ghost"
-          title="Olvide mi contraseña"
-          textStyle={styles.forgetText}
-          size="small"
-          style={{ marginRight: "auto", paddingLeft: 0 }}
+        <ThemedButton
+          label="Olvide mi contraseña"
           onPress={() => navigate("NewPassword")}
+          textStyle={styles.forgetText}
+          style={{ paddingLeft: 0, marginRight: "auto"}}
         />
       </View>
       {/* CustomAlert para errores y demo */}

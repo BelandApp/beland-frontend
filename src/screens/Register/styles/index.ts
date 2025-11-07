@@ -23,6 +23,7 @@ export const styles = StyleSheet.create({
     width: "100%",
     flexDirection: width > 600 ? "row" : "column",
     gap: 10,
+    alignItems: "flex-end",
   },
   logo: { margin: "auto" },
   title: {
@@ -47,8 +48,6 @@ export const styles = StyleSheet.create({
     padding: 10,
   },
   buttonLink: {
-    color: "white",
-    fontWeight: "bold",
     paddingHorizontal: 0,
   },
   buttonText: { color: colors.belandOrange, fontWeight: "bold" },

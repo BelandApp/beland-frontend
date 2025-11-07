@@ -12,5 +12,5 @@ input:focus,
 .css-textinput-11aywtz:focus, .css-text-146c3p1:focus {
   outline: none !important;
   box-shadow: none !important;
-  border: none !important;
+  /* border: none !important; */
 }

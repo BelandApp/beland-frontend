@@ -63,10 +63,10 @@ export const CustomInput: React.FC<CustomInputProps> = ({
 
   const labelStyle = {
     position: "absolute" as const,
-    left: 5,
+    left: 0,
     top: animatedLabel.interpolate({
       inputRange: [0, 1],
-      outputRange: [18, -10],
+      outputRange: [10, -10],
     }),
     fontSize: animatedLabel.interpolate({
       inputRange: [0, 1],
@@ -80,10 +80,6 @@ export const CustomInput: React.FC<CustomInputProps> = ({
     outputRange: ["#ffffff", "#FFD700"],
   });
 
-  const borderWidth = animatedBorder.interpolate({
-    inputRange: [0, 1],
-    outputRange: [2, 3],
-  });
 
   return (
     <TouchableOpacity onPress={() => setIsFocused(true)} style={styles.button}>
@@ -92,7 +88,6 @@ export const CustomInput: React.FC<CustomInputProps> = ({
           styles.container,
           {
             borderBottomColor: borderColor,
-            borderBottomWidth: borderWidth,
           },
         ]}
       >
@@ -125,7 +120,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
 
 const styles = StyleSheet.create({
   button: {
-    marginBottom: 30,
+    marginBottom: 20,
     flexDirection: "column",
     gap: 5,
   },
@@ -136,14 +131,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    borderBottomWidth: 2,
+    
   },
   input: {
-    paddingTop: 10,
-    paddingBottom: 15,
+    paddingVertical: 8,
     fontSize: 17,
     fontWeight: "600",
     color: "white",
     borderStyle: "solid",
+    borderWidth: 1,
     borderColor: "transparent",
     outlineColor: "transparent",
   },

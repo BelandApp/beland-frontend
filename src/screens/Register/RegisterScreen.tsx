@@ -9,26 +9,33 @@ import {
 import { CustomAlert } from "../../components/ui/CustomAlert";
 import { LoginWave } from "src/components/ui/waves/Login.wave";
 import BelandLogo from "src/components/icons/BelandLogo";
-import { CustomInput } from "src/components/shared/input";
+import { CustomInput, PhoneInput } from "src/components/shared/input";
 import { Button } from "src/components/ui";
 import { useNavigation } from "@react-navigation/native";
 import { styles } from "./styles";
 import { SocialButton } from "src/components/shared";
 import { CircleArrowLeftIcon } from "lucide-react-native";
 import { authService } from "src/services/auth/auth.service";
+import { useValidation } from "src/hooks/form/useValidation";
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
+import ThemedButton from "src/components/shared/buttons/Themed.button";
+
 export type RegisterFormData = {
-  full_name: string;
-  phone: string;
   email: string;
   password: string;
   confirmPassword: string;
+  username: string;
   address: string;
+  phone: string;
   country: string;
   city: string;
+  full_name: string;
+  profile_picture_url?: string;
 };
 export default function RegisterScreen() {
-  const navigation = useNavigation();
+  const { navigate } = useCustomNavigation();
   const { width, height } = Dimensions.get("window");
+  const { validateForm } = useValidation();
   const [alert, setAlert] = useState<{
     visible: boolean;
     title: string;
@@ -37,19 +44,22 @@ export default function RegisterScreen() {
   }>({ visible: false, title: "", message: "", type: "error" });
   const [FormData, setFormData] = useState<RegisterFormData>({
     full_name: "",
-    phone: "",
+    username: "",
     email: "",
+    phone: "",
     password: "",
     confirmPassword: "",
-    address: "Belgrano",
-    country: "Argentina",
-    city: "Posadas",
+    address: "",
+    country: "",
+    city: "",
   });
 
   // TODO HANDLE AUTH
   const isLoading = false;
   const handleRegister = async () => {
-    if (!FormData.email.trim() || !FormData.password.trim()) {
+    FormData.confirmPassword = FormData.password;
+    const isValid = validateForm(FormData);
+    if (!isValid) {
       setAlert({
         visible: true,
         title: "Error",
@@ -58,7 +68,6 @@ export default function RegisterScreen() {
       });
       return;
     }
-    FormData.confirmPassword = FormData.password;
     try {
       const success = await authService.registerUser(FormData);
       if (!success) {
@@ -70,7 +79,7 @@ export default function RegisterScreen() {
         });
       }
       await authService.loginWithEmail(FormData.email, FormData.password);
-      navigation.navigate("MainTabs" as never);
+      navigate("MainTabs");
     } catch (error) {
       setAlert({
         visible: true,
@@ -93,7 +102,7 @@ export default function RegisterScreen() {
         style={styles.logo}
       />
       <TouchableOpacity
-        onPress={() => navigation.navigate("MainTabs" as never)}
+        onPress={() => navigate("MainTabs")}
         style={styles.backButton}
       >
         <CircleArrowLeftIcon size={32} color="#FFF" />
@@ -109,12 +118,10 @@ export default function RegisterScreen() {
             }
             value={FormData.full_name}
           />
-        <CustomInput
-          label="Teléfono"
-          onChangeText={(phone) => setFormData({ ...FormData, phone })}
-          value={FormData.phone}
-          keyboardType="phone-pad"
-        />
+          <PhoneInput
+            value={FormData.phone}
+            onChange={(phone) => setFormData({ ...FormData, phone })}
+          />
         </View>
         <CustomInput
           label="Correo Electrónico"
@@ -128,19 +135,13 @@ export default function RegisterScreen() {
           value={FormData.password}
           secureTextEntry
         />
-        <Button
-          title={isLoading ? "Cargando..." : "Registrarse"}
-          onPress={handleRegister}
-          style={styles.button}
-          textStyle={styles.buttonText}
-        />
+        <ThemedButton label="Registrarse" onPress={handleRegister} variant="secondary"/>
         <View style={styles.containerRow}>
           <Text style={styles.subtitle}>¿Ya tienes cuenta? </Text>
-          <Button
-            variant="ghost"
-            title="Ingresar"
-            textStyle={styles.buttonLink}
-            onPress={() => navigation.navigate("Login" as never)}
+          <ThemedButton
+            label="Ingresar"
+            onPress={() => navigate("Login")}
+            style={styles.buttonLink}
           />
         </View>
       </View>

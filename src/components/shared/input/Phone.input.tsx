@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
+import { colors } from "src/styles";
 
 interface PhoneInputProps {
   value: string;
@@ -61,7 +62,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
     left: 90,
     top: animatedLabel.interpolate({
       inputRange: [0, 1],
-      outputRange: [18, -10],
+      outputRange: [10, -10],
     }),
     fontSize: animatedLabel.interpolate({
       inputRange: [0, 1],
@@ -75,10 +76,6 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
     outputRange: ["#ffffff", "#FFD700"],
   });
 
-  const borderWidth = animatedBorder.interpolate({
-    inputRange: [0, 1],
-    outputRange: [2, 3],
-  });
 
   const handleChange = (text: string) => {
     setNumber(text);
@@ -86,13 +83,12 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
   };
 
   return (
-    <TouchableOpacity onPress={() => setIsFocused(true)}>
+    <TouchableOpacity onPress={() => setIsFocused(true)} style={styles.button}>
       <Animated.View
         style={[
           styles.container,
           {
             borderBottomColor: borderColor,
-            borderBottomWidth: borderWidth,
           },
         ]}
       >
@@ -100,19 +96,23 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
 
         <View style={styles.row}>
           <Picker
+            mode="dialog"
+            selectionColor={"white"}
             selectedValue={countryCode}
             onValueChange={(code) => {
               setCountryCode(code);
               onChange(`${code}${number}`);
             }}
-            style={styles.picker}
-            dropdownIconColor="#fff"
+            style={styles.picker}    
+            dropdownIconColor="white"
           >
             {COUNTRY_CODES.map((c) => (
               <Picker.Item
                 key={c.code}
                 label={`${c.name} ${c.code}`}
                 value={c.code}
+                color="black"
+                style={{ backgroundColor: colors.belandOrange }}
               />
             ))}
           </Picker>
@@ -133,29 +133,34 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
 };
 
 const styles = StyleSheet.create({
+  button: {
+    marginBottom: 20,
+    flexDirection: "column",
+    gap: 5,
+  },
   container: {
-    marginBottom: 30,
     position: "relative",
     outlineWidth: 0,
     borderWidth: 0,
     flexDirection: "column",
     justifyContent: "center",
+    borderBottomWidth: 2,
   },
   row: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8
+    gap: 8,
   },
   picker: {
     width: 80,
     height: "100%",
     backgroundColor: "transparent",
     borderWidth: 0,
+    color: "white",
   },
   input: {
     flex: 1,
-    paddingTop: 10,
-    paddingBottom: 15,
+    paddingVertical: 8,
     fontSize: 17,
     fontWeight: "600",
     color: "white",
