@@ -209,6 +209,7 @@ export const RootStackNavigator = () => {
         component={UsersManagementScreen}
         options={{ headerShown: false }}
       />
+      {/* TODO REVISAR SI ES NECESARIO */}
       <Stack.Screen
         name="Rewards"
         component={RewardsScreen}

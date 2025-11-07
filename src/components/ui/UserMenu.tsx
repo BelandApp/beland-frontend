@@ -172,6 +172,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
               <LayoutDashboard size={18} color="#333" />
               <Text style={styles.menuItemText}>Dashboard</Text>
             </TouchableOpacity>
+            {/* TODO REVISAR SI ES NECESARIO */}
             {/* <TouchableOpacity
               style={styles.menuItem}
               onPress={() => {
