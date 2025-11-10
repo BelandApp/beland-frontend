@@ -32,7 +32,7 @@ export default function LoginScreen() {
     email: "",
     password: "",
   });
-  if (isAuthenticated) navigate("MainTabs");
+  if (isAuthenticated) navigate("MainTabs", { screen: "Home" });
   const handleLogin = async () => {
     if (!FormData.email.trim() || !FormData.password.trim()) {
       setAlert({
@@ -66,7 +66,7 @@ export default function LoginScreen() {
 
   const handleLoginAuth0 = async () => {
     await handleAuth0Login();
-    navigate("MainTabs");
+    navigate("MainTabs", { screen: "Home" })
   };
 
   return (
@@ -75,7 +75,7 @@ export default function LoginScreen() {
       showsVerticalScrollIndicator={false}
     >
       <TouchableOpacity
-        onPress={() => navigate("MainTabs")}
+        onPress={() => navigate("MainTabs", { screen: "Home" })}
         style={styles.backButton}
       >
         <CircleArrowLeftIcon size={32} color="#FFF" />
@@ -119,7 +119,7 @@ export default function LoginScreen() {
           label="Olvide mi contraseña"
           onPress={() => navigate("NewPassword")}
           textStyle={styles.forgetText}
-          style={{ paddingLeft: 0, marginRight: "auto"}}
+          style={{ paddingLeft: 0, marginRight: "auto" }}
         />
       </View>
       {/* CustomAlert para errores y demo */}

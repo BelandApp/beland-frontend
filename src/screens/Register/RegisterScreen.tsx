@@ -11,12 +11,8 @@ import { LoginWave } from "src/components/ui/waves/Login.wave";
 import BelandLogo from "src/components/icons/BelandLogo";
 import { styles } from "./styles";
 import { CircleArrowLeftIcon } from "lucide-react-native";
-import { authService } from "src/services/auth/auth.service";
-import { useValidation } from "src/hooks/form/useValidation";
-import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import RegisterStep from "./components/RegisterStep";
 import { useRegister } from "./hook/useRegister";
-import ThemedButton from "src/components/shared/buttons/Themed.button";
 import CodeStep from "../NewPassword/components/Code.step";
 
 export type RegisterFormData = {
@@ -59,7 +55,7 @@ export default function RegisterScreen() {
         style={styles.logo}
       />
       <TouchableOpacity
-        onPress={() => navigate("MainTabs")}
+        onPress={() => navigate("MainTabs", { screen: "Home" })}
         style={styles.backButton}
       >
         <CircleArrowLeftIcon size={32} color="#FFF" />

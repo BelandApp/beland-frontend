@@ -41,7 +41,7 @@ export const useResetPassword = () => {
     setLoading(false);
     if (!res) return;
     //  TODO notificar al usuario
-    navigate("MainTabs");
+    navigate("MainTabs", { screen: "Home" });
   };
   const handleStepBack = () => {
     setStep("email");
