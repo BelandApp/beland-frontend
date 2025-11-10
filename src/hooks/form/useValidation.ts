@@ -30,7 +30,6 @@ export const useValidation = () => {
     password?: string;
   }) => {
     const newErrors: Record<string, string> = {};
-    console.log(data.phone);
     if (data.name !== undefined && !validateName(data.name))
       newErrors.name = "El nombre debe tener al menos 3 letras.";
 

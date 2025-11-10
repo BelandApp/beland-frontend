@@ -37,6 +37,7 @@ export const useRegister = () => {
     setStep("register");
   };
   const handleRegister = async () => {
+    FormData.username = FormData.full_name.split(" ").join("");
     FormData.confirmPassword = FormData.password;
     const isValid = validateForm(FormData);
     if (!isValid) {
@@ -54,7 +55,7 @@ export const useRegister = () => {
         setAlert({
           visible: true,
           title: "Error",
-          message: "Credenciales incorrectas",
+          message: "No pudimos registrarte, intenta nuevamente",
           type: "error",
         });
       }
@@ -63,10 +64,10 @@ export const useRegister = () => {
       setAlert({
         visible: true,
         title: "Error",
-        message: "No se pudo completar el inicio de sesión",
+        message: "No se pudo completar el Registro",
         type: "error",
       });
-      console.error("[LOGIN] Error en loginWithEmailPassword:", error);
+      console.error("[REGISTER] Error en Register:", error);
     }
   };
   const handleReSendCode = async () => {

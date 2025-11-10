@@ -20,12 +20,12 @@ export type RegisterFormData = {
   password: string;
   confirmPassword: string;
   username: string;
-  address: string;
   phone: string;
-  country: string;
-  city: string;
   full_name: string;
   profile_picture_url?: string;
+  address: string;
+  city: string;
+  country: string;
 };
 export default function RegisterScreen() {
   const { width, height } = Dimensions.get("window");
