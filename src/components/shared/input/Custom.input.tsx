@@ -89,7 +89,10 @@ export const CustomInput: React.FC<CustomInputProps> = ({
   return (
     <Pressable
       onPress={handleFocus}
-      style={styles.button}
+      style={({ pressed }) => [
+        styles.button,
+        { opacity: pressed ? 0.8 : 1, },
+      ]}
       accessible={false}
       tabIndex={-1}
     >

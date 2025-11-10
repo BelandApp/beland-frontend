@@ -90,7 +90,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
       tabIndex={-1}
       accessible={false}
       onPress={() => setIsFocused(true)}
-      style={styles.button}
+      style={({ pressed }) => [styles.button, { opacity: pressed ? 0.8 : 1 }]}
     >
       <Animated.View
         accessible={false}
