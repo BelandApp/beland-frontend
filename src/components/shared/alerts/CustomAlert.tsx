@@ -8,7 +8,7 @@ import {
   Dimensions,
   Platform,
 } from "react-native";
-import { colors } from "../../styles/colors";
+import { colors } from "@styles/colors";
 
 interface CustomAlertProps {
   visible: boolean;

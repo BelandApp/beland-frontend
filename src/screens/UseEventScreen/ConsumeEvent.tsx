@@ -1,10 +1,8 @@
 
-import { StackNavigationProp } from "@react-navigation/stack";
 import { CheckCheckIcon } from "lucide-react-native";
 import React from "react";
 import { StyleSheet, View, Text, Pressable } from "react-native";
-import { RootStackParamList } from "src/components/layout/RootStackNavigator";
-import { ThemedHeader } from "src/components/shared/headers/Header";
+import { ThemedHeader } from "@components/shared";
 import { colors } from "src/design-system";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 

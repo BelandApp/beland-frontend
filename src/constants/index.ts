@@ -29,3 +29,5 @@ export {
   convertUSDToBeCoins,
   convertBeCoinsToUSD,
 } from "./currency";
+
+export * from "./paymentModes"

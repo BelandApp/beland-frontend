@@ -14,11 +14,9 @@ import {
   LogOut,
   LayoutDashboard,
   Store,
-  Gift,
   User,
   Settings,
   PackageIcon,
-  GiftIcon,
   Percent,
 } from "lucide-react-native";
 import { showSuccessAlert, showErrorAlert } from "../../utils/alertHelpers";
@@ -38,7 +36,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
 }) => {
   const { navigate } = useCustomNavigation();
 
-  const { user, isLoading, handleAuth0Login, logout } = useAuth();
+  const { user, isLoading, logout } = useAuth();
 
   const [menuVisible, setMenuVisible] = useState(false);
   const [showCommerceAlert, setShowCommerceAlert] = useState(false);
@@ -200,7 +198,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
               style={styles.menuItem}
               onPress={() => {
                 setMenuVisible(false);
-                navigate("Orders");
+                navigate("Orders",{screen:"OrdersList"});
               }}
             >
               <PackageIcon size={18} color="#333" />

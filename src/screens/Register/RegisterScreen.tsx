@@ -6,7 +6,7 @@ import {
   Dimensions,
   TouchableOpacity,
 } from "react-native";
-import { CustomAlert } from "../../components/ui/CustomAlert";
+import { CustomAlert } from "@components/shared";
 import { LoginWave } from "src/components/ui/waves/Login.wave";
 import BelandLogo from "src/components/icons/BelandLogo";
 import { styles } from "./styles";

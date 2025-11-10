@@ -24,7 +24,7 @@ export const EventsList = ({ events, tab }: any) => {
           <>
             <Text style={styles.emptyText}>Aún no has adquirido eventos."</Text>
             {!isAuthenticated && (
-              <>
+                <>
                 <Button
                   variant="ghost"
                   style={{ margin: 0, padding: 0 }}

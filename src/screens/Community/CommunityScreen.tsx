@@ -7,9 +7,7 @@ import {
   RefreshControl,
   Alert,
 } from "react-native";
-import { StackNavigationProp } from "@react-navigation/stack";
-import { RootStackParamList } from "../../components/layout/RootStackNavigator";
-import { CustomAlert } from "../../components/ui/CustomAlert";
+import { CustomAlert } from "@components/shared";
 import { colors } from "../../styles/colors";
 import { ResourceType } from "@services/core";
 import { Resource } from "../../types/resource";
@@ -28,7 +26,7 @@ import { PurchaseModal } from "./components/PurchaseModal";
 // Styles
 import { containerStyles } from "./styles";
 import { ThemedHeader } from "src/components/shared/headers/Header";
-import { BeCoinsBalance } from "src/components/ui";
+import { BeCoinsBalance } from "@components/shared"
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 // Helper function to map ResourceType to Resource

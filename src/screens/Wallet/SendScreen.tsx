@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { CustomAlert } from "../../components/ui/CustomAlert";
+import { CustomAlert } from "@components/shared";
 import {
   View,
   Text,

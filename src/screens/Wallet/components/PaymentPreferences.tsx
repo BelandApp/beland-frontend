@@ -14,7 +14,7 @@ import {
   WithdrawAccount,
 } from "../../../services/withdrawService";
 import { AddWithdrawAccountModal } from "./AddWithdrawAccountModal";
-import { CustomAlert } from "../../../components/ui/CustomAlert";
+import { CustomAlert } from "@components/shared";
 
 interface PaymentPreferencesProps {
   onRefresh?: () => void;

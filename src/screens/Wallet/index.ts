@@ -7,6 +7,8 @@ export { default as HistoryScreen } from "./WalletHistoryScreen";
 export { default as CanjearScreen } from "./CanjearScreen";
 export { default as CobrarScreen } from "./CobrarScreen";
 export { default as WithdrawMethodScreen } from "./WithdrawMethodScreen";
+export { default as WalletHistoryScreen } from "./WalletHistoryScreen"
+export { default as PayphoneSuccessScreen } from "./PayphoneSuccessScreen"
 export * from "./components";
 export * from "./hooks";
 export * from "./types";

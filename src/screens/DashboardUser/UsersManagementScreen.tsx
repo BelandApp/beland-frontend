@@ -14,7 +14,7 @@ import {
 import DashboardWrapper from "./components/DashboardWrapper";
 import { adminApiService, AdminUser } from "src/services/AdminApiService";
 
-const UsersManagementScreen: React.FC = () => {
+export const UsersManagementScreen: React.FC = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);

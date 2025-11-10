@@ -19,7 +19,7 @@ import { CircleArrowLeftIcon } from "lucide-react-native";
 import BelandLogo from "src/components/icons/BelandLogo";
 import { useResetPassword } from "./hook/useResetPassword";
 
-const NewPasswordScreen = () => {
+export const NewPasswordScreen = () => {
   const { navigate } = useCustomNavigation();
   const { width, height } = Dimensions.get("window");
   const {

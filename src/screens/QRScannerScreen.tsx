@@ -7,7 +7,7 @@ import { View, Text, StyleSheet, Alert, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Camera, CameraView, BarcodeScanningResult } from "expo-camera";
 import { colors } from "../styles/colors";
-import { Button } from "../components/ui/Button";
+import { Button } from "@components/shared";
 import { GoBackButton } from "src/components/shared/buttons/GoBack.button";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
@@ -221,6 +221,14 @@ export const QRScannerScreen = () => {
             }}
             style={styles.button}
           />
+          {/* <Button
+            title="Solicitar permisos"
+            onPress={async () => {
+              const { status } = await Camera.requestCameraPermissionsAsync();
+              setHasPermission(status === "granted");
+            }}
+            style={styles.button}
+          /> */}
         </View>
       </SafeAreaView>
     );

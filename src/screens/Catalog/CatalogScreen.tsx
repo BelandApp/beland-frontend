@@ -12,9 +12,8 @@ import {
   TouchableOpacity,
   Alert,
   StyleSheet,
-  Platform,
 } from "react-native";
-import { BeCoinsBalance } from "../../components/ui/BeCoinsBalance";
+import { BeCoinsBalance } from "@components/shared";
 
 // Hooks
 import { useCatalogFilters, useCatalogModals } from "./hooks";
@@ -28,7 +27,7 @@ import { useCustomAlert } from "../../hooks/useCustomAlert";
 // Components
 import { SearchBar, FilterPanel, ProductGrid } from "./components";
 import { OrderDeliveryModal } from "./components/OrderDeliveryModal";
-import { CustomAlert } from "../../components/ui/CustomAlert";
+import { CustomAlert } from "@components/shared";
 
 // Styles
 import { containerStyles, productStyles } from "./styles";
@@ -378,7 +377,7 @@ export const CatalogScreen = () => {
         onClose={closeDeliveryModal}
         onOrderCreated={(orderId: string) => {
           // Navigate to Orders tab to see the created order
-          navigate("Orders");
+          navigate("Orders",{screen:"OrdersList"});
         }}
       />
 

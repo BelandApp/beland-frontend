@@ -9,7 +9,7 @@ import {
   Animated,
   Easing,
 } from "react-native";
-import { colors } from "../../styles/colors";
+import { colors } from "@styles/colors";
 
 interface ConfirmationAlertProps {
   visible: boolean;

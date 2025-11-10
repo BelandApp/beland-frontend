@@ -17,7 +17,7 @@ import {
   WithdrawService,
   WithdrawAccount,
 } from "../../services/withdrawService";
-import { CustomAlert } from "../../components/ui/CustomAlert";
+import { CustomAlert } from "@components/shared";
 import { useWalletData } from "./hooks/useWalletData";
 
 const CanjearScreen: React.FC<{

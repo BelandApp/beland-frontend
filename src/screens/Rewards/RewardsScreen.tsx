@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { View, ScrollView, Text } from "react-native";
 import { Card } from "../../components/ui/Card";
-import { CustomAlert } from "../../components/ui/CustomAlert";
-import { ConfirmationAlert } from "../../components/ui/ConfirmationAlert";
+import { CustomAlert } from "@components/shared";
+import { ConfirmationAlert } from "../../components/shared/alerts/ConfirmationAlert";
 import { colors } from "../../styles/colors";
 import { Reward } from "./types";
 import { useCustomAlert } from "../../hooks/useCustomAlert";
@@ -20,7 +20,7 @@ import { CategoryFilter, RewardsGrid } from "./components";
 // Styles
 import { containerStyles } from "./styles";
 import { ThemedHeader } from "src/components/shared/headers/Header";
-import { BeCoinsBalance } from "src/components/ui";
+import { BeCoinsBalance } from "@components/shared";
 import { headerStyles } from "../Payment";
 
 export const RewardsScreen = () => {
@@ -126,7 +126,6 @@ export const RewardsScreen = () => {
         <View style={containerStyles.featuredSection}>
           <Card
             style={containerStyles.featuredCard}
-            backgroundColor={colors.belandOrange + "25"}
           >
             <View style={containerStyles.featuredContent}>
               <View style={containerStyles.featuredText}>

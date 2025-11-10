@@ -19,7 +19,7 @@ import {
 import { useEventStore } from "src/stores/Event";
 import { colors } from "src/styles";
 import { useCustomAlert } from "src/hooks";
-import { CustomAlert } from "src/components/ui";
+import { CustomAlert } from "@components/shared";
 import { eventsService } from "src/services/events";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 

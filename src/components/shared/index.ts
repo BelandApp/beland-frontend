@@ -1,2 +1,6 @@
 export * from "./buttons"
 export * from "./input"
+export * from "./Tabs"
+export * from "./alerts"
+export * from "./headers"
+export * from "./loader"

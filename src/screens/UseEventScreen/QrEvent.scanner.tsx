@@ -1,21 +1,16 @@
 import React, { useState, useEffect } from "react";
-import type { StackNavigationProp } from "@react-navigation/stack";
 import {
   View,
   Text,
   StyleSheet,
-  Alert,
   Pressable,
-  TouchableOpacity,
   Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Camera, CameraView, BarcodeScanningResult } from "expo-camera";
 import { colors } from "src/styles";
-import { RootStackParamList } from "src/components/layout/RootStackNavigator";
-import { Button } from "src/components/ui";
+import { Button, GoBackButton } from "@components/shared";
 import { eventsService } from "src/services/events";
-import {GoBackButton} from "src/components/shared/buttons/GoBack.button";
 import { getBackendErrorMessage } from "src/services";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 export const QRUseEventScreen = ({ route }: { route: any }) => {
