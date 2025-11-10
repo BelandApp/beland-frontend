@@ -21,9 +21,9 @@ import {
   GiftIcon,
   Percent,
 } from "lucide-react-native";
-import { useNavigation } from "@react-navigation/native";
 import { showSuccessAlert, showErrorAlert } from "../../utils/alertHelpers";
 import { authService } from "../../services/auth/auth.service";
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 interface UserMenuProps {
   style?: any;
@@ -36,7 +36,8 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   variant = "compact",
   iconColor = "#fff",
 }) => {
-  const navigation = useNavigation();
+  const { navigate } = useCustomNavigation();
+
   const { user, isLoading, handleAuth0Login, logout } = useAuth();
 
   const [menuVisible, setMenuVisible] = useState(false);
@@ -54,7 +55,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
 
   const handleNavigateToDashboard = () => {
     setMenuVisible(false);
-    (navigation as any).navigate("UserDashboardScreen");
+    navigate("UserDashboardScreen");
   };
   const handleChangeRoleToCommerce = async () => {
     setIsChangingRole(true);
@@ -92,7 +93,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   if (!user) {
     return (
       <TouchableOpacity
-        onPress={() => navigation.navigate("Login" as never)}
+        onPress={() => navigate("Login")}
         style={[styles.loginButton, style]}
       >
         <User size={20} color={iconColor} />
@@ -188,7 +189,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
               style={styles.menuItem}
               onPress={() => {
                 setMenuVisible(false);
-                (navigation as any).navigate("UserResources");
+                navigate("UserResources");
               }}
             >
               <Percent size={18} color="#333" />
@@ -198,7 +199,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
               style={styles.menuItem}
               onPress={() => {
                 setMenuVisible(false);
-                (navigation as any).navigate("Orders");
+                navigate("Orders");
               }}
             >
               <PackageIcon size={18} color="#333" />
@@ -208,7 +209,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
               style={styles.menuItem}
               onPress={() => {
                 setMenuVisible(false);
-                (navigation as any).navigate("WalletSettingsScreen");
+                navigate("WalletSettingsScreen");
               }}
             >
               <Settings size={18} color="#333" />

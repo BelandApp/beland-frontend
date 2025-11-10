@@ -12,30 +12,26 @@ import {
   ArrowLeftRight,
   Calendar,
   MapPin,
-  Ticket,
-  DollarSign,
   RotateCcw,
   SquareChevronDown,
   CheckCircle2,
 } from "lucide-react-native";
-import { useNavigation } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
 import { useEventStore } from "src/stores/Event";
-import { RootStackParamList } from "src/components/layout/RootStackNavigator";
 import { colors } from "src/styles";
 import { useCustomAlert } from "src/hooks";
 import { CustomAlert } from "src/components/ui";
 import { eventsService } from "src/services/events";
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 export const AcquiredEventModal = ({ route }: { route: any }) => {
   const { id_modal } = route.params;
   const { getAcquiredEvent } = useEventStore();
   const event = getAcquiredEvent(id_modal);
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const { navigate, goBack } = useCustomNavigation();
   const { showCustomAlert, alertConfig, showAlert, hideAlert } =
     useCustomAlert();
   const [visibleImage, setVisibleImage] = useState(0);
-
+  console.log(event);
   if (!event) return null;
 
   const {
@@ -51,7 +47,6 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
     refund_days_limit,
     image_url,
     images_urls,
-    user_acquired,
     user_attended,
     purchase_price,
     user_pass_id,
@@ -86,10 +81,9 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
     });
   };
   // const canRefund = new Date() -;
-  const handleClose = () => navigation.goBack();
+  const handleClose = () => goBack();
 
-  const handleUse = () =>
-    navigation.navigate("UseEventScreen", { id: id_modal });
+  const handleUse = () => navigate("UseEventScreen", { id: id_modal });
   const handleRefund = async () => {
     showCustomAlert("Procesando reembolso...", "", "info");
     if (!purchase_price || !user_pass_id)
@@ -106,8 +100,6 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
       return { label: "Finalizado", color: colors.textSecondary };
     return { label: "Adquirido", color: colors.belandOrange };
   })();
-
-  const ticketsLeft = limit_tickets - sold_tickets;
 
   return (
     <View style={styles.modal}>
@@ -180,7 +172,9 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
               <View style={styles.actions}>
                 {!user_attended ? (
                   <>
-                    <Text style={styles.infoText}>Entrada a nombre de: {holder_name}</Text>
+                    <Text style={styles.infoText}>
+                      Entrada a nombre de: {holder_name}
+                    </Text>
                     <Pressable
                       style={[styles.button, styles.useButton]}
                       onPress={handleUse}
@@ -293,7 +287,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 50,
     borderColor: colors.primary,
-     paddingVertical: 8
+    paddingVertical: 8,
   },
   description: {
     marginVertical: 16,

@@ -11,7 +11,6 @@ import {
   Platform,
 } from "react-native";
 import { useAuth } from "src/context";
-import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "src/components/layout/RootStackNavigator";
 import DashboardWrapper from "./DashboardWrapper";
@@ -19,6 +18,7 @@ import {
   adminApiService,
   DashboardMetrics,
 } from "src/services/AdminApiService";
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 const { width } = Dimensions.get("window");
 
@@ -237,7 +237,7 @@ interface DashboardSection {
 
 const AdminPanel: React.FC = () => {
   const { user, isLoading } = useAuth();
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const { navigate } = useCustomNavigation();
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loadingMetrics, setLoadingMetrics] = useState(true);
   const [selectedSection, setSelectedSection] = useState<string>("home");
@@ -317,10 +317,10 @@ const AdminPanel: React.FC = () => {
     // Navegación real a las pantallas de gestión
     switch (sectionId) {
       case "events":
-        navigation.navigate("EventsManagement");
+        navigate("EventsManagement");
         break;
       case "users":
-        navigation.navigate("UsersManagement");
+        navigate("UsersManagement");
         break;
       case "products":
         Alert.alert(
@@ -369,7 +369,7 @@ const AdminPanel: React.FC = () => {
         color: "#34C759",
         trend: "up" as const,
         percentage: 8,
-        onPress: () => navigation.navigate("UsersManagement"),
+        onPress: () => navigate("UsersManagement"),
       },
       {
         label: "Productos",
@@ -396,7 +396,7 @@ const AdminPanel: React.FC = () => {
         color: "#AF52DE",
         trend: "neutral" as const,
         percentage: 3,
-        onPress: () => navigation.navigate("EventsManagement"),
+        onPress: () => navigate("EventsManagement"),
       },
     ];
 
@@ -537,7 +537,7 @@ const AdminPanel: React.FC = () => {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.quickActionButton}
-              onPress={() => navigation.navigate("UsersManagement")}
+              onPress={() => navigate("UsersManagement")}
             >
               <Text style={styles.quickActionText}>Usuarios</Text>
             </TouchableOpacity>

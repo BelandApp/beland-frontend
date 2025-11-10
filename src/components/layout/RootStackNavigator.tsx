@@ -34,6 +34,8 @@ import { QRUseEventScreen } from "src/screens/UseEventScreen/QrEvent.scanner";
 import { ConsumedEventScreen } from "src/screens/UseEventScreen/ConsumeEvent";
 import { AcquiredEventModal } from "src/screens/Events/AcquiredEvent.modal";
 import NewPasswordScreen from "src/screens/NewPassword/NewPassword.screen";
+import { GroupsStackNavigator } from "./GroupsStackNavigator";
+import { GroupsStackParamList, MainTabParamList } from "src/types/navigation";
 
 export type RootStackParamList = {
   // Auth Screens
@@ -41,13 +43,8 @@ export type RootStackParamList = {
   Register: undefined;
   NewPassword: undefined;
   // Main Screens
-  Home: undefined;
-  MainTabs: undefined;
-  Community: undefined;
-  Catalog: undefined;
-  Groups: undefined;
-  Orders: undefined;
-  
+  MainTabs: MainTabParamList;
+
   // Payments
   CobrarScreen: undefined;
   SendScreen: undefined;
@@ -73,7 +70,7 @@ export type RootStackParamList = {
   };
   NewPaymentScreen: PaymentScreenRoute;
   PayphoneSuccess: { toWalletId: string; amountPaymentId: string };
-  
+
   // Users
   Dashboard: undefined;
   UserDashboardScreen: undefined;
@@ -87,7 +84,7 @@ export type RootStackParamList = {
     beCoinsAmount: number;
     usdAmount: number;
   };
-  
+
   // Admin Management Screens
   EventsManagement: undefined;
   UsersManagement: undefined;
@@ -113,6 +110,7 @@ export const RootStackNavigator = () => {
       screenOptions={{ headerShown: false }}
     >
       <Stack.Screen name="MainTabs" component={MainTabNavigator} />
+
       <Stack.Screen name="CanjearScreen" component={CanjearScreen} />
       <Stack.Screen
         name="WithdrawMethodScreen"
@@ -169,21 +167,13 @@ export const RootStackNavigator = () => {
         component={PaymentScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen
-        name="Catalog"
-        component={CatalogScreen}
-        options={{ headerShown: false }}
-      />
+
       <Stack.Screen
         name="UserResources"
         component={UserResourcesScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen
-        name="Orders"
-        component={OrdersStackNavigator}
-        options={{ headerShown: false }}
-      />
+
       <Stack.Screen
         name="Login"
         component={LoginScreen}

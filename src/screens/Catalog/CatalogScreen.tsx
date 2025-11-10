@@ -14,7 +14,6 @@ import {
   StyleSheet,
   Platform,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 import { BeCoinsBalance } from "../../components/ui/BeCoinsBalance";
 
 // Hooks
@@ -41,9 +40,10 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import CatalogCommunitySection from "./mainComponents/CatalogCommunitySection";
 import { useGroupedProducts } from "./mainHooks/useGroupedProducts";
 import { ThemedHeader } from "src/components/shared/headers/Header";
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 export const CatalogScreen = () => {
-  const navigation = useNavigation();
+  const { navigate } = useCustomNavigation();
   const { canPerformAction, handleAuth0Login, isAuthenticated } = useAuth();
   const { showAlert, alertConfig, showCustomAlert, hideAlert } =
     useCustomAlert();
@@ -189,7 +189,7 @@ export const CatalogScreen = () => {
     }
 
     setAddingProductId(product.id);
-    addProductToCart({...product, quantity: 1});
+    addProductToCart({ ...product, quantity: 1 });
     setAddingProductId(null);
   };
 
@@ -328,7 +328,7 @@ export const CatalogScreen = () => {
           onClose={() => setShowCart(false)}
           onNavigateToRecharge={() => {
             setShowCart(false);
-            (navigation as any).navigate("RechargeScreen");
+            navigate("RechargeScreen");
           }}
           onCheckout={async () => {
             setShowCart(false);
@@ -378,7 +378,7 @@ export const CatalogScreen = () => {
         onClose={closeDeliveryModal}
         onOrderCreated={(orderId: string) => {
           // Navigate to Orders tab to see the created order
-          (navigation as any).navigate("Orders");
+          navigate("Orders");
         }}
       />
 

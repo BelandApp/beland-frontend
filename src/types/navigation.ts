@@ -16,10 +16,8 @@ export type OrdersStackParamList = {
 
 export type MainTabParamList = {
   Home: undefined;
-  QRScanner: undefined;
-  Groups: undefined;
   Wallet: undefined;
+  Catalog: undefined;
   Community: undefined;
-  History: undefined;
-  Profile: undefined;
+  Groups: GroupsStackParamList;
 };
