@@ -47,6 +47,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   const handleLogout = async () => {
     setMenuVisible(false);
     await logout();
+    navigate("Login")
   };
 
   const toggleMenu = () => {

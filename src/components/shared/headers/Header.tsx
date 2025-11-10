@@ -10,8 +10,6 @@ import { CircleArrowLeftIcon } from "lucide-react-native";
 import BelandLogo from "src/components/icons/BelandLogo";
 import { UserMenu } from "src/components/ui/UserMenu";
 import { HeaderStyles } from "./header.styles";
-import { StackNavigationProp } from "@react-navigation/stack";
-import { RootStackParamList } from "src/components/layout/RootStackNavigator";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 type HeaderProps = {

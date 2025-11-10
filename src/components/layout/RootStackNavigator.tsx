@@ -35,7 +35,8 @@ import { ConsumedEventScreen } from "src/screens/UseEventScreen/ConsumeEvent";
 import { AcquiredEventModal } from "src/screens/Events/AcquiredEvent.modal";
 import NewPasswordScreen from "src/screens/NewPassword/NewPassword.screen";
 import { GroupsStackNavigator } from "./GroupsStackNavigator";
-import { GroupsStackParamList, MainTabParamList } from "src/types/navigation";
+import { GroupsStackParamList, MainTabParamList, OrdersStackParamList } from "src/types/navigation";
+import { Order } from "src/types";
 
 export type RootStackParamList = {
   // Auth Screens
@@ -43,8 +44,8 @@ export type RootStackParamList = {
   Register: undefined;
   NewPassword: undefined;
   // Main Screens
-  MainTabs: MainTabParamList;
-
+  MainTabs: undefined;
+  Orders: undefined;
   // Payments
   CobrarScreen: undefined;
   SendScreen: undefined;
@@ -199,17 +200,6 @@ export const RootStackNavigator = () => {
         component={UsersManagementScreen}
         options={{ headerShown: false }}
       />
-      {/* TODO REVISAR SI ES NECESARIO */}
-      <Stack.Screen
-        name="Rewards"
-        component={RewardsScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="NewPaymentScreen"
-        component={NewPaymentScreen}
-        options={{ headerShown: false }}
-      />
       <Stack.Screen
         name="UseEventScreen"
         component={UseEventScreen}
@@ -223,6 +213,22 @@ export const RootStackNavigator = () => {
       <Stack.Screen
         name="ConsumedEventScreen"
         component={ConsumedEventScreen}
+        options={{ headerShown: false }}
+      />
+      {/* TODO REVISAR SI ES NECESARIO */}
+      <Stack.Screen
+        name="Rewards"
+        component={RewardsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Orders"
+        component={OrdersStackNavigator}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="NewPaymentScreen"
+        component={NewPaymentScreen}
         options={{ headerShown: false }}
       />
       {/* Modales */}
