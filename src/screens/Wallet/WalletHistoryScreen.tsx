@@ -9,12 +9,13 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
 import { TransactionCard } from "./components/TransactionCard";
 import { useWalletTransactions } from "./hooks/useWalletTransactions";
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 export default function WalletHistoryScreen() {
-  const navigation = useNavigation();
+  const { goBack } = useCustomNavigation();
+
   const { transactions, isLoading } = useWalletTransactions();
   const [searchText, setSearchText] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
@@ -45,7 +46,7 @@ export default function WalletHistoryScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => navigation.goBack()}
+          onPress={() => goBack()}
           style={styles.backButton}
         >
           <MaterialCommunityIcons name="arrow-left" size={24} color="#fff" />

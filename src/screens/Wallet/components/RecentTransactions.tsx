@@ -1,10 +1,10 @@
 import React from "react";
 import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
 import { TransactionCard } from "./TransactionCard";
 import { Transaction } from "../types";
 import { recentTransactionsStyles } from "../styles";
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 interface RecentTransactionsProps {
   transactions: Transaction[];
@@ -14,11 +14,11 @@ interface RecentTransactionsProps {
 export const RecentTransactions: React.FC<RecentTransactionsProps> = ({
   transactions,
   isLoading = false,
-}) => {
-  const navigation = useNavigation();
+}) => {  const { navigate } = useCustomNavigation();
+
 
   const handleViewAll = () => {
-    navigation.navigate("WalletHistoryScreen" as never);
+    navigate("WalletHistoryScreen");
   };
 
   if (isLoading) {

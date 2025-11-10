@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useNavigation, useRoute } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
 import {
   View,
@@ -15,18 +14,18 @@ import { Camera, CameraView, BarcodeScanningResult } from "expo-camera";
 import { colors } from "src/styles";
 import { RootStackParamList } from "src/components/layout/RootStackNavigator";
 import { Button } from "src/components/ui";
-import { ThemedHeader } from "src/components/shared/headers/Header";
-import { CircleArrowLeftIcon } from "lucide-react-native";
 import { eventsService } from "src/services/events";
 import {GoBackButton} from "src/components/shared/buttons/GoBack.button";
 import { getBackendErrorMessage } from "src/services";
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 export const QRUseEventScreen = ({ route }: { route: any }) => {
   const { id } = route.params;
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [scanned, setScanned] = useState(false);
   const [isActive, setIsActive] = useState(true);
   const [loading, setLoading] = useState(false);
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+    const { navigate } = useCustomNavigation();
+
   useEffect(() => {
     const getCameraPermissions = async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
@@ -50,7 +49,7 @@ export const QRUseEventScreen = ({ route }: { route: any }) => {
       if (Platform.OS === "web") {
         localStorage.setItem("consumedEvent", JSON.stringify(res));
       }
-      navigation.navigate("ConsumedEventScreen", {
+     navigate("ConsumedEventScreen", {
         id,
         holder: res.userEventPass.holder_name,
       });
@@ -143,7 +142,7 @@ export const QRUseEventScreen = ({ route }: { route: any }) => {
           style={styles.controlButton}
         />
         <Pressable
-          onPress={() => navigation.navigate("ConsumedEventScreen", { id })}
+          onPress={() => navigate("ConsumedEventScreen", { id })}
         >
           <Text>Ir</Text>
         </Pressable>

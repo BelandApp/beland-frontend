@@ -37,6 +37,7 @@ import NewPasswordScreen from "src/screens/NewPassword/NewPassword.screen";
 import { GroupsStackNavigator } from "./GroupsStackNavigator";
 import { GroupsStackParamList, MainTabParamList, OrdersStackParamList } from "src/types/navigation";
 import { Order } from "src/types";
+import { NavigatorScreenParams } from "@react-navigation/native";
 
 export type RootStackParamList = {
   // Auth Screens
@@ -44,8 +45,9 @@ export type RootStackParamList = {
   Register: undefined;
   NewPassword: undefined;
   // Main Screens
-  MainTabs: undefined;
-  Orders: undefined;
+  MainTabs: NavigatorScreenParams<MainTabParamList>;
+  Orders: NavigatorScreenParams<OrdersStackParamList>;
+  Groups: NavigatorScreenParams<GroupsStackParamList>;
   // Payments
   CobrarScreen: undefined;
   SendScreen: undefined;
@@ -111,7 +113,11 @@ export const RootStackNavigator = () => {
       screenOptions={{ headerShown: false }}
     >
       <Stack.Screen name="MainTabs" component={MainTabNavigator} />
-
+      <Stack.Screen
+        name="Orders"
+        component={OrdersStackNavigator}
+        options={{ headerShown: false }}
+      />
       <Stack.Screen name="CanjearScreen" component={CanjearScreen} />
       <Stack.Screen
         name="WithdrawMethodScreen"
@@ -221,11 +227,7 @@ export const RootStackNavigator = () => {
         component={RewardsScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen
-        name="Orders"
-        component={OrdersStackNavigator}
-        options={{ headerShown: false }}
-      />
+
       <Stack.Screen
         name="NewPaymentScreen"
         component={NewPaymentScreen}

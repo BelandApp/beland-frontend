@@ -1,4 +1,4 @@
-import { useNavigation } from "@react-navigation/native";
+
 import { StackNavigationProp } from "@react-navigation/stack";
 import { CheckCheckIcon } from "lucide-react-native";
 import React from "react";
@@ -6,10 +6,12 @@ import { StyleSheet, View, Text, Pressable } from "react-native";
 import { RootStackParamList } from "src/components/layout/RootStackNavigator";
 import { ThemedHeader } from "src/components/shared/headers/Header";
 import { colors } from "src/design-system";
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 export const ConsumedEventScreen = ({ route }: { route: any }) => {
   const { id, holder } = route.params;
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+   const { navigate } = useCustomNavigation();
+
   return (
     <>
       <ThemedHeader title="Entrada" canGoBack />
@@ -26,7 +28,7 @@ export const ConsumedEventScreen = ({ route }: { route: any }) => {
           <Text>ID Validado: {id}</Text>
           {holder && <Text>Entrada a nombre de {holder}</Text>}
           <Pressable
-            onPress={() => navigation.navigate("MainTabs")}
+            onPress={() => navigate("MainTabs",{screen:"Home"})}
             style={styles.button}
           >
             <Text style={{ color: "white", fontWeight: "bold" }}>Inicio</Text>

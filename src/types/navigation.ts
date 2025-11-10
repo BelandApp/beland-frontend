@@ -1,3 +1,5 @@
+import { NavigatorScreenParams } from "@react-navigation/native";
+
 export type GroupsStackParamList = {
   GroupsList: undefined;
   CreateGroup: undefined;
@@ -19,5 +21,5 @@ export type MainTabParamList = {
   Wallet: undefined;
   Catalog: undefined;
   Community: undefined;
-  Groups: GroupsStackParamList;
+  Groups: NavigatorScreenParams<GroupsStackParamList>;
 };

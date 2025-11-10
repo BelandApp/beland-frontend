@@ -13,13 +13,13 @@ import {
 } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "src/context";
 import { useWalletData } from "../Wallet/hooks/useWalletData";
 import { WalletService } from "@services/core";
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 const ReceiveScreen = () => {
-  const navigation = useNavigation();
+  const { goBack } = useCustomNavigation();
   const { walletData } = useWalletData();
   const { user } = useAuth();
   const [showToast, setShowToast] = useState(false);
@@ -84,7 +84,7 @@ const ReceiveScreen = () => {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => navigation.goBack()}
+          onPress={() => goBack()}
           style={styles.backButton}
         >
           <MaterialCommunityIcons name="arrow-left" size={24} color="#fff" />

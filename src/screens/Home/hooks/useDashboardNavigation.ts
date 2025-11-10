@@ -1,16 +1,17 @@
-import { useNavigation } from "@react-navigation/native";
+
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 export const useDashboardNavigation = () => {
-  const navigation = useNavigation();
+  const {navigate}=useCustomNavigation()
 
   const handleMenuPress = () => {
-    // Navegar a configuración
+    // TODO Navegar a configuración
     console.log("Menu pressed");
   };
 
   const handleViewHistory = () => {
     // Navegar a la pantalla de historial
-    navigation.navigate("HistoryScreen" as never);
+   navigate("HistoryScreen");
   };
 
   const handleCoinsPress = () => {
@@ -20,7 +21,7 @@ export const useDashboardNavigation = () => {
 
   const handleRecyclingMapPress = () => {
     // Navegar a la pantalla completa del mapa de reciclaje
-    navigation.navigate("RecyclingMap" as never);
+    navigate("RecyclingMap");
   };
 
   return {

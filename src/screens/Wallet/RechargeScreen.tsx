@@ -9,8 +9,8 @@ import {
   StyleSheet,
   Platform,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 // Montos predefinidos
 const PRESET_AMOUNTS = [10, 25, 50, 100, 200, 500];
@@ -49,7 +49,8 @@ function loadPayphoneScript(): Promise<void> {
 }
 
 export default function RechargeScreen() {
-  const navigation = useNavigation();
+  const { goBack } = useCustomNavigation();
+
   const [amount, setAmount] = useState("");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -410,7 +411,7 @@ export default function RechargeScreen() {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => navigation.goBack()}
+          onPress={() => goBack()}
           style={styles.backButton}
         >
           <MaterialCommunityIcons name="arrow-left" size={24} color="#333" />

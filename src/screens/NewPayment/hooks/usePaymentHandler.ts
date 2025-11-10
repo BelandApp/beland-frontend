@@ -5,14 +5,12 @@ import { payWithPayphone } from "../services/payphoneService";
 import { convertBeCoinsToUSD } from "src/constants";
 import { User } from "src/context";
 import { PaymentMethod } from "../components/PaymentMehotdSelector";
-import { useNavigation } from "@react-navigation/native";
-import { RootStackParamList } from "src/components/layout/RootStackNavigator";
-import { StackNavigationProp } from "@react-navigation/stack";
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 export const usePaymentHandler = (user?: User) => {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<"methods" | "payment">("methods");
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const {navigate} =useCustomNavigation()
   const changeStatus = (newStatus: "methods" | "payment") =>
     setStatus(newStatus);
   const handlePayment = async ({
@@ -36,6 +34,7 @@ export const usePaymentHandler = (user?: User) => {
       }
 
       Alert.alert("Éxito", "Pago completado con éxito 🎉");
+       navigate("MainTabs", { screen: "Community" });
     } catch (error) {
       console.error(error);
       Alert.alert("Error", "No se pudo procesar el pago");
@@ -49,7 +48,7 @@ export const usePaymentHandler = (user?: User) => {
     try {
       setLoading(true);
       await becoinService.acquireFreeProduct(eventDto);
-      navigation.navigate("MainTabs");
+      navigate("MainTabs", { screen: "Community" });
     } catch {
     } finally {
       setLoading(false);
