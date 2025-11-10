@@ -1,21 +1,41 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Dimensions } from "react-native";
 import { Ticket } from "lucide-react-native";
 import { EventCard } from "./EventCard";
 import { colors } from "src/styles";
 import { AcquiredEventCard } from "./AcquiredEventCard";
 import { Event } from "src/stores/Event";
+import { useAuth } from "src/context";
+import { Button } from "src/components/ui";
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 export const EventsList = ({ events, tab }: any) => {
+  const { isAuthenticated } = useAuth();
+  const { navigate } = useCustomNavigation();
   if (!events?.length) {
     return (
       <View style={styles.emptyContainer}>
         <Ticket color={colors.textSecondary} size={48} />
-        <Text style={styles.emptyText}>
-          {tab === "available"
-            ? "No hay eventos disponibles por ahora."
-            : "Aún no has adquirido eventos."}
-        </Text>
+        {tab === "available" ? (
+          <Text style={styles.emptyText}>
+            No hay eventos disponibles por ahora.
+          </Text>
+        ) : (
+          <>
+            <Text style={styles.emptyText}>Aún no has adquirido eventos."</Text>
+            {!isAuthenticated && (
+              <>
+                <Button
+                  variant="ghost"
+                  style={{ margin: 0, padding: 0 }}
+                  title="Inicia Sesion"
+                  onPress={() => navigate("Login")}
+                />
+                <Text style={styles.emptyText}> para adquirirlos.</Text>
+              </>
+            )}
+          </>
+        )}
       </View>
     );
   }
@@ -43,7 +63,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   emptyContainer: {
-    flexDirection: "row",
+    flexDirection: Dimensions.get("window").width > 600 ? "row" : "column",
     justifyContent: "center",
     alignItems: "center",
     gap: 10,
