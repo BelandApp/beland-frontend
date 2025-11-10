@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Text,
   View,
+  Pressable,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { colors } from "src/styles";
@@ -15,6 +16,7 @@ interface PhoneInputProps {
   value: string;
   onChange: (text: string) => void;
   error?: string;
+  onBlur?: () => void;
 }
 
 const COUNTRY_CODES = [
@@ -30,6 +32,8 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
   value,
   onChange,
   error,
+  onBlur,
+  ...props
 }) => {
   const [countryCode, setCountryCode] = useState("+54");
   const [number, setNumber] = useState(value.replace(/^\+\d+/, ""));
@@ -76,15 +80,21 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
     outputRange: ["#ffffff", "#FFD700"],
   });
 
-
   const handleChange = (text: string) => {
     setNumber(text);
     onChange(`${countryCode}${text}`);
   };
 
   return (
-    <TouchableOpacity onPress={() => setIsFocused(true)} style={styles.button}>
+    <Pressable
+      tabIndex={-1}
+      accessible={false}
+      onPress={() => setIsFocused(true)}
+      style={styles.button}
+    >
       <Animated.View
+        accessible={false}
+        tabIndex={-1}
         style={[
           styles.container,
           {
@@ -94,16 +104,16 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
       >
         <Animated.Text style={labelStyle}>Teléfono</Animated.Text>
 
-        <View style={styles.row}>
+        <View style={styles.row} accessible={false} tabIndex={-1}>
           <Picker
             mode="dialog"
-            selectionColor={"white"}
+            // selectionColor={"white"}
             selectedValue={countryCode}
             onValueChange={(code) => {
               setCountryCode(code);
               onChange(`${code}${number}`);
             }}
-            style={styles.picker}    
+            style={styles.picker}
             dropdownIconColor="white"
           >
             {COUNTRY_CODES.map((c) => (
@@ -122,18 +132,23 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
             value={number}
             onChangeText={handleChange}
             onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
+            onBlur={() => {
+              setIsFocused(false);
+              onBlur && onBlur();
+            }}
             style={styles.input}
+            {...props}
           />
         </View>
       </Animated.View>
       {error && <Text style={{ color: "red" }}>{error}</Text>}
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 
 const styles = StyleSheet.create({
   button: {
+    flex: 1,
     marginBottom: 20,
     flexDirection: "column",
     gap: 5,
@@ -152,8 +167,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   picker: {
-    width: 80,
-    height: "100%",
+    width: 85,
+    height: 38,
     backgroundColor: "transparent",
     borderWidth: 0,
     color: "white",
