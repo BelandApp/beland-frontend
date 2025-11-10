@@ -10,18 +10,18 @@ import {
 import { ResourceService } from "@services/core";
 import UserResourceCard from "./components/UserResourceCard";
 import { useCustomAlert } from "src/hooks/useCustomAlert";
-import { useNavigation } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
 import type { RootStackParamList } from "src/components/layout/RootStackNavigator";
 import { Gift, Filter } from "lucide-react-native";
 import { ThemedHeader } from "src/components/shared/headers/Header";
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 const UserResourcesScreen: React.FC = () => {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const FILTERS = ["Todos", "Activos", "Expirados"];
   const { showCustomAlert } = useCustomAlert();
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const { navigate } = useCustomNavigation();
 
   const load = async () => {
     setLoading(true);
@@ -112,10 +112,7 @@ const UserResourcesScreen: React.FC = () => {
             item={item}
             onUse={(it) => {
               // Redirigir al scanner QR pasando el recurso seleccionado
-              navigation.navigate(
-                "QR" as any,
-                { pendingRedemption: it } as any
-              );
+              navigate("QR", { pendingRedemption: it });
             }}
             onDetails={(it) => {
               showCustomAlert("Detalle", JSON.stringify(it), "info");

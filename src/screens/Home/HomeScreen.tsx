@@ -1,6 +1,5 @@
 import React from "react";
 import { View, ScrollView, Platform, StyleSheet } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 import {
   HeroSection,
   QuickActions,
@@ -20,9 +19,10 @@ import { LoginWave } from "src/components/ui/waves/Login.wave";
 import { HomeWave } from "src/components/ui/waves/Home.wave";
 import { colors } from "src/styles";
 import { ThemedHeader } from "src/components/shared/headers/Header";
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 export const HomeScreen = () => {
-  const navigation = useNavigation();
+  const {navigate} = useCustomNavigation()
   const {
     handleMenuPress,
     handleViewHistory,
@@ -45,33 +45,33 @@ export const HomeScreen = () => {
     ? lockedBalance
     : undefined;
 
-  // Handlers para acciones rápidas
+  // TODO REFACTOR Handlers para acciones rápidas
   const handleRecharge = () => {
-    navigation.navigate("RechargeScreen" as never);
+    navigate("RechargeScreen");
   };
 
   const handleSend = () => {
-    navigation.navigate("SendScreen" as never);
+    navigate("SendScreen");
   };
 
   const handleExchange = () => {
-    navigation.navigate("CanjearScreen" as never);
+    navigate("CanjearScreen");
   };
 
   const handleReceive = () => {
-    navigation.navigate("ReceiveScreen" as never);
+    navigate("ReceiveScreen");
   };
 
   const handleCollect = () => {
-    navigation.navigate("CobrarScreen" as never);
+    navigate("CobrarScreen");
   };
 
   const handleCommunity = () => {
-    navigation.navigate("Community" as never);
+    navigate("MainTabs", {screen:"Community"});
   };
 
   const handleDelivery = () => {
-    navigation.navigate("Catalog" as never);
+    navigate("MainTabs", { screen: "Catalog" });
   };
   if (Platform.OS === "web") {
     const dynamicStyles = StyleSheet.create({

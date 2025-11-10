@@ -1,23 +1,20 @@
-import { useNavigation } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
-import { GroupsStackParamList } from "../../../types/navigation";
 
-type NavigationProp = StackNavigationProp<GroupsStackParamList, "GroupsList">;
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
+
 
 export const useGroupsNavigation = () => {
-  const navigation = useNavigation<NavigationProp>();
+  const { navigate, goBack } = useCustomNavigation()
 
   const navigateToCreateGroup = () => {
-    navigation.navigate("CreateGroup");
+    navigate("Groups",{screen:"CreateGroup"});
   };
 
+  // chequear que funcione
   const navigateToGroupManagement = (groupId: string) => {
-    navigation.navigate("GroupManagement", { groupId });
+    navigate("Groups", { screen: "GroupManagement", params: { groupId } });
   };
 
-  const goBack = () => {
-    navigation.goBack();
-  };
+
 
   return {
     navigateToCreateGroup,

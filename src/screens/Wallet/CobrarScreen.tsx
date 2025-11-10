@@ -15,8 +15,8 @@ import {
 } from "react-native";
 import { WalletService } from "@services/core";
 import { convertUSDToBeCoins } from "../../constants/currency";
-import { useNavigation } from "@react-navigation/native";
 import { TokenService } from "src/services/auth/token.service";
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 const CobrarScreen = () => {
   // Actualizar historial de montos en tiempo real al recibir pago por socket
@@ -28,7 +28,8 @@ const CobrarScreen = () => {
     }
   });
   const [showPresetForm, setShowPresetForm] = useState(false);
-  const navigation = useNavigation();
+    const { goBack } = useCustomNavigation();
+
   const [qrImage, setQrImage] = useState<string | null>(null);
   const [qrLoading, setQrLoading] = useState(false);
   const [qrError, setQrError] = useState<string | null>(null);
@@ -246,7 +247,7 @@ const CobrarScreen = () => {
             contentContainerStyle={{ paddingBottom: 32 }}
           >
             <TouchableOpacity
-              onPress={() => navigation.goBack()}
+              onPress={() => goBack()}
               style={{
                 backgroundColor: "#fff",
                 borderRadius: 24,
@@ -658,7 +659,7 @@ const CobrarScreen = () => {
         contentContainerStyle={{ paddingBottom: 32 }}
       >
         <TouchableOpacity
-          onPress={() => navigation.goBack()}
+          onPress={() => goBack()}
           style={{
             backgroundColor: "#fff",
             borderRadius: 24,

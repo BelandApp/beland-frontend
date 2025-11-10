@@ -1,19 +1,22 @@
+import { EyeClosed, EyeOff } from "lucide-react-native";
 import React, { useState, useRef, useEffect } from "react";
 import {
   TextInput,
   Animated,
   Easing,
   StyleSheet,
-  Pressable,
   TouchableOpacity,
+  Text,
+  TextInputProps,
 } from "react-native";
 
-interface CustomInputProps {
+interface CustomInputProps extends TextInputProps {
   label: string;
   value: string;
   onChangeText: (text: string) => void;
   secureTextEntry?: boolean;
-  keyboardType?: string;
+  error?: string;
+  onBlur?: () => void;
 }
 
 // Componente Input con animaciones, recibe por props:
@@ -22,7 +25,7 @@ interface CustomInputProps {
 // onChangeText: (text: string) => void,
 // --OptionalProps--
 // secureTextEntry?: boolean,
-// keyboardType?: 
+// keyboardType?:
 
 export const CustomInput: React.FC<CustomInputProps> = ({
   label,
@@ -30,8 +33,12 @@ export const CustomInput: React.FC<CustomInputProps> = ({
   onChangeText,
   secureTextEntry = false,
   keyboardType = "default",
+  error,
+  onBlur,
+  ...props
 }) => {
   const [isFocused, setIsFocused] = useState(false);
+  const [isSecure, setIsSecure] = useState(secureTextEntry);
 
   const animatedLabel = useRef(new Animated.Value(value ? 1 : 0)).current;
   const animatedBorder = useRef(new Animated.Value(0)).current;
@@ -56,10 +63,10 @@ export const CustomInput: React.FC<CustomInputProps> = ({
 
   const labelStyle = {
     position: "absolute" as const,
-    left: 5,
+    left: 0,
     top: animatedLabel.interpolate({
       inputRange: [0, 1],
-      outputRange: [18, -10],
+      outputRange: [10, -10],
     }),
     fontSize: animatedLabel.interpolate({
       inputRange: [0, 1],
@@ -73,57 +80,71 @@ export const CustomInput: React.FC<CustomInputProps> = ({
     outputRange: ["#ffffff", "#FFD700"],
   });
 
-  const borderWidth = animatedBorder.interpolate({
-    inputRange: [0, 1],
-    outputRange: [2, 3],
-  });
 
   return (
-    <TouchableOpacity onPress={() => setIsFocused(true)}>
+    <TouchableOpacity onPress={() => setIsFocused(true)} style={styles.button}>
       <Animated.View
         style={[
           styles.container,
           {
             borderBottomColor: borderColor,
-            borderBottomWidth: borderWidth,
           },
         ]}
       >
         <Animated.Text style={labelStyle}>{label}</Animated.Text>
         <TextInput
-          id={'input-' + label}
+          id={"input-" + label}
           value={value}
           onChangeText={onChangeText}
-          secureTextEntry={secureTextEntry}
-          keyboardType={keyboardType as any}
+          secureTextEntry={isSecure}
+          keyboardType={keyboardType}
           style={styles.input}
           onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
+          onBlur={() => {
+            setIsFocused(false);
+            onBlur && onBlur();
+          }}
+          {...props}
         />
+        {secureTextEntry &&
+          (isSecure ? (
+            <EyeOff color="white" onPress={() => setIsSecure(!isSecure)} />
+          ) : (
+            <EyeClosed color="white" onPress={() => setIsSecure(!isSecure)} />
+          ))}
       </Animated.View>
+      {error && <Text style={styles.textError}>{error}</Text>}
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
+  button: {
+    marginBottom: 20,
+    flexDirection: "column",
+    gap: 5,
+  },
   container: {
-    width: "100%",
-    marginBottom: 30,
     position: "relative",
     outlineWidth: 0,
     borderWidth: 0,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderBottomWidth: 2,
+    
   },
   input: {
-    paddingTop: 20,
-    paddingBottom: 10,
-    paddingLeft: 5,
+    paddingVertical: 8,
     fontSize: 17,
     fontWeight: "600",
     color: "white",
     borderStyle: "solid",
+    borderWidth: 1,
     borderColor: "transparent",
     outlineColor: "transparent",
   },
+  textError: { color: "red", fontSize: 12, maxWidth: 300 },
 });
 
 export default CustomInput;

@@ -1,1 +1,2 @@
-export * from "./Input";
+export * from "./Custom.input";
+export * from "./Phone.input";

@@ -9,7 +9,6 @@ import {
   Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useOrdersStoreAPI } from "../../stores/useOrdersStoreAPI";
@@ -18,11 +17,8 @@ import { OrdersStackParamList } from "../../types/navigation";
 import { colors } from "../../styles/colors";
 import { orderDetailStyles } from "./styles";
 import { FeedbackModal } from "./components/FeedbackModal";
-
-type OrderDetailScreenNavigationProp = StackNavigationProp<
-  OrdersStackParamList,
-  "OrderDetail"
->;
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
+import { RouteProp, useRoute } from "@react-navigation/native";
 
 type OrderDetailScreenRouteProp = RouteProp<
   OrdersStackParamList,
@@ -30,7 +26,8 @@ type OrderDetailScreenRouteProp = RouteProp<
 >;
 
 const OrderDetailScreen: React.FC = () => {
-  const navigation = useNavigation<OrderDetailScreenNavigationProp>();
+  const { goBack } = useCustomNavigation();
+
   const route = useRoute<OrderDetailScreenRouteProp>();
   const { orderId } = route.params;
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
@@ -185,7 +182,7 @@ const OrderDetailScreen: React.FC = () => {
           </Text>
           <TouchableOpacity
             style={orderDetailStyles.backButton}
-            onPress={() => navigation.goBack()}
+            onPress={() => goBack()}
           >
             <MaterialCommunityIcons name="arrow-left" size={20} color="white" />
             <Text style={orderDetailStyles.backButtonText}>Volver</Text>
@@ -391,7 +388,7 @@ const OrderDetailScreen: React.FC = () => {
         <View style={orderDetailStyles.headerRow}>
           <TouchableOpacity
             style={orderDetailStyles.headerButton}
-            onPress={() => navigation.goBack()}
+            onPress={() => goBack()}
           >
             <MaterialCommunityIcons name="arrow-left" size={20} color="white" />
           </TouchableOpacity>

@@ -10,7 +10,6 @@ import {
   Image,
   Dimensions,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "src/components/layout/RootStackNavigator";
 import { colors } from "src/styles";
@@ -21,6 +20,7 @@ import { useEventStore } from "src/stores/Event";
 import { ThemedHeader } from "src/components/shared/headers/Header";
 import { OpenInGoogleMaps } from "./components/OpenInGoogleMaps";
 import { ArrowLeftRight } from "lucide-react-native";
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 type Navigation = StackNavigationProp<RootStackParamList>;
 type RouteParams = { id: string };
@@ -40,7 +40,8 @@ export const UseEventScreen = ({ route }: { route: any }) => {
     latitude,
     longitude,
   } = event;
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+    const { navigate } = useCustomNavigation();
+
   const [isReadyToUse, setIsReadyToUse] = useState(true);
 
   const eventDate = useMemo(
@@ -63,7 +64,7 @@ export const UseEventScreen = ({ route }: { route: any }) => {
 
   const handleNavigateToScanner = () => {
     if (!user_pass_id) return alert("Falta id de compra");
-    navigation.navigate("QrUseEventScreen", { id: user_pass_id });
+    navigate("QrUseEventScreen", { id: user_pass_id });
   };
 
   return (

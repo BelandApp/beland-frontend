@@ -7,19 +7,23 @@ export const styles = StyleSheet.create({
   scroll: {
     flex: 1,
     position: "relative",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
   },
   container: {
     flexDirection: "column",
     marginHorizontal: "auto",
-    marginBottom: 20,
+    marginBottom: 40,
     padding: 20,
+    gap: 5,
+    height: "auto",
     borderRadius: 20,
     width: width > 500 ? 400 : width * 0.9,
     // TODO PROBAR RESPONSIVE BACKGROUND
     // backgroundColor: colors.belandOrange,
-    gap: 5,
   },
-  logo: { margin: "auto" },
+  logo: { margin: "auto", marginTop: 20 },
   title: { fontSize: 24, fontWeight: 600, color: "white" },
   subtitle: { color: "white" },
   button: {
@@ -42,6 +46,11 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 0,
   },
   buttonText: { color: colors.belandOrange, fontWeight: "bold" },
+  forgetText: {
+    color: colors.cardBackground,
+    textDecorationLine: "underline",
+    fontSize: 12,
+  },
   containerRow: {
     flexDirection: "row",
     gap: 4,

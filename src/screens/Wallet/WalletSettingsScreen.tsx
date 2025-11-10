@@ -9,14 +9,15 @@ import {
   StyleSheet,
   Switch,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuth } from "@/context/AuthContext";
 
 import { useWalletData } from "./hooks/useWalletData";
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 export default function WalletSettingsScreen() {
-  const navigation = useNavigation();
+    const { goBack } = useCustomNavigation();
+
   const { user } = useAuth();
   const { fullWalletData, refetch } = useWalletData();
 
@@ -113,7 +114,7 @@ export default function WalletSettingsScreen() {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => navigation.goBack()}
+          onPress={() => goBack()}
           style={styles.backButton}
         >
           <MaterialCommunityIcons name="arrow-left" size={24} color="#333" />

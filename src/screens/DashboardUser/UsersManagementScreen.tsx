@@ -11,12 +11,10 @@ import {
   ScrollView,
   Image,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 import DashboardWrapper from "./components/DashboardWrapper";
 import { adminApiService, AdminUser } from "src/services/AdminApiService";
 
 const UsersManagementScreen: React.FC = () => {
-  const navigation = useNavigation();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);

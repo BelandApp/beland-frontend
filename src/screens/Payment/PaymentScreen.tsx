@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import { useRoute, RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../../components/layout/RootStackNavigator";
 import { Alert } from "react-native";
@@ -31,6 +31,7 @@ import { BankTransferModal } from "./components/BankTransferModal";
 
 // Importar tipos reales
 import { UserResource as RealUserResource } from "../../types/resource";
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 // Types del código original
 type Resource = {
@@ -78,7 +79,8 @@ type PaymentScreenRouteProp = RouteProp<
 
 const PaymentScreen: React.FC = () => {
   const route = useRoute<PaymentScreenRouteProp>();
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+   const { navigate, goBack } = useCustomNavigation();
+
 
   // Estados principales
   const [showFreeAlert, setShowFreeAlert] = useState(false);
@@ -527,7 +529,7 @@ const PaymentScreen: React.FC = () => {
           setShowFreeAlert(true);
           setTimeout(() => {
             setShowFreeAlert(false);
-            navigation.goBack();
+            goBack();
           }, 2000);
         }
         setIsLoading(false);
@@ -1011,7 +1013,7 @@ const PaymentScreen: React.FC = () => {
 
                 <button
                   className="secondary-button"
-                  onClick={() => navigation.goBack()}
+                  onClick={() => goBack()}
                 >
                   Cancelar
                 </button>
@@ -1068,20 +1070,14 @@ const PaymentScreen: React.FC = () => {
           onPress: () => {
             setShowFreeAlert(false);
             if (!(backendResponse?.noHidden || paymentData.noHidden)) {
-              navigation.reset({
-                index: 0,
-                routes: [{ name: "MainTabs", params: { screen: "Home" } }],
-              });
+             navigate("MainTabs", { screen: "Home" });
             }
           },
         }}
         onClose={() => {
           setShowFreeAlert(false);
           if (!(backendResponse?.noHidden || paymentData.noHidden)) {
-            navigation.reset({
-              index: 0,
-              routes: [{ name: "MainTabs", params: { screen: "Home" } }],
-            });
+           navigate("MainTabs", { screen: "Home" });
           }
         }}
       />
@@ -1102,20 +1098,14 @@ const PaymentScreen: React.FC = () => {
           onPress: () => {
             setShowPaymentSuccessAlert(false);
             if (!(backendResponse?.noHidden || paymentData.noHidden)) {
-              navigation.reset({
-                index: 0,
-                routes: [{ name: "MainTabs", params: { screen: "Home" } }],
-              });
+             navigate("MainTabs", { screen: "Home" });
             }
           },
         }}
         onClose={() => {
           setShowPaymentSuccessAlert(false);
           if (!(backendResponse?.noHidden || paymentData.noHidden)) {
-            navigation.reset({
-              index: 0,
-              routes: [{ name: "MainTabs", params: { screen: "Home" } }],
-            });
+           navigate("MainTabs", { screen: "Home" });
           }
         }}
       />

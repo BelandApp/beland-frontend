@@ -6,25 +6,12 @@ import {
   SquareChevronUp,
   Tickets,
 } from "lucide-react-native";
-import React, { useState } from "react";
-import {
-  Pressable,
-  StyleSheet,
-  View,
-  Text,
-  Image,
-} from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import { RootStackParamList } from "src/components/layout/RootStackNavigator";
-
-import { StackNavigationProp } from "@react-navigation/stack";
+import React from "react";
+import { Pressable, StyleSheet, View, Text, Image } from "react-native";
 import { Event } from "src/stores/Event";
 import { colors } from "src/styles";
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
-type EventScreenNavigationProp = StackNavigationProp<
-  RootStackParamList,
-  "EventModal"
->;
 export const EventCard: React.FC<Event> = ({
   id,
   name,
@@ -35,19 +22,14 @@ export const EventCard: React.FC<Event> = ({
   price_becoin,
   end_sale_date,
   user_attended,
-  event_pass_id
 }) => {
-  const navigation = useNavigation<EventScreenNavigationProp>();
+  const { navigate } = useCustomNavigation();
   if (!id) return null;
   const handleNavigation = () => {
-    return navigation.navigate("EventModal", { id });
-  }
+    return navigate("EventModal", { id });
+  };
   return (
-    <Pressable
-      key={id}
-      onPress={handleNavigation}
-      style={styles.card}
-    >
+    <Pressable key={id} onPress={handleNavigation} style={styles.card}>
       {/* Badges */}
       {/* No deberian superponerse, si ya fue adquirido solo mostramos ese */}
       {!user_attended &&

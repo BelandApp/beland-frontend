@@ -9,78 +9,44 @@ import {
 import { CustomAlert } from "../../components/ui/CustomAlert";
 import { LoginWave } from "src/components/ui/waves/Login.wave";
 import BelandLogo from "src/components/icons/BelandLogo";
-import { CustomInput } from "src/components/shared/input";
-import { Button } from "src/components/ui";
-import { useNavigation } from "@react-navigation/native";
 import { styles } from "./styles";
-import { SocialButton } from "src/components/shared";
 import { CircleArrowLeftIcon } from "lucide-react-native";
 import { authService } from "src/services/auth/auth.service";
+import { useValidation } from "src/hooks/form/useValidation";
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
+import RegisterStep from "./components/RegisterStep";
+import { useRegister } from "./hook/useRegister";
+import ThemedButton from "src/components/shared/buttons/Themed.button";
+import CodeStep from "../NewPassword/components/Code.step";
+
 export type RegisterFormData = {
-  full_name: string;
-  phone: string;
   email: string;
   password: string;
   confirmPassword: string;
+  username: string;
   address: string;
+  phone: string;
   country: string;
   city: string;
+  full_name: string;
+  profile_picture_url?: string;
 };
 export default function RegisterScreen() {
-  const navigation = useNavigation();
   const { width, height } = Dimensions.get("window");
-  const [alert, setAlert] = useState<{
-    visible: boolean;
-    title: string;
-    message: string;
-    type?: "success" | "error" | "info";
-  }>({ visible: false, title: "", message: "", type: "error" });
-  const [FormData, setFormData] = useState<RegisterFormData>({
-    full_name: "",
-    phone: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    address: "Belgrano",
-    country: "Argentina",
-    city: "Posadas",
-  });
-
-  // TODO HANDLE AUTH
-  const isLoading = false;
-  const handleRegister = async () => {
-    if (!FormData.email.trim() || !FormData.password.trim()) {
-      setAlert({
-        visible: true,
-        title: "Error",
-        message: "Por favor completa todos los campos",
-        type: "error",
-      });
-      return;
-    }
-    FormData.confirmPassword = FormData.password;
-    try {
-      const success = await authService.registerUser(FormData);
-      if (!success) {
-        setAlert({
-          visible: true,
-          title: "Error",
-          message: "Credenciales incorrectas",
-          type: "error",
-        });
-      }
-      await authService.loginWithEmail(FormData.email, FormData.password);
-      navigation.navigate("MainTabs" as never);
-    } catch (error) {
-      setAlert({
-        visible: true,
-        title: "Error",
-        message: "No se pudo completar el inicio de sesión",
-        type: "error",
-      });
-      console.error("[LOGIN] Error en loginWithEmailPassword:", error);
-    }
-  };
+  const {
+    FormData,
+    alert,
+    step,
+    handleRegister,
+    isLoading,
+    navigate,
+    setAlert,
+    onChangeText,
+    handleReSendCode,
+    handleStepBack,
+    handleVerifyCode,
+    errors,
+  } = useRegister();
 
   return (
     <ScrollView
@@ -93,52 +59,33 @@ export default function RegisterScreen() {
         style={styles.logo}
       />
       <TouchableOpacity
-        onPress={() => navigation.navigate("MainTabs" as never)}
+        onPress={() => navigate("MainTabs")}
         style={styles.backButton}
       >
         <CircleArrowLeftIcon size={32} color="#FFF" />
       </TouchableOpacity>
       <LoginWave />
       <View style={styles.container}>
-        <Text style={styles.title}>REGISTRARSE</Text>
-        <CustomInput
-          label="Nombre completo"
-          onChangeText={(full_name) => setFormData({ ...FormData, full_name })}
-          value={FormData.full_name}
-        />
-        <CustomInput
-          label="Teléfono"
-          onChangeText={(phone) => setFormData({ ...FormData, phone })}
-          value={FormData.phone}
-          keyboardType="phone-pad"
-        />
-        <CustomInput
-          label="Correo Electrónico"
-          onChangeText={(email) => setFormData({ ...FormData, email })}
-          value={FormData.email}
-          keyboardType="email-address"
-        />
-        <CustomInput
-          label="Contraseña"
-          onChangeText={(password) => setFormData({ ...FormData, password })}
-          value={FormData.password}
-          secureTextEntry
-        />
-        <Button
-          title={isLoading ? "Cargando..." : "Registrarse"}
-          onPress={handleRegister}
-          style={styles.button}
-          textStyle={styles.buttonText}
-        />
-        <View style={styles.containerRow}>
-          <Text style={styles.subtitle}>¿Ya tienes cuenta? </Text>
-          <Button
-            variant="ghost"
-            title="Ingresar"
-            textStyle={styles.buttonLink}
-            onPress={() => navigation.navigate("Login" as never)}
+        <Text style={styles.title}>
+          {step === "register" ? "Nueva cuenta" : "Confirma tu correo"}
+        </Text>
+        {step === "register" && (
+          <RegisterStep
+            formData={FormData}
+            onChangeText={onChangeText}
+            handleRegister={handleRegister}
+            isLoading={isLoading}
+            errors={errors}
           />
-        </View>
+        )}
+        {step === "code" && (
+          <CodeStep
+            onResendCode={handleReSendCode}
+            onStepBack={handleStepBack}
+            onSubmit={handleVerifyCode}
+            isLoading={isLoading}
+          />
+        )}
       </View>
       {/* CustomAlert para errores y demo */}
       <CustomAlert
