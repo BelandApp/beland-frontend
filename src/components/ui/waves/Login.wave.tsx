@@ -48,7 +48,7 @@ export const LoginWave: React.FC = () => {
       {/* Capa naranja curva superior */}
       <Svg
         width={width}
-        height={height * 0.8}
+        height={height * 0.9}
         viewBox="0 0 1200 320"
         preserveAspectRatio="none"
         style={{ position: "absolute", bottom: 0 }}

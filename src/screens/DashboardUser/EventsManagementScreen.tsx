@@ -14,7 +14,6 @@ import {
   Dimensions,
   Platform,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 import DashboardWrapper from "./components/DashboardWrapper";
 import EventFormModal from "./components/eventos/EventFormModal";
 import {
@@ -24,9 +23,8 @@ import {
 } from "src/services/AdminApiService";
 import { CustomAlert } from "src/components/ui";
 import { useCustomAlert } from "src/hooks";
-
+// TODO CHEQUEAR SI SE USA
 const EventsManagementScreen: React.FC = () => {
-  const navigation = useNavigation();
   const [events, setEvents] = useState<EventPass[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);

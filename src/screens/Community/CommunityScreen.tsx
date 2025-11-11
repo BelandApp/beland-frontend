@@ -7,7 +7,6 @@ import {
   RefreshControl,
   Alert,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../../components/layout/RootStackNavigator";
 import { CustomAlert } from "../../components/ui/CustomAlert";
@@ -23,16 +22,14 @@ import { calculateResourcePrice } from "../../utils/priceHelpers";
 import { useAuth } from "src/context";
 
 // Components
-import {
-  ResourcesGrid,
-  InsufficientBalanceModal,
-} from "./components";
+import { ResourcesGrid, InsufficientBalanceModal } from "./components";
 import { PurchaseModal } from "./components/PurchaseModal";
 
 // Styles
 import { containerStyles } from "./styles";
 import { ThemedHeader } from "src/components/shared/headers/Header";
 import { BeCoinsBalance } from "src/components/ui";
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 // Helper function to map ResourceType to Resource
 const mapResourceTypeToResource = (resourceType: ResourceType): Resource => ({
@@ -49,7 +46,8 @@ const mapResourceTypeToResource = (resourceType: ResourceType): Resource => ({
 });
 
 export const CommunityScreen = () => {
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const { navigate } = useCustomNavigation();
+
   const { isAuthenticated, handleAuth0Login, canPerformAction } = useAuth();
 
   // Estado para recursos
@@ -199,12 +197,12 @@ export const CommunityScreen = () => {
   const handleNavigateToRechargeFromInsufficientBalance = () => {
     setInsufficientBalanceModalVisible(false);
     setSelectedResource(null);
-    navigation.navigate("RechargeScreen");
+    navigate("RechargeScreen");
   };
 
   // Función para navegar a la pantalla de recarga
   const handleNavigateToRecharge = () => {
-    navigation.navigate("RechargeScreen");
+    navigate("RechargeScreen");
   };
 
   // Función para confirmar la compra desde el modal

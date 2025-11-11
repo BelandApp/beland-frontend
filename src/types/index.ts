@@ -63,3 +63,5 @@ export { Product };
 
 // Export order types
 export * from "./Order";
+// Export auth types
+export * from "./Auth"

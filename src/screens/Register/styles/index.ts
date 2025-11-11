@@ -1,26 +1,40 @@
 import { StyleSheet, Dimensions, Platform } from "react-native";
 import { colors } from "src/styles";
 
-const { width, height } = Dimensions.get("window");
+const { width } = Dimensions.get("window");
 
 export const styles = StyleSheet.create({
   scroll: {
     flex: 1,
-    position:"relative"
+    position: "relative",
   },
   container: {
     flexDirection: "column",
     justifyContent: "center",
     marginHorizontal: "auto",
-    marginBottom: 20,
+    marginBottom: "auto",
     padding: 20,
     borderRadius: 20,
-    width: width > 500 ? 400 : width * 0.9,
+    borderTopLeftRadius: 120,
+    borderTopRightRadius: 120,
+    minWidth: width > 600 ? 600 : width * 0.9,
     gap: 5,
     backgroundColor: colors.belandOrange,
   },
-  logo: { margin: "auto" },
-  title: { fontSize: 24, fontWeight: 600, color: "white" },
+  inputsContainer: {
+    width: "100%",
+    flexDirection: width > 600 ? "row" : "column",
+    gap: 10,
+    alignItems: "baseline",
+  },
+  logo: { margin: "auto", marginTop: 20 },
+  title: {
+    fontSize: 24,
+    fontWeight: 600,
+    color: "white",
+    marginHorizontal: "auto",
+    marginBottom: 10,
+  },
   subtitle: { color: "white" },
   button: {
     backgroundColor: "white",
@@ -34,11 +48,9 @@ export const styles = StyleSheet.create({
     left: 10,
     backgroundColor: colors.belandOrange,
     borderRadius: 50,
-    padding:10
+    padding: 10,
   },
   buttonLink: {
-    color: "white",
-    fontWeight: "bold",
     paddingHorizontal: 0,
   },
   buttonText: { color: colors.belandOrange, fontWeight: "bold" },

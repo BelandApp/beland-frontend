@@ -33,37 +33,29 @@ import { UseEventScreen } from "src/screens/UseEventScreen/UseEventScreen";
 import { QRUseEventScreen } from "src/screens/UseEventScreen/QrEvent.scanner";
 import { ConsumedEventScreen } from "src/screens/UseEventScreen/ConsumeEvent";
 import { AcquiredEventModal } from "src/screens/Events/AcquiredEvent.modal";
+import NewPasswordScreen from "src/screens/NewPassword/NewPassword.screen";
+import { GroupsStackNavigator } from "./GroupsStackNavigator";
+import { GroupsStackParamList, MainTabParamList, OrdersStackParamList } from "src/types/navigation";
+import { Order } from "src/types";
+import { NavigatorScreenParams } from "@react-navigation/native";
 
 export type RootStackParamList = {
-  Home: undefined;
-  MainTabs: undefined;
+  // Auth Screens
+  Login: undefined;
+  Register: undefined;
+  NewPassword: undefined;
+  // Main Screens
+  MainTabs: NavigatorScreenParams<MainTabParamList>;
+  Orders: NavigatorScreenParams<OrdersStackParamList>;
+  Groups: NavigatorScreenParams<GroupsStackParamList>;
+  // Payments
   CobrarScreen: undefined;
-  Dashboard: undefined;
-  CommerceDashboard: undefined;
-  Wallet: undefined;
-  Community: undefined;
-  QR: { pendingRedemption?: any } | undefined;
-  RecyclingMap: undefined;
-  CanjearScreen: undefined;
-  WithdrawMethodScreen: {
-    beCoinsAmount: number;
-    usdAmount: number;
-  };
   SendScreen: undefined;
   ReceiveScreen: undefined;
   HistoryScreen: undefined;
   WalletHistoryScreen: undefined;
   RechargeScreen: undefined;
   WalletSettingsScreen: undefined;
-  Catalog: undefined;
-  Groups: undefined;
-  UserDashboardScreen: undefined;
-  UserResources: undefined;
-  Orders: undefined;
-  // Admin Management Screens
-  EventsManagement: undefined;
-  UsersManagement: undefined;
-  ProductsManagement: undefined;
   PaymentScreen: {
     paymentData: {
       amount: number;
@@ -79,17 +71,37 @@ export type RootStackParamList = {
     };
     amount_to_payment_id?: string | null;
   };
+  NewPaymentScreen: PaymentScreenRoute;
   PayphoneSuccess: { toWalletId: string; amountPaymentId: string };
-  Login: undefined;
-  Register: undefined;
+
+  // Users
+  Dashboard: undefined;
+  UserDashboardScreen: undefined;
+  UserResources: undefined;
+  CommerceDashboard: undefined;
+  Wallet: undefined;
+  QR: { pendingRedemption?: any } | undefined;
+  RecyclingMap: undefined;
+  CanjearScreen: undefined;
+  WithdrawMethodScreen: {
+    beCoinsAmount: number;
+    usdAmount: number;
+  };
+
+  // Admin Management Screens
+  EventsManagement: undefined;
+  UsersManagement: undefined;
+  ProductsManagement: undefined;
+
+  // Events Screens
   EventModal: { id: string };
   AcquiredEventModal: { id_modal: string };
   UseEventScreen: { id: string };
   QrUseEventScreen: { id: string };
   ConsumedEventScreen: { id: string; holder?: string };
-  // Chequear si es necesario
+
+  // Chequear si son necesarios
   Rewards: undefined;
-  NewPaymentScreen: PaymentScreenRoute;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -101,6 +113,11 @@ export const RootStackNavigator = () => {
       screenOptions={{ headerShown: false }}
     >
       <Stack.Screen name="MainTabs" component={MainTabNavigator} />
+      <Stack.Screen
+        name="Orders"
+        component={OrdersStackNavigator}
+        options={{ headerShown: false }}
+      />
       <Stack.Screen name="CanjearScreen" component={CanjearScreen} />
       <Stack.Screen
         name="WithdrawMethodScreen"
@@ -157,21 +174,13 @@ export const RootStackNavigator = () => {
         component={PaymentScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen
-        name="Catalog"
-        component={CatalogScreen}
-        options={{ headerShown: false }}
-      />
+
       <Stack.Screen
         name="UserResources"
         component={UserResourcesScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen
-        name="Orders"
-        component={OrdersStackNavigator}
-        options={{ headerShown: false }}
-      />
+
       <Stack.Screen
         name="Login"
         component={LoginScreen}
@@ -183,6 +192,11 @@ export const RootStackNavigator = () => {
         options={{ headerShown: false }}
       />
       <Stack.Screen
+        name="NewPassword"
+        component={NewPasswordScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
         name="EventsManagement"
         component={EventsManagementScreen}
         options={{ headerShown: false }}
@@ -190,16 +204,6 @@ export const RootStackNavigator = () => {
       <Stack.Screen
         name="UsersManagement"
         component={UsersManagementScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Rewards"
-        component={RewardsScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="NewPaymentScreen"
-        component={NewPaymentScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen
@@ -215,6 +219,18 @@ export const RootStackNavigator = () => {
       <Stack.Screen
         name="ConsumedEventScreen"
         component={ConsumedEventScreen}
+        options={{ headerShown: false }}
+      />
+      {/* TODO REVISAR SI ES NECESARIO */}
+      <Stack.Screen
+        name="Rewards"
+        component={RewardsScreen}
+        options={{ headerShown: false }}
+      />
+
+      <Stack.Screen
+        name="NewPaymentScreen"
+        component={NewPaymentScreen}
         options={{ headerShown: false }}
       />
       {/* Modales */}

@@ -18,20 +18,18 @@ import {
   SquareChevronDown,
   CheckCircle2,
 } from "lucide-react-native";
-import { useNavigation } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
 import { useEventStore } from "src/stores/Event";
-import { RootStackParamList } from "src/components/layout/RootStackNavigator";
 import { colors } from "src/styles";
 import { useAuth } from "src/context";
 import { useCustomAlert } from "src/hooks";
 import { CustomAlert } from "src/components/ui";
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 export const EventModal = ({ route }: { route: any }) => {
   const { id } = route.params;
   const { getEvent } = useEventStore();
-  const event = getEvent(id);
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const event = getEvent(id);  const { navigate, goBack } = useCustomNavigation();
+
   const { showCustomAlert, alertConfig, showAlert, hideAlert } =
     useCustomAlert();
   const { canPerformAction } = useAuth();
@@ -83,7 +81,7 @@ export const EventModal = ({ route }: { route: any }) => {
     });
   };
   // const canRefund = new Date() -;
-  const handleClose = () => navigation.goBack();
+  const handleClose = () => goBack();
 
   const handleBuy = async () => {
     if (!canPerformAction) {
@@ -94,7 +92,7 @@ export const EventModal = ({ route }: { route: any }) => {
       );
       return;
     }
-    navigation.navigate("NewPaymentScreen", {
+    navigate("NewPaymentScreen", {
       company: { id: name, name, img: image_url },
       product: {
         id,

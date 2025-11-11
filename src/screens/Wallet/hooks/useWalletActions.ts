@@ -6,8 +6,8 @@ import {
   RechargeIcon,
   CobrarIcon,
 } from "../../../components/icons";
-import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "src/context";
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 export const useWalletActions = (
   showCustomAlert?: (
@@ -16,7 +16,8 @@ export const useWalletActions = (
     type?: "success" | "error" | "info"
   ) => void
 ) => {
-  const navigation = useNavigation();
+   const { navigate } = useCustomNavigation();
+
   // Obtener rol del usuario
   const { user } = useAuth();
 
@@ -27,25 +28,25 @@ export const useWalletActions = (
       label: "Recargar",
       icon: RechargeIcon,
       backgroundColor: "#FFFFFF",
-      onPress: () => navigation.navigate("RechargeScreen" as never),
+      onPress: () => navigate("RechargeScreen"),
     },
     {
       id: "send",
       label: "Enviar",
       icon: SendIcon,
       backgroundColor: "#FFFFFF",
-      onPress: () => navigation.navigate("SendScreen" as never),
+      onPress: () => navigate("SendScreen"),
     },
     {
       id: "receive",
       label: "Recibir",
       icon: ReceiveIcon,
       backgroundColor: "#FFFFFF",
-      onPress: () => navigation.navigate("ReceiveScreen" as never),
+      onPress: () => navigate("ReceiveScreen"),
     },
   ];
 
-  // Agregar botón Cobrar solo para roles permitidos
+  // TODO CHEQUEAR botón Cobrar solo para roles permitidos
   if (
     (typeof user?.role_name === "string" &&
       ["COMMERCE", "ADMIN", "SUPERADMIN", "EMPRESA"].includes(
@@ -53,10 +54,10 @@ export const useWalletActions = (
       )) ||
     (user?.role &&
       typeof user.role === "object" &&
-      user.role.name &&
-      typeof user.role.name === "string" &&
+      user.role &&
+      typeof user.role === "string" &&
       ["COMMERCE", "ADMIN", "SUPERADMIN", "EMPRESA"].includes(
-        user.role.name.toUpperCase()
+        user.role.toUpperCase()
       ))
   ) {
     mainWalletActions.push({
@@ -64,7 +65,7 @@ export const useWalletActions = (
       label: "Cobrar",
       icon: CobrarIcon,
       backgroundColor: "#FFFFFF",
-      onPress: () => navigation.navigate("CobrarScreen" as never),
+      onPress: () => navigate("CobrarScreen"),
     });
   }
 
@@ -74,7 +75,7 @@ export const useWalletActions = (
     label: "Canjear",
     icon: ExchangeIcon,
     backgroundColor: "#FFFFFF",
-    onPress: () => navigation.navigate("CanjearScreen" as never),
+    onPress: () => navigate("CanjearScreen"),
   });
 
   // Acciones secundarias - sin historial ya que está integrado en la vista principal

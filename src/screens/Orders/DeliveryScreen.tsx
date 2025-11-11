@@ -13,7 +13,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
 import { useOrders } from "../../hooks/useOrders";
 import { Order } from "../../types/Order";
 import { colors } from "../../styles/colors";
@@ -21,7 +20,7 @@ import { deliveryStyles } from "./styles/deliveryStyles";
 import { ThemedHeader } from "src/components/shared/headers/Header";
 
 export const DeliveryScreen = () => {
-  const navigation = useNavigation();
+
   const { orders, loading, loadPendingOrders, confirmDelivery } = useOrders();
 
   const [searchQuery, setSearchQuery] = useState("");

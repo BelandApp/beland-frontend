@@ -6,7 +6,7 @@ export default {
     slug: "Beland",
     version: "1.0.0",
     orientation: "portrait",
-    icon: "./assets/icon.png",
+    icon: "./assets/beland.png",
     userInterfaceStyle: "light",
     newArchEnabled: true,
     scheme: "belandnative",
@@ -42,7 +42,7 @@ export default {
     },
     android: {
       adaptiveIcon: {
-        foregroundImage: "./assets/adaptive-icon.png",
+        foregroundImage: "./assets/beland.png",
         backgroundColor: "#ffffff",
       },
       statusBar: {
@@ -60,7 +60,7 @@ export default {
       permissions: ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
     },
     web: {
-      favicon: "./assets/favicon.png",
+      favicon: "./assets/beland.png",
     },
   },
 };

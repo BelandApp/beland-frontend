@@ -5,11 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
-  Dimensions,
-  Platform,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useOrdersStoreAPI } from "../../stores/useOrdersStoreAPI";
@@ -18,18 +14,17 @@ import { OrdersStackParamList } from "../../types/navigation";
 import { colors } from "../../styles/colors";
 import { ordersStyles } from "./styles";
 import { useAuth } from "src/context";
-import { UserMenu } from "../../components/ui/UserMenu";
 import { ThemedHeader } from "src/components/shared/headers/Header";
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 type OrdersScreenNavigationProp = StackNavigationProp<
   OrdersStackParamList,
   "OrdersList"
 >;
 
-const { width } = Dimensions.get("window");
-
 const OrdersScreen: React.FC = () => {
-  const navigation = useNavigation<OrdersScreenNavigationProp>();
+    const { navigate, goBack } = useCustomNavigation();
+
   const { orders, isLoading, getOrderSummary, loadUserOrders } =
     useOrdersStoreAPI();
   const [selectedFilter, setSelectedFilter] = useState<OrderStatus | "all">(
@@ -175,7 +170,7 @@ const OrdersScreen: React.FC = () => {
   };
 
   const handleOrderPress = (order: Order) => {
-    navigation.navigate("OrderDetail", { orderId: order.id });
+    navigate("Orders", { screen: "OrderDetail", params: { orderId: order.id } });
   };
 
   const renderSummaryCard = () => (
@@ -383,7 +378,7 @@ const OrdersScreen: React.FC = () => {
             ]}
             onPress={() => {
               if (canPerformAction) {
-                navigation.navigate("Delivery");
+                navigate("Orders", { screen: "Delivery" });
               }
             }}
             activeOpacity={canPerformAction ? 0.8 : 1}
@@ -445,7 +440,7 @@ const OrdersScreen: React.FC = () => {
             {selectedFilter === "all" && (
               <TouchableOpacity
                 style={ordersStyles.shopButton}
-                onPress={() => navigation.goBack()}
+                onPress={() => goBack()}
               >
                 <Text style={ordersStyles.shopButtonText}>Ir al catálogo</Text>
               </TouchableOpacity>

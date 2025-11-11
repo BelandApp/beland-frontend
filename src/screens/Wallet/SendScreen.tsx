@@ -10,14 +10,15 @@ import {
   ScrollView,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "@/context/AuthContext";
 import { PaymentService, WalletService } from "@services/core";
 import Constants from "expo-constants";
 import { useWalletData } from "../Wallet/hooks/useWalletData";
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 const SendScreen = () => {
-  const navigation = useNavigation();
+   const { navigate, goBack } = useCustomNavigation();
+
   const { walletData, refetch } = useWalletData();
   const { user } = useAuth();
   const [amount, setAmount] = useState("");
@@ -168,7 +169,7 @@ const SendScreen = () => {
       <ScrollView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => navigation.goBack()}
+            onPress={() => goBack()}
             style={styles.backButton}
           >
             <MaterialCommunityIcons name="arrow-left" size={24} color="#fff" />
@@ -204,7 +205,7 @@ const SendScreen = () => {
             />
             <TouchableOpacity
               style={styles.qrButton}
-              onPress={() => navigation.navigate("QR" as never)}
+              onPress={() => navigate("QR")}
             >
               <MaterialCommunityIcons
                 name="qrcode-scan"
@@ -260,7 +261,7 @@ const SendScreen = () => {
           setAlertVisible(false);
           // Si fue éxito o invitación, volver atrás
           if (alertType === "success" || alertType === "info") {
-            navigation.goBack();
+           goBack();
           }
         }}
       />

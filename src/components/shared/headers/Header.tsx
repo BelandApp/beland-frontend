@@ -1,4 +1,3 @@
-import { useNavigation } from "@react-navigation/native";
 import React from "react";
 import {
   StyleSheet,
@@ -11,8 +10,7 @@ import { CircleArrowLeftIcon } from "lucide-react-native";
 import BelandLogo from "src/components/icons/BelandLogo";
 import { UserMenu } from "src/components/ui/UserMenu";
 import { HeaderStyles } from "./header.styles";
-import { StackNavigationProp } from "@react-navigation/stack";
-import { RootStackParamList } from "src/components/layout/RootStackNavigator";
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 type HeaderProps = {
   title?: string;
@@ -29,14 +27,14 @@ export const ThemedHeader: React.FC<HeaderProps> = ({
   buttons,
   centerTitle = false,
 }) => {
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const { navigate } = useCustomNavigation();
 
   const renderLeftContent = () => {
     if (logo) {
       return (
         <TouchableOpacity
           style={HeaderStyles.logoContainer}
-          onPress={() => navigation.navigate("MainTabs")}
+          onPress={() => navigate("MainTabs")}
         >
           <BelandLogo width={120} height={32} />
         </TouchableOpacity>
@@ -46,7 +44,7 @@ export const ThemedHeader: React.FC<HeaderProps> = ({
     return (
       <View style={HeaderStyles.left}>
         {canGoBack && (
-          <TouchableOpacity onPress={() => navigation.navigate("MainTabs")}>
+          <TouchableOpacity onPress={() => navigate("MainTabs")}>
             <CircleArrowLeftIcon size={32} color="#FFF" />
           </TouchableOpacity>
         )}

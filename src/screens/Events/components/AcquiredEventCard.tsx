@@ -8,17 +8,11 @@ import {
 } from "lucide-react-native";
 import React, { useState } from "react";
 import { Pressable, StyleSheet, View, Text, Image } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import { RootStackParamList } from "src/components/layout/RootStackNavigator";
-
-import { StackNavigationProp } from "@react-navigation/stack";
 import { Event } from "src/stores/Event";
 import { colors } from "src/styles";
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
-type EventScreenNavigationProp = StackNavigationProp<
-  RootStackParamList,
-  "EventModal"
->;
+
 export const AcquiredEventCard: React.FC<Event> = ({
   id,
   name,
@@ -30,12 +24,13 @@ export const AcquiredEventCard: React.FC<Event> = ({
   end_sale_date,
   user_attended,
   holder_name,
-  user_pass_id
+  user_pass_id,
 }) => {
-  const navigation = useNavigation<EventScreenNavigationProp>();
+  const { navigate } = useCustomNavigation();
+
   if (!id || !user_pass_id) return null;
   const handleNavigation = () => {
-    return navigation.navigate("AcquiredEventModal", { id_modal: user_pass_id });
+    return navigate("AcquiredEventModal", { id_modal: user_pass_id });
   };
   return (
     <Pressable key={id} onPress={handleNavigation} style={styles.card}>
@@ -49,7 +44,7 @@ export const AcquiredEventCard: React.FC<Event> = ({
           </View>
         )}
       {user_attended && (
-        <View style={[styles.badge,styles.badgeUsed]}>
+        <View style={[styles.badge, styles.badgeUsed]}>
           <Text style={styles.badgeText}>Usado</Text>
         </View>
       )}
@@ -147,7 +142,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.belandOrange,
   },
   badgeUsed: {
-    backgroundColor: colors.error
+    backgroundColor: colors.error,
   },
   badgeText: {
     fontSize: 15,

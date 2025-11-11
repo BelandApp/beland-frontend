@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useRoute } from "@react-navigation/native";
 import type { StackNavigationProp } from "@react-navigation/stack";
 import type { RootStackParamList } from "../components/layout/RootStackNavigator";
 import { WalletService } from "@services/core";
@@ -9,13 +9,14 @@ import { Camera, CameraView, BarcodeScanningResult } from "expo-camera";
 import { colors } from "../styles/colors";
 import { Button } from "../components/ui/Button";
 import { GoBackButton } from "src/components/shared/buttons/GoBack.button";
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 export const QRScannerScreen = () => {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [scanned, setScanned] = useState(false);
   const [isActive, setIsActive] = useState(true);
   const [loading, setLoading] = useState(false);
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const { navigate } = useCustomNavigation();
   const route = useRoute();
   const pendingRedemption = (route.params as any)?.pendingRedemption;
 
@@ -166,7 +167,7 @@ export const QRScannerScreen = () => {
           return;
         }
         setLoading(false);
-        navigation.navigate("PaymentScreen", { paymentData } as any);
+        navigate("PaymentScreen", { paymentData });
       } catch (err: any) {
         setLoading(false);
         // Restaurar scanner para permitir re-intento
@@ -227,7 +228,7 @@ export const QRScannerScreen = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={["bottom", "left", "right"]}>
-      <GoBackButton/>
+      <GoBackButton />
       <View style={styles.header}>
         <Text style={styles.title}>Escanear QR</Text>
         <Text style={styles.subtitle}>

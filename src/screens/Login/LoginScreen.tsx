@@ -10,15 +10,15 @@ import { CustomAlert } from "../../components/ui/CustomAlert";
 import { LoginWave } from "src/components/ui/waves/Login.wave";
 import BelandLogo from "src/components/icons/BelandLogo";
 import { CustomInput } from "src/components/shared/input";
-import { Button } from "src/components/ui";
-import { useNavigation } from "@react-navigation/native";
 import { styles } from "./styles";
 import { SocialButton } from "src/components/shared";
 import { useAuth } from "src/context";
 import { CircleArrowLeftIcon } from "lucide-react-native";
+import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
+import ThemedButton from "src/components/shared/buttons/Themed.button";
 
 export default function LoginScreen() {
-  const navigation = useNavigation<any>();
+  const {navigate} = useCustomNavigation();
   const { handleAuth0Login, loginWithEmail, user, isAuthenticated, isLoading } =
     useAuth();
   const { width, height } = Dimensions.get("window");
@@ -32,7 +32,7 @@ export default function LoginScreen() {
     email: "",
     password: "",
   });
-  if (isAuthenticated) navigation.navigate("MainTabs");
+  if (isAuthenticated) navigate("MainTabs");
   const handleLogin = async () => {
     if (!FormData.email.trim() || !FormData.password.trim()) {
       setAlert({
@@ -66,7 +66,7 @@ export default function LoginScreen() {
 
   const handleLoginAuth0 = async () => {
     await handleAuth0Login();
-    navigation.navigate("MainTabs");
+    navigate("MainTabs");
   };
 
   return (
@@ -75,7 +75,7 @@ export default function LoginScreen() {
       showsVerticalScrollIndicator={false}
     >
       <TouchableOpacity
-        onPress={() => navigation.navigate("MainTabs" as never)}
+        onPress={() => navigate("MainTabs")}
         style={styles.backButton}
       >
         <CircleArrowLeftIcon size={32} color="#FFF" />
@@ -88,7 +88,6 @@ export default function LoginScreen() {
       <LoginWave />
       <View style={styles.container}>
         <SocialButton onPress={handleLoginAuth0} />
-        <View style={styles.container} />
         <CustomInput
           label="Correo Electrónico"
           onChangeText={(email) => setFormData({ ...FormData, email })}
@@ -101,21 +100,27 @@ export default function LoginScreen() {
           value={FormData.password}
           secureTextEntry
         />
-        <Button
-          title={isLoading ? "Cargando..." : "Entrar"}
+        <ThemedButton
+          label="Ingresar"
           onPress={handleLogin}
-          style={styles.button}
-          textStyle={styles.buttonText}
+          variant="secondary"
+          isLoading={isLoading}
         />
+
         <View style={styles.containerRow}>
           <Text style={styles.subtitle}>¿Eres nuevo? </Text>
-          <Button
-            variant="ghost"
-            title="Registrarse"
-            textStyle={styles.buttonLink}
-            onPress={() => navigation.navigate("Register")}
+          <ThemedButton
+            label="Registrate"
+            onPress={() => navigate("Register")}
+            style={{ paddingLeft: 0 }}
           />
         </View>
+        <ThemedButton
+          label="Olvide mi contraseña"
+          onPress={() => navigate("NewPassword")}
+          textStyle={styles.forgetText}
+          style={{ paddingLeft: 0, marginRight: "auto"}}
+        />
       </View>
       {/* CustomAlert para errores y demo */}
       <CustomAlert
