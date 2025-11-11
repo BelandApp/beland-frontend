@@ -25,7 +25,7 @@ type OrderDetailScreenRouteProp = RouteProp<
   "OrderDetail"
 >;
 
-const OrderDetailScreen: React.FC = () => {
+export const OrderDetailScreen: React.FC = () => {
   const { goBack } = useCustomNavigation();
 
   const route = useRoute<OrderDetailScreenRouteProp>();

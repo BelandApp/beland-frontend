@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Text,
   TextInputProps,
+  Pressable,
 } from "react-native";
 
 interface CustomInputProps extends TextInputProps {
@@ -40,6 +41,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
   const [isFocused, setIsFocused] = useState(false);
   const [isSecure, setIsSecure] = useState(secureTextEntry);
 
+  const inputRef = useRef<TextInput>(null);
   const animatedLabel = useRef(new Animated.Value(value ? 1 : 0)).current;
   const animatedBorder = useRef(new Animated.Value(0)).current;
 
@@ -80,10 +82,23 @@ export const CustomInput: React.FC<CustomInputProps> = ({
     outputRange: ["#ffffff", "#FFD700"],
   });
 
-
+  const handleFocus = () => {
+    inputRef.current?.focus();
+    setIsFocused(true);
+  };
   return (
-    <TouchableOpacity onPress={() => setIsFocused(true)} style={styles.button}>
+    <Pressable
+      onPress={handleFocus}
+      style={({ pressed }) => [
+        styles.button,
+        { opacity: pressed ? 0.8 : 1, },
+      ]}
+      accessible={false}
+      tabIndex={-1}
+    >
       <Animated.View
+        accessible={false}
+        tabIndex={-1}
         style={[
           styles.container,
           {
@@ -91,8 +106,11 @@ export const CustomInput: React.FC<CustomInputProps> = ({
           },
         ]}
       >
-        <Animated.Text style={labelStyle}>{label}</Animated.Text>
+        <Animated.Text style={labelStyle} accessible={false}>
+          {label}
+        </Animated.Text>
         <TextInput
+          ref={inputRef}
           id={"input-" + label}
           value={value}
           onChangeText={onChangeText}
@@ -114,7 +132,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
           ))}
       </Animated.View>
       {error && <Text style={styles.textError}>{error}</Text>}
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 
@@ -132,9 +150,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     borderBottomWidth: 2,
-    
   },
   input: {
+    width: "100%",
     paddingVertical: 8,
     fontSize: 17,
     fontWeight: "600",

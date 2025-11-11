@@ -3,13 +3,12 @@ import { useGroupAdminStore } from "../../stores/groupStores";
 import React, { useState } from "react";
 import { View, ScrollView, Dimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { CustomAlert } from "../../components/ui/CustomAlert";
-import { ConfirmationAlert } from "../../components/ui/ConfirmationAlert";
+import { CustomAlert } from "@components/shared";
+import { ConfirmationAlert } from "../../components/shared/alerts/ConfirmationAlert";
 import { WaveBottomGray } from "../../components/icons";
 import { GroupService } from "@services/core";
 import { InstagramUser } from "../../services/instagramService";
-import { Participant } from "../../types";
-import { useCreateGroupStore } from "../../stores/useCreateGroupStore";
+import { useCreateGroupStore } from "@stores/useCreateGroupStore";
 import * as Haptics from "expo-haptics";
 
 // Validación y utilidades
@@ -32,6 +31,7 @@ import {
 
 // Estilos
 import { createGroupStyles } from "./styles";
+import { Participant } from "src/types";
 
 export const CreateGroupScreen = ({ navigation, route }: any) => {
   // Hooks de Zustand para carrito y productos de grupo (deben ir dentro del componente)

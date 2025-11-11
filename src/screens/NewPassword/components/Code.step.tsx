@@ -2,7 +2,7 @@ import { CustomInput } from "src/components/shared";
 import { View, Text, TouchableHighlight, StyleSheet } from "react-native";
 import { useEffect, useState } from "react";
 import { CodeStepProps } from "src/types";
-import ThemedButton from "src/components/shared/buttons/Themed.button";
+import { Button } from "@components/shared";
 const CodeStep: React.FC<CodeStepProps> = ({
   onSubmit,
   onResendCode,
@@ -33,14 +33,14 @@ const CodeStep: React.FC<CodeStepProps> = ({
         maxLength={6}
       />
       <View style={styles.rowContainer}>
-        <ThemedButton
-          label="Volver"
+        <Button
+          title="Volver"
           onPress={onStepBack}
           variant="primary"
           style={{ paddingLeft: 0 }}
         />
-        <ThemedButton
-          label="Siguiente"
+        <Button
+          title="Siguiente"
           onPress={() => onSubmit(code)}
           variant="secondary"
           disabled={!code}
@@ -52,8 +52,8 @@ const CodeStep: React.FC<CodeStepProps> = ({
           ¿No recibiste el código? {""}
           {count > 0 && count}
         </Text>
-        <ThemedButton
-          label="Reenviar"
+        <Button
+          title="Reenviar"
           onPress={handleResendCode}
           variant="primary"
           disabled={count != 0}

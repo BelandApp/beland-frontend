@@ -1,13 +1,16 @@
+
 import { JSX } from "react";
 import {
   ActivityIndicator,
   TouchableOpacity,
   Text,
   StyleSheet,
+  ButtonProps,
 } from "react-native";
 import { colors } from "src/styles";
-type ThemedButtonProps = {
-  label: string;
+
+interface CustomButtonProps extends ButtonProps {
+  title: string;
   onPress: () => void;
   variant?: Variant;
   icon?: JSX.Element;
@@ -16,11 +19,12 @@ type ThemedButtonProps = {
   isLoading?: boolean;
   style?: any;
   textStyle?: any;
-};
+}
 type Variant = "primary" | "secondary" | "ghost";
 type IconPosition = "left" | "right";
-const ThemedButton: React.FC<ThemedButtonProps> = ({
-  label,
+
+export const Button: React.FC<CustomButtonProps> = ({
+  title,
   onPress,
   variant = "primary",
   icon,
@@ -70,7 +74,7 @@ const ThemedButton: React.FC<ThemedButtonProps> = ({
       disabled={disabled || isLoading}
       accessible={true}
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={title}
       accessibilityState={{ disabled, busy: isLoading }}
       accessibilityHint={
         disabled
@@ -88,7 +92,7 @@ const ThemedButton: React.FC<ThemedButtonProps> = ({
         <Text
           style={[styles.text, { color: variantStyles.textColor }, textStyle]}
         >
-          {label}
+          {title}
         </Text>
       )}
       {icon && iconPosition === "right" && icon}
@@ -104,7 +108,6 @@ const styles = StyleSheet.create({
     gap: 8,
     alignItems: "center",
     justifyContent: "center",
-    
   },
   text: {
     color: "white",
@@ -112,4 +115,4 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
-export default ThemedButton;
+export default Button;

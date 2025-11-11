@@ -21,7 +21,7 @@ import { apiRequest } from "../../../services/api";
 import { useOrdersStoreAPI } from "../../../stores/useOrdersStoreAPI";
 import { useCartStore, CartProduct } from "../../../stores/useCartStore";
 import { useCustomAlert } from "../../../hooks/useCustomAlert";
-import { CustomAlert } from "../../../components/ui/CustomAlert";
+import { CustomAlert } from "@components/shared";
 import { useAuth } from "src/context";
 import {
   DeliveryAddress,

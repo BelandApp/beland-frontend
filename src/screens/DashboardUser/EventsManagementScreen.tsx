@@ -21,10 +21,10 @@ import {
   EventPass,
   EventPassType,
 } from "src/services/AdminApiService";
-import { CustomAlert } from "src/components/ui";
+import { CustomAlert } from "@components/shared";
 import { useCustomAlert } from "src/hooks";
 // TODO CHEQUEAR SI SE USA
-const EventsManagementScreen: React.FC = () => {
+export const EventsManagementScreen: React.FC = () => {
   const [events, setEvents] = useState<EventPass[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);

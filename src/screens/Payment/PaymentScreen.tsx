@@ -3,7 +3,7 @@ import { useRoute, RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../../components/layout/RootStackNavigator";
 import { Alert } from "react-native";
-import { CustomAlert } from "../../components/ui/CustomAlert";
+import { CustomAlert } from "@components/shared";
 import { TransactionContextManager } from "../../hooks/usePaymentSocket";
 import { useUserResources } from "../../hooks/useUserResources";
 import { WalletService } from "@services/core";

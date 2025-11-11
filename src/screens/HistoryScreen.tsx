@@ -6,12 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
 } from "react-native";
-import {
-  BottleRecycleIcon,
-  BeCoinIcon,
-  WaveBottom,
-  HistoryIcon,
-} from "../components/icons";
+import { BeCoinIcon, WaveBottom, RecycleIcon } from "@/components/icons";
 import { colors } from "../styles/colors";
 
 const historyData = [
@@ -99,7 +94,7 @@ export const HistoryScreen = () => {
               <View style={styles.historyContent}>
                 <View style={styles.leftSection}>
                   <View style={styles.iconContainer}>
-                    <BottleRecycleIcon width={32} height={32} />
+                    <RecycleIcon width={32} height={32} />
                   </View>
                   <View style={styles.textSection}>
                     <Text style={styles.dateText}>{item.date}</Text>

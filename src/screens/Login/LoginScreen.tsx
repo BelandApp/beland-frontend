@@ -6,7 +6,7 @@ import {
   Dimensions,
   TouchableOpacity,
 } from "react-native";
-import { CustomAlert } from "../../components/ui/CustomAlert";
+import { CustomAlert } from "@components/shared";
 import { LoginWave } from "src/components/ui/waves/Login.wave";
 import BelandLogo from "src/components/icons/BelandLogo";
 import { CustomInput } from "src/components/shared/input";
@@ -15,7 +15,7 @@ import { SocialButton } from "src/components/shared";
 import { useAuth } from "src/context";
 import { CircleArrowLeftIcon } from "lucide-react-native";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
-import ThemedButton from "src/components/shared/buttons/Themed.button";
+import { Button } from "@components/shared";
 
 export default function LoginScreen() {
   const {navigate} = useCustomNavigation();
@@ -32,7 +32,7 @@ export default function LoginScreen() {
     email: "",
     password: "",
   });
-  if (isAuthenticated) navigate("MainTabs");
+  if (isAuthenticated) navigate("MainTabs", { screen: "Home" });
   const handleLogin = async () => {
     if (!FormData.email.trim() || !FormData.password.trim()) {
       setAlert({
@@ -66,7 +66,7 @@ export default function LoginScreen() {
 
   const handleLoginAuth0 = async () => {
     await handleAuth0Login();
-    navigate("MainTabs");
+    navigate("MainTabs", { screen: "Home" })
   };
 
   return (
@@ -75,7 +75,7 @@ export default function LoginScreen() {
       showsVerticalScrollIndicator={false}
     >
       <TouchableOpacity
-        onPress={() => navigate("MainTabs")}
+        onPress={() => navigate("MainTabs", { screen: "Home" })}
         style={styles.backButton}
       >
         <CircleArrowLeftIcon size={32} color="#FFF" />
@@ -100,8 +100,8 @@ export default function LoginScreen() {
           value={FormData.password}
           secureTextEntry
         />
-        <ThemedButton
-          label="Ingresar"
+        <Button
+          title="Ingresar"
           onPress={handleLogin}
           variant="secondary"
           isLoading={isLoading}
@@ -109,17 +109,17 @@ export default function LoginScreen() {
 
         <View style={styles.containerRow}>
           <Text style={styles.subtitle}>¿Eres nuevo? </Text>
-          <ThemedButton
-            label="Registrate"
+          <Button
+            title="Registrate"
             onPress={() => navigate("Register")}
             style={{ paddingLeft: 0 }}
           />
         </View>
-        <ThemedButton
-          label="Olvide mi contraseña"
+        <Button
+          title="Olvide mi contraseña"
           onPress={() => navigate("NewPassword")}
           textStyle={styles.forgetText}
-          style={{ paddingLeft: 0, marginRight: "auto"}}
+          style={{ paddingLeft: 0, marginRight: "auto" }}
         />
       </View>
       {/* CustomAlert para errores y demo */}

@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useCustomAlert } from "src/hooks";
-import { CustomAlert } from "src/components/ui/CustomAlert";
+import { CustomAlert } from "@components/shared";
 import IntuitiveDatePicker from "src/components/ui/IntuitiveDatePicker";
 import { compressImages } from "src/utils/imageCompression";
 import {

@@ -14,7 +14,7 @@ import {
 } from "../../../components/icons";
 import { RechargeIcon } from "../../../components/icons/WalletIcons";
 import { useCustomAlert } from "../../../hooks/useCustomAlert";
-import { CustomAlert } from "../../../components/ui/CustomAlert";
+import { CustomAlert } from "@components/shared";
 import { useAuth } from "src/context";
 import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
 

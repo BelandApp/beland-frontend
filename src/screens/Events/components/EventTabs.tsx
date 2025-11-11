@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import React from "react";
+import { View,  StyleSheet } from "react-native";
 import { EventsList } from "./EventList";
 import { colors } from "src/styles";
 import ThemedTabs from "src/components/shared/Tabs/ThemedTabs";

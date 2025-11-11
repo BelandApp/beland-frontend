@@ -1,29 +1,21 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  Platform,
   ScrollView,
-  Linking,
-  Pressable,
   Image,
   Dimensions,
 } from "react-native";
-import { StackNavigationProp } from "@react-navigation/stack";
-import { RootStackParamList } from "src/components/layout/RootStackNavigator";
 import { colors } from "src/styles";
 import { CountdownTimer } from "./components/CountdownTimer";
 import { UseTicketButton } from "./components/UseTicketButton";
 import { EventMap } from "./components/EventMap";
-import { useEventStore } from "src/stores/Event";
-import { ThemedHeader } from "src/components/shared/headers/Header";
+import { useEventStore } from "@stores/Event";
+import { ThemedHeader } from "@components/shared";
 import { OpenInGoogleMaps } from "./components/OpenInGoogleMaps";
-import { ArrowLeftRight } from "lucide-react-native";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
-type Navigation = StackNavigationProp<RootStackParamList>;
-type RouteParams = { id: string };
 
 export const UseEventScreen = ({ route }: { route: any }) => {
   const { id } = route.params;

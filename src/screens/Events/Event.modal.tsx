@@ -22,7 +22,7 @@ import { useEventStore } from "src/stores/Event";
 import { colors } from "src/styles";
 import { useAuth } from "src/context";
 import { useCustomAlert } from "src/hooks";
-import { CustomAlert } from "src/components/ui";
+import { CustomAlert } from "@components/shared";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 export const EventModal = ({ route }: { route: any }) => {

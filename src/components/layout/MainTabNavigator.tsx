@@ -1,12 +1,12 @@
 import React from "react";
 import { View, Platform } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { colors } from "../../styles/colors";
-import { HomeScreen } from "../../screens/HomeScreen";
-import { WalletScreen } from "../../screens/WalletScreen";
+import { colors } from "@styles/colors";
+import { HomeScreen } from "@screens/HomeScreen";
+import { WalletScreen } from "@screens/WalletScreen";
+import { CatalogScreen } from "@screens/CatalogScreen";
 import { GroupsStackNavigator } from "./GroupsStackNavigator";
-import { CatalogScreen } from "../../screens/CatalogScreen";
-import { useAuth } from "src/context";
+import { useAuth } from "@/context";
 
 import {
   HomeIcon,
@@ -15,8 +15,8 @@ import {
   CatalogIcon,
   OrderIcon,
   CommunityIcon,
-} from "../icons";
-import { CommunityScreen } from "src/screens";
+} from "@components/icons";
+
 import EventsScreen from "src/screens/Events/EventsScreen";
 
 const Tab = createBottomTabNavigator();

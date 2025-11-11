@@ -6,7 +6,7 @@ import { colors } from "src/styles";
 import { AcquiredEventCard } from "./AcquiredEventCard";
 import { Event } from "src/stores/Event";
 import { useAuth } from "src/context";
-import { Button } from "src/components/ui";
+import { Button } from "@/components/shared";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 export const EventsList = ({ events, tab }: any) => {
@@ -24,7 +24,7 @@ export const EventsList = ({ events, tab }: any) => {
           <>
             <Text style={styles.emptyText}>Aún no has adquirido eventos."</Text>
             {!isAuthenticated && (
-              <>
+                <>
                 <Button
                   variant="ghost"
                   style={{ margin: 0, padding: 0 }}

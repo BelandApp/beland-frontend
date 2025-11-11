@@ -61,7 +61,8 @@ export interface AlertConfig {
 
 export { Product };
 
-// Export order types
+// Export types
 export * from "./Order";
-// Export auth types
 export * from "./Auth"
+export * from "./Group"
+export * from "./navigation"

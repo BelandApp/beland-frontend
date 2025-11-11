@@ -1,9 +1,7 @@
 import React from "react";
 import {
-  StyleSheet,
   View,
   Text,
-  Platform,
   TouchableOpacity,
 } from "react-native";
 import { CircleArrowLeftIcon } from "lucide-react-native";
@@ -34,7 +32,7 @@ export const ThemedHeader: React.FC<HeaderProps> = ({
       return (
         <TouchableOpacity
           style={HeaderStyles.logoContainer}
-          onPress={() => navigate("MainTabs")}
+          onPress={() => navigate("MainTabs", { screen: "Home" })}
         >
           <BelandLogo width={120} height={32} />
         </TouchableOpacity>
@@ -44,7 +42,9 @@ export const ThemedHeader: React.FC<HeaderProps> = ({
     return (
       <View style={HeaderStyles.left}>
         {canGoBack && (
-          <TouchableOpacity onPress={() => navigate("MainTabs")}>
+          <TouchableOpacity
+            onPress={() => navigate("MainTabs", { screen: "Home" })}
+          >
             <CircleArrowLeftIcon size={32} color="#FFF" />
           </TouchableOpacity>
         )}
