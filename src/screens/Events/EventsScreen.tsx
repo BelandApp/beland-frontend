@@ -2,7 +2,6 @@ import React from "react";
 import {
   RefreshControl,
   ScrollView,
-  Text,
   StyleSheet,
   View,
 } from "react-native";

@@ -6,7 +6,7 @@ import { colors } from "src/styles";
 import { AcquiredEventCard } from "./AcquiredEventCard";
 import { Event } from "src/stores/Event";
 import { useAuth } from "src/context";
-import { Button } from "src/components/ui";
+import { Button } from "@/components/shared";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 export const EventsList = ({ events, tab }: any) => {
