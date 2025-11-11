@@ -23,3 +23,4 @@ export type MainTabParamList = {
   Community: undefined;
   Groups: NavigatorScreenParams<GroupsStackParamList>;
 };
+

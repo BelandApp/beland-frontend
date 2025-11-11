@@ -1,9 +1,11 @@
 import React from "react";
 import { createStackNavigator } from "@react-navigation/stack";
-import { OrdersStackParamList } from "../../types/navigation";
-import { OrdersScreen } from "../../screens/Orders";
-import OrderDetailScreen from "../../screens/Orders/OrderDetailScreen";
-import { DeliveryScreen } from "../../screens/Orders/DeliveryScreen";
+import {OrdersStackParamList} from "../../types";
+import {
+  OrdersScreen,
+  OrderDetailScreen,
+  DeliveryScreen,
+} from "@screens/Orders";
 
 const Stack = createStackNavigator<OrdersStackParamList>();
 
