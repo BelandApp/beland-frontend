@@ -107,7 +107,7 @@ export const authService = {
     const data = await res.json();
     return data.token;
   },
-  async sendCodeToEmail(email: string) {
+  async sendCodeToEmailForgotPassword(email: string) {
     try {
       const res = await fetch(`${API_URL}/auth/forgot-password-code/${email}`, {
         method: "POST",
@@ -116,7 +116,7 @@ export const authService = {
         throw new Error(res.statusText);
       }
       const data = await res.json();
-      return data.token;
+      return data.message;
     } catch (error) {
       alert(error);
     }
@@ -137,7 +137,7 @@ export const authService = {
         throw new Error(res.statusText);
       }
       const data = await res.json();
-      return data.token;
+      return data.message;
     } catch (error) {
       alert(error);
     }

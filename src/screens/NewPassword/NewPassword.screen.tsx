@@ -13,7 +13,6 @@ import { colors } from "src/styles";
 import EmailStep from "./components/Email.step";
 import CodeStep from "./components/Code.step";
 import NewPasswordStep from "./components/NewPassword";
-import { authService } from "src/services";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { CircleArrowLeftIcon } from "lucide-react-native";
 import BelandLogo from "src/components/icons/BelandLogo";
@@ -51,7 +50,9 @@ export const NewPasswordScreen = () => {
       <LoginWave />
       <View style={styles.container}>
         <Text style={styles.title}>Recuperar contraseña</Text>
-        {step === "email" && <EmailStep onSubmit={handleMail} isLoading={isLoading} />}
+        {step === "email" && (
+          <EmailStep onSubmit={handleMail} isLoading={isLoading} />
+        )}
         {step === "code" && (
           <CodeStep
             onSubmit={handleCode}

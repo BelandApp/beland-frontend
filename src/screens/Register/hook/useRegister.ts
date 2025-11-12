@@ -76,7 +76,8 @@ export const useRegister = () => {
   };
   const handleReSendCode = async () => {
     if (!FormData.email) return;
-    await authService.sendCodeToEmail(FormData.email);
+    // CREAR ENDPOINT
+    // await authService.sendCodeToEmailRegister(FormData.email);
     //  TODO notificar al usuario
   };
   const handleVerifyCode = async (code: string) => {
