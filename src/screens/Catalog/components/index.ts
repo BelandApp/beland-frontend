@@ -1,4 +1,3 @@
-export { SearchBar } from "./SearchBar";
 export { FilterPanel } from "./FilterPanel";
 export { ProductCard } from "./ProductCard";
 export { ProductGrid } from "./ProductGrid";

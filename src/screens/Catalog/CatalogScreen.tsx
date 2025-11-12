@@ -17,29 +17,31 @@ import { BeCoinsBalance } from "@components/shared";
 
 // Hooks
 import { useCatalogFilters, useCatalogModals } from "./hooks";
-import { useProducts } from "../../hooks/useProducts";
-import { useCartSync } from "../../hooks/useCartSync";
+import {
+  useCartSync,
+  useProducts,
+  useCustomAlert,
+  useCustomNavigation,
+} from "@/hooks";
 import { ProductService } from "@/services";
 import { ProductCardType } from "./components/ProductCard";
 import { useAuth } from "@/context";
-import { useCustomAlert } from "../../hooks/useCustomAlert";
 
 // Components
-import { SearchBar, FilterPanel, ProductGrid } from "./components";
+import { FilterPanel, ProductGrid } from "./components";
 import { OrderDeliveryModal } from "./components/OrderDeliveryModal";
 import { CustomAlert } from "@components/shared";
-
+import {SearchBarInput} from "@components/shared";
 // Styles
 import { containerStyles, productStyles } from "./styles";
 
-import { useCartStore } from "../../stores/useCartStore";
+import { useCartStore } from "@/stores/useCartStore";
 import { CartBottomSheet } from "./components/CartBottomSheet";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 // Community Main Component
 import CatalogCommunitySection from "./mainComponents/CatalogCommunitySection";
 import { useGroupedProducts } from "./mainHooks/useGroupedProducts";
-import { ThemedHeader } from "src/components/shared/headers/Header";
-import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
+import { ThemedHeader } from "@/components";
 
 export const CatalogScreen = () => {
   const { navigate } = useCustomNavigation();
@@ -243,7 +245,11 @@ export const CatalogScreen = () => {
         contentContainerStyle={containerStyles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
-        <SearchBar searchQuery={searchText} onSearchChange={setSearchText} />
+        <SearchBarInput
+          searchQuery={searchText}
+          onSearchChange={setSearchText}
+          placeholder="Buscar Productos..."
+        />
 
         {showFilters && (
           <FilterPanel
@@ -377,7 +383,7 @@ export const CatalogScreen = () => {
         onClose={closeDeliveryModal}
         onOrderCreated={(orderId: string) => {
           // Navigate to Orders tab to see the created order
-          navigate("Orders",{screen:"OrdersList"});
+          navigate("Orders", { screen: "OrdersList" });
         }}
       />
 
