@@ -6,16 +6,18 @@ import {
   Dimensions,
   TouchableOpacity,
 } from "react-native";
-import { CustomAlert } from "@components/shared";
-import { LoginWave } from "src/components/ui/waves/Login.wave";
+import {
+  CustomAlert,
+  CustomInput,
+  SocialButton,
+  Button,
+} from "@components/shared";
+import { LoginWave } from "@components/ui";
 import BelandLogo from "src/components/icons/BelandLogo";
-import { CustomInput } from "src/components/shared/input";
 import { styles } from "./styles";
-import { SocialButton } from "src/components/shared";
 import { useAuth } from "src/context";
 import { CircleArrowLeftIcon } from "lucide-react-native";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
-import { Button } from "@components/shared";
 
 export default function LoginScreen() {
   const {navigate} = useCustomNavigation();

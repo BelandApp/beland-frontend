@@ -14,14 +14,15 @@ export const SocialButton: React.FC<SocialButtonsProps> = ({ onPress }) => {
       style={{
         flexDirection: "row",
         justifyContent: "center",
-        alignItems: "baseline",
+        alignItems: "center",
         gap: 12,
         backgroundColor: "white",
         borderWidth: 2,
         borderColor: colors.border.default,
         borderRadius: 24,
         padding: 10,
-        width: "auto",
+        width: 150,
+        height: 45,
         marginHorizontal: "auto",
       }}
       onPress={onPress}
