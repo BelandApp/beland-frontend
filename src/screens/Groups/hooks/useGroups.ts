@@ -6,6 +6,7 @@ import { GroupService } from "@services/core";
 export const useGroups = () => {
   const [groups, setGroups] = useState<Group[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,24 +35,37 @@ export const useGroups = () => {
   );
 
   const getAllGroups = () => groups;
-
-  const getActiveGroups = () =>
+  const activeGroups = () =>
     groups.filter(
       (group) => group.status === "active" || group.status === "pending"
     );
 
-  const getCompletedGroups = () =>
+  const completedGroups = () =>
     groups.filter((group) => group.status === "completed");
+
+  const filters = {
+    Activos: (group: Group) =>
+      group.status === "active" || group.status === "pending",
+    Historial: (group: Group) => group.status === "completed",
+  };
 
   const getGroupById = (id: string) => groups.find((group) => group.id === id);
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchGroups();
+    setRefreshing(false);
+  };
   return {
     getAllGroups,
-    getActiveGroups,
-    getCompletedGroups,
     getGroupById,
+    activeGroups,
+    completedGroups,
     refreshKey,
     loading,
     error,
+    onRefresh,
+    refreshing,
+    filters,
   };
 };

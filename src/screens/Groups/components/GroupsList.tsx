@@ -8,7 +8,7 @@ import { groupCardStyles } from "../styles";
 interface GroupsListProps {
   groups: Group[];
   onGroupPress: (groupId: string) => void;
-  emptyStateType: "active" | "history";
+  emptyStateType: "Activos" | "Historial";
 }
 
 export const GroupsList: React.FC<GroupsListProps> = ({

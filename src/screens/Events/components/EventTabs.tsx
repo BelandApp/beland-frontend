@@ -13,7 +13,7 @@ export const EventsTabs = ({
   const {tabs,onTabChange, activeTab}= useThemedTabs(["Disponibles", "Adquiridos"]);
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, padding: 16 }}>
       <ThemedTabs tabs={tabs} onTabChange={onTabChange} />
       <EventsList
         events={activeTab === "Disponibles" ? availableEvents : acquiredEvents}
@@ -23,28 +23,3 @@ export const EventsTabs = ({
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  tabContainer: {
-    flexDirection: "row",
-    marginBottom: 16,
-    justifyContent: "center",
-  },
-  tabButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderBottomWidth: 2,
-    borderBottomColor: "transparent",
-  },
-  activeTab: {
-    borderBottomColor: colors.primary,
-  },
-  tabText: {
-    color: colors.textSecondary,
-    fontSize: 16,
-  },
-  activeText: {
-    color: colors.primary,
-    fontWeight: "600",
-  },
-});

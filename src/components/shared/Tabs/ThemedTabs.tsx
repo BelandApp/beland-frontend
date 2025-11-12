@@ -7,6 +7,7 @@ export type TabItem = {
   label: string;
   icon?: React.ReactNode;
   disabled?: boolean;
+  count?: number | string;
 };
 type ThemedTabsProps = {
   tabs: TabItem[];
@@ -32,7 +33,7 @@ const ThemedTabs: React.FC<ThemedTabsProps> = ({
   };
   return (
     <View style={[styles.container, containerStyle]}>
-      {tabs.map(({ label, icon, disabled }) => {
+      {tabs.map(({ label, icon, disabled,count }) => {
         const isActive = label === activeTab;
         return (
           <Pressable
@@ -57,7 +58,8 @@ const ThemedTabs: React.FC<ThemedTabsProps> = ({
                 disabled && styles.disabledText,
               ]}
             >
-              {label}
+              {label}{" "}
+              {count}
             </Text>
           </Pressable>
         );
@@ -68,28 +70,36 @@ const ThemedTabs: React.FC<ThemedTabsProps> = ({
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
+    backgroundColor: "#FFFFFF",
     marginBottom: 16,
-    justifyContent: "center",
+    borderRadius: 12,
+    padding: 4,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   tab: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    paddingVertical: 8,
+    paddingVertical: 12,
     paddingHorizontal: 16,
-    borderBottomWidth: 2,
-    borderBottomColor: "transparent",
+    borderRadius: 8,
+    justifyContent: "center",
   },
   activeTab: {
-    borderBottomColor: colors.primary,
+    backgroundColor: colors.belandOrange,
   },
   text: {
+    fontSize: 14,
+    fontWeight: "500" as const,
     color: colors.textSecondary,
-    fontSize: 16,
   },
   activeText: {
-    color: colors.primary,
-    fontWeight: "600",
+    color: "#FFFFFF",
   },
   disabled: {
     opacity: 0.5,

@@ -58,7 +58,6 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     flexDirection: "row",
     gap: 16,
-    paddingHorizontal: 8,
     marginBottom: 80, // TODO chequear despues para vista celular
     justifyContent: "center",
   },
