@@ -212,7 +212,7 @@ export const CatalogScreen = () => {
               >
                 <MaterialCommunityIcons
                   name={isSyncing ? "sync" : "cart-variant"}
-                  size={29}
+                  size={25}
                   color={isSyncing ? "#FFA500" : "#FF6B35"}
                   style={[
                     styles.headerCartIcon,
