@@ -19,6 +19,7 @@ const RegisterStep: React.FC<RegisterStepProps> = ({
   errors,
 }) => {
   const { navigate } = useCustomNavigation();
+  console.log(isLoading)
   return (
     <>
       <View style={styles.inputsContainer}>

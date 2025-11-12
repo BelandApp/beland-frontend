@@ -68,7 +68,7 @@ export const Button: React.FC<CustomButtonProps> = ({
           borderWidth: variantStyles.borderWidth,
           borderColor: variantStyles.borderColor,
         },
-        { cursor: disabled ? "not-allowed" : "pointer" },
+        { cursor: disabled || isLoading ? "not-allowed" : "pointer" },
         style,
       ]}
       disabled={disabled || isLoading}
