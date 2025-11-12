@@ -5,11 +5,11 @@ import {
   Animated,
   Easing,
   StyleSheet,
-  TouchableOpacity,
   Text,
   TextInputProps,
   Pressable,
 } from "react-native";
+import "@styles/inputs.css";
 
 interface CustomInputProps extends TextInputProps {
   label: string;
@@ -138,6 +138,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
 
 const styles = StyleSheet.create({
   button: {
+    flex: 1,
     marginBottom: 20,
     flexDirection: "column",
     gap: 5,

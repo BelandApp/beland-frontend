@@ -26,8 +26,7 @@ export const EventsList = ({ events, tab }: any) => {
             {!isAuthenticated && (
                 <>
                 <Button
-                  variant="ghost"
-                  style={{ margin: 0, padding: 0 }}
+                  variant="inline"
                   title="Inicia Sesion"
                   onPress={() => navigate("Login")}
                 />

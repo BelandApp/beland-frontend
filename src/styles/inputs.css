@@ -1,0 +1,26 @@
+/* Evita el autocompletado de campos en React Native Web */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  box-shadow: 0 0 0 1000px #00000000 inset !important;
+  /* fondo deseado */
+  -webkit-text-fill-color: #fff !important;
+  /* color del texto */
+  transition: background-color 99999s ease-out 0s;
+  caret-color: #ffffff;
+  color: "white"
+}
+
+/* Eliminar borde negro de TextInput y Picker en focus en React Native Web */
+textarea:focus,
+input:focus,
+select:focus,
+.css-textinput-11aywtz:focus,
+.css-text-146c3p1:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}

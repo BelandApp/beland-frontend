@@ -1,4 +1,3 @@
-
 import { JSX } from "react";
 import {
   ActivityIndicator,
@@ -20,9 +19,48 @@ interface CustomButtonProps extends ButtonProps {
   style?: any;
   textStyle?: any;
 }
-type Variant = "primary" | "secondary" | "ghost";
+type Variant = "primary" | "secondary" | "ghost" | "inline";
 type IconPosition = "left" | "right";
 
+const VARIANT_STYLES = {
+  primary: {
+    container: { backgroundColor: colors.belandOrange },
+    text: { color: "white" },
+  },
+  secondary: {
+    container: { backgroundColor: colors.belandGreen },
+    text: { color: "white" },
+  },
+  ghost: {
+    container: {
+      backgroundColor: "transparent",
+      borderWidth: 1,
+      borderColor: colors.belandOrange,
+    },
+    text: { color: colors.belandOrange },
+  },
+  inline: {
+    container: {
+      backgroundColor: "transparent",
+      borderBottomWidth: 1,
+      borderBottomColor: colors.belandOrange,
+      paddingVertical: 0,
+      paddingHorizontal: 0,
+      borderRadius:0
+    },
+    text: { color: colors.belandOrange },
+  },
+} as const;
+const getVariantStyles = (variant: Variant, disabled?: boolean) => {
+  const base = VARIANT_STYLES[variant];
+  if (disabled) {
+    return {
+      container: { ...base.container, opacity: 0.6 },
+      text: { ...base.text, color: "#ccc" },
+    };
+  }
+  return base;
+};
 export const Button: React.FC<CustomButtonProps> = ({
   title,
   onPress,
@@ -34,41 +72,14 @@ export const Button: React.FC<CustomButtonProps> = ({
   style,
   textStyle,
 }) => {
-  const getVariantStyles = () => {
-    switch (variant) {
-      case "primary":
-        return {
-          backgroundColor: colors.belandOrange,
-          textColor: disabled ? "#f2e9e9c5" : "white",
-        };
-      case "secondary":
-        return {
-          backgroundColor: colors.belandGreen,
-          textColor: disabled ? "#f2e9e9c5" : "white",
-        };
-      case "ghost":
-        return {
-          backgroundColor: "transparent",
-          textColor: colors.belandOrange,
-          borderWidth: 1,
-          borderColor: colors.belandOrange,
-        };
-      default:
-        return { backgroundColor: colors.belandOrange, textColor: "white" };
-    }
-  };
-  const variantStyles = getVariantStyles();
+  const variantStyle = getVariantStyles(variant, disabled);
   return (
     <TouchableOpacity
       onPress={onPress}
       style={[
         styles.container,
-        { backgroundColor: variantStyles.backgroundColor },
-        variant === "ghost" && {
-          borderWidth: variantStyles.borderWidth,
-          borderColor: variantStyles.borderColor,
-        },
-        { cursor: disabled || isLoading ? "not-allowed" : "pointer" },
+        variantStyle.container,
+        (disabled || isLoading) && { opacity: 0.6 },
         style,
       ]}
       disabled={disabled || isLoading}
@@ -87,13 +98,9 @@ export const Button: React.FC<CustomButtonProps> = ({
     >
       {icon && iconPosition === "left" && icon}
       {isLoading ? (
-        <ActivityIndicator color={variantStyles.textColor} />
+        <ActivityIndicator color={variantStyle.text.color} />
       ) : (
-        <Text
-          style={[styles.text, { color: variantStyles.textColor }, textStyle]}
-        >
-          {title}
-        </Text>
+        <Text style={[styles.text, variantStyle.text, textStyle]}>{title}</Text>
       )}
       {icon && iconPosition === "right" && icon}
     </TouchableOpacity>
@@ -113,6 +120,7 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     fontWeight: "600",
+   
   },
 });
 export default Button;

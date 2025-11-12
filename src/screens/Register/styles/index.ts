@@ -25,7 +25,7 @@ export const styles = StyleSheet.create({
     width: "100%",
     flexDirection: width > 600 ? "row" : "column",
     gap: 10,
-    alignItems: "baseline",
+    alignItems:  width > 600 ?"baseline" :"stretch",
   },
   logo: { margin: "auto", marginTop: 20 },
   title: {
