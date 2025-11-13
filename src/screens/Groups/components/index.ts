@@ -1,4 +1,3 @@
-export { GroupTabs } from "./GroupTabs";
 export { GroupsHeader } from "./GroupsHeader";
 export { SimpleGroupCard } from "./SimpleGroupCard";
 export { GroupsList } from "./GroupsList";

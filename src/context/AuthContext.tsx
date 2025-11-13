@@ -91,16 +91,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     })();
   }, []);
 
-  const discovery = useAutoDiscovery(`https://${auth0Domain}`);
+  const redirectUrl = makeRedirectUri({
+    path: Platform.select({ web: undefined, default: "callback" }),
+    preferLocalhost: true,
+  });
+  // Development URL:
+  // NATIVE> exp://localhost:8081/--/callback WEB> http://localhost:8081
 
+  const discovery = useAutoDiscovery(`https://${auth0Domain}`);
   const [request, response, promptAsync] = useAuthRequest(
     {
       clientId: Platform.OS === "web" ? clientWebId : clientNativeId,
-      redirectUri: makeRedirectUri({
-        scheme: scheme,
-        path: Platform.select({ web: undefined, default: "callback" }),
-        preferLocalhost: true,
-      }),
+      redirectUri: redirectUrl,
       scopes: ["openid", "profile", "email", "offline_access"],
       usePKCE: true,
       extraParams: {
@@ -119,15 +121,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           if (code) {
             const tokenResponse = await exchangeCodeAsync(
               {
-                clientId: clientWebId,
+                clientId: Platform.OS === "web" ? clientWebId : clientNativeId,
                 code,
-                redirectUri: makeRedirectUri({
-                  scheme: scheme,
-                  path: Platform.select({
-                    web: undefined,
-                    default: "callback",
-                  }),
-                }),
+                redirectUri: redirectUrl,
                 extraParams: {
                   code_verifier: request?.codeVerifier || "",
                 },

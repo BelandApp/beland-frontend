@@ -3,7 +3,7 @@ import { colors } from "@styles/colors";
 
 export const styles = StyleSheet.create({
   pointCard: {
-    backgroundColor: colors.cardBackground,
+    backgroundColor: "white",
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,

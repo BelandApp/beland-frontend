@@ -10,19 +10,18 @@ import {
 import { ResourceService } from "@services/core";
 import UserResourceCard from "./components/UserResourceCard";
 import { useCustomAlert } from "src/hooks/useCustomAlert";
-import type { StackNavigationProp } from "@react-navigation/stack";
-import type { RootStackParamList } from "src/components/layout/RootStackNavigator";
 import { Gift, Filter } from "lucide-react-native";
 import { ThemedHeader } from "src/components/shared/headers/Header";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
+import { CustomLoader, useThemedTabs } from "src/components";
+import ThemedTabs from "src/components/shared/Tabs/ThemedTabs";
 
 const UserResourcesScreen: React.FC = () => {
+  const { tabs, onTabChange, filterWithTab, getFilteredByActiveTab } =
+    useThemedTabs(["Todos", "Activos", "Expirados"]);
+  // TODO MOVER A UN HOOK
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const FILTERS = ["Todos", "Activos", "Expirados"];
-  const { showCustomAlert } = useCustomAlert();
-  const { navigate } = useCustomNavigation();
-
   const load = async () => {
     setLoading(true);
     try {
@@ -61,49 +60,29 @@ const UserResourcesScreen: React.FC = () => {
     load();
   }, []);
 
-  const [filter, setFilter] = useState<string>(FILTERS[0]);
-  const filtered = items.filter((it) => {
-    if (filter === "Todos") return true;
-    const expiresAt = it.expires_at ? new Date(it.expires_at) : null;
-    const isExpired = expiresAt ? expiresAt.getTime() < Date.now() : false;
-    if (filter === "Activos") return !isExpired;
-    if (filter === "Expirados") return isExpired;
-    return true;
-  });
+  const filters = {
+    Activos: (item: any) => {
+      return item.expires_at > Date.now();
+    },
+    Expirados: (item: any) => item.expires_at < Date.now(),
+  };
+  // TODO FIN 
+  
+  const filtered = getFilteredByActiveTab(items, filters);
+
+  const { showCustomAlert } = useCustomAlert();
+  const { navigate } = useCustomNavigation();
+
   if (loading) {
     return (
-      <View style={styles.containerCentered}>
-        <ActivityIndicator />
-      </View>
+      <CustomLoader/>
     );
   }
 
   return (
     <View style={styles.container}>
       <ThemedHeader title="Mis Beneficios" canGoBack />
-
-      <View style={styles.filterRow}>
-        <Filter size={18} color="#6B7280" />
-        <View style={styles.filterOptions}>
-          {FILTERS.map((f) => (
-            <TouchableOpacity
-              key={f}
-              style={[styles.filterBtn, filter === f && styles.filterBtnActive]}
-              onPress={() => setFilter(f)}
-            >
-              <Text
-                style={[
-                  styles.filterText,
-                  filter === f && styles.filterTextActive,
-                ]}
-              >
-                {f}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
+      <ThemedTabs tabs={tabs} onTabChange={onTabChange} />
       <FlatList
         data={filtered}
         keyExtractor={(i) => String(i.id)}

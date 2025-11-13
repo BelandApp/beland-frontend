@@ -1,7 +1,7 @@
 import { StyleSheet, Dimensions, Platform } from "react-native";
 import { colors } from "src/styles";
 
-const { width } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
 
 export const styles = StyleSheet.create({
   scroll: {
@@ -11,21 +11,23 @@ export const styles = StyleSheet.create({
   container: {
     flexDirection: "column",
     justifyContent: "center",
-    marginHorizontal: "auto",
+    marginHorizontal: width > 600 ? "auto" : 0,
     marginBottom: "auto",
     padding: 20,
     borderRadius: 20,
     borderTopLeftRadius: 120,
     borderTopRightRadius: 120,
-    minWidth: width > 600 ? 600 : width * 0.9,
+    width: width > 600 ? 600 : width,
     gap: 5,
     backgroundColor: colors.belandOrange,
+    height: Platform.OS === "web" ? "auto" : height * 0.5,
   },
   inputsContainer: {
     width: "100%",
+    height: Platform.OS === "web" ? "auto" : height * 0.15,
     flexDirection: width > 600 ? "row" : "column",
-    gap: 10,
-    alignItems: "baseline",
+    gap: Platform.OS === "web" ? 10 : 0,
+    alignItems: Platform.OS === "web" && width > 600 ? "flex-end" : "stretch",
   },
   logo: { margin: "auto", marginTop: 20 },
   title: {

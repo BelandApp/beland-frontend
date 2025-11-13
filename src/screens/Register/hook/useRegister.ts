@@ -41,6 +41,7 @@ export const useRegister = () => {
     FormData.confirmPassword = FormData.password;
     const isValid = validateForm(FormData);
     if (!isValid) {
+      setIsLoading(false);
       setAlert({
         visible: true,
         title: "Error",
@@ -50,6 +51,7 @@ export const useRegister = () => {
       return;
     }
     try {
+      setIsLoading(true);
       const success = await authService.registerUser(FormData);
       if (!success) {
         setAlert({
@@ -68,11 +70,14 @@ export const useRegister = () => {
         type: "error",
       });
       console.error("[REGISTER] Error en Register:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
   const handleReSendCode = async () => {
     if (!FormData.email) return;
-    await authService.sendCodeToEmail(FormData.email);
+    // CREAR ENDPOINT
+    // await authService.sendCodeToEmailRegister(FormData.email);
     //  TODO notificar al usuario
   };
   const handleVerifyCode = async (code: string) => {

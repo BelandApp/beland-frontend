@@ -32,6 +32,7 @@ const EventsScreen = () => {
             refreshing={refreshing}
             onRefresh={onRefresh}
             colors={[colors.primary]}
+            style={{padding:0}}
           />
         }
       >
@@ -52,7 +53,7 @@ const EventsScreen = () => {
 const styles = StyleSheet.create({
   content: { flex: 1 },
   scroll: {
-    paddingVertical: 16,
+    flex: 1,
   },
 });
 

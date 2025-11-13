@@ -26,12 +26,12 @@ export const productStyles = StyleSheet.create({
   },
   productRow: {
     flexDirection: "row" as const,
-    justifyContent: "space-between" as const,
+    justifyContent: "center" ,
     marginBottom: 16,
     flexWrap: "wrap",
+    gap: 16,
     ...(Platform.OS === "web"
       ? {
-          gap: 16,
           justifyContent: "center",
           width: "100%",
         }
@@ -58,7 +58,7 @@ export const productStyles = StyleSheet.create({
           boxSizing: "border-box",
         }
       : {
-          width: getCardWidth(),
+          width: "80%",
           minHeight: 260,
         }),
   },

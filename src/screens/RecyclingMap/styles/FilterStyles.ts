@@ -3,10 +3,8 @@ import { colors } from "@styles/colors";
 
 export const styles = StyleSheet.create({
   header: {
-    padding: 10,
+    paddingBottom: 16,
     backgroundColor: colors.cardBackground,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
   },
   title: {
     fontSize: 24,
@@ -18,23 +16,10 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textSecondary,
   },
-  searchContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-  },
-  searchInput: {
-    backgroundColor: "#F3F4F6",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-    fontSize: 16,
-    color: colors.textPrimary,
-  },
   filtersContainer: {
     maxHeight: 50,
   },
   filtersContent: {
-    paddingHorizontal: 20,
     paddingVertical: 6,
     gap: 8,
   },
@@ -42,8 +27,8 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#F3F4F6",
-    paddingHorizontal: 12,
     paddingVertical: 8,
+    paddingHorizontal: 8,
     borderRadius: 20,
     marginRight: 8,
   },

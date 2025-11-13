@@ -3,12 +3,12 @@ import { View, Text } from "react-native";
 import { groupCardStyles } from "../styles";
 
 interface EmptyStateProps {
-  type: "active" | "history";
+  type: "Activos" | "Historial";
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({ type }) => {
   const getEmptyContent = () => {
-    if (type === "active") {
+    if (type === "Activos") {
       return {
         title: "¡No tienes grupos activos!",
         text: "Crea tu primer grupo para empezar a disfrutar de las compras colaborativas.",

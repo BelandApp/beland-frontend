@@ -102,7 +102,7 @@ export const AcquiredEventCard: React.FC<Event> = ({
 
 const styles = StyleSheet.create({
   card: {
-    width: "90%",
+    width: "100%",
     maxWidth: 600,
     flexDirection: "row",
     position: "relative",

@@ -83,7 +83,6 @@ export const HomeScreen = () => {
       },
       content: {
         ...webStyles.content,
-        padding: isMobile ? 16 : 32,
         paddingBottom: isMobile ? 80 : 120,
       },
     });
@@ -187,7 +186,6 @@ const styles = StyleSheet.create({
 const webStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
   },
   scrollView: {
     flex: 1,
@@ -196,7 +194,7 @@ const webStyles = StyleSheet.create({
     width: "100%",
     maxWidth: 1400,
     alignSelf: "center",
-    padding: 32,
+    padding: 16,
     paddingBottom: 120,
   },
 });

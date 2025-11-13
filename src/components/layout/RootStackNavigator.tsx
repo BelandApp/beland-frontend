@@ -148,7 +148,7 @@ export const RootStackNavigator = () => {
       <Stack.Screen
         name="RecyclingMap"
         component={RecyclingMapScreen}
-        options={{ headerShown: true, title: "Mapa de Reciclaje" }}
+        options={{ headerShown: false}}
       />
       <Stack.Screen
         name="HistoryScreen"

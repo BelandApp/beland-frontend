@@ -1,41 +1,50 @@
 import React from "react";
-import { View, ScrollView, Dimensions, TouchableOpacity, Text } from "react-native";
-import { GroupsStackParamList } from "../../types/navigation";
+import {
+  View,
+  ScrollView,
+  Dimensions,
+  TouchableOpacity,
+  Text,
+  RefreshControl,
+} from "react-native";
 import { WaveBottomGray } from "../../components/icons";
 
+type Tabs = "Activos" | "Historial";
+
 // Hooks
-import {
-  useGroupsTabs,
-  useGroupsNavigation,
-  useGroups,
-  useGroupTypeFilter,
-} from "./hooks";
+import { useGroupsNavigation, useGroups, useGroupTypeFilter } from "./hooks";
 
 // Components
-import {
-  GroupsHeader,
-  GroupTabs,
-  GroupsList,
-  GroupTypeFilter,
-} from "./components";
+import { GroupsList, GroupTypeFilter } from "./components";
 
 // Styles
 import { buttonStyles, containerStyles } from "./styles";
 import { ThemedHeader } from "src/components/shared/headers/Header";
+import { useThemedTabs } from "src/components";
+import ThemedTabs from "src/components/shared/Tabs/ThemedTabs";
+import { colors } from "src/styles";
 
 export const GroupsScreen: React.FC<any> = (props) => {
-  // Hooks personalizados
-  const { selectedTab, setSelectedTab, isActiveTab } = useGroupsTabs();
+  // Hooks
   const { navigateToCreateGroup, navigateToGroupManagement } =
     useGroupsNavigation();
-  const { getActiveGroups, getCompletedGroups } = useGroups();
-
+  const {
+    getAllGroups,
+    onRefresh,
+    refreshing,
+    filters,
+    activeGroups,
+    completedGroups,
+  } = useGroups();
   // Obtener los grupos
-  const activeGroups = getActiveGroups();
-  const completedGroups = getCompletedGroups();
+  const groups = getAllGroups();
 
-  // Determinar qué grupos mostrar según la pestaña seleccionada
-  const baseGroups = isActiveTab ? activeGroups : completedGroups;
+  const { tabs, activeTab, getFilteredByActiveTab, onTabChange } =
+    useThemedTabs([
+      { label: "Activos", count: activeGroups.length },
+      { label: "Historial", count: completedGroups.length },
+    ]);
+  const baseGroups = getFilteredByActiveTab(groups, filters);
 
   // Hook para filtrar por tipo
   const {
@@ -65,18 +74,19 @@ export const GroupsScreen: React.FC<any> = (props) => {
           </>
         }
       />
-      <ScrollView style={containerStyles.scrollView}>
-        <View style={containerStyles.content}>
-          {/* Header con título y botón crear */}
-
-          {/* Pestañas de navegación */}
-          <GroupTabs
-            selectedTab={selectedTab}
-            onTabChange={setSelectedTab}
-            activeCount={activeGroups.length}
-            historyCount={completedGroups.length}
+      <ScrollView
+        style={containerStyles.scrollView}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[colors.primary]}
+            style={{ padding: 0 }}
           />
-
+        }
+      >
+        <View style={containerStyles.content}>
+          <ThemedTabs tabs={tabs} onTabChange={onTabChange} />
           {/* Filtro por tipo de grupo */}
           {availableTypes.length > 0 && (
             <GroupTypeFilter
@@ -90,7 +100,7 @@ export const GroupsScreen: React.FC<any> = (props) => {
           <GroupsList
             groups={currentGroups}
             onGroupPress={navigateToGroupManagement}
-            emptyStateType={selectedTab}
+            emptyStateType={activeTab as Tabs}
           />
         </View>
       </ScrollView>

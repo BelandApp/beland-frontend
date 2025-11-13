@@ -5,11 +5,12 @@ import {
   Animated,
   Easing,
   StyleSheet,
-  TouchableOpacity,
   Text,
   TextInputProps,
   Pressable,
+  Platform,
 } from "react-native";
+import "@styles/inputs.css";
 
 interface CustomInputProps extends TextInputProps {
   label: string;
@@ -138,6 +139,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
 
 const styles = StyleSheet.create({
   button: {
+    flex: 1,
     marginBottom: 20,
     flexDirection: "column",
     gap: 5,
@@ -148,13 +150,13 @@ const styles = StyleSheet.create({
     borderWidth: 0,
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: Platform.OS === "web" ? "center" : "flex-end",
     borderBottomWidth: 2,
+    paddingBottom: Platform.OS === "web" ? 0 : 4,
   },
   input: {
-    width: "100%",
-    paddingVertical: 8,
-    fontSize: 17,
+    paddingVertical: Platform.OS === "web" ? 8 : 10,
+    fontSize: 17, 
     fontWeight: "600",
     color: "white",
     borderStyle: "solid",

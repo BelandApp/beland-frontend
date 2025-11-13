@@ -8,6 +8,5 @@ export const styles = StyleSheet.create({
   },
   pointsList: {
     flex: 1,
-    paddingHorizontal: 20,
   },
 });

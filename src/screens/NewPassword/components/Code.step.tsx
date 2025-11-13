@@ -3,6 +3,7 @@ import { View, Text, TouchableHighlight, StyleSheet } from "react-native";
 import { useEffect, useState } from "react";
 import { CodeStepProps } from "src/types";
 import { Button } from "@components/shared";
+import { useValidation } from "src/hooks/form/useValidation";
 const CodeStep: React.FC<CodeStepProps> = ({
   onSubmit,
   onResendCode,
@@ -11,15 +12,21 @@ const CodeStep: React.FC<CodeStepProps> = ({
 }) => {
   const [code, setCode] = useState("");
   const [count, setCount] = useState<number>(50);
+  const {validateForm, errors}=useValidation()
   setTimeout(() => {
     if (count > 0) {
       setCount(count - 1);
     }
   }, 1000);
 
+  const handleSubmit = () => {
+    const isValid = validateForm({ code });
+    if(!isValid) return
+    onSubmit(code);
+  }
   const handleResendCode = () => {
     onResendCode();
-    setCount(50);
+    setCount(150);
   }
   return (
     <View>
@@ -31,6 +38,9 @@ const CodeStep: React.FC<CodeStepProps> = ({
         onChangeText={(text) => setCode(text)}
         value={code}
         maxLength={6}
+        keyboardType="numeric"
+        error={errors.code}
+        onBlur={()=>{validateForm({ code })}}
       />
       <View style={styles.rowContainer}>
         <Button
@@ -40,8 +50,8 @@ const CodeStep: React.FC<CodeStepProps> = ({
           style={{ paddingLeft: 0 }}
         />
         <Button
-          title="Siguiente"
-          onPress={() => onSubmit(code)}
+          title="Confirmar"
+          onPress={handleSubmit}
           variant="secondary"
           disabled={!code}
           isLoading={isLoading}

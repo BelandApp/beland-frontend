@@ -2,17 +2,18 @@ import React from "react";
 import { ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusHeader } from "./components/StatusHeader";
-import { SearchBar } from "./components/SearchBar";
 import { FilterChips } from "./components/FilterChips";
 import { MapView } from "./components/MapView";
 import { PointCard } from "./components/PointCard";
 import { styles } from "@screens/RecyclingMap/styles/RecyclingMapStyles";
 import { useRecyclingMapContext } from "./context/RecyclingMapContext";
 import { RecyclingMapProvider } from "./context/RecyclingMapContext";
+import { SearchBarInput, ThemedHeader } from "src/components";
 
 export const RecyclingMapScreen = () => {
   return (
     <RecyclingMapProvider>
+      <ThemedHeader canGoBack title="Mapa de Reciclaje" />
       <RecyclingMapScreenContent />
     </RecyclingMapProvider>
   );
@@ -74,7 +75,7 @@ const RecyclingMapScreenContent = () => {
             }}
           >
             <StatusHeader pointCount={filteredPoints.length} />
-            <SearchBar value={searchQuery} onChangeText={setSearchQuery} />
+            <SearchBarInput searchQuery={searchQuery} onSearchChange={setSearchQuery} placeholder="Buscar..."/>
             <FilterChips
               selectedFilters={selectedFilters}
               toggleFilter={toggleFilter}
@@ -111,7 +112,7 @@ const RecyclingMapScreenContent = () => {
           style={{
             flex: 1,
             minWidth: 0,
-            padding: 0,
+            padding: 16,
             overflowY: "auto",
             height: "100vh",
             boxSizing: "border-box",
@@ -119,7 +120,7 @@ const RecyclingMapScreenContent = () => {
           }}
         >
           <StatusHeader pointCount={filteredPoints.length} />
-          <SearchBar value={searchQuery} onChangeText={setSearchQuery} />
+          <SearchBarInput searchQuery={searchQuery} onSearchChange={setSearchQuery} placeholder="Buscar por nombre o dirección..."/>
           <FilterChips
             selectedFilters={selectedFilters}
             toggleFilter={toggleFilter}
@@ -143,7 +144,11 @@ const RecyclingMapScreenContent = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusHeader pointCount={filteredPoints.length} />
-      <SearchBar value={searchQuery} onChangeText={setSearchQuery} />
+      <SearchBarInput
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        placeholder="Buscar por nombre o dirección..."
+      />
       <FilterChips
         selectedFilters={selectedFilters}
         toggleFilter={toggleFilter}
