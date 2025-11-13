@@ -39,7 +39,7 @@ type AuthContextType = {
   user: User | null;
   token: string | null;
   isLoading: boolean;
-  loginWithEmail: (email: string, password: string) => Promise<void>;
+  loginWithEmail: (email: string, password: string) => Promise<{token: string | null}>;
   handleAuth0Login: () => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
@@ -165,11 +165,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       await TokenService.saveToken(newToken);
       setToken(newToken);
       setUser(await authService.getCurrentUser(newToken));
+      return { token: newToken };
     } catch (error) {
       Alert.alert(
         "Error de autenticación",
         "Fallo al iniciar sesión. Por favor, inténtelo de nuevo."
       );
+      return {token:null}
     } finally {
       setIsLoading(false);
     }

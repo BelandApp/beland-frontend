@@ -46,8 +46,8 @@ export default function LoginScreen() {
       return;
     }
     try {
-      await loginWithEmail(FormData.email, FormData.password);
-      if (!user) {
+      const res = await loginWithEmail(FormData.email, FormData.password);
+      if (!res.token) {
         setAlert({
           visible: true,
           title: "Error",
@@ -55,6 +55,7 @@ export default function LoginScreen() {
           type: "error",
         });
       }
+      navigate("MainTabs", { screen: "Home" });
     } catch (error) {
       setAlert({
         visible: true,

@@ -1,5 +1,10 @@
 import { Alert } from "react-native";
-
+type CustomAlert = {
+  title: string;
+  message: string;
+  buttonText?: string;
+  onClose?: () => void;
+};
 // Helper para mostrar alerta de código QR compartido
 export const showQRSharedAlert = (onComplete?: () => void) => {
   return {
@@ -13,33 +18,34 @@ export const showQRSharedAlert = (onComplete?: () => void) => {
 };
 
 // Helper para otras alertas de éxito
-export const showSuccessAlert = (
-  title: string,
-  message: string,
-  buttonText: string = "OK",
-  onComplete?: () => void
-) => {
+export const showSuccessAlert = ({
+  title,
+  message,
+  buttonText = "Aceptar",
+  onClose,
+}: CustomAlert) => {
   return {
     title,
     message,
     type: "success" as const,
     buttonText,
-    onClose: onComplete || (() => {}),
+    onClose: onClose || (() => {}),
   };
 };
 
 // Helper para alertas de error
-export const showErrorAlert = (
-  title: string,
-  message: string,
-  buttonText: string = "OK",
-  onComplete?: () => void
-) => {
+
+export const showErrorAlert = ({
+  title,
+  message,
+  buttonText = "Aceptar",
+  onClose,
+}: CustomAlert) => {
   return {
     title,
     message,
     type: "error" as const,
     buttonText,
-    onClose: onComplete || (() => {}),
+    onClose: onClose || (() => {}),
   };
 };

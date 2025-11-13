@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useValidation } from "src/hooks/form/useValidation";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { RegisterFormData } from "../RegisterScreen";
-import { authService } from "src/services";
+import { authService, getBackendErrorMessage } from "src/services";
+import { showErrorAlert, showSuccessAlert } from "src/utils/alertHelpers";
 
 export const useRegister = () => {
   const [step, setStep] = useState<"register" | "code">("register");
@@ -75,15 +76,37 @@ export const useRegister = () => {
     }
   };
   const handleReSendCode = async () => {
-    if (!FormData.email) return;
-    // CREAR ENDPOINT
-    // await authService.sendCodeToEmailRegister(FormData.email);
-    //  TODO notificar al usuario
+    try {
+      if (!FormData.email) return;
+      await authService.resendRegisterCode(FormData.email);
+       showSuccessAlert({
+         title: "Enviado",
+         message: "Nuevo código enviado",
+       });
+    } catch (error) {
+      const message = getBackendErrorMessage(error);
+      showErrorAlert({
+        title: "Error",
+        message: message,
+      });
+    }
   };
   const handleVerifyCode = async (code: string) => {
-    await authService.checkRegisterCode({ email: FormData.email, code });
-    // TODO notificar registracion exitosa
-    await authService.loginWithEmail(FormData.email, FormData.password);
+    try {
+      await authService.checkRegisterCode({ email: FormData.email, code });
+      showSuccessAlert({
+        title: "Listo",
+        message: "Registro exitoso",
+      })
+      await authService.loginWithEmail(FormData.email, FormData.password);
+      navigate("MainTabs", { screen: "Home" });
+    } catch (error) {
+      const message = getBackendErrorMessage(error);
+      showErrorAlert({
+        title: "Error",
+        message: message,
+      });
+    }
   };
   return {
     step,
