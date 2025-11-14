@@ -1,29 +1,14 @@
 import { useState } from "react";
 import { FormErrors } from "../../../business/validation/groupValidation";
+import { useNotify } from "src/hooks";
 
 export const useCreateGroupForm = () => {
   const [newParticipantName, setNewParticipantName] = useState("");
   const [newParticipantInstagram, setNewParticipantInstagram] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
-
-  // Estados para alertas personalizadas
-  const [showAlert, setShowAlert] = useState(false);
-  const [alertConfig, setAlertConfig] = useState({
-    title: "",
-    message: "",
-    type: "info" as "success" | "error" | "info",
-  });
-
-  // Función para mostrar alertas personalizadas
-  const showCustomAlert = (
-    title: string,
-    message: string,
-    type: "success" | "error" | "info" = "info"
-  ) => {
-    setAlertConfig({ title, message, type });
-    setShowAlert(true);
-  };
+  const notify = useNotify();
+ 
 
   const clearError = (field: keyof FormErrors) => {
     if (errors[field]) {
@@ -47,18 +32,11 @@ export const useCreateGroupForm = () => {
     newParticipantInstagram,
     errors,
     isLoading,
-    showAlert,
-    alertConfig,
-
     // Setters
     setNewParticipantName,
     setNewParticipantInstagram,
     setErrors,
     setIsLoading,
-    setShowAlert,
-
-    // Funciones
-    showCustomAlert,
     clearError,
     setError,
     clearAllErrors,

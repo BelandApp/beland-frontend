@@ -23,6 +23,8 @@ import { useBeCoinsStore } from "src/stores/useBeCoinsStore";
 import { useOrdersStoreAPI } from "src/stores/useOrdersStoreAPI";
 import { useCreateGroupStore } from "src/stores/useCreateGroupStore";
 import { useAuthTokenStore } from "src/stores/useAuthTokenStore";
+import { getBackendErrorMessage } from "src/services";
+import { notify } from "src/hooks/notification/notify.external";
 
 export type User = {
   id: string;
@@ -39,7 +41,7 @@ type AuthContextType = {
   user: User | null;
   token: string | null;
   isLoading: boolean;
-  loginWithEmail: (email: string, password: string) => Promise<void>;
+  loginWithEmail: (email: string, password: string) => Promise<{token: string | null}>;
   handleAuth0Login: () => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
@@ -146,10 +148,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         await TokenService.clearToken();
         setUser(null);
         setToken(null);
-        Alert.alert(
-          "Error de autenticación",
-          "Fallo al iniciar sesión. Por favor, inténtelo de nuevo."
-        );
+        notify.error("Error al iniciar sesión.");
       } finally {
         setIsLoading(false);
       }
@@ -165,11 +164,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       await TokenService.saveToken(newToken);
       setToken(newToken);
       setUser(await authService.getCurrentUser(newToken));
+      return { token: newToken };
     } catch (error) {
-      Alert.alert(
-        "Error de autenticación",
-        "Fallo al iniciar sesión. Por favor, inténtelo de nuevo."
-      );
+      const message = getBackendErrorMessage(error);
+      notify.error(message);
+      return {token:null}
     } finally {
       setIsLoading(false);
     }

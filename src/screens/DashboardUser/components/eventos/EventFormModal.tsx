@@ -13,8 +13,6 @@ import {
   Alert,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { useCustomAlert } from "src/hooks";
-import { CustomAlert } from "@components/shared";
 import IntuitiveDatePicker from "src/components/ui/IntuitiveDatePicker";
 import { compressImages } from "src/utils/imageCompression";
 import {
@@ -23,6 +21,8 @@ import {
   EventPassType,
   adminApiService,
 } from "src/services/AdminApiService";
+import { useNotify } from "src/hooks";
+import { getBackendErrorMessage } from "src/services";
 
 interface EventFormModalProps {
   visible: boolean;
@@ -143,9 +143,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const { showAlert, alertConfig, showCustomAlert, hideAlert } =
-    useCustomAlert();
-
+  const notify = useNotify();
   // Generar código automático
   const generateEventCode = () => {
     const now = new Date();
@@ -314,11 +312,9 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
   const requestImagePickerPermissions = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      showCustomAlert(
-        "Permisos requeridos",
-        "Necesitamos permisos para acceder a tu galería de fotos",
-        "error"
-      );
+      notify.error({
+        message: "Necesitamos permisos para acceder a tu galería de fotos",
+      });
       return false;
     }
     return true;
@@ -343,11 +339,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
       }
     } catch (error) {
       console.error("Error picking images:", error);
-      showCustomAlert(
-        "Error",
-        "No se pudieron seleccionar las imágenes",
-        "error"
-      );
+      notify.error({ message: "No se pudieron seleccionar las imágenes" });
     }
   };
 
@@ -400,15 +392,11 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
 
         onSuccess(result);
         onClose();
-
-        showCustomAlert(
-          "Éxito",
-          editingEvent
+        notify.success({
+          message: editingEvent
             ? "Evento actualizado correctamente"
             : "Evento creado correctamente",
-          "success"
-        );
-
+        });
         return;
       }
 
@@ -426,6 +414,8 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
           const file = new File([blob], fileName, { type: "image/jpeg" });
           imageFiles.push(file);
         } catch (error) {
+          const message = getBackendErrorMessage(error);
+          notify.error({ message });
           console.error("Error converting image to file:", error);
         }
       }
@@ -510,23 +500,15 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
 
       onSuccess(result);
       onClose();
-
-      showCustomAlert(
-        "Éxito",
-        editingEvent
+      notify.success({
+        message: editingEvent
           ? "Evento actualizado correctamente"
           : "Evento creado correctamente",
-        "success"
-      );
+      });
     } catch (error: any) {
       console.error("Error saving event:", error);
-      showCustomAlert(
-        "Error",
-        editingEvent
-          ? "No se pudo actualizar el evento"
-          : "No se pudo crear el evento",
-        "error"
-      );
+      const message = getBackendErrorMessage(error);
+      notify.error({ message });
     } finally {
       setLoading(false);
     }
@@ -752,13 +734,6 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
           </View>
         </ScrollView>
       </View>
-      <CustomAlert
-        visible={showAlert}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        type={alertConfig.type}
-        onClose={() => hideAlert()}
-      />
     </Modal>
   );
 };

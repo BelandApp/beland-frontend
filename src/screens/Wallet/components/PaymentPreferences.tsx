@@ -50,7 +50,7 @@ export const PaymentPreferences: React.FC<PaymentPreferencesProps> = ({
       console.log("📋 Cargando cuentas de retiro...");
       const response = await withdrawService.getWithdrawAccounts();
       console.log("📋 Cuentas obtenidas:", response.accounts);
-      response.accounts.forEach((account, index) => {
+      response.accounts.forEach((account: any, index: string) => {
         console.log(`📋 Cuenta ${index + 1}:`, {
           id: account.id,
           owner_name: account.owner_name,

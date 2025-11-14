@@ -1,6 +1,6 @@
 import React from "react";
 import { View } from "react-native";
-import { Group } from "../../../types/Group";
+import { Group } from "@/types/Group";
 import { SimpleGroupCard } from "./SimpleGroupCard";
 import { EmptyState } from "./EmptyState";
 import { groupCardStyles } from "../styles";

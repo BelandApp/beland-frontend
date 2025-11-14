@@ -55,7 +55,6 @@ export const LocationModal: React.FC<LocationModalProps> = ({
 
   const handleCurrentLocation = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
     try {
       // Intentar obtener la ubicación
       await onGetCurrentLocation();

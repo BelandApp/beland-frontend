@@ -21,15 +21,15 @@ import {
   EventPass,
   EventPassType,
 } from "src/services/AdminApiService";
-import { CustomAlert } from "@components/shared";
-import { useCustomAlert } from "src/hooks";
+import { useNotify } from "src/hooks";
+import { getBackendErrorMessage } from "src/services";
 // TODO CHEQUEAR SI SE USA
 export const EventsManagementScreen: React.FC = () => {
   const [events, setEvents] = useState<EventPass[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchText, setSearchText] = useState("");
-
+  const notify = useNotify();
   // Paginación
   const [currentPage, setCurrentPage] = useState(1);
   const [totalEvents, setTotalEvents] = useState(0);
@@ -39,10 +39,6 @@ export const EventsManagementScreen: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState<EventPass | null>(null);
-
-  // Alerta personalizada
-  const { showAlert, alertConfig, showCustomAlert, hideAlert } =
-    useCustomAlert();
 
   // Confirmación de eliminación
   const [confirmDelete, setConfirmDelete] = useState<null | EventPass>(null);
@@ -89,14 +85,12 @@ export const EventsManagementScreen: React.FC = () => {
   const loadInitialData = async () => {
     try {
       setLoading(true);
-
       await loadEvents(1);
     } catch (error: any) {
       console.error("Error loading initial data:", error);
-      Alert.alert(
-        "Error de Conexión",
-        "No se pudieron cargar los eventos. Verifica tu conexión a internet."
-      );
+      notify.error({
+        message: "No se pudieron cargar los eventos desde el servidor. ",
+      });
     } finally {
       setLoading(false);
     }
@@ -120,7 +114,9 @@ export const EventsManagementScreen: React.FC = () => {
     } catch (error: any) {
       console.error("Error loading events:", error);
       if (page === 1) {
-        Alert.alert("Error", "No se pudieron cargar los eventos");
+        notify.error({
+          message: "No se pudieron cargar los eventos desde el servidor. ",
+        });
         setEvents([]);
       }
     }
@@ -144,7 +140,10 @@ export const EventsManagementScreen: React.FC = () => {
         )
       );
     } catch (error: any) {
-      console.error("Error toggling event status:", error);
+      const message = getBackendErrorMessage(error);
+      notify.error({
+        message: message,
+      });
     }
   };
 
@@ -174,6 +173,11 @@ export const EventsManagementScreen: React.FC = () => {
 
   const handleDeleteEvent = (event: EventPass) => {
     setConfirmDelete(event);
+    notify.confirm({
+      message: "Estas seguro de eliminar el evento?",
+      onConfirm: () => confirmDeleteEvent(),
+      onCancel: () => setConfirmDelete(null),
+    });
   };
 
   const confirmDeleteEvent = async () => {
@@ -183,10 +187,10 @@ export const EventsManagementScreen: React.FC = () => {
       await adminApiService.deleteEventPass(confirmDelete.id);
       setEvents((prev) => prev.filter((e) => e.id !== confirmDelete.id));
       setTotalEvents((prev) => prev - 1);
-      showCustomAlert("Éxito", "Evento eliminado correctamente", "success");
+      notify.success({ message: "Evento eliminado correctamente" });
     } catch (error: any) {
-      console.error("Error deleting event:", error);
-      showCustomAlert("Error", "No se pudo eliminar el evento", "error");
+      const message = getBackendErrorMessage(error);
+      notify.error({ message });
     } finally {
       setLoading(false);
       setConfirmDelete(null);
@@ -222,7 +226,8 @@ export const EventsManagementScreen: React.FC = () => {
         URL.revokeObjectURL(url);
       } catch (err) {
         console.error("Error descargando QR (web):", err);
-        Alert.alert("Error", "No se pudo descargar el QR");
+        const message = getBackendErrorMessage(err);
+        notify.error({ message });
       }
     } else {
       try {
@@ -233,10 +238,11 @@ export const EventsManagementScreen: React.FC = () => {
           FileSystem.documentDirectory + filename
         );
         console.log("QR descargado en:", downloadRes.uri);
-        Alert.alert("Descarga exitosa", "El QR se guardó en tus archivos.");
+        notify.success({ message: "El QR se guardó en tus archivos." });
       } catch (err) {
         console.error("Error descargando QR (nativo):", err);
-        Alert.alert("Error", "No se pudo descargar el QR");
+       const message = getBackendErrorMessage(err);
+       notify.error({ message });
       }
     }
   };
@@ -371,34 +377,6 @@ export const EventsManagementScreen: React.FC = () => {
 
   return (
     <DashboardWrapper title="Gestión de Eventos" isLoading={loading}>
-      {/* Alerta de feedback */}
-      <CustomAlert
-        visible={showAlert}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        type={alertConfig.type}
-        onClose={hideAlert}
-      />
-      {/* Confirmación de eliminación */}
-      <CustomAlert
-        visible={!!confirmDelete}
-        title="Confirmar eliminación"
-        message={
-          confirmDelete
-            ? `¿Estás seguro de que quieres eliminar el evento "${confirmDelete.name}"?`
-            : ""
-        }
-        type="error"
-        onClose={() => setConfirmDelete(null)}
-        primaryButton={{
-          text: "Eliminar",
-          onPress: confirmDeleteEvent,
-        }}
-        secondaryButton={{
-          text: "Cancelar",
-          onPress: () => setConfirmDelete(null),
-        }}
-      />
       <View style={styles.container}>
         {/* Header con estadísticas */}
         <View style={styles.statsContainer}>

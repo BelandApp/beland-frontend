@@ -93,6 +93,20 @@ export const authService = {
     const data = await res.json();
     return data.message;
   },
+  async resendRegisterCode(email: string) {
+     const res = await fetch(`${API_URL}/auth/resend-code`, {
+       method: "POST",
+       headers: {
+         "Content-Type": "application/json",
+       },
+       body: JSON.stringify(email),
+     });
+    if (!res.ok) {
+      throw new Error(res.statusText);
+    }
+    const data = await res.json();
+    return data.message;
+  },
   async checkRegisterCode(FormData: { code: string; email: string }) {
     const res = await fetch(`${API_URL}/auth/signup-register`, {
       method: "POST",

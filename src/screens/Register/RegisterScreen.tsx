@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -6,9 +6,8 @@ import {
   Dimensions,
   TouchableOpacity,
 } from "react-native";
-import { CustomAlert } from "@components/shared";
-import { LoginWave } from "src/components/ui/waves/Login.wave";
-import BelandLogo from "src/components/icons/BelandLogo";
+import { LoginWave } from "@/components/ui";
+import { BelandLogo } from "@/components/icons";
 import { styles } from "./styles";
 import { CircleArrowLeftIcon } from "lucide-react-native";
 import RegisterStep from "./components/RegisterStep";
@@ -31,12 +30,10 @@ export default function RegisterScreen() {
   const { width, height } = Dimensions.get("window");
   const {
     FormData,
-    alert,
     step,
     handleRegister,
     isLoading,
     navigate,
-    setAlert,
     onChangeText,
     handleReSendCode,
     handleStepBack,
@@ -83,14 +80,6 @@ export default function RegisterScreen() {
           />
         )}
       </View>
-      {/* CustomAlert para errores y demo */}
-      <CustomAlert
-        visible={alert.visible}
-        title={alert.title}
-        message={alert.message}
-        type={alert.type}
-        onClose={() => setAlert({ ...alert, visible: false })}
-      />
     </ScrollView>
   );
 }

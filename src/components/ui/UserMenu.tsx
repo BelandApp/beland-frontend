@@ -45,7 +45,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   const handleLogout = async () => {
     setMenuVisible(false);
     await logout();
-    navigate("Login")
+    navigate("Login");
   };
 
   const toggleMenu = () => {
@@ -61,19 +61,18 @@ export const UserMenu: React.FC<UserMenuProps> = ({
     try {
       const resp = await authService.changeRoleToCommerce();
       setShowCommerceAlert(false);
-      showSuccessAlert(
-        "¡Ya eres comerciante!",
-        "Tu perfil ha sido actualizado y ahora puedes recibir pagos por QR.",
-        "OK"
+      showSuccessAlert({
+        title: "¡Ya eres comerciante!",
+        message: "Tu perfil ha sido actualizado y ahora puedes recibir pagos por QR."}
       );
       await authService.getCurrentUser(resp.token);
     } catch (err) {
       setShowCommerceAlert(false);
-      showErrorAlert(
-        "Error",
-        String(err) || "No se pudo cambiar el rol. Intenta nuevamente.",
-        "OK"
-      );
+      showErrorAlert({
+        title: "Error",
+        message:
+          String(err) || "No se pudo cambiar el rol. Intenta nuevamente.",
+      });
     } finally {
       setIsChangingRole(false);
     }
@@ -198,7 +197,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
               style={styles.menuItem}
               onPress={() => {
                 setMenuVisible(false);
-                navigate("Orders",{screen:"OrdersList"});
+                navigate("Orders", { screen: "OrdersList" });
               }}
             >
               <PackageIcon size={18} color="#333" />

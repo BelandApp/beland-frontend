@@ -155,6 +155,7 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === "web" ? 0 : 4,
   },
   input: {
+    flex: 1,
     paddingVertical: Platform.OS === "web" ? 8 : 10,
     fontSize: 17, 
     fontWeight: "600",
