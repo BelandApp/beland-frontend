@@ -6,12 +6,8 @@ import {
   StyleSheet,
   Platform,
 } from "react-native";
-import {
-  SendIcon,
-  ReceiveIcon,
-  CobrarIcon,
-  ExchangeIcon,
-} from "../../../components/icons";
+import { SendIcon, ReceiveIcon, ExchangeIcon } from "../../../components/icons";
+import { CobrarIcon } from "src/components/icons/CobrarIcon";
 import { RechargeIcon } from "../../../components/icons/WalletIcons";
 import { useCustomAlert } from "../../../hooks/useCustomAlert";
 import { CustomAlert } from "@components/shared";
