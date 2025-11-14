@@ -5,18 +5,15 @@ import {
   Text,
   ActivityIndicator,
   RefreshControl,
-  Alert,
 } from "react-native";
-import { CustomAlert } from "@components/shared";
-import { colors } from "../../styles/colors";
+import { colors } from "@/styles/colors";
 import { ResourceType } from "@services/core";
-import { Resource } from "../../types/resource";
+import { Resource } from "@/types/resource";
 import { ResourceService } from "@services/core";
 import { PaymentService } from "@services/core";
 import { WalletService } from "@services/core";
-import { useCustomAlert } from "../../hooks/useCustomAlert";
-import { useUserBalance } from "../../hooks/useUserBalance";
-import { calculateResourcePrice } from "../../utils/priceHelpers";
+import { useUserBalance } from "@/hooks/useUserBalance";
+import { calculateResourcePrice } from "@/utils/priceHelpers";
 import { useAuth } from "src/context";
 
 // Components
@@ -26,8 +23,9 @@ import { PurchaseModal } from "./components/PurchaseModal";
 // Styles
 import { containerStyles } from "./styles";
 import { ThemedHeader } from "src/components/shared/headers/Header";
-import { BeCoinsBalance } from "@components/shared"
+import { BeCoinsBalance } from "@components/shared";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
+import { useNotify } from "src/hooks";
 
 // Helper function to map ResourceType to Resource
 const mapResourceTypeToResource = (resourceType: ResourceType): Resource => ({
@@ -45,7 +43,7 @@ const mapResourceTypeToResource = (resourceType: ResourceType): Resource => ({
 
 export const CommunityScreen = () => {
   const { navigate } = useCustomNavigation();
-
+  const notify = useNotify();
   const { isAuthenticated, handleAuth0Login, canPerformAction } = useAuth();
 
   // Estado para recursos
@@ -65,11 +63,8 @@ export const CommunityScreen = () => {
   const [selectedResource, setSelectedResource] = useState<Resource | null>(
     null
   );
-  const [showAuthAlert, setShowAuthAlert] = useState(false);
 
   // Hooks personalizados
-  const { showAlert, alertConfig, showCustomAlert, hideAlert } =
-    useCustomAlert();
   const { balance, refetch: refetchBalance } = useUserBalance();
 
   // Cargar recursos
@@ -115,8 +110,7 @@ export const CommunityScreen = () => {
       } else if (error.message) {
         errorMessage = `Error: ${error.message}`;
       }
-
-      showCustomAlert("Error", errorMessage, "error");
+      notify.error({ message: errorMessage });
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -155,7 +149,10 @@ export const CommunityScreen = () => {
   // Función para manejar la compra con modal
   const handlePurchasePress = async (resource: Resource) => {
     if (!canPerformAction) {
-      setShowAuthAlert(true);
+      notify.confirm({
+        message: "Debes iniciar sesión para comprar recursos",
+        onConfirm: () => handleAuth0Login(),
+      });
       return;
     }
 
@@ -225,19 +222,16 @@ export const CommunityScreen = () => {
         );
         // Cerrar el modal antes de mostrar la alerta
         handleModalClose();
-        showCustomAlert(
-          "Error en la compra",
-          "No se pudo completar la compra. Verifica tu saldo y que el producto tenga stock disponible.",
-          "error"
-        );
+        notify.error({
+          message:
+            "No se pudo completar la compra. Verifica tu saldo y que el producto tenga stock disponible.",
+        });
+
         return;
       }
-
-      showCustomAlert(
-        "¡Compra Exitosa!",
-        `Has comprado ${quantity} ${selectedResource.resource_name} exitosamente`,
-        "success"
-      );
+      notify.success({
+        message: `Has comprado ${quantity} ${selectedResource.resource_name} exitosamente`,
+      });
 
       // Actualizar el balance del usuario desde el backend
       await refetchBalance();
@@ -277,7 +271,7 @@ export const CommunityScreen = () => {
 
       // Cerrar el modal antes de mostrar la alerta de error
       handleModalClose();
-      showCustomAlert("Error en la compra", errorMessage, "error");
+      notify.error({ message: errorMessage });
     }
   };
 
@@ -314,26 +308,6 @@ export const CommunityScreen = () => {
             para miembros registrados.
           </Text>
         </View>
-
-        {/* Custom Alert para login requerido */}
-        <CustomAlert
-          visible={showLoginRequiredAlert}
-          title="¡Acceso restringido!"
-          message="Para explorar y comprar recursos en la comunidad, necesitas tener una cuenta activa. Es rápido y seguro crear una."
-          type="info"
-          onClose={() => setShowLoginRequiredAlert(false)}
-          primaryButton={{
-            text: "Iniciar sesión",
-            onPress: () => {
-              setShowLoginRequiredAlert(false);
-              handleAuth0Login();
-            },
-          }}
-          secondaryButton={{
-            text: "Más tarde",
-            onPress: () => setShowLoginRequiredAlert(false),
-          }}
-        />
       </View>
     );
   }
@@ -410,24 +384,6 @@ export const CommunityScreen = () => {
         )}
       </ScrollView>
 
-      {/* Alertas */}
-      <CustomAlert
-        visible={showAlert}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        type={alertConfig.type}
-        onClose={hideAlert}
-      />
-
-      {/* Modal de compra */}
-      <CustomAlert
-        visible={showAlert}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        type={alertConfig.type}
-        onClose={hideAlert}
-      />
-
       {/* Modal de compra */}
       <PurchaseModal
         visible={purchaseModalVisible}
@@ -449,26 +405,6 @@ export const CommunityScreen = () => {
         }
         onRecharge={handleNavigateToRechargeFromInsufficientBalance}
         onCancel={handleInsufficientBalanceModalClose}
-      />
-
-      {/* Custom Alert para autenticación */}
-      <CustomAlert
-        visible={showAuthAlert}
-        title="¡Inicia sesión para comprar!"
-        message="Para comprar recursos en la comunidad, necesitas tener una cuenta activa. Es rápido y seguro."
-        type="info"
-        onClose={() => setShowAuthAlert(false)}
-        primaryButton={{
-          text: "Iniciar sesión",
-          onPress: () => {
-            setShowAuthAlert(false);
-            handleAuth0Login();
-          },
-        }}
-        secondaryButton={{
-          text: "Más tarde",
-          onPress: () => setShowAuthAlert(false),
-        }}
       />
     </View>
   );
