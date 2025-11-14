@@ -25,6 +25,7 @@ import PayphoneSuccessScreen from "./src/screens/Wallet/PayphoneSuccessScreen";
 import SocketStatus from "./src/components/SocketStatus";
 import { usePaymentSocket } from "src/hooks/usePaymentSocket";
 import { colors } from "src/styles";
+import { GlobalNotification } from "src/components/shared/notification/GlobalNotification";
 
 const AppContent = () => {
   // Declarar todos los hooks al inicio, sin condicionales
@@ -145,6 +146,7 @@ const AppContent = () => {
         linking={linking}
       >
         <RootStackNavigator />
+        <GlobalNotification/>
         {shouldShowQRButton && <FloatingQRButton onPress={handleQRPress} />}
       </NavigationContainer>
     </View>
