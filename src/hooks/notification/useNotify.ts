@@ -7,6 +7,7 @@ type NotifyConfirm = {
   onCancel?: () => void;
 };
 
+// Hook para mostrar notificaciones dentro de un componente react
 export const useNotify = () => {
   const { show, clear } = useNotificationStore();
 
@@ -18,3 +19,4 @@ export const useNotify = () => {
     clear,
   };
 };
+

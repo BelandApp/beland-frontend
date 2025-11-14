@@ -4,6 +4,7 @@ import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { RegisterFormData } from "../RegisterScreen";
 import { authService, getBackendErrorMessage } from "src/services";
 import { showErrorAlert, showSuccessAlert } from "src/utils/alertHelpers";
+import { notify } from "src/hooks/notification/notify.external";
 
 export const useRegister = () => {
   const [step, setStep] = useState<"register" | "code">("register");
@@ -21,13 +22,6 @@ export const useRegister = () => {
     country: "",
     city: "",
   });
-  const [alert, setAlert] = useState<{
-    visible: boolean;
-    title: string;
-    message: string;
-    type?: "success" | "error" | "info";
-  }>({ visible: false, title: "", message: "", type: "error" });
-
   const onChangeText = (name: string, value: string) => {
     setFormData({
       ...FormData,
@@ -43,34 +37,17 @@ export const useRegister = () => {
     const isValid = validateForm(FormData);
     if (!isValid) {
       setIsLoading(false);
-      setAlert({
-        visible: true,
-        title: "Error",
-        message: "Por favor completa todos los campos",
-        type: "error",
-      });
+      notify.error("Debes completar todos los campos");
       return;
     }
     try {
       setIsLoading(true);
-      const success = await authService.registerUser(FormData);
-      if (!success) {
-        setAlert({
-          visible: true,
-          title: "Error",
-          message: "No pudimos registrarte, intenta nuevamente",
-          type: "error",
-        });
-      }
+      await authService.registerUser(FormData);
+      notify.info("Verifica tu correo");
       setStep("code");
     } catch (error) {
-      setAlert({
-        visible: true,
-        title: "Error",
-        message: "No se pudo completar el Registro",
-        type: "error",
-      });
-      console.error("[REGISTER] Error en Register:", error);
+      const message = getBackendErrorMessage(error);
+      notify.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -79,33 +56,21 @@ export const useRegister = () => {
     try {
       if (!FormData.email) return;
       await authService.resendRegisterCode(FormData.email);
-       showSuccessAlert({
-         title: "Enviado",
-         message: "Nuevo código enviado",
-       });
+      notify.info("Verifica tu correo");
     } catch (error) {
       const message = getBackendErrorMessage(error);
-      showErrorAlert({
-        title: "Error",
-        message: message,
-      });
+      notify.error(message);
     }
   };
   const handleVerifyCode = async (code: string) => {
     try {
       await authService.checkRegisterCode({ email: FormData.email, code });
-      showSuccessAlert({
-        title: "Listo",
-        message: "Registro exitoso",
-      })
+      notify.success("Registro exitoso, vamos a loguearte");
       await authService.loginWithEmail(FormData.email, FormData.password);
       navigate("MainTabs", { screen: "Home" });
     } catch (error) {
-      const message = getBackendErrorMessage(error);
-      showErrorAlert({
-        title: "Error",
-        message: message,
-      });
+       const message = getBackendErrorMessage(error);
+       notify.error(message);
     }
   };
   return {
@@ -114,10 +79,8 @@ export const useRegister = () => {
     FormData,
     errors,
     onChangeText,
-    alert,
     handleRegister,
     navigate,
-    setAlert,
     handleStepBack,
     handleReSendCode,
     handleVerifyCode,

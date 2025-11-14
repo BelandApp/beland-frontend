@@ -6,72 +6,25 @@ import {
   Dimensions,
   TouchableOpacity,
 } from "react-native";
-import {
-  CustomAlert,
-  CustomInput,
-  SocialButton,
-  Button,
-} from "@components/shared";
+import { CustomInput, SocialButton, Button } from "@components/shared";
 import { LoginWave } from "@components/ui";
-import BelandLogo from "src/components/icons/BelandLogo";
+import { BelandLogo } from "@/components";
 import { styles } from "./styles";
-import { useAuth } from "src/context";
 import { CircleArrowLeftIcon } from "lucide-react-native";
-import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
+import { useLogin } from "./hook/useLogin";
 
 export default function LoginScreen() {
-  const {navigate} = useCustomNavigation();
-  const { handleAuth0Login, loginWithEmail, user, isAuthenticated, isLoading } =
-    useAuth();
   const { width, height } = Dimensions.get("window");
-  const [alert, setAlert] = useState<{
-    visible: boolean;
-    title: string;
-    message: string;
-    type?: "success" | "error" | "info";
-  }>({ visible: false, title: "", message: "", type: "error" });
-  const [FormData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+  const {
+    handleLogin,
+    handleLoginAuth0,
+    setFormData,
+    navigate,
+    FormData,
+    isLoading,
+    isAuthenticated,
+  } = useLogin();
   if (isAuthenticated) navigate("MainTabs", { screen: "Home" });
-  const handleLogin = async () => {
-    if (!FormData.email.trim() || !FormData.password.trim()) {
-      setAlert({
-        visible: true,
-        title: "Error",
-        message: "Por favor completa todos los campos",
-        type: "error",
-      });
-      return;
-    }
-    try {
-      const res = await loginWithEmail(FormData.email, FormData.password);
-      if (!res.token) {
-        setAlert({
-          visible: true,
-          title: "Error",
-          message: "Credenciales incorrectas",
-          type: "error",
-        });
-      }
-      navigate("MainTabs", { screen: "Home" });
-    } catch (error) {
-      setAlert({
-        visible: true,
-        title: "Error",
-        message: "No se pudo completar el inicio de sesión",
-        type: "error",
-      });
-      console.error("[LOGIN] Error en loginWithEmailPassword:", error);
-    }
-  };
-
-  const handleLoginAuth0 = async () => {
-    await handleAuth0Login();
-    navigate("MainTabs", { screen: "Home" })
-  };
-
   return (
     <ScrollView
       contentContainerStyle={styles.scroll}
@@ -125,14 +78,6 @@ export default function LoginScreen() {
           style={{ paddingLeft: 0, marginRight: "auto" }}
         />
       </View>
-      {/* CustomAlert para errores y demo */}
-      <CustomAlert
-        visible={alert.visible}
-        title={alert.title}
-        message={alert.message}
-        type={alert.type}
-        onClose={() => setAlert({ ...alert, visible: false })}
-      />
     </ScrollView>
   );
 }

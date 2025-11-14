@@ -1,7 +1,7 @@
 import * as React from "react";
 import Svg, { G, Path, ClipPath, Defs, Rect } from "react-native-svg";
 
-const BelandLogo = ({ width = 120, height = 32, ...props }) => (
+export const BelandLogo = ({ width = 120, height = 32, ...props }) => (
   <Svg
     width={width}
     height={height}

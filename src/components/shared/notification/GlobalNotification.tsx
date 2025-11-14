@@ -9,6 +9,7 @@ import { View, Text } from "react-native";
 import { Brain, CheckCircle, CircleAlert, InfoIcon } from "lucide-react-native";
 import { colors } from "src/styles";
 import { Button } from "../buttons";
+import { notificationAsync, NotificationFeedbackType } from "expo-haptics";
 
 interface ConfirmProps extends BaseToastProps {
   onConfirm: () => void;
@@ -92,6 +93,7 @@ const toastConfig = {
           variant="primary"
           onPress={() => {
             Toast.hide();
+            notificationAsync(NotificationFeedbackType.Success);
             props?.onConfirm?.();
           }}
         />
@@ -105,7 +107,7 @@ export const GlobalNotification = () => {
 
   useEffect(() => {
     if (!current) return;
-
+    if(current.type === "confirm") notificationAsync(NotificationFeedbackType.Warning);
     Toast.show({
       type: current.type,
       text1: current.message,

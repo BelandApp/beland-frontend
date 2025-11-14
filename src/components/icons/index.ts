@@ -1,6 +1,5 @@
 export { CommunityIcon } from "./CommunityIcon";
-export { CobrarIcon } from "./CobrarIcon";
-
+export { BelandLogo } from "./BelandLogo";
 export { TreesIcon } from "./TreesIcon";
 export { WaterIcon } from "./WaterIcon";
 export { WeightIcon } from "./WeightIcon";
