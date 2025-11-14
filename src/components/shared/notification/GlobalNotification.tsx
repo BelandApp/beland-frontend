@@ -24,7 +24,7 @@ const toastConfig = {
         <CheckCircle style={{ paddingLeft: 2 }} color="green" />
       )}
       text1Style={{ color: "green" }}
-      style={{ alignItems: "center" }}
+      style={{ alignItems: "center", minWidth: 400 }}
     />
   ),
   error: (props: BaseToastProps) => (
@@ -33,7 +33,8 @@ const toastConfig = {
       renderLeadingIcon={() => (
         <CircleAlert style={{ paddingLeft: 2 }} color="red" />
       )}
-      style={{ alignItems: "center", borderLeftColor: "red" }}
+      style={{ alignItems: "center", borderLeftColor: "red", minWidth: 400 }}
+      text1NumberOfLines={2}
     />
   ),
   info: (props: BaseToastProps) => (
@@ -41,7 +42,11 @@ const toastConfig = {
       renderLeadingIcon={() => (
         <InfoIcon style={{ paddingLeft: 2 }} color="#5584d0ff" />
       )}
-      style={{ alignItems: "center", borderLeftColor: "#5584d0ff" }}
+      style={{
+        alignItems: "center",
+        borderLeftColor: "#5584d0ff",
+        minWidth: 400,
+      }}
       {...props}
     />
   ),
