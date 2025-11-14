@@ -10,7 +10,6 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  Alert,
   StyleSheet,
 } from "react-native";
 import { BeCoinsBalance } from "@components/shared";
@@ -20,8 +19,8 @@ import { useCatalogFilters, useCatalogModals } from "./hooks";
 import {
   useCartSync,
   useProducts,
-  useCustomAlert,
   useCustomNavigation,
+  useNotify,
 } from "@/hooks";
 import { ProductService } from "@/services";
 import { ProductCardType } from "./components/ProductCard";
@@ -30,13 +29,12 @@ import { useAuth } from "@/context";
 // Components
 import { FilterPanel, ProductGrid } from "./components";
 import { OrderDeliveryModal } from "./components/OrderDeliveryModal";
-import { CustomAlert } from "@components/shared";
-import {SearchBarInput} from "@components/shared";
+import { SearchBarInput } from "@components/shared";
+import { CartBottomSheet } from "./components/CartBottomSheet";
 // Styles
 import { containerStyles, productStyles } from "./styles";
 
 import { useCartStore } from "@/stores/useCartStore";
-import { CartBottomSheet } from "./components/CartBottomSheet";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 // Community Main Component
 import CatalogCommunitySection from "./mainComponents/CatalogCommunitySection";
@@ -46,8 +44,6 @@ import { ThemedHeader } from "@/components";
 export const CatalogScreen = () => {
   const { navigate } = useCustomNavigation();
   const { canPerformAction, handleAuth0Login, isAuthenticated } = useAuth();
-  const { showAlert, alertConfig, showCustomAlert, hideAlert } =
-    useCustomAlert();
 
   const {
     addProduct: addProductToCart,
@@ -69,10 +65,9 @@ export const CatalogScreen = () => {
 
   const { showDeliveryModal, openDeliveryModal, closeDeliveryModal } =
     useCatalogModals();
-
+  const notify = useNotify();
   const [showCart, setShowCart] = useState(false);
   const [addingProductId, setAddingProductId] = useState<string | null>(null);
-  const [showAuthAlert, setShowAuthAlert] = useState(false);
   const [allCategories, setAllCategories] = useState<
     {
       id: string;
@@ -185,7 +180,11 @@ export const CatalogScreen = () => {
 
   const handleAddProduct = async (product: ProductCardType) => {
     if (!canPerformAction) {
-      setShowAuthAlert(true);
+      notify.confirm({
+        message: "Debes iniciar sesión para agregar productos al carrito",
+        onConfirm: () => handleAuth0Login(),
+        onCancel: () => {},
+      });
       return;
     }
 
@@ -339,10 +338,7 @@ export const CatalogScreen = () => {
             setShowCart(false);
 
             if (cartProducts.length === 0) {
-              Alert.alert(
-                "Carrito vacío",
-                "Agrega productos antes de continuar"
-              );
+              notify.error({message:"El carrito esta vacio"});
               return;
             }
 
@@ -360,19 +356,15 @@ export const CatalogScreen = () => {
               if (fullProduct) {
                 openDeliveryModal(fullProduct);
               } else {
-                Alert.alert(
-                  "Producto no disponible",
-                  "El producto seleccionado ya no está disponible en el catálogo.",
-                  [{ text: "OK" }]
-                );
+                notify.error(
+                  {message:"El producto ya no esta disponible"}
+                )
               }
             } catch (error) {
               console.error("Error en checkout:", error);
-              Alert.alert(
-                "Error",
-                "Hubo un problema al procesar tu carrito. Inténtalo de nuevo.",
-                [{ text: "OK" }]
-              );
+              notify.error(
+                  {message:"Hubo un problema al procesar tu carrito. Inténtalo de nuevo."}
+                )
             }
           }}
         />
@@ -385,35 +377,6 @@ export const CatalogScreen = () => {
           // Navigate to Orders tab to see the created order
           navigate("Orders", { screen: "OrdersList" });
         }}
-      />
-
-      {/* Custom Alert para autenticación */}
-      <CustomAlert
-        visible={showAuthAlert}
-        title="¡Inicia sesión para comprar!"
-        message="Para agregar productos al carrito, necesitas tener una cuenta activa. Es rápido y seguro."
-        type="info"
-        onClose={() => setShowAuthAlert(false)}
-        primaryButton={{
-          text: "Iniciar sesión",
-          onPress: () => {
-            setShowAuthAlert(false);
-            handleAuth0Login();
-          },
-        }}
-        secondaryButton={{
-          text: "Más tarde",
-          onPress: () => setShowAuthAlert(false),
-        }}
-      />
-
-      {/* Alert del hook useCustomAlert para otros mensajes */}
-      <CustomAlert
-        visible={showAlert}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        type={alertConfig.type}
-        onClose={hideAlert}
       />
     </>
   );
