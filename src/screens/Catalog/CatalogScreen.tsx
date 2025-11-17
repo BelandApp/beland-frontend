@@ -12,7 +12,7 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
-import { BeCoinsBalance } from "@components/shared";
+import { BeCoinsBalance, CustomLoader } from "@components/shared";
 
 // Hooks
 import { useCatalogFilters, useCatalogModals } from "./hooks";
@@ -191,6 +191,7 @@ export const CatalogScreen = () => {
     setAddingProductId(product.id);
     addProductToCart({ ...product, quantity: 1 });
     setAddingProductId(null);
+    notify.success({ message: "Producto agregado al carrito" });
   };
 
   return (
@@ -274,12 +275,10 @@ export const CatalogScreen = () => {
         {/* <CatalogCommunitySection /> */}
 
         {loading ? (
-          <Text style={{ textAlign: "center", marginTop: 32 }}>
-            Cargando productos...
-          </Text>
+          <CustomLoader/>
         ) : error ? (
           <Text style={{ color: "red", textAlign: "center", marginTop: 32 }}>
-            {error}
+            Error al cargar los productos, vuelve a cargar la pantalla.
           </Text>
         ) : (
           // Revertido a grilla de productos (estilizada)

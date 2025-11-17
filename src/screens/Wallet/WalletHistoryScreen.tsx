@@ -12,6 +12,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { TransactionCard } from "./components/TransactionCard";
 import { useWalletTransactions } from "./hooks/useWalletTransactions";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
+import { SearchBarInput, ThemedHeader } from "src/components";
 
 export default function WalletHistoryScreen() {
   const { goBack } = useCustomNavigation();
@@ -44,34 +45,16 @@ export default function WalletHistoryScreen() {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => goBack()}
-          style={styles.backButton}
-        >
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Historial de Transacciones</Text>
-      </View>
+      <ThemedHeader canGoBack title="Historial de Transacciones" />
 
       {/* Search and Filters */}
       <View style={styles.searchAndFilters}>
         {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <MaterialCommunityIcons name="magnify" size={20} color="#666" />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Buscar transacciones..."
-            value={searchText}
-            onChangeText={setSearchText}
-          />
-          {searchText.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchText("")}>
-              <MaterialCommunityIcons name="close" size={20} color="#666" />
-            </TouchableOpacity>
-          )}
-        </View>
-
+        <SearchBarInput
+          placeholder="Buscar transacciones..."
+          onSearchChange={setSearchText}
+          searchQuery={searchText}
+        />
         {/* Filter Buttons */}
         <ScrollView
           horizontal
@@ -153,22 +136,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f8f9fa",
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    paddingTop: 50,
-    backgroundColor: "#F88D2A",
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-  },
-  backButton: {
-    marginRight: 16,
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: "rgba(255,255,255,0.2)",
-  },
   title: {
     fontSize: 18,
     fontWeight: "bold",
@@ -179,22 +146,6 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: "#fff",
     marginBottom: 8,
-  },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f5f5f5",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginBottom: 12,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    color: "#333",
-    marginLeft: 8,
-    paddingVertical: 4,
   },
   filtersContainer: {
     marginHorizontal: -4,

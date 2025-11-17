@@ -43,7 +43,7 @@ export default function LoginScreen() {
       />
       <LoginWave />
       <View style={styles.container}>
-        <SocialButton onPress={handleLoginAuth0} />
+        <SocialButton onPress={handleLoginAuth0} disabled={isLoading} />
         <CustomInput
           label="Correo Electrónico"
           onChangeText={(email) => setFormData({ ...FormData, email })}

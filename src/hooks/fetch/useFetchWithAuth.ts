@@ -3,7 +3,6 @@ import { useAuth } from "src/context/AuthContext";
 
 export const useFetchWithAuth = () => {
   const { token } = useAuth();
-
   const fetchWithAuth = useCallback(
     async (url: string, options: RequestInit = {}) => {
       const headers = {

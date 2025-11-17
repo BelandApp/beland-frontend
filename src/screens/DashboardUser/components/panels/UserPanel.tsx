@@ -76,7 +76,7 @@ export const UserPanel: React.FC = () => {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.saveBtn}
-                  onPress={form.onSave}
+                  onPress={()=>form.onSave()}
                   disabled={form.saving}
                 >
                   {form.saving ? (

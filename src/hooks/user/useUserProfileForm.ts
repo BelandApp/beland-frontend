@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Alert, Platform } from "react-native";
 import { userService } from "src/services/user/user.service";
 import { User } from "src/context";
+import { notify } from "../notification/notify.external";
+import { getBackendErrorMessage } from "src/services";
 
 export const useUserProfileForm = (
   user: User | null,
@@ -36,10 +38,9 @@ export const useUserProfileForm = (
       const permission =
         await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (permission.status !== "granted") {
-        Alert.alert(
-          "Permiso denegado",
-          "Necesitamos permisos para acceder a las fotos."
-        );
+        notify.error({
+          message: "Necesitamos permisos para acceder a tu galería de fotos",
+        })
         return;
       }
 
@@ -85,20 +86,21 @@ export const useUserProfileForm = (
 
   const onSave = async () => {
     if (!user) return;
-    if (fullName.trim().length === 0) {
-      Alert.alert("Nombre inválido", "El nombre no puede quedar vacío.");
+    if (fullName.trim().length < 2) {
+      notify.error({message: "Nombre requerido, al menos 3 caracteres"})
       return;
     }
-
+    if (address.trim().length < 5) {
+      notify.error({message: "Dirección requerida, al menos 5 caracteres"})
+      return;
+    }
     setSaving(true);
     try {
       const payload: any = { full_name: fullName, address, phone };
-
       if (localImage || localImageFile) {
         const dataUrl = await convertImageToDataUrl();
         if (dataUrl) payload.profile_picture_url = dataUrl;
       }
-
       const updated = await userService.updateUser(payload);
       setUser({
         ...user,
@@ -106,15 +108,12 @@ export const useUserProfileForm = (
         picture: updated.profile_picture_url || updated.picture,
       });
       setEditing(false);
-      Alert.alert(
-        "Perfil actualizado",
-        "Tus datos se han guardado correctamente."
-      );
+      notify.success({
+        message: "Perfil actualizado",
+      })
     } catch (err) {
-      Alert.alert(
-        "Error",
-        "No se pudo actualizar el perfil. Intenta de nuevo."
-      );
+      const message = getBackendErrorMessage(err);
+      notify.error({ message });
     } finally {
       setSaving(false);
     }

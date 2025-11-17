@@ -16,7 +16,7 @@ export const EventsList = ({ events, tab }: any) => {
     return (
       <View style={styles.emptyContainer}>
         <Ticket color={colors.textSecondary} size={48} />
-        {tab === "available" ? (
+        {tab === "Disponibles" ? (
           <Text style={styles.emptyText}>
             No hay eventos disponibles por ahora.
           </Text>
