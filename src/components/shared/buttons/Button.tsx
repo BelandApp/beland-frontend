@@ -19,7 +19,7 @@ interface CustomButtonProps extends ButtonProps {
   style?: any;
   textStyle?: any;
 }
-type Variant = "primary" | "secondary" | "ghost" | "inline";
+type Variant = "primary" | "secondary" | "ghost" | "inline" | "onlyIcon";
 type IconPosition = "left" | "right";
 
 const VARIANT_STYLES = {
@@ -46,9 +46,18 @@ const VARIANT_STYLES = {
       borderBottomColor: colors.belandOrange,
       paddingVertical: 0,
       paddingHorizontal: 0,
-      borderRadius:0
+      borderRadius: 0,
     },
     text: { color: colors.belandOrange },
+  },
+  onlyIcon: {
+    container: {
+      backgroundColor: "transparent",
+      borderWidth: 1,
+      borderColor: colors.belandOrange,
+      paddingVertical: 6,
+      paddingHorizontal: 6,
+    },text:{color:"transparent"}
   },
 } as const;
 const getVariantStyles = (variant: Variant, disabled?: boolean) => {
@@ -100,7 +109,7 @@ export const Button: React.FC<CustomButtonProps> = ({
       {isLoading ? (
         <ActivityIndicator color={variantStyle.text.color} />
       ) : (
-        <Text style={[styles.text, variantStyle.text, textStyle]}>{title}</Text>
+        variant !== "onlyIcon" && <Text style={[styles.text, variantStyle.text, textStyle]}>{title}</Text>
       )}
       {icon && iconPosition === "right" && icon}
     </TouchableOpacity>

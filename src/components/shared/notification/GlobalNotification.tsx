@@ -24,7 +24,8 @@ const toastConfig = {
         <CheckCircle style={{ paddingLeft: 2 }} color="green" />
       )}
       text1Style={{ color: "green" }}
-      style={{ alignItems: "center", minWidth: 400 }}
+      style={{ alignItems: "center", minWidth: 400, borderLeftColor: "green" }}
+      text1NumberOfLines={2}
     />
   ),
   error: (props: BaseToastProps) => (
@@ -48,6 +49,7 @@ const toastConfig = {
         minWidth: 400,
       }}
       {...props}
+      text1NumberOfLines={2}
     />
   ),
   confirm: ({ text1, props }: ToastConfigParams<ConfirmProps>) => (

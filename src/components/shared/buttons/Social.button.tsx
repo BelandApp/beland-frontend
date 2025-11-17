@@ -7,8 +7,12 @@ import { GoogleIcon } from "src/components/icons/socials/Google";
 import { colors } from "src/design-system";
 type SocialButtonsProps = {
   onPress: () => void;
+  disabled: boolean;
 };
-export const SocialButton: React.FC<SocialButtonsProps> = ({ onPress }) => {
+export const SocialButton: React.FC<SocialButtonsProps> = ({
+  onPress,
+  disabled = false,
+}) => {
   return (
     <TouchableOpacity
       style={{
@@ -26,11 +30,12 @@ export const SocialButton: React.FC<SocialButtonsProps> = ({ onPress }) => {
         marginHorizontal: "auto",
       }}
       onPress={onPress}
+      disabled={disabled}
       aria-label="botón ingresar con redes sociales"
     >
       <GoogleIcon />
       <AppleIcon />
-      <FacebookIcon/>
+      <FacebookIcon />
     </TouchableOpacity>
   );
 };
