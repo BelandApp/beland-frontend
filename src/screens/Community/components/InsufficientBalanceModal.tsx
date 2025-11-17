@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   modalWeb: {
-    maxHeight: "80%",
+    maxHeight: "95%",
   },
   header: {
     alignItems: "center",

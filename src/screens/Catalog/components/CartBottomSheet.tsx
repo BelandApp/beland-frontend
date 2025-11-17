@@ -17,6 +17,11 @@ import {
   CURRENCY_CONFIG,
 } from "../../../constants/currency";
 import { InsufficientBalanceModal } from "../../Community/components";
+import { useNotify } from "src/hooks";
+import { getBackendErrorMessage } from "src/services";
+import { Button } from "src/components";
+import { ArrowDown, ClosedCaption, X } from "lucide-react-native";
+import { colors } from "src/styles";
 
 interface CartBottomSheetProps {
   visible: boolean;
@@ -39,6 +44,7 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
     updateQuantityOnServer,
     clearCart,
   } = useCartStore();
+  const notify = useNotify();
   const total = products.reduce((sum, p) => sum + p.price * p.quantity, 0);
   const { balance } = useUserBalance();
   const [insufficientModalVisible, setInsufficientModalVisible] =
@@ -49,8 +55,11 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
   const handleRemoveProduct = async (productId: string) => {
     try {
       const success = await removeProductFromServer(productId);
+      notify.info({ message: "Producto eliminado del carrito" });
     } catch (error) {
       console.error("❌ CartBottomSheet: Error removing product:", error);
+      const message = getBackendErrorMessage(error);
+      notify.error({ message });
       // En caso de error, aún eliminar localmente
       removeProduct(productId);
     }
@@ -81,9 +90,15 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
         <View style={styles.sheet}>
           <View style={styles.header}>
             <Text style={styles.title}>Carrito</Text>
-            <TouchableOpacity onPress={clearCart}>
-              <Text style={styles.clear}>Vaciar</Text>
-            </TouchableOpacity>
+            <View style={styles.header}>
+              <Button
+                title="Vaciar"
+                variant="secondary"
+                onPress={clearCart}
+                disabled={products.length === 0}
+              />
+              <Button title="cerrar" variant="onlyIcon" icon={<ArrowDown color={colors.belandOrange}/>} onPress={onClose} />
+            </View>
           </View>
 
           <View style={{ maxHeight: 400, minHeight: 100 }}>
@@ -158,11 +173,8 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
                 {formatBeCoins(convertUSDToBeCoins(total))}
               </Text>
             </View>
-            <TouchableOpacity
-              style={[
-                styles.checkoutBtn,
-                products.length === 0 && { backgroundColor: "#ccc" },
-              ]}
+            <Button
+              title="Finalizar compra"
               disabled={products.length === 0}
               onPress={() => {
                 // Verificar saldo en BeCoins antes de proceder
@@ -172,9 +184,8 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
                 }
                 onCheckout && onCheckout();
               }}
-            >
-              <Text style={styles.checkoutText}>Finalizar compra</Text>
-            </TouchableOpacity>
+            />
+            
           </View>
         </View>
       </Modal>
@@ -203,13 +214,14 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 18,
     padding: 16,
     minHeight: 200,
-    maxHeight: "80%",
+    maxHeight: "95%",
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 8,
+    gap: 8,
   },
   title: { fontSize: 20, fontWeight: "bold" },
   clear: { color: "#FF6B35", fontWeight: "600" },
