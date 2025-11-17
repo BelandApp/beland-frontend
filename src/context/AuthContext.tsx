@@ -41,7 +41,10 @@ type AuthContextType = {
   user: User | null;
   token: string | null;
   isLoading: boolean;
-  loginWithEmail: (email: string, password: string) => Promise<{token: string | null}>;
+  loginWithEmail: (
+    email: string,
+    password: string
+  ) => Promise<{ token: string | null }>;
   handleAuth0Login: () => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
@@ -85,6 +88,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           const me = await authService.getCurrentUser(savedToken);
           setToken(savedToken);
           setUser(me);
+          // Sync with useAuthTokenStore
+          useAuthTokenStore.getState().setToken(savedToken);
+          useAuthTokenStore.getState().setUser(me);
         } catch (e) {
           await TokenService.clearToken();
         }
@@ -139,6 +145,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               );
               setToken(tokenResponse.accessToken);
               setUser(me);
+              // Sync with useAuthTokenStore
+              useAuthTokenStore.getState().setToken(tokenResponse.accessToken);
+              useAuthTokenStore.getState().setUser(me);
             } else {
               throw new Error("accessToken no fue recibido.");
             }
@@ -163,12 +172,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const newToken = await authService.loginWithEmail(email, password);
       await TokenService.saveToken(newToken);
       setToken(newToken);
-      setUser(await authService.getCurrentUser(newToken));
+      const userData = await authService.getCurrentUser(newToken);
+      setUser(userData);
+      // Sync with useAuthTokenStore
+      useAuthTokenStore.getState().setToken(newToken);
+      useAuthTokenStore.getState().setUser(userData);
       return { token: newToken };
     } catch (error) {
       const message = getBackendErrorMessage(error);
       notify.error(message);
-      return {token:null}
+      return { token: null };
     } finally {
       setIsLoading(false);
     }

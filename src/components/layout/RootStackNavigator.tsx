@@ -41,6 +41,8 @@ import { NewPaymentScreen, PaymentScreenRoute } from "@screens/NewPayment";
 import {
   EventsManagementScreen,
   UsersManagementScreen,
+  OrdersManagementScreen,
+  OrderAdminDetailScreen,
 } from "@screens/DashboardUser";
 // TODO arreglar pantallas en carpeta raiz
 import { HistoryScreen, RecyclingMapScreen } from "../../screens";
@@ -96,6 +98,8 @@ export type RootStackParamList = {
 
   // Admin Management Screens
   EventsManagement: undefined;
+  OrdersManagement: undefined;
+  OrderAdminDetail?: { orderId: string };
   UsersManagement: undefined;
   ProductsManagement: undefined;
 
@@ -148,7 +152,7 @@ export const RootStackNavigator = () => {
       <Stack.Screen
         name="RecyclingMap"
         component={RecyclingMapScreen}
-        options={{ headerShown: false}}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="HistoryScreen"
@@ -205,6 +209,16 @@ export const RootStackNavigator = () => {
       <Stack.Screen
         name="EventsManagement"
         component={EventsManagementScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="OrdersManagement"
+        component={OrdersManagementScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="OrderAdminDetail"
+        component={OrderAdminDetailScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen

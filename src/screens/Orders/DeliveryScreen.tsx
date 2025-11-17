@@ -20,7 +20,6 @@ import { deliveryStyles } from "./styles/deliveryStyles";
 import { ThemedHeader } from "src/components/shared/headers/Header";
 
 export const DeliveryScreen = () => {
-
   const { orders, loading, loadPendingOrders, confirmDelivery } = useOrders();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -131,7 +130,9 @@ export const DeliveryScreen = () => {
         <View style={deliveryStyles.orderInfo}>
           <Text style={deliveryStyles.orderId}>#{order.id.slice(-8)}</Text>
           <Text style={deliveryStyles.orderDate}>
-            {new Date(order.createdAt).toLocaleDateString("es-ES")}
+            {order.createdAt
+              ? new Date(order.createdAt).toLocaleDateString("es-ES")
+              : "Fecha no disponible"}
           </Text>
         </View>
         <View

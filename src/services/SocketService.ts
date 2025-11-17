@@ -70,6 +70,15 @@ export class SocketService {
     this.socket?.on("transactionReceived", callback);
   }
 
+  // Listen for order-related events if backend emits them
+  onOrderCreated(callback: (data: any) => void) {
+    this.socket?.on("orderCreated", callback);
+  }
+
+  onOrderUpdated(callback: (data: any) => void) {
+    this.socket?.on("orderUpdated", callback);
+  }
+
   disconnect() {
     this.socket?.disconnect();
     this.socket = null;

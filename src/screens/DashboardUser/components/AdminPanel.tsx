@@ -322,6 +322,9 @@ const AdminPanel: React.FC = () => {
       case "users":
         navigate("UsersManagement");
         break;
+      case "orders":
+        navigate("OrdersManagement");
+        break;
       case "products":
         Alert.alert(
           "Próximamente",

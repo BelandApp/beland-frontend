@@ -24,8 +24,16 @@ export const convertPesoToUSD = (pesoAmount: number): number => {
 /**
  * Formatea un precio en dólares para mostrar
  */
-export const formatUSDPrice = (amount: number): string => {
-  const formattedAmount = amount.toFixed(CURRENCY_CONFIG.DECIMAL_PLACES);
+export const formatUSDPrice = (amount: number | string): string => {
+  const numericAmount =
+    typeof amount === "string" ? parseFloat(amount) : amount;
+
+  if (isNaN(numericAmount)) {
+    console.warn("formatUSDPrice: Invalid amount received:", amount);
+    return "$0.00";
+  }
+
+  const formattedAmount = numericAmount.toFixed(CURRENCY_CONFIG.DECIMAL_PLACES);
 
   if (CURRENCY_CONFIG.USE_THOUSANDS_SEPARATOR) {
     return formattedAmount.replace(/\B(?=(\d{3})+(?!\d))/g, ",");

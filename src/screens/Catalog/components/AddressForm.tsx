@@ -15,6 +15,7 @@ import { DeliveryAddress } from "../../../types/Order";
 import { AddressMapPicker } from "./AddressMapPicker";
 import geocodingService from "../../../services/geocodingService";
 import { colors } from "../../../styles/colors";
+import { useNotificationStore } from "@/stores/notificationStore/notification.store";
 
 interface AddressFormProps {
   initialAddress?: DeliveryAddress;
@@ -30,6 +31,7 @@ export const AddressForm: React.FC<AddressFormProps> = ({
   isLoading = false,
 }) => {
   const isWeb = Platform.OS === "web";
+  const { show: showNotification } = useNotificationStore();
   const [address, setAddress] = useState<DeliveryAddress>(
     initialAddress || {
       street: "",
@@ -208,10 +210,10 @@ export const AddressForm: React.FC<AddressFormProps> = ({
 
   const handleSubmit = async () => {
     if (!validateForm()) {
-      Alert.alert(
-        "Datos incompletos",
-        "Por favor completa todos los campos requeridos correctamente"
-      );
+      showNotification({
+        type: "error",
+        message: "Por favor completa todos los campos requeridos correctamente",
+      });
       return;
     }
 
@@ -230,52 +232,13 @@ export const AddressForm: React.FC<AddressFormProps> = ({
         return;
       }
 
-      // If validation failed, offer the user options: correct, use suggested, or submit anyway
-      const reason = res.reason || "La dirección no se pudo validar";
-      Alert.alert(
-        "Validación de dirección",
-        reason +
-          (res.normalized
-            ? "\n\nSe puede usar la dirección sugerida por Google."
-            : ""),
-        [
-          { text: "Corregir", style: "cancel" },
-          {
-            text: "Usar sugerida",
-            onPress: () => {
-              if (res.normalized) {
-                setAddress((prev) => ({
-                  ...prev,
-                  street: res.normalized?.street || prev.street,
-                  city: res.normalized?.city || prev.city,
-                  state: res.normalized?.state || prev.state,
-                  zipCode: res.normalized?.postalCode || prev.zipCode,
-                  country: res.normalized?.country || prev.country,
-                }));
-                setIsValidated(true);
-              }
-            },
-          },
-          {
-            text: "Confirmar de todos modos",
-            onPress: () => onSubmit(address),
-            style: "destructive",
-          },
-        ]
-      );
+      // If validation failed, just proceed without asking for confirmation
+      // This allows the flow to work even when Google Places API is not available
+      onSubmit(address);
     } catch (e) {
-      // If the validation call fails (network, key, etc.), allow submit but warn the user
-      Alert.alert(
-        "Validación no disponible",
-        "No fue posible validar la dirección en este momento. Puedes confirmar de todos modos.",
-        [
-          { text: "Cancelar", style: "cancel" },
-          {
-            text: "Confirmar de todos modos",
-            onPress: () => onSubmit(address),
-          },
-        ]
-      );
+      // If the validation call fails (network, key, etc.), just proceed without confirmation
+      // This allows the flow to work even when Google Places API is not available
+      onSubmit(address);
     }
   };
 

@@ -128,7 +128,6 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
           // Pasar el id de la dirección creada para actualizar el carrito antes de crear la orden
           handleCreateOrder(toOrderAddress, created.id);
         } catch (e: any) {
-          console.error("Error creando dirección de usuario:", e);
           notify.error({
             message: "No se pudo guardar la dirección. Intenta de nuevo.",
           });
@@ -176,8 +175,6 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
             method: "PUT",
           });
         } catch (e) {
-          console.error("❌ Failed to update cart with address:", e);
-
           notify.error({
             message:
               "No se pudo actualizar el carrito con la dirección seleccionada.",
@@ -270,10 +267,7 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
             }
           }
         } catch (attachErr) {
-          console.error(
-            "[OrderDeliveryModal] Failed to attach fallback deliveryAddress:",
-            attachErr
-          );
+          // Failed to attach fallback deliveryAddress
         }
 
         clearCart();
@@ -291,8 +285,6 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
         }, 300);
       });
     } catch (error) {
-      console.error("❌ Error creating order:", error);
-
       setCurrentStep("address_form");
       notify.error({
         message: `No se pudo crear la orden: ${
@@ -306,7 +298,6 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
     setCurrentStep("address_form");
     onClose();
   };
-
 
   const renderAddressForm = () => (
     <AddressForm

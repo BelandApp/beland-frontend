@@ -19,6 +19,7 @@ import { orderDetailStyles } from "./styles";
 import { FeedbackModal } from "./components/FeedbackModal";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { RouteProp, useRoute } from "@react-navigation/native";
+import { useNotify } from "../../hooks/notification/useNotify";
 
 type OrderDetailScreenRouteProp = RouteProp<
   OrdersStackParamList,
@@ -27,6 +28,7 @@ type OrderDetailScreenRouteProp = RouteProp<
 
 export const OrderDetailScreen: React.FC = () => {
   const { goBack } = useCustomNavigation();
+  const { success, error, confirm } = useNotify();
 
   const route = useRoute<OrderDetailScreenRouteProp>();
   const { orderId } = route.params;
@@ -35,7 +37,7 @@ export const OrderDetailScreen: React.FC = () => {
   // Use selectors from the store to avoid recreating objects every render
   const storeOrders = useOrdersStoreAPI((s) => s.orders);
   const getOrderById = useOrdersStoreAPI((s) => s.getOrderById);
-  const updateOrderStatus = useOrdersStoreAPI((s) => s.updateOrderStatus);
+  const cancelOrderApi = useOrdersStoreAPI((s) => s.cancelOrderApi);
   const confirmReception = useOrdersStoreAPI((s) => s.confirmReception);
 
   // Local cached order from store (if any) - memoized so reference is stable
@@ -84,8 +86,13 @@ export const OrderDetailScreen: React.FC = () => {
       try {
         const items = await Promise.all(
           (base.items || []).map(async (it: any) => {
-            // If item already has name or image, skip
-            if ((it.name && it.name.length) || (it.image && it.image.length)) {
+            // If item already has name or image, skip enrichment
+            if (
+              (it.name &&
+                it.name.length > 0 &&
+                it.name !== `Producto ${it.product_id?.slice(-8)}`) ||
+              (it.image && it.image.length > 0)
+            ) {
               return it;
             }
 
@@ -123,10 +130,24 @@ export const OrderDetailScreen: React.FC = () => {
 
         if (!cancelled) {
           // Only update if something changed
-          setEnrichedOrder({ ...base, items } as any);
+          const hasChanges = items.some((item, index) => {
+            const original = base.items?.[index];
+            return (
+              item.name !== original?.name || item.image !== original?.image
+            );
+          });
+
+          if (hasChanges) {
+            setEnrichedOrder({ ...base, items } as any);
+          } else {
+            setEnrichedOrder(base as any);
+          }
         }
       } catch (err) {
         console.warn("[OrderDetail] error enriching order items:", err);
+        if (!cancelled) {
+          setEnrichedOrder(base as any);
+        }
       }
     };
 
@@ -146,7 +167,67 @@ export const OrderDetailScreen: React.FC = () => {
       try {
         const fetched = await OrderService.getOrder(orderId);
         if (!cancelled) {
-          setApiOrder(fetched as any);
+          // Map API response to frontend format
+          const apiData = fetched as any;
+          const mappedOrder = {
+            ...apiData,
+            // Map status from object to string
+            status: apiData.status?.code?.toLowerCase() || apiData.status,
+            // Map address to deliveryAddress
+            deliveryAddress: apiData.address
+              ? {
+                  street: apiData.address.addressLine1,
+                  additionalInfo: apiData.address.addressLine2,
+                  city: apiData.address.city,
+                  state: apiData.address.state,
+                  zipCode: apiData.address.postalCode,
+                  country: apiData.address.country,
+                  latitude: apiData.address.latitude,
+                  longitude: apiData.address.longitude,
+                }
+              : undefined,
+            // Map dates
+            createdAt: apiData.created_at
+              ? new Date(apiData.created_at)
+              : new Date(),
+            updatedAt: apiData.updated_at
+              ? new Date(apiData.updated_at)
+              : new Date(),
+            deliveredAt: apiData.delivered_at
+              ? new Date(apiData.delivered_at)
+              : undefined,
+            estimatedDelivery: apiData.delivery_at
+              ? new Date(apiData.delivery_at)
+              : undefined,
+            // Map numeric fields
+            subtotal: parseFloat(apiData.subtotal_amount) || 0,
+            total: parseFloat(apiData.total_amount) || 0,
+            deliveryFee: parseFloat(apiData.price_delivery) || 0,
+            discount: 0, // Not provided in API response
+            // Map items
+            items: (apiData.items || []).map((item: any) => ({
+              ...item,
+              id: item.id,
+              product_id: item.product_id,
+              quantity: item.quantity || item.ordered_quantity || 1,
+              price: parseFloat(item.unit_price) || 0,
+              subtotal: parseFloat(item.total_price) || 0,
+              priceBecoin: parseFloat(item.unit_becoin) || 0,
+              totalBecoin: parseFloat(item.total_becoin) || 0,
+              // These will be enriched later with product info
+              name:
+                item.name ||
+                `Producto ${item.product_id?.slice(-8) || "desconocido"}`,
+              image: item.image || undefined,
+            })),
+            // Map other fields
+            deliveryType: "home" as const,
+            groupId: apiData.group_id,
+            notes: apiData.observation,
+            paymentMethod: apiData.payment_type?.code,
+            becoinsUsed: parseFloat(apiData.total_becoin) || 0,
+          };
+          setApiOrder(mappedOrder as any);
         }
       } catch (err) {
         console.warn("[OrderDetail] could not fetch order from API:", err);
@@ -268,16 +349,23 @@ export const OrderDetailScreen: React.FC = () => {
     }
   };
 
-  const formatDate = (date: Date): string => {
+  const formatDate = (date: Date | string | undefined): string => {
+    if (!date) return "Fecha no disponible";
+
+    const dateObj = typeof date === "string" ? new Date(date) : date;
+
+    // Check if date is valid
+    if (isNaN(dateObj.getTime())) return "Fecha inválida";
+
     const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffTime = Math.abs(now.getTime() - dateObj.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
     if (diffDays === 1) return "Hoy";
     if (diffDays === 2) return "Ayer";
     if (diffDays <= 7) return `Hace ${diffDays - 1} días`;
 
-    return date.toLocaleDateString("es-ES", {
+    return dateObj.toLocaleDateString("es-ES", {
       weekday: "long",
       year: "numeric",
       month: "long",
@@ -298,66 +386,51 @@ export const OrderDetailScreen: React.FC = () => {
 
   const handleCancelOrder = () => {
     if (baseOrder.status === "pending" || baseOrder.status === "confirmed") {
-      Alert.alert(
-        "Cancelar orden",
-        "¿Estás seguro de que quieres cancelar esta orden? Esta acción no se puede deshacer.",
-        [
-          { text: "No", style: "cancel" },
-          {
-            text: "Sí, cancelar",
-            style: "destructive",
-            onPress: async () => {
-              try {
-                await updateOrderStatus(orderId, "cancelled");
-                Alert.alert(
-                  "Orden cancelada",
-                  "Tu orden ha sido cancelada exitosamente."
-                );
-              } catch (error) {
-                Alert.alert(
-                  "Error",
-                  "No se pudo cancelar la orden. Inténtalo de nuevo."
-                );
-              }
-            },
-          },
-        ]
-      );
+      confirm({
+        message:
+          "¿Estás seguro de que quieres cancelar esta orden? Esta acción no se puede deshacer.",
+        onConfirm: async () => {
+          try {
+            await cancelOrderApi(orderId);
+            success({
+              message: "Tu orden ha sido cancelada exitosamente.",
+            });
+            // Refrescar los datos de la orden desde el backend
+            setTimeout(() => {
+              // Forzar refetch de la orden
+              setApiOrder(undefined);
+            }, 500);
+          } catch (err) {
+            error({
+              message: "No se pudo cancelar la orden. Inténtalo de nuevo.",
+            });
+          }
+        },
+      });
     }
   };
 
   const handleConfirmReception = () => {
-    Alert.alert(
-      "Confirmar recepción",
-      "¿Confirmas que has recibido tu orden correctamente?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Sí, recibido",
-          onPress: async () => {
-            try {
-              await updateOrderStatus(orderId, "delivered");
-              Alert.alert(
-                "¡Perfecto!",
-                "Tu orden ha sido marcada como recibida. ¿Te gustaría calificar tu experiencia?",
-                [
-                  { text: "Ahora no", style: "cancel" },
-                  {
-                    text: "Calificar",
-                    onPress: () => setShowFeedbackModal(true),
-                  },
-                ]
-              );
-            } catch (error) {
-              Alert.alert(
-                "Error",
-                "No se pudo confirmar la recepción. Inténtalo de nuevo."
-              );
-            }
-          },
-        },
-      ]
-    );
+    confirm({
+      message: "¿Confirmas que has recibido tu orden correctamente?",
+      onConfirm: async () => {
+        try {
+          await confirmReception(orderId);
+          success({
+            message: "¡Perfecto! Tu orden ha sido marcada como recibida.",
+          });
+          // Refrescar los datos de la orden desde el backend
+          setTimeout(() => {
+            setApiOrder(undefined);
+            setShowFeedbackModal(true);
+          }, 1000);
+        } catch (err) {
+          error({
+            message: "No se pudo confirmar la recepción. Inténtalo de nuevo.",
+          });
+        }
+      },
+    });
   };
 
   const handleFeedbackSubmit = async (rating: number, feedback: string) => {
