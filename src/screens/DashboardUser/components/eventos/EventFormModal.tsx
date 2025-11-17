@@ -4,13 +4,10 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Switch,
   TextInput,
   Modal,
   ScrollView,
   Image,
-  Platform,
-  Alert,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import IntuitiveDatePicker from "src/components/ui/IntuitiveDatePicker";

@@ -1,12 +1,10 @@
 import React, { useState } from "react";
-import { CustomAlert } from "@components/shared";
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   ScrollView,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -15,25 +13,17 @@ import { PaymentService, WalletService } from "@services/core";
 import Constants from "expo-constants";
 import { useWalletData } from "../Wallet/hooks/useWalletData";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
+import { useNotify } from "src/hooks";
+import { getBackendErrorMessage } from "src/services";
 
 const SendScreen = () => {
-   const { navigate, goBack } = useCustomNavigation();
-
+  const { navigate, goBack } = useCustomNavigation();
   const { walletData, refetch } = useWalletData();
-  const { user } = useAuth();
+  const { user, handleAuth0Login } = useAuth();
   const [amount, setAmount] = useState("");
   const [address, setAddress] = useState("");
   const [currency] = useState("becoin");
-  // Estados para CustomAlert
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [alertType, setAlertType] = useState<"success" | "error" | "info">(
-    "info"
-  );
-  const [alertTitle, setAlertTitle] = useState("");
-  const [alertMessage, setAlertMessage] = useState("");
-  const [alertAutoClose, setAlertAutoClose] = useState<number | undefined>(
-    undefined
-  );
+  const notify = useNotify();
   const [isLoading, setIsLoading] = useState(false);
 
   // Para mostrar datos en la alerta de éxito
@@ -48,62 +38,50 @@ const SendScreen = () => {
     const transferAmount = parseFloat(amount);
 
     if (!amount || isNaN(transferAmount) || transferAmount <= 0) {
-      setAlertType("error");
-      setAlertTitle("Error");
-      setAlertMessage("Por favor ingresa un monto válido");
-      setAlertAutoClose(2000);
-      setAlertVisible(true);
+      notify.error({ message: "Por favor ingresa un monto valido" });
       return false;
     }
 
     if (transferAmount > walletData.balance) {
-      setAlertType("error");
-      setAlertTitle("Error");
-      setAlertMessage("Saldo insuficiente para realizar la transferencia");
-      setAlertAutoClose(2000);
-      setAlertVisible(true);
+      notify.error({
+        message: "Saldo insuficiente para realizar la transferencia",
+      });
       return false;
     }
 
     if (!address.trim()) {
-      setAlertType("error");
-      setAlertTitle("Error");
-      setAlertMessage("Por favor ingresa un alias o número de teléfono");
-      setAlertAutoClose(2000);
-      setAlertVisible(true);
+      notify.error({
+        message: "Por favor ingresa un alias o número de teléfono",
+      });
       return false;
     }
-
     return true;
   };
 
   const handleSend = async () => {
     if (!validateTransfer()) return;
-
     setIsLoading(true);
-
     try {
       if (useDemoMode) {
         // Modo demo: simular transferencia
+        notify.info({message:"Estas en modo DEMO"})
         await new Promise((resolve) => setTimeout(resolve, 1500));
         setSentAmount(amount);
         setSentCurrency(currency);
         setSentAddress(address);
-        setAlertType("success");
-        setAlertTitle("¡Transferencia Exitosa!");
-        setAlertMessage(`Se han enviado ${amount} BECOINS a ${address}`);
-        setAlertAutoClose(2000);
-        setAlertVisible(true);
+        notify.success({
+          message: `Se han enviado ${amount} BECOINS a ${address}`,
+        });
+
         // Actualizar datos de la wallet
         refetch();
       } else {
         // Modo producción: transferencia real usando nueva funcionalidad
         if (!user?.email) {
-          setAlertType("error");
-          setAlertTitle("Error");
-          setAlertMessage("Usuario no autenticado");
-          setAlertAutoClose(2000);
-          setAlertVisible(true);
+          notify.confirm({
+            message: "Debes iniciar sesión para adquirir",
+            onConfirm: () => handleAuth0Login(),
+          });
           return;
         }
 
@@ -122,56 +100,36 @@ const SendScreen = () => {
             setSentAmount(amount);
             setSentCurrency(currency);
             setSentAddress(address);
-            setAlertType("success");
-            setAlertTitle("¡Transferencia Exitosa!");
-            setAlertMessage(`Se han enviado ${amount} BECOINS a ${address}`);
-            setAlertAutoClose(2000);
-            setAlertVisible(true);
+            notify.success({
+              message: `Se han enviado ${amount} BECOINS a ${address}`,
+            });
 
             // Actualizar datos de la wallet
             refetch();
           }
-        } catch (transferError: any) {
-          console.error("Error en transferencia:", transferError);
-          setAlertType("error");
-          setAlertTitle("Error en transferencia");
-          setAlertMessage(
-            transferError.message ||
-              "No se pudo completar la transferencia. Verifica los datos e intenta nuevamente."
-          );
-          setAlertAutoClose(2000);
-          setAlertVisible(true);
+        } catch (error) {
+          const message = getBackendErrorMessage(error);
+          notify.error({ message: message || "Error en transferencia" });
         }
       }
 
       // Limpiar formulario
       setAmount("");
       setAddress("");
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error en transferencia:", error);
-      setAlertType("error");
-      setAlertTitle("Error en transferencia");
-      setAlertMessage(
-        error.message ||
-          "No se pudo completar la transferencia. Intenta nuevamente."
-      );
-      setAlertAutoClose(2000);
-      setAlertVisible(true);
+      const message = getBackendErrorMessage(error);
+      notify.error({ message: message || "Error en transferencia" });
     } finally {
       setIsLoading(false);
     }
   };
 
-  // El modal de éxito se reemplaza por CustomAlert
-
   return (
     <>
       <ScrollView style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => goBack()}
-            style={styles.backButton}
-          >
+          <TouchableOpacity onPress={() => goBack()} style={styles.backButton}>
             <MaterialCommunityIcons name="arrow-left" size={24} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.title}>Enviar BeCoins</Text>
@@ -250,21 +208,6 @@ const SendScreen = () => {
 
         {/* El selector de moneda ha sido eliminado, solo se permite BeCoins */}
       </ScrollView>
-      {/* CustomAlert para mostrar errores y éxito */}
-      <CustomAlert
-        visible={alertVisible}
-        type={alertType}
-        title={alertTitle}
-        message={alertMessage}
-        autoCloseDelay={alertAutoClose}
-        onClose={() => {
-          setAlertVisible(false);
-          // Si fue éxito o invitación, volver atrás
-          if (alertType === "success" || alertType === "info") {
-           goBack();
-          }
-        }}
-      />
     </>
   );
 };

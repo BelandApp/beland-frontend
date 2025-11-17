@@ -271,7 +271,7 @@ export const CatalogScreen = () => {
         {/* Sección Comunidad integrada dentro del Catálogo
             Mostrar solo si hay recursos o si está cargando (para evitar mostrar
             un título vacío cuando no existan beneficios). */}
-        <CatalogCommunitySection />
+        {/* <CatalogCommunitySection /> */}
 
         {loading ? (
           <Text style={{ textAlign: "center", marginTop: 32 }}>

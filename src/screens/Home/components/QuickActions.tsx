@@ -9,14 +9,13 @@ import {
 import {
   SendIcon,
   ReceiveIcon,
-  CobrarIcon,
   ExchangeIcon,
-} from "../../../components/icons";
-import { RechargeIcon } from "../../../components/icons/WalletIcons";
-import { useCustomAlert } from "../../../hooks/useCustomAlert";
-import { CustomAlert } from "@components/shared";
+  CobrarIcon,
+  RechargeIcon,
+} from "@/components/icons";
 import { useAuth } from "src/context";
 import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
+import { useNotify } from "src/hooks";
 
 interface QuickAction {
   id: string;
@@ -42,8 +41,6 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
   onCollect,
   onExchange,
 }) => {
-  const { showAlert, alertConfig, showCustomAlert, hideAlert } =
-    useCustomAlert();
   const { user } = useAuth();
   const { isMobile, isDesktop } = useResponsiveLayout();
 
@@ -180,13 +177,6 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
           })}
         </View>
       </View>
-      <CustomAlert
-        visible={showAlert}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        type={alertConfig.type}
-        onClose={hideAlert}
-      />
     </>
   );
 };
