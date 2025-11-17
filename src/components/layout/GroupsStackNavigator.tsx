@@ -1,9 +1,11 @@
 import React from "react";
 import { createStackNavigator } from "@react-navigation/stack";
-import { GroupsStackParamList } from "../../types/navigation";
-import { GroupsScreen } from "../../screens/GroupsScreen";
-import { CreateGroupScreen } from "../../screens/CreateGroupScreen";
-import { GroupManagementScreen } from "../../screens/GroupManagementScreen";
+import { GroupsStackParamList } from "@/types/navigation";
+import {
+  GroupsScreen,
+  CreateGroupScreen,
+  GroupManagementScreen,
+} from "@/screens";
 
 const Stack = createStackNavigator<GroupsStackParamList>();
 

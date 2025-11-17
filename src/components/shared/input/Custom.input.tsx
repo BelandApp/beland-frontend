@@ -5,10 +5,12 @@ import {
   Animated,
   Easing,
   StyleSheet,
-  TouchableOpacity,
   Text,
   TextInputProps,
+  Pressable,
+  Platform,
 } from "react-native";
+import "@styles/inputs.css";
 
 interface CustomInputProps extends TextInputProps {
   label: string;
@@ -40,6 +42,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
   const [isFocused, setIsFocused] = useState(false);
   const [isSecure, setIsSecure] = useState(secureTextEntry);
 
+  const inputRef = useRef<TextInput>(null);
   const animatedLabel = useRef(new Animated.Value(value ? 1 : 0)).current;
   const animatedBorder = useRef(new Animated.Value(0)).current;
 
@@ -80,10 +83,23 @@ export const CustomInput: React.FC<CustomInputProps> = ({
     outputRange: ["#ffffff", "#FFD700"],
   });
 
-
+  const handleFocus = () => {
+    inputRef.current?.focus();
+    setIsFocused(true);
+  };
   return (
-    <TouchableOpacity onPress={() => setIsFocused(true)} style={styles.button}>
+    <Pressable
+      onPress={handleFocus}
+      style={({ pressed }) => [
+        styles.button,
+        { opacity: pressed ? 0.8 : 1, },
+      ]}
+      accessible={false}
+      tabIndex={-1}
+    >
       <Animated.View
+        accessible={false}
+        tabIndex={-1}
         style={[
           styles.container,
           {
@@ -91,8 +107,11 @@ export const CustomInput: React.FC<CustomInputProps> = ({
           },
         ]}
       >
-        <Animated.Text style={labelStyle}>{label}</Animated.Text>
+        <Animated.Text style={labelStyle} accessible={false}>
+          {label}
+        </Animated.Text>
         <TextInput
+          ref={inputRef}
           id={"input-" + label}
           value={value}
           onChangeText={onChangeText}
@@ -114,12 +133,13 @@ export const CustomInput: React.FC<CustomInputProps> = ({
           ))}
       </Animated.View>
       {error && <Text style={styles.textError}>{error}</Text>}
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 
 const styles = StyleSheet.create({
   button: {
+    flex: 1,
     marginBottom: 20,
     flexDirection: "column",
     gap: 5,
@@ -130,13 +150,14 @@ const styles = StyleSheet.create({
     borderWidth: 0,
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: Platform.OS === "web" ? "center" : "flex-end",
     borderBottomWidth: 2,
-    
+    paddingBottom: Platform.OS === "web" ? 0 : 4,
   },
   input: {
-    paddingVertical: 8,
-    fontSize: 17,
+    flex: 1,
+    paddingVertical: Platform.OS === "web" ? 8 : 10,
+    fontSize: 17, 
     fontWeight: "600",
     color: "white",
     borderStyle: "solid",

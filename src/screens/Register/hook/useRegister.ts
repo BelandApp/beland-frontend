@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useValidation } from "src/hooks/form/useValidation";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { RegisterFormData } from "../RegisterScreen";
-import { authService } from "src/services";
+import { authService, getBackendErrorMessage } from "src/services";
+import { notify } from "src/hooks/notification/notify.external";
 
 export const useRegister = () => {
   const [step, setStep] = useState<"register" | "code">("register");
@@ -20,13 +21,6 @@ export const useRegister = () => {
     country: "",
     city: "",
   });
-  const [alert, setAlert] = useState<{
-    visible: boolean;
-    title: string;
-    message: string;
-    type?: "success" | "error" | "info";
-  }>({ visible: false, title: "", message: "", type: "error" });
-
   const onChangeText = (name: string, value: string) => {
     setFormData({
       ...FormData,
@@ -37,47 +31,46 @@ export const useRegister = () => {
     setStep("register");
   };
   const handleRegister = async () => {
+    FormData.username = FormData.full_name.split(" ").join("");
     FormData.confirmPassword = FormData.password;
     const isValid = validateForm(FormData);
     if (!isValid) {
-      setAlert({
-        visible: true,
-        title: "Error",
-        message: "Por favor completa todos los campos",
-        type: "error",
-      });
+      setIsLoading(false);
+      notify.error({message:"Debes completar todos los campos"});
       return;
     }
     try {
-      const success = await authService.registerUser(FormData);
-      if (!success) {
-        setAlert({
-          visible: true,
-          title: "Error",
-          message: "Credenciales incorrectas",
-          type: "error",
-        });
-      }
+      setIsLoading(true);
+      await authService.registerUser(FormData);
+      notify.info({ message: "Verifica tu correo" });
       setStep("code");
     } catch (error) {
-      setAlert({
-        visible: true,
-        title: "Error",
-        message: "No se pudo completar el inicio de sesión",
-        type: "error",
-      });
-      console.error("[LOGIN] Error en loginWithEmailPassword:", error);
+      const message = getBackendErrorMessage(error);
+      notify.error({message});
+    } finally {
+      setIsLoading(false);
     }
   };
   const handleReSendCode = async () => {
-    if (!FormData.email) return;
-    await authService.sendCodeToEmail(FormData.email);
-    //  TODO notificar al usuario
+    try {
+      if (!FormData.email) return;
+      await authService.resendRegisterCode(FormData.email);
+      notify.info({ message: "Verifica tu correo" });
+    } catch (error) {
+      const message = getBackendErrorMessage(error);
+      notify.error({message});
+    }
   };
   const handleVerifyCode = async (code: string) => {
-    await authService.checkRegisterCode({ email: FormData.email, code });
-    // TODO notificar registracion exitosa
-    await authService.loginWithEmail(FormData.email, FormData.password);
+    try {
+      await authService.checkRegisterCode({ email: FormData.email, code });
+      notify.success({ message: "Registro exitoso, vamos a loguearte" });
+      await authService.loginWithEmail(FormData.email, FormData.password);
+      navigate("MainTabs", { screen: "Home" });
+    } catch (error) {
+       const message = getBackendErrorMessage(error);
+       notify.error({message});
+    }
   };
   return {
     step,
@@ -85,10 +78,8 @@ export const useRegister = () => {
     FormData,
     errors,
     onChangeText,
-    alert,
     handleRegister,
     navigate,
-    setAlert,
     handleStepBack,
     handleReSendCode,
     handleVerifyCode,

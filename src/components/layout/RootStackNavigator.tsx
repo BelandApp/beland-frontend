@@ -1,43 +1,51 @@
 import React from "react";
 import { createStackNavigator } from "@react-navigation/stack";
-import { MainTabNavigator } from "./MainTabNavigator";
-import CanjearScreen from "../../screens/Wallet/CanjearScreen";
-import WithdrawMethodScreen from "../../screens/Wallet/WithdrawMethodScreen";
-import { ReceiveScreen, CobrarScreen } from "src/screens/Wallet";
-import SendScreen from "../../screens/Wallet/SendScreen";
-import WalletHistoryScreen from "../../screens/Wallet/WalletHistoryScreen";
-import RechargeScreen from "../../screens/Wallet/RechargeScreen";
-import WalletSettingsScreen from "../../screens/Wallet/WalletSettingsScreen";
-import { QRScannerScreen } from "../../screens/QRScannerScreen";
-import PaymentScreen from "../../screens/Payment/PaymentScreen";
-import { HistoryScreen, RecyclingMapScreen } from "../../screens";
-import UserDashboardScreen from "src/screens/UserDashboardScreen";
-import UserResourcesScreen from "src/screens/UserResources/UserResourcesScreen";
-
-import PayphoneSuccessScreen from "../../screens/Wallet/PayphoneSuccessScreen";
-import { CatalogScreen } from "src/screens/Catalog";
-import { LoginScreen } from "src/screens/Login";
-import { RegisterScreen } from "src/screens/Register";
-import { OrdersStackNavigator } from "./OrdersStackNavigator";
-import { RewardsScreen } from "src/screens/Rewards";
-
-import { EventModal } from "src/screens/Events/Event.modal";
-import {
-  NewPaymentScreen,
-  PaymentScreenRoute,
-} from "src/screens/NewPayment/NewPaymentScreen";
-import EventsManagementScreen from "src/screens/DashboardUser/EventsManagementScreen";
-import UsersManagementScreen from "src/screens/DashboardUser/UsersManagementScreen";
-
-import { UseEventScreen } from "src/screens/UseEventScreen/UseEventScreen";
-import { QRUseEventScreen } from "src/screens/UseEventScreen/QrEvent.scanner";
-import { ConsumedEventScreen } from "src/screens/UseEventScreen/ConsumeEvent";
-import { AcquiredEventModal } from "src/screens/Events/AcquiredEvent.modal";
-import NewPasswordScreen from "src/screens/NewPassword/NewPassword.screen";
-import { GroupsStackNavigator } from "./GroupsStackNavigator";
-import { GroupsStackParamList, MainTabParamList, OrdersStackParamList } from "src/types/navigation";
-import { Order } from "src/types";
 import { NavigatorScreenParams } from "@react-navigation/native";
+
+// Navigators imports
+import { MainTabNavigator } from "./MainTabNavigator";
+import { OrdersStackNavigator } from "./OrdersStackNavigator";
+// Types imports
+import {
+  GroupsStackParamList,
+  MainTabParamList,
+  OrdersStackParamList,
+} from "src/types/navigation";
+// Screens imports
+import {
+  CanjearScreen,
+  ReceiveScreen,
+  CobrarScreen,
+  WithdrawMethodScreen,
+  SendScreen,
+  WalletHistoryScreen,
+  RechargeScreen,
+  WalletSettingsScreen,
+  PayphoneSuccessScreen,
+} from "@screens/Wallet";
+import { QRScannerScreen } from "@screens/QRScannerScreen";
+import PaymentScreen from "@screens/Payment/PaymentScreen";
+import UserDashboardScreen from "@screens/UserDashboardScreen";
+import UserResourcesScreen from "@screens/UserResources/UserResourcesScreen";
+import { LoginScreen } from "@screens/Login";
+import { RegisterScreen } from "@screens/Register";
+import { NewPasswordScreen } from "@screens/NewPassword";
+import { RewardsScreen } from "@screens/Rewards";
+import { EventModal, AcquiredEventModal } from "@screens/Events";
+import {
+  UseEventScreen,
+  QRUseEventScreen,
+  ConsumedEventScreen,
+} from "@screens/UseEventScreen";
+import { NewPaymentScreen, PaymentScreenRoute } from "@screens/NewPayment";
+import {
+  EventsManagementScreen,
+  UsersManagementScreen,
+  OrdersManagementScreen,
+  OrderAdminDetailScreen,
+} from "@screens/DashboardUser";
+// TODO arreglar pantallas en carpeta raiz
+import { HistoryScreen, RecyclingMapScreen } from "../../screens";
 
 export type RootStackParamList = {
   // Auth Screens
@@ -90,6 +98,8 @@ export type RootStackParamList = {
 
   // Admin Management Screens
   EventsManagement: undefined;
+  OrdersManagement: undefined;
+  OrderAdminDetail?: { orderId: string };
   UsersManagement: undefined;
   ProductsManagement: undefined;
 
@@ -142,7 +152,7 @@ export const RootStackNavigator = () => {
       <Stack.Screen
         name="RecyclingMap"
         component={RecyclingMapScreen}
-        options={{ headerShown: true, title: "Mapa de Reciclaje" }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="HistoryScreen"
@@ -199,6 +209,16 @@ export const RootStackNavigator = () => {
       <Stack.Screen
         name="EventsManagement"
         component={EventsManagementScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="OrdersManagement"
+        component={OrdersManagementScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="OrderAdminDetail"
+        component={OrderAdminDetailScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen

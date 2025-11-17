@@ -10,43 +10,40 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  Alert,
   StyleSheet,
-  Platform,
 } from "react-native";
-import { BeCoinsBalance } from "../../components/ui/BeCoinsBalance";
+import { BeCoinsBalance, CustomLoader } from "@components/shared";
 
 // Hooks
 import { useCatalogFilters, useCatalogModals } from "./hooks";
-import { useProducts } from "../../hooks/useProducts";
-import { useCartSync } from "../../hooks/useCartSync";
+import {
+  useCartSync,
+  useProducts,
+  useCustomNavigation,
+  useNotify,
+} from "@/hooks";
 import { ProductService } from "@/services";
 import { ProductCardType } from "./components/ProductCard";
 import { useAuth } from "@/context";
-import { useCustomAlert } from "../../hooks/useCustomAlert";
 
 // Components
-import { SearchBar, FilterPanel, ProductGrid } from "./components";
+import { FilterPanel, ProductGrid } from "./components";
 import { OrderDeliveryModal } from "./components/OrderDeliveryModal";
-import { CustomAlert } from "../../components/ui/CustomAlert";
-
+import { SearchBarInput } from "@components/shared";
+import { CartBottomSheet } from "./components/CartBottomSheet";
 // Styles
 import { containerStyles, productStyles } from "./styles";
 
-import { useCartStore } from "../../stores/useCartStore";
-import { CartBottomSheet } from "./components/CartBottomSheet";
+import { useCartStore } from "@/stores/useCartStore";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 // Community Main Component
 import CatalogCommunitySection from "./mainComponents/CatalogCommunitySection";
 import { useGroupedProducts } from "./mainHooks/useGroupedProducts";
-import { ThemedHeader } from "src/components/shared/headers/Header";
-import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
+import { ThemedHeader } from "@/components";
 
 export const CatalogScreen = () => {
   const { navigate } = useCustomNavigation();
   const { canPerformAction, handleAuth0Login, isAuthenticated } = useAuth();
-  const { showAlert, alertConfig, showCustomAlert, hideAlert } =
-    useCustomAlert();
 
   const {
     addProduct: addProductToCart,
@@ -68,10 +65,9 @@ export const CatalogScreen = () => {
 
   const { showDeliveryModal, openDeliveryModal, closeDeliveryModal } =
     useCatalogModals();
-
+  const notify = useNotify();
   const [showCart, setShowCart] = useState(false);
   const [addingProductId, setAddingProductId] = useState<string | null>(null);
-  const [showAuthAlert, setShowAuthAlert] = useState(false);
   const [allCategories, setAllCategories] = useState<
     {
       id: string;
@@ -184,13 +180,18 @@ export const CatalogScreen = () => {
 
   const handleAddProduct = async (product: ProductCardType) => {
     if (!canPerformAction) {
-      setShowAuthAlert(true);
+      notify.confirm({
+        message: "Debes iniciar sesión para agregar productos al carrito",
+        onConfirm: () => handleAuth0Login(),
+        onCancel: () => {},
+      });
       return;
     }
 
     setAddingProductId(product.id);
     addProductToCart({ ...product, quantity: 1 });
     setAddingProductId(null);
+    notify.success({ message: "Producto agregado al carrito" });
   };
 
   return (
@@ -213,7 +214,7 @@ export const CatalogScreen = () => {
               >
                 <MaterialCommunityIcons
                   name={isSyncing ? "sync" : "cart-variant"}
-                  size={29}
+                  size={25}
                   color={isSyncing ? "#FFA500" : "#FF6B35"}
                   style={[
                     styles.headerCartIcon,
@@ -244,7 +245,11 @@ export const CatalogScreen = () => {
         contentContainerStyle={containerStyles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
-        <SearchBar searchQuery={searchText} onSearchChange={setSearchText} />
+        <SearchBarInput
+          searchQuery={searchText}
+          onSearchChange={setSearchText}
+          placeholder="Buscar Productos..."
+        />
 
         {showFilters && (
           <FilterPanel
@@ -267,15 +272,13 @@ export const CatalogScreen = () => {
         {/* Sección Comunidad integrada dentro del Catálogo
             Mostrar solo si hay recursos o si está cargando (para evitar mostrar
             un título vacío cuando no existan beneficios). */}
-        <CatalogCommunitySection />
+        {/* <CatalogCommunitySection /> */}
 
         {loading ? (
-          <Text style={{ textAlign: "center", marginTop: 32 }}>
-            Cargando productos...
-          </Text>
+          <CustomLoader/>
         ) : error ? (
           <Text style={{ color: "red", textAlign: "center", marginTop: 32 }}>
-            {error}
+            Error al cargar los productos, vuelve a cargar la pantalla.
           </Text>
         ) : (
           // Revertido a grilla de productos (estilizada)
@@ -334,10 +337,7 @@ export const CatalogScreen = () => {
             setShowCart(false);
 
             if (cartProducts.length === 0) {
-              Alert.alert(
-                "Carrito vacío",
-                "Agrega productos antes de continuar"
-              );
+              notify.error({message:"El carrito esta vacio"});
               return;
             }
 
@@ -355,19 +355,15 @@ export const CatalogScreen = () => {
               if (fullProduct) {
                 openDeliveryModal(fullProduct);
               } else {
-                Alert.alert(
-                  "Producto no disponible",
-                  "El producto seleccionado ya no está disponible en el catálogo.",
-                  [{ text: "OK" }]
-                );
+                notify.error(
+                  {message:"El producto ya no esta disponible"}
+                )
               }
             } catch (error) {
               console.error("Error en checkout:", error);
-              Alert.alert(
-                "Error",
-                "Hubo un problema al procesar tu carrito. Inténtalo de nuevo.",
-                [{ text: "OK" }]
-              );
+              notify.error(
+                  {message:"Hubo un problema al procesar tu carrito. Inténtalo de nuevo."}
+                )
             }
           }}
         />
@@ -378,37 +374,8 @@ export const CatalogScreen = () => {
         onClose={closeDeliveryModal}
         onOrderCreated={(orderId: string) => {
           // Navigate to Orders tab to see the created order
-          navigate("Orders");
+          navigate("Orders", { screen: "OrdersList" });
         }}
-      />
-
-      {/* Custom Alert para autenticación */}
-      <CustomAlert
-        visible={showAuthAlert}
-        title="¡Inicia sesión para comprar!"
-        message="Para agregar productos al carrito, necesitas tener una cuenta activa. Es rápido y seguro."
-        type="info"
-        onClose={() => setShowAuthAlert(false)}
-        primaryButton={{
-          text: "Iniciar sesión",
-          onPress: () => {
-            setShowAuthAlert(false);
-            handleAuth0Login();
-          },
-        }}
-        secondaryButton={{
-          text: "Más tarde",
-          onPress: () => setShowAuthAlert(false),
-        }}
-      />
-
-      {/* Alert del hook useCustomAlert para otros mensajes */}
-      <CustomAlert
-        visible={showAlert}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        type={alertConfig.type}
-        onClose={hideAlert}
       />
     </>
   );

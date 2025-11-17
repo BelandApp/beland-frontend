@@ -6,8 +6,9 @@ import {
   OrderFilters,
   OrderSummary,
 } from "../types/Order";
-import { OrderService, CartService } from "@services/core";
+import { OrderService, CartService, CreateOrderDto } from "@services/core";
 import { useCartStore } from "./useCartStore";
+import { useAuthTokenStore } from "./useAuthTokenStore";
 
 // Import dinámico de AsyncStorage solo en mobile
 let AsyncStorage: any = undefined;
@@ -107,10 +108,13 @@ export interface OrdersActions {
   updateOrderStatus: (orderId: string, status: OrderStatus) => void;
   getOrderById: (orderId: string) => Order | undefined;
   cancelOrder: (orderId: string) => void;
+  // API-backed cancel: call backend and update local state
+  cancelOrderApi: (orderId: string, reason?: string) => Promise<boolean>;
   loadUserOrders: () => Promise<void>;
   loadPendingOrders: () => Promise<void>;
   confirmDelivery: (orderId: string, notes?: string) => Promise<boolean>;
   confirmReception: (orderId: string) => Promise<boolean>;
+  updateOrderFromApi: (apiOrder: any) => void;
 
   // Filtering and search
   setFilters: (filters: OrderFilters) => void;
@@ -158,25 +162,166 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
         throw new Error("No items in cart to create order");
       }
 
+      console.log(
+        "[OrdersStoreAPI] Local cart has items:",
+        cartState.products.length
+      );
+      console.log("[OrdersStoreAPI] Local cart products:", cartState.products);
+
       // processing checkout with cart items (verbose logs removed)
 
       // Step 1: Get current cart from backend
       const cart = await CartService.getCart();
-      // Diagnostic: log cartId used to create the order
-      console.log("[OrdersStoreAPI] Creating order using cartId:", cart.id);
+      console.log("[OrdersStoreAPI] Backend cart ID:", cart.id);
+      console.log("[OrdersStoreAPI] Backend cart items:", cart.items);
+      console.log(
+        "[OrdersStoreAPI] Backend cart total_items:",
+        cart.total_items
+      );
+
+      // Step 1.5: If backend cart is empty but local cart has items, sync them
+      if (
+        (!cart.items || cart.items.length === 0) &&
+        cartState.products.length > 0
+      ) {
+        console.log(
+          "[OrdersStoreAPI] Backend cart is empty, syncing local items to server..."
+        );
+
+        try {
+          // Sync each local item to the server
+          for (const localProduct of cartState.products) {
+            console.log(
+              "[OrdersStoreAPI] Syncing product to server:",
+              localProduct
+            );
+            await CartService.addToCart({
+              product_id: localProduct.id,
+              quantity: localProduct.quantity,
+            });
+          }
+
+          // Get updated cart after sync
+          const updatedCart = await CartService.getCart();
+          console.log(
+            "[OrdersStoreAPI] Cart after sync - items:",
+            updatedCart.items?.length || 0
+          );
+
+          if (!updatedCart.items || updatedCart.items.length === 0) {
+            throw new Error("Failed to sync cart items to server");
+          }
+
+          // Use the updated cart
+          Object.assign(cart, updatedCart);
+        } catch (syncError) {
+          console.error(
+            "[OrdersStoreAPI] Failed to sync cart items:",
+            syncError
+          );
+          throw new Error(
+            "No se pudieron sincronizar los items del carrito con el servidor"
+          );
+        }
+      }
+
+      // Validate backend cart has items after potential sync
+      if (!cart.items || cart.items.length === 0) {
+        throw new Error(
+          "El carrito del servidor está vacío. Agregue productos antes de crear la orden."
+        );
+      }
 
       // Step 2: Create order directly from the user's existing cart
       console.log(
         "[OrdersStoreAPI] Calling OrderService.createOrder with cartId:",
         cart.id
       );
-      const newOrder = await OrderService.createOrder({
-        shipping_address_id: "default", // TODO: Map from orderRequest.deliveryAddress
-        payment_method: orderRequest.paymentMethod,
-        notes: orderRequest.notes,
-      });
+
+      // Get current user ID from auth store (for validation only, backend gets it from JWT)
+      const { user } = useAuthTokenStore.getState();
+      console.log("[OrdersStoreAPI] Auth store user:", user);
+      console.log("[OrdersStoreAPI] User ID:", user?.id);
+
+      if (!user?.id) {
+        console.error(
+          "[OrdersStoreAPI] User not authenticated - user object:",
+          user
+        );
+        throw new Error("Usuario no autenticado");
+      }
+
+      const orderData: CreateOrderDto = {
+        cart_id: cart.id,
+      };
+
+      const newOrder = await OrderService.createOrder(orderData);
       // Use a mutable variable for potential patching before saving/returning
       let orderToSave: any = newOrder.order;
+
+      // Convert date strings to Date objects
+      if (orderToSave) {
+        orderToSave.createdAt = orderToSave.created_at
+          ? new Date(orderToSave.created_at)
+          : new Date();
+        orderToSave.updatedAt = orderToSave.updated_at
+          ? new Date(orderToSave.updated_at)
+          : new Date();
+        if (orderToSave.delivered_at) {
+          orderToSave.deliveredAt = new Date(orderToSave.delivered_at);
+        }
+        if (orderToSave.estimated_delivery) {
+          orderToSave.estimatedDelivery = new Date(
+            orderToSave.estimated_delivery
+          );
+        }
+
+        // Convert numeric string fields to numbers
+        orderToSave.discount = parseFloat(orderToSave.discount_amount) || 0;
+        orderToSave.deliveryFee = parseFloat(orderToSave.price_delivery) || 0;
+        orderToSave.total = parseFloat(orderToSave.total_amount) || 0;
+        orderToSave.subtotal = parseFloat(orderToSave.subtotal_amount) || 0;
+        orderToSave.becoinsUsed = parseFloat(orderToSave.total_becoin) || 0;
+
+        // Map status if it's an object
+        if (orderToSave.status && typeof orderToSave.status === "object") {
+          orderToSave.status =
+            orderToSave.status.code?.toLowerCase() || "pending";
+        }
+
+        // Map address if present
+        if (orderToSave.address) {
+          orderToSave.deliveryAddress = {
+            street: orderToSave.address.addressLine1,
+            additionalInfo: orderToSave.address.addressLine2,
+            city: orderToSave.address.city,
+            state: orderToSave.address.state,
+            zipCode: orderToSave.address.postalCode,
+            country: orderToSave.address.country,
+            latitude: orderToSave.address.latitude,
+            longitude: orderToSave.address.longitude,
+          };
+        }
+
+        // Map items
+        if (orderToSave.items) {
+          orderToSave.items = orderToSave.items.map((item: any) => ({
+            ...item,
+            id: item.id,
+            product_id: item.product_id,
+            quantity: item.quantity || item.ordered_quantity || 1,
+            price: parseFloat(item.unit_price) || 0,
+            subtotal: parseFloat(item.total_price) || 0,
+            priceBecoin: parseFloat(item.unit_becoin) || 0,
+            totalBecoin: parseFloat(item.total_becoin) || 0,
+            name:
+              item.name ||
+              `Producto ${item.product_id?.slice(-8) || "desconocido"}`,
+            image: item.image || undefined,
+          }));
+        }
+      }
+
       // Diagnostic: log the response returned by OrderService
       console.log(
         "[OrdersStoreAPI] OrderService.createOrder returned:",
@@ -312,23 +457,52 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
 
     try {
       console.log("🌐 Store API: Loading user orders from API...");
-      const response = await OrderService.getOrders();
+      const response = await OrderService.getUserOrders();
       // TODO: Map API response to store types - temporary conversion
       const orders = (response.data || []).map((apiOrder: any) => ({
         ...apiOrder,
         userId: apiOrder.user_id || "",
-        discount: apiOrder.discount_amount || 0,
-        deliveryFee: apiOrder.shipping_cost || 0,
-        total: apiOrder.total_amount || 0,
-        items: apiOrder.order_items || [],
+        discount: parseFloat(apiOrder.discount_amount) || 0,
+        deliveryFee: parseFloat(apiOrder.price_delivery) || 0,
+        total: parseFloat(apiOrder.total_amount) || 0,
+        items: (apiOrder.items || []).map((item: any) => ({
+          ...item,
+          id: item.id,
+          product_id: item.product_id,
+          quantity: item.quantity || item.ordered_quantity || 1,
+          price: parseFloat(item.unit_price) || 0,
+          subtotal: parseFloat(item.total_price) || 0,
+          priceBecoin: parseFloat(item.unit_becoin) || 0,
+          totalBecoin: parseFloat(item.total_becoin) || 0,
+          name:
+            item.name ||
+            `Producto ${item.product_id?.slice(-8) || "desconocido"}`,
+          image: item.image || undefined,
+        })),
         deliveryType: "home" as const,
-        deliveryAddress: apiOrder.shipping_address,
-        subtotal: apiOrder.subtotal_amount || 0,
-        status: apiOrder.status,
-        createdAt: apiOrder.created_at,
-        updatedAt: apiOrder.updated_at,
-        paymentMethod: apiOrder.payment_method,
-        notes: apiOrder.notes,
+        deliveryAddress: apiOrder.address
+          ? {
+              street: apiOrder.address.addressLine1,
+              additionalInfo: apiOrder.address.addressLine2,
+              city: apiOrder.address.city,
+              state: apiOrder.address.state,
+              zipCode: apiOrder.address.postalCode,
+              country: apiOrder.address.country,
+              latitude: apiOrder.address.latitude,
+              longitude: apiOrder.address.longitude,
+            }
+          : undefined,
+        subtotal: parseFloat(apiOrder.subtotal_amount) || 0,
+        status: apiOrder.status?.code?.toLowerCase() || apiOrder.status,
+        createdAt: apiOrder.created_at
+          ? new Date(apiOrder.created_at)
+          : new Date(),
+        updatedAt: apiOrder.updated_at
+          ? new Date(apiOrder.updated_at)
+          : new Date(),
+        paymentMethod: apiOrder.payment_type?.code,
+        notes: apiOrder.observation,
+        becoinsUsed: parseFloat(apiOrder.total_becoin) || 0,
       }));
 
       set((state) => {
@@ -363,18 +537,47 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
       const orders = (response.data || []).map((apiOrder: any) => ({
         ...apiOrder,
         userId: apiOrder.user_id || "",
-        discount: apiOrder.discount_amount || 0,
-        deliveryFee: apiOrder.shipping_cost || 0,
-        total: apiOrder.total_amount || 0,
-        items: apiOrder.order_items || [],
+        discount: parseFloat(apiOrder.discount_amount) || 0,
+        deliveryFee: parseFloat(apiOrder.price_delivery) || 0,
+        total: parseFloat(apiOrder.total_amount) || 0,
+        items: (apiOrder.items || []).map((item: any) => ({
+          ...item,
+          id: item.id,
+          product_id: item.product_id,
+          quantity: item.quantity || item.ordered_quantity || 1,
+          price: parseFloat(item.unit_price) || 0,
+          subtotal: parseFloat(item.total_price) || 0,
+          priceBecoin: parseFloat(item.unit_becoin) || 0,
+          totalBecoin: parseFloat(item.total_becoin) || 0,
+          name:
+            item.name ||
+            `Producto ${item.product_id?.slice(-8) || "desconocido"}`,
+          image: item.image || undefined,
+        })),
         deliveryType: "home" as const,
-        deliveryAddress: apiOrder.shipping_address,
-        subtotal: apiOrder.subtotal_amount || 0,
-        status: apiOrder.status,
-        createdAt: apiOrder.created_at,
-        updatedAt: apiOrder.updated_at,
-        paymentMethod: apiOrder.payment_method,
-        notes: apiOrder.notes,
+        deliveryAddress: apiOrder.address
+          ? {
+              street: apiOrder.address.addressLine1,
+              additionalInfo: apiOrder.address.addressLine2,
+              city: apiOrder.address.city,
+              state: apiOrder.address.state,
+              zipCode: apiOrder.address.postalCode,
+              country: apiOrder.address.country,
+              latitude: apiOrder.address.latitude,
+              longitude: apiOrder.address.longitude,
+            }
+          : undefined,
+        subtotal: parseFloat(apiOrder.subtotal_amount) || 0,
+        status: apiOrder.status?.code?.toLowerCase() || apiOrder.status,
+        createdAt: apiOrder.created_at
+          ? new Date(apiOrder.created_at)
+          : new Date(),
+        updatedAt: apiOrder.updated_at
+          ? new Date(apiOrder.updated_at)
+          : new Date(),
+        paymentMethod: apiOrder.payment_type?.code,
+        notes: apiOrder.observation,
+        becoinsUsed: parseFloat(apiOrder.total_becoin) || 0,
       }));
 
       set((state) => {
@@ -446,8 +649,8 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
       );
 
       if (updatedOrder) {
-        // Update local state
-        get().updateOrderStatus(orderId, "delivered");
+        // Update local state with the updated order from backend
+        get().updateOrderFromApi(updatedOrder);
         console.log("✅ Store API: Reception confirmed");
         // reception confirmed
         set({ isLoading: false });
@@ -462,6 +665,39 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
         isLoading: false,
         error:
           error instanceof Error ? error.message : "Error confirming reception",
+      });
+      return false;
+    }
+  },
+
+  // Cancel order via API (admin or user depending on permissions)
+  cancelOrderApi: async (
+    orderId: string,
+    reason?: string
+  ): Promise<boolean> => {
+    set({ isLoading: true, error: undefined });
+
+    try {
+      console.log("🌐 Store API: Cancelling order via API:", orderId);
+      // OrderService.cancelOrder returns the updated order directly
+      const updatedOrder = await OrderService.cancelOrder(orderId, reason);
+
+      if (updatedOrder) {
+        // Update local state with the updated order from backend
+        get().updateOrderFromApi(updatedOrder);
+        console.log("✅ Store API: Order cancelled via API");
+        set({ isLoading: false });
+        return true;
+      }
+
+      set({ isLoading: false });
+      return false;
+    } catch (error) {
+      console.error("❌ Store API: Error cancelling order:", error);
+      set({
+        isLoading: false,
+        error:
+          error instanceof Error ? error.message : "Error cancelling order",
       });
       return false;
     }
@@ -488,6 +724,92 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
         currentOrder:
           state.currentOrder?.id === orderId
             ? updatedOrders.find((o) => o.id === orderId)
+            : state.currentOrder,
+      };
+
+      saveOrdersState(newState);
+      return newState;
+    });
+  },
+
+  // Update order from API response
+  updateOrderFromApi: (apiOrder: any) => {
+    set((state) => {
+      // Map API response to frontend format
+      const mappedOrder = {
+        ...apiOrder,
+        // Map status from object to string
+        status: apiOrder.status?.code?.toLowerCase() || apiOrder.status,
+        // Map address to deliveryAddress
+        deliveryAddress: apiOrder.address
+          ? {
+              street: apiOrder.address.addressLine1,
+              additionalInfo: apiOrder.address.addressLine2,
+              city: apiOrder.address.city,
+              state: apiOrder.address.state,
+              zipCode: apiOrder.address.postalCode,
+              country: apiOrder.address.country,
+              latitude: apiOrder.address.latitude,
+              longitude: apiOrder.address.longitude,
+            }
+          : undefined,
+        // Map dates
+        createdAt: apiOrder.created_at
+          ? new Date(apiOrder.created_at)
+          : new Date(),
+        updatedAt: apiOrder.updated_at
+          ? new Date(apiOrder.updated_at)
+          : new Date(),
+        deliveredAt: apiOrder.delivered_at
+          ? new Date(apiOrder.delivered_at)
+          : undefined,
+        estimatedDelivery: apiOrder.delivery_at
+          ? new Date(apiOrder.delivery_at)
+          : undefined,
+        // Map numeric fields
+        subtotal: parseFloat(apiOrder.subtotal_amount) || 0,
+        total: parseFloat(apiOrder.total_amount) || 0,
+        deliveryFee: parseFloat(apiOrder.price_delivery) || 0,
+        discount: 0, // Not provided in API response
+        // Map items
+        items: (apiOrder.items || []).map((item: any) => ({
+          ...item,
+          id: item.id,
+          product_id: item.product_id,
+          quantity: item.quantity || item.ordered_quantity || 1,
+          price: parseFloat(item.unit_price) || 0,
+          subtotal: parseFloat(item.total_price) || 0,
+          priceBecoin: parseFloat(item.unit_becoin) || 0,
+          totalBecoin: parseFloat(item.total_becoin) || 0,
+          // These will be enriched later with product info
+          name:
+            item.name ||
+            `Producto ${item.product_id?.slice(-8) || "desconocido"}`,
+          image: item.image || undefined,
+        })),
+        // Map other fields
+        deliveryType: "home" as const,
+        groupId: apiOrder.group_id,
+        notes: apiOrder.observation,
+        paymentMethod: apiOrder.payment_type?.code,
+        becoinsUsed: parseFloat(apiOrder.total_becoin) || 0,
+      };
+
+      const updatedOrders = state.orders.map((order) =>
+        order.id === mappedOrder.id ? mappedOrder : order
+      );
+
+      // If order doesn't exist in local state, add it
+      if (!updatedOrders.find((o) => o.id === mappedOrder.id)) {
+        updatedOrders.push(mappedOrder);
+      }
+
+      const newState = {
+        ...state,
+        orders: updatedOrders,
+        currentOrder:
+          state.currentOrder?.id === mappedOrder.id
+            ? mappedOrder
             : state.currentOrder,
       };
 
@@ -590,7 +912,12 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
       completedOrders: orders.filter((o) => o.status === "delivered").length,
       totalSpent: orders
         .filter((o) => o.status === "delivered")
-        .reduce((sum, o) => sum + o.total, 0),
+        .reduce(
+          (sum, o) =>
+            sum +
+            (typeof o.total === "number" ? o.total : parseFloat(o.total) || 0),
+          0
+        ),
     };
   },
 

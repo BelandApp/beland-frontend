@@ -1,11 +1,7 @@
 import React, { useState } from "react";
 import { View, ScrollView, Text } from "react-native";
-import { Card } from "../../components/ui/Card";
-import { CustomAlert } from "../../components/ui/CustomAlert";
-import { ConfirmationAlert } from "../../components/ui/ConfirmationAlert";
-import { colors } from "../../styles/colors";
+import { Card } from "@/components/ui";
 import { Reward } from "./types";
-import { useCustomAlert } from "../../hooks/useCustomAlert";
 
 // Hooks
 import {
@@ -20,8 +16,8 @@ import { CategoryFilter, RewardsGrid } from "./components";
 // Styles
 import { containerStyles } from "./styles";
 import { ThemedHeader } from "src/components/shared/headers/Header";
-import { BeCoinsBalance } from "src/components/ui";
-import { headerStyles } from "../Payment";
+import { BeCoinsBalance } from "@components/shared";
+import { useCustomNavigation, useNotify } from "src/hooks";
 
 export const RewardsScreen = () => {
   // Hooks personalizados
@@ -29,36 +25,29 @@ export const RewardsScreen = () => {
   const { filteredRewards } = useRewardsFiltering(selectedCategory);
   const { userBalance, canAffordReward, spendCoins, formatBalance } =
     useUserBalance();
-  const { showAlert, alertConfig, showCustomAlert, hideAlert } =
-    useCustomAlert();
-
+  const notify = useNotify();
+  const { navigate } = useCustomNavigation();
   // Estado para manejar la confirmación del canje
   const [pendingReward, setPendingReward] = useState<Reward | null>(null);
-  const [showConfirmation, setShowConfirmation] = useState(false);
 
   // Función para manejar el canje de recompensas
   const handleClaimReward = (reward: Reward) => {
     if (!reward.available) {
-      showCustomAlert(
-        "Recompensa agotada",
-        "Esta recompensa ya no está disponible.",
-        "error"
-      );
+      notify.error({ message: "Esta recompensa ya ha sido canjeada." });
       return;
     }
 
     if (!canAffordReward(reward)) {
-      showCustomAlert(
-        "Saldo insuficiente",
-        `Necesitas ${reward.cost} BeCoins para canjear esta recompensa. Tu saldo actual es ${userBalance} BeCoins.`,
-        "error"
-      );
+      notify.confirm({
+        message: `Necesitas ${reward.cost} BeCoins para canjear esta recompensa. Tu saldo actual es ${userBalance} BeCoins. Quieres recargar?`,
+        onConfirm: () => navigate("RechargeScreen"),
+        onCancel: cancelRewardClaim,
+      });
       return;
     }
 
     // Mostrar confirmación personalizada
     setPendingReward(reward);
-    setShowConfirmation(true);
   };
 
   // Función para confirmar el canje después del alert
@@ -74,27 +63,21 @@ export const RewardsScreen = () => {
     if (success) {
       // Obtener el balance actualizado después del gasto
       const newBalance = userBalance - pendingReward.cost;
-      showCustomAlert(
-        "¡Canje exitoso!",
-        `Has canjeado "${pendingReward.title}". Tu nuevo saldo es ${newBalance} BeCoins.`,
-        "success"
-      );
+      notify.success({
+        message: `Has canjeado "${pendingReward.title}". Tu nuevo saldo es ${newBalance} BeCoins.`,
+      });
     } else {
-      showCustomAlert(
-        "Error",
-        "No tienes suficientes BeCoins para este canje.",
-        "error"
-      );
+      notify.error({
+        message: "No tienes suficientes BeCoins para canjear esta recompensa.",
+      });
     }
 
     // Limpiar estado
     setPendingReward(null);
-    setShowConfirmation(false);
   };
 
   const cancelRewardClaim = () => {
     setPendingReward(null);
-    setShowConfirmation(false);
   };
 
   const getSectionTitle = () => {
@@ -124,10 +107,7 @@ export const RewardsScreen = () => {
 
         {/* Banner destacado */}
         <View style={containerStyles.featuredSection}>
-          <Card
-            style={containerStyles.featuredCard}
-            backgroundColor={colors.belandOrange + "25"}
-          >
+          <Card style={containerStyles.featuredCard}>
             <View style={containerStyles.featuredContent}>
               <View style={containerStyles.featuredText}>
                 <Text style={containerStyles.featuredTitle}>
@@ -154,32 +134,6 @@ export const RewardsScreen = () => {
 
         <View style={containerStyles.bottomSpacing} />
       </ScrollView>
-
-      {/* ConfirmationAlert para canje */}
-      <ConfirmationAlert
-        visible={showConfirmation}
-        title="Confirmar canje"
-        message={`¿Deseas canjear "${pendingReward?.title}" por ${pendingReward?.cost} BeCoins?`}
-        onConfirm={confirmRewardClaim}
-        onCancel={cancelRewardClaim}
-        confirmText="Canjear"
-        cancelText="Cancelar"
-        type="info"
-        icon="🎁"
-      />
-
-      {/* CustomAlert para notificaciones */}
-      <CustomAlert
-        visible={showAlert}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        type={alertConfig.type}
-        onClose={hideAlert}
-        primaryButton={{
-          text: "OK",
-          onPress: hideAlert,
-        }}
-      />
     </View>
   );
 };

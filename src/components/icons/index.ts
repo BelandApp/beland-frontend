@@ -1,6 +1,5 @@
 export { CommunityIcon } from "./CommunityIcon";
-export { CobrarIcon } from "./CobrarIcon";
-
+export { BelandLogo } from "./BelandLogo";
 export { TreesIcon } from "./TreesIcon";
 export { WaterIcon } from "./WaterIcon";
 export { WeightIcon } from "./WeightIcon";
@@ -25,5 +24,5 @@ export { OrderIcon } from "./OrderIcon";
 export { RecyclingMarker } from "./RecyclingMarker";
 export { PhoneMapSVG } from "./PhoneMapSVG";
 export { RechargeIcon, SettingsIcon } from "./WalletIcons";
-
+export {CobrarIcon} from "./CobrarIcon"
 export { PaymentPreferencesIcon } from "./PaymentPreferencesIcon";

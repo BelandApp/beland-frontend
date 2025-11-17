@@ -22,15 +22,17 @@ export const useValidation = () => {
   const validatePhone = (phone: string) =>
     /^\+?[1-9]\d{1,3}\d{6,14}$/.test(phone.replace(/\s+/g, ""));
 
+  // Codigo de verificacion enviado al mail
+  const validateCode = (code: string) => /^\d{6}$/.test(code.replace(/\s+/g, ""));
   /** Validación genérica de formulario */
   const validateForm = (data: {
     name?: string;
     email?: string;
     phone?: string;
     password?: string;
+    code?: string;
   }) => {
     const newErrors: Record<string, string> = {};
-    console.log(data.phone);
     if (data.name !== undefined && !validateName(data.name))
       newErrors.name = "El nombre debe tener al menos 3 letras.";
 
@@ -43,7 +45,8 @@ export const useValidation = () => {
     if (data.password !== undefined && !validatePassword(data.password))
       newErrors.password =
         "La contraseña debe tener al menos 6 caracteres, una mayúscula, una minúscula y un símbolo.";
-
+    if(data.code !== undefined && !validateCode(data.code))
+      newErrors.code = "El código debe tener 6 dígitos.";
     setErrors(newErrors);
     const valid = Object.keys(newErrors).length === 0;
     setIsValid(valid);

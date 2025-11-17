@@ -18,20 +18,17 @@ import {
 } from "lucide-react-native";
 import { useEventStore } from "src/stores/Event";
 import { colors } from "src/styles";
-import { useCustomAlert } from "src/hooks";
-import { CustomAlert } from "src/components/ui";
 import { eventsService } from "src/services/events";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
+import { useNotify } from "src/hooks";
 
 export const AcquiredEventModal = ({ route }: { route: any }) => {
   const { id_modal } = route.params;
   const { getAcquiredEvent } = useEventStore();
   const event = getAcquiredEvent(id_modal);
   const { navigate, goBack } = useCustomNavigation();
-  const { showCustomAlert, alertConfig, showAlert, hideAlert } =
-    useCustomAlert();
+  const notify = useNotify()
   const [visibleImage, setVisibleImage] = useState(0);
-  console.log(event);
   if (!event) return null;
 
   const {
@@ -85,12 +82,12 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
 
   const handleUse = () => navigate("UseEventScreen", { id: id_modal });
   const handleRefund = async () => {
-    showCustomAlert("Procesando reembolso...", "", "info");
+    notify.info({ message: "Procesando reembolso..." });
     if (!purchase_price || !user_pass_id)
       return Alert.alert("Error", "No se pudo procesar el reembolso");
     if (purchase_price === "0.00") {
       const response = await eventsService.refundEvent(user_pass_id);
-      alert(response.message);
+      notify.info(response.message);
     }
   };
 
@@ -201,13 +198,6 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
           </View>
         </ScrollView>
       </View>
-      <CustomAlert
-        visible={showAlert}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        type={alertConfig.type}
-        onClose={hideAlert}
-      />
     </View>
   );
 };

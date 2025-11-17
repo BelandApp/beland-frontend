@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  StyleSheet,
-  View,
-  Text,
-  Platform,
-  TouchableOpacity,
-} from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { CircleArrowLeftIcon } from "lucide-react-native";
 import BelandLogo from "src/components/icons/BelandLogo";
 import { UserMenu } from "src/components/ui/UserMenu";
@@ -16,25 +10,35 @@ type HeaderProps = {
   title?: string;
   logo?: boolean;
   canGoBack?: boolean;
+  onBackPress?: () => void;
   buttons?: React.ReactNode;
-  centerTitle?: boolean; // nueva opción
+  centerTitle?: boolean;
 };
 
 export const ThemedHeader: React.FC<HeaderProps> = ({
   title,
   logo,
   canGoBack = false,
+  onBackPress,
   buttons,
   centerTitle = false,
 }) => {
   const { navigate } = useCustomNavigation();
+
+  const handleBackPress = () => {
+    if (onBackPress) {
+      onBackPress();
+    } else {
+      navigate("MainTabs", { screen: "Home" });
+    }
+  };
 
   const renderLeftContent = () => {
     if (logo) {
       return (
         <TouchableOpacity
           style={HeaderStyles.logoContainer}
-          onPress={() => navigate("MainTabs")}
+          onPress={() => navigate("MainTabs", { screen: "Home" })}
         >
           <BelandLogo width={120} height={32} />
         </TouchableOpacity>
@@ -44,7 +48,7 @@ export const ThemedHeader: React.FC<HeaderProps> = ({
     return (
       <View style={HeaderStyles.left}>
         {canGoBack && (
-          <TouchableOpacity onPress={() => navigate("MainTabs")}>
+          <TouchableOpacity onPress={handleBackPress}>
             <CircleArrowLeftIcon size={32} color="#FFF" />
           </TouchableOpacity>
         )}

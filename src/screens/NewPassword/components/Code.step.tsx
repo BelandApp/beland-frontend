@@ -2,7 +2,8 @@ import { CustomInput } from "src/components/shared";
 import { View, Text, TouchableHighlight, StyleSheet } from "react-native";
 import { useEffect, useState } from "react";
 import { CodeStepProps } from "src/types";
-import ThemedButton from "src/components/shared/buttons/Themed.button";
+import { Button } from "@components/shared";
+import { useValidation } from "src/hooks/form/useValidation";
 const CodeStep: React.FC<CodeStepProps> = ({
   onSubmit,
   onResendCode,
@@ -11,15 +12,21 @@ const CodeStep: React.FC<CodeStepProps> = ({
 }) => {
   const [code, setCode] = useState("");
   const [count, setCount] = useState<number>(50);
+  const {validateForm, errors}=useValidation()
   setTimeout(() => {
     if (count > 0) {
       setCount(count - 1);
     }
   }, 1000);
 
+  const handleSubmit = () => {
+    const isValid = validateForm({ code });
+    if(!isValid) return
+    onSubmit(code);
+  }
   const handleResendCode = () => {
     onResendCode();
-    setCount(50);
+    setCount(150);
   }
   return (
     <View>
@@ -31,17 +38,20 @@ const CodeStep: React.FC<CodeStepProps> = ({
         onChangeText={(text) => setCode(text)}
         value={code}
         maxLength={6}
+        keyboardType="numeric"
+        error={errors.code}
+        onBlur={()=>{validateForm({ code })}}
       />
       <View style={styles.rowContainer}>
-        <ThemedButton
-          label="Volver"
+        <Button
+          title="Volver"
           onPress={onStepBack}
           variant="primary"
           style={{ paddingLeft: 0 }}
         />
-        <ThemedButton
-          label="Siguiente"
-          onPress={() => onSubmit(code)}
+        <Button
+          title="Confirmar"
+          onPress={handleSubmit}
           variant="secondary"
           disabled={!code}
           isLoading={isLoading}
@@ -52,8 +62,8 @@ const CodeStep: React.FC<CodeStepProps> = ({
           ¿No recibiste el código? {""}
           {count > 0 && count}
         </Text>
-        <ThemedButton
-          label="Reenviar"
+        <Button
+          title="Reenviar"
           onPress={handleResendCode}
           variant="primary"
           disabled={count != 0}

@@ -1,9 +1,5 @@
-export { Button } from "./Button";
 export { Card } from "./Card";
-export { CustomAlert } from "./CustomAlert";
-export { ConfirmationAlert } from "./ConfirmationAlert";
 export { FloatingQRButton } from "./FloatingQRButton";
-export { EnhancedInput } from "./EnhancedInput";
-export { BeCoinsBalance } from "./BeCoinsBalance";
-export { AddParticipantModal } from "./AddParticipantModal";
 export { InstagramSearchInput } from "./InstagramSearchInput";
+
+export * from "./waves"

@@ -7,7 +7,7 @@ import EmpresaPanel from "./components/EmpresaPanel";
 import {UserPanel }from "./components/panels";
 import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 
-const UserDashboard: React.FC = () => {
+export const UserDashboard: React.FC = () => {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {

@@ -6,11 +6,3 @@ html body #root {
   scrollbar-width: none;
   overflow-y: scroll;
 }
-/* Eliminar borde negro de TextInput en focus en React Native Web */
-textarea:focus,
-input:focus,
-.css-textinput-11aywtz:focus, .css-text-146c3p1:focus {
-  outline: none !important;
-  box-shadow: none !important;
-  /* border: none !important; */
-}

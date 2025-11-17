@@ -16,18 +16,20 @@ export const useResetPassword = () => {
   const handleMail = async (email: string) => {
     setFormData({ ...FormData, email });
     setLoading(true);
-    const res = await authService.sendCodeToEmail(email);
+    const res = await authService.sendCodeToEmailForgotPassword(email);
+    console.log(res)
     setLoading(false);
-    if (!res) return;
+    // if (!res) return;
     //  TODO notificar al usuario
     setStep("code");
   };
   const handleCode = async (code: string) => {
     setFormData({ ...FormData, code });
+    console.log(FormData)
     setLoading(true);
     const res = await authService.checkCode({
       email: FormData.email,
-      code: FormData.code,
+      code,
     });
     setLoading(false);
     if (!res) return;
@@ -41,14 +43,14 @@ export const useResetPassword = () => {
     setLoading(false);
     if (!res) return;
     //  TODO notificar al usuario
-    navigate("MainTabs");
+    navigate("MainTabs", { screen: "Home" });
   };
   const handleStepBack = () => {
     setStep("email");
   };
   const handleReSendCode = async () => {
     if (!FormData.email) return;
-    await authService.sendCodeToEmail(FormData.email);
+    await authService.sendCodeToEmailForgotPassword(FormData.email);
     //  TODO notificar al usuario
   };
   return {

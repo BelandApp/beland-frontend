@@ -57,7 +57,8 @@ class AddressService {
         if (Array.isArray(response[0])) {
           addressesRaw = response[0];
         } else {
-          addressesRaw = response;
+          // Si el backend retorna [UserAddress[], number], entonces response[0] son las direcciones
+          addressesRaw = response[0] || [];
         }
       } else if (Array.isArray((response as any).addresses)) {
         addressesRaw = (response as any).addresses;
@@ -99,7 +100,36 @@ class AddressService {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      return this.mapAddressResponse(response);
+
+      // Normalize possible wrapped responses. Backend might return:
+      // - the address object directly
+      // - { data: address }
+      // - { address: address }
+      // - [address] or [[address], meta]
+      let addressRaw: any = response;
+      if (response && typeof response === "object") {
+        if (
+          (response as any).data &&
+          typeof (response as any).data === "object" &&
+          !Array.isArray((response as any).data)
+        ) {
+          addressRaw = (response as any).data;
+        } else if ((response as any).address) {
+          addressRaw = (response as any).address;
+        } else if (Array.isArray(response)) {
+          if (
+            response.length > 0 &&
+            Array.isArray(response[0]) &&
+            response[0].length > 0
+          ) {
+            addressRaw = response[0][0];
+          } else if (response.length > 0 && typeof response[0] === "object") {
+            addressRaw = response[0];
+          }
+        }
+      }
+
+      return this.mapAddressResponse(addressRaw);
     } catch (error) {
       console.error("Error creating address:", error);
       throw error;
@@ -151,22 +181,25 @@ class AddressService {
 
   // Helper para mapear respuesta del backend
   private mapAddressResponse(response: any): UserAddress {
+    const r = response || {};
     return {
-      id: response.id,
-      user_id: response.user_id,
-      addressLine1: response.addressLine1 || response.address_line_1,
-      addressLine2: response.addressLine2 || response.address_line_2,
-      city: response.city,
-      state: response.state,
-      country: response.country,
-      postalCode: response.postalCode || response.postal_code,
-      latitude: response.latitude ? parseFloat(response.latitude) : undefined,
-      longitude: response.longitude
-        ? parseFloat(response.longitude)
-        : undefined,
-      isDefault: response.isDefault || response.is_default || false,
-      created_at: new Date(response.created_at),
-      updated_at: new Date(response.updated_at),
+      id: r.id,
+      user_id: r.user_id,
+      addressLine1:
+        r.addressLine1 || r.address_line_1 || r.street || r.address || "",
+      addressLine2:
+        r.addressLine2 || r.address_line_2 || r.additionalInfo || "",
+      city: r.city || r.town || "",
+      state: r.state || r.province || "",
+      country: r.country || "",
+      postalCode: r.postalCode || r.postal_code || r.zip || "",
+      latitude:
+        r.latitude !== undefined ? parseFloat(String(r.latitude)) : undefined,
+      longitude:
+        r.longitude !== undefined ? parseFloat(String(r.longitude)) : undefined,
+      isDefault: !!(r.isDefault || r.is_default),
+      created_at: r.created_at ? new Date(r.created_at) : new Date(),
+      updated_at: r.updated_at ? new Date(r.updated_at) : new Date(),
     };
   }
 

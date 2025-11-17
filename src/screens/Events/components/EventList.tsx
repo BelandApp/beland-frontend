@@ -6,7 +6,7 @@ import { colors } from "src/styles";
 import { AcquiredEventCard } from "./AcquiredEventCard";
 import { Event } from "src/stores/Event";
 import { useAuth } from "src/context";
-import { Button } from "src/components/ui";
+import { Button } from "@/components/shared";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 export const EventsList = ({ events, tab }: any) => {
@@ -16,18 +16,17 @@ export const EventsList = ({ events, tab }: any) => {
     return (
       <View style={styles.emptyContainer}>
         <Ticket color={colors.textSecondary} size={48} />
-        {tab === "available" ? (
+        {tab === "Disponibles" ? (
           <Text style={styles.emptyText}>
             No hay eventos disponibles por ahora.
           </Text>
         ) : (
           <>
-            <Text style={styles.emptyText}>Aún no has adquirido eventos."</Text>
+            <Text style={styles.emptyText}>Aún no has adquirido eventos.</Text>
             {!isAuthenticated && (
-              <>
+                <>
                 <Button
-                  variant="ghost"
-                  style={{ margin: 0, padding: 0 }}
+                  variant="inline"
                   title="Inicia Sesion"
                   onPress={() => navigate("Login")}
                 />
@@ -58,7 +57,6 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     flexDirection: "row",
     gap: 16,
-    paddingHorizontal: 8,
     marginBottom: 80, // TODO chequear despues para vista celular
     justifyContent: "center",
   },

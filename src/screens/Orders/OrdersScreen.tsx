@@ -23,7 +23,7 @@ type OrdersScreenNavigationProp = StackNavigationProp<
 >;
 
 const OrdersScreen: React.FC = () => {
-    const { navigate, goBack } = useCustomNavigation();
+  const { navigate, goBack } = useCustomNavigation();
 
   const { orders, isLoading, getOrderSummary, loadUserOrders } =
     useOrdersStoreAPI();
@@ -149,28 +149,46 @@ const OrdersScreen: React.FC = () => {
     }
   };
 
-  const formatDate = (date: Date): string => {
+  const formatDate = (date: Date | string | undefined): string => {
+    if (!date) return "Fecha no disponible";
+
+    const dateObj = typeof date === "string" ? new Date(date) : date;
+
+    // Check if date is valid
+    if (isNaN(dateObj.getTime())) return "Fecha inválida";
+
     const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffTime = Math.abs(now.getTime() - dateObj.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
     if (diffDays === 1) return "Hoy";
     if (diffDays === 2) return "Ayer";
     if (diffDays <= 7) return `Hace ${diffDays - 1} días`;
 
-    return date.toLocaleDateString("es-ES", {
+    return dateObj.toLocaleDateString("es-ES", {
       day: "2-digit",
       month: "short",
       year: "numeric",
     });
   };
 
-  const formatCurrency = (amount: number): string => {
-    return `$${amount.toFixed(2)}`;
+  const formatCurrency = (amount: number | string): string => {
+    const numericAmount =
+      typeof amount === "string" ? parseFloat(amount) : amount;
+
+    if (isNaN(numericAmount)) {
+      console.warn("formatCurrency: Invalid amount received:", amount);
+      return "$0.00";
+    }
+
+    return `$${numericAmount.toFixed(2)}`;
   };
 
   const handleOrderPress = (order: Order) => {
-    navigate("Orders", { screen: "OrderDetail", params: { orderId: order.id } });
+    navigate("Orders", {
+      screen: "OrderDetail",
+      params: { orderId: order.id },
+    });
   };
 
   const renderSummaryCard = () => (

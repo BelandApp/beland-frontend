@@ -1,0 +1,5 @@
+// TODO CHEQUEAR SI SE USA
+export const UI_CONSTANTS = {
+  MAX_PRODUCTS_PREVIEW: 2,
+  TIME_INPUT_MAX_LENGTH: 5,
+} as const;

@@ -1,19 +1,16 @@
-import { useCartStore } from "../../stores/useCartStore";
-import { useGroupAdminStore } from "../../stores/groupStores";
+import { useCartStore } from "@/stores/useCartStore";
+import { useGroupAdminStore } from "@/stores/groupStores";
 import React, { useState } from "react";
 import { View, ScrollView, Dimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { CustomAlert } from "../../components/ui/CustomAlert";
-import { ConfirmationAlert } from "../../components/ui/ConfirmationAlert";
-import { WaveBottomGray } from "../../components/icons";
+import { WaveBottomGray } from "@/components/icons";
 import { GroupService } from "@services/core";
-import { InstagramUser } from "../../services/instagramService";
-import { Participant } from "../../types";
-import { useCreateGroupStore } from "../../stores/useCreateGroupStore";
+import { InstagramUser } from "@/services/instagramService";
+import { useCreateGroupStore } from "@stores/useCreateGroupStore";
 import * as Haptics from "expo-haptics";
 
 // Validación y utilidades
-import { validateGroupForm } from "../../business/validation/groupValidation";
+import { validateGroupForm } from "@/business/validation/groupValidation";
 import { formatTimeInput, formatPersonName } from "./business/textUtils";
 
 // Hooks personalizados
@@ -32,6 +29,8 @@ import {
 
 // Estilos
 import { createGroupStyles } from "./styles";
+import { Participant } from "src/types";
+import { useNotify } from "src/hooks";
 
 export const CreateGroupScreen = ({ navigation, route }: any) => {
   // Hooks de Zustand para carrito y productos de grupo (deben ir dentro del componente)
@@ -70,7 +69,7 @@ export const CreateGroupScreen = ({ navigation, route }: any) => {
   // Estado para el usuario de Instagram seleccionado
   const [selectedInstagramUser, setSelectedInstagramUser] =
     useState<InstagramUser | null>(null);
-
+  const notify = useNotify();
   const {
     showTimeModal,
     selectedHour,
@@ -97,37 +96,10 @@ export const CreateGroupScreen = ({ navigation, route }: any) => {
 
   // Estados locales
   const [isLoading, setIsLoading] = useState(false);
-  const [showAlert, setShowAlert] = useState(false);
-  const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
-
-  const [
-    showRemoveParticipantConfirmation,
-    setShowRemoveParticipantConfirmation,
-  ] = useState(false);
+  const [newGoupId, setNewGroupId] = useState<string | null>(null);
   const [participantToRemove, setParticipantToRemove] = useState<string | null>(
     null
   );
-  const [alertConfig, setAlertConfig] = useState<{
-    title: string;
-    message: string;
-    type: "success" | "error" | "info";
-    groupId?: string;
-  }>({
-    title: "",
-    message: "",
-    type: "info",
-    groupId: undefined,
-  });
-
-  // Función para mostrar alertas
-  const showCustomAlert = (
-    title: string,
-    message: string,
-    type: "success" | "error" | "info" = "info"
-  ) => {
-    setAlertConfig({ title, message, type });
-    setShowAlert(true);
-  };
 
   // Validación del formulario
   const validateForm = (): boolean => {
@@ -281,7 +253,11 @@ export const CreateGroupScreen = ({ navigation, route }: any) => {
     // Buscar el participante para obtener su nombre
     const participant = participants.find((p) => p.id === id);
     setParticipantToRemove(id);
-    setShowRemoveParticipantConfirmation(true);
+    notify.confirm({
+      message: `¿Deseas eliminar a ${participant?.name}?`,
+      onConfirm: confirmRemoveParticipant,
+      onCancel: ()=> setParticipantToRemove(null)
+    });
   };
 
   const confirmRemoveParticipant = () => {
@@ -289,7 +265,6 @@ export const CreateGroupScreen = ({ navigation, route }: any) => {
       removeParticipant(participantToRemove);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
     }
-    setShowRemoveParticipantConfirmation(false);
     setParticipantToRemove(null);
   };
 
@@ -307,7 +282,10 @@ export const CreateGroupScreen = ({ navigation, route }: any) => {
 
     if (hasFormData) {
       // Mostrar confirmación si hay datos
-      setShowCancelConfirmation(true);
+      notify.confirm({
+        message: "¿Deseas salir sin guardar?",
+        onConfirm: confirmBackToGroups,
+      });
     } else {
       // Navegar directamente si no hay datos
       confirmBackToGroups();
@@ -317,18 +295,16 @@ export const CreateGroupScreen = ({ navigation, route }: any) => {
   const confirmBackToGroups = () => {
     // Limpiar el store antes de navegar
     clearGroup();
-    setShowCancelConfirmation(false);
     navigation.navigate("Groups", { screen: "GroupsList" });
   };
 
   // Crear grupo
   const handleCreateGroup = async () => {
     if (!validateForm()) {
-      showCustomAlert(
-        "Formulario incompleto",
-        "Por favor completa todos los campos requeridos correctamente.",
-        "error"
-      );
+      notify.error({
+        message:
+          "Por favor completa todos los campos requeridos correctamente.",
+      });
       return;
     }
 
@@ -343,37 +319,24 @@ export const CreateGroupScreen = ({ navigation, route }: any) => {
         delivery_time: deliveryTime,
         // Note: participants will be added separately if needed
       });
+      notify.success({ message: "¡Grupo creado!" });
+      setNewGroupId(newGroup.id);
 
-      setAlertConfig({
-        title: "¡Grupo creado!",
-        message:
-          "Ahora puedes agregar productos y asignar consumos a los participantes desde la administración del grupo.",
-        type: "success",
-        // Guardar el id del grupo para usarlo en el handler
-        groupId: newGroup.id,
-      });
-      setShowAlert(true);
       clearGroup();
     } catch (error) {
-      showCustomAlert(
-        "Error al crear grupo",
-        "Hubo un problema al crear el grupo. Por favor intenta nuevamente.",
-        "error"
-      );
+      notify.error({ message: "Hubo un problema al crear el grupo." });
       console.error("Error creating group:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Función que se ejecuta cuando se cierra el alert
-  const handleAlertClose = () => {
-    setShowAlert(false);
-  };
-
   const handleGoToGroupAdmin = () => {
-    setShowAlert(false);
-    const groupId = alertConfig.groupId;
+    const groupId = newGoupId;
+    if (!groupId) {
+      notify.error({ message: "Hubo un problema al crear el grupo." });
+      return;
+    }
     if (typeof groupId === "string" && groupId.length > 0) {
       // Mover productos del carrito al grupo
       if (cartProducts && cartProducts.length > 0) {
@@ -396,7 +359,6 @@ export const CreateGroupScreen = ({ navigation, route }: any) => {
   };
 
   const handleGoToGroupsList = () => {
-    setShowAlert(false);
     navigation.navigate("Groups", { screen: "GroupsList" });
   };
 
@@ -449,56 +411,7 @@ export const CreateGroupScreen = ({ navigation, route }: any) => {
         <WaveBottomGray width={Dimensions.get("window").width} height={120} />
       </View>
 
-      {/* Alerta personalizada */}
-      <CustomAlert
-        visible={showAlert}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        type={alertConfig.type}
-        onClose={handleAlertClose}
-        primaryButton={{
-          text: "Ir a administrar grupo",
-          onPress: handleGoToGroupAdmin,
-        }}
-        secondaryButton={{
-          text: "Volver a grupos",
-          onPress: handleGoToGroupsList,
-        }}
-      />
-
-      {/* Alerta de confirmación para cancelar */}
-      <ConfirmationAlert
-        visible={showCancelConfirmation}
-        title="¿Cancelar creación del grupo?"
-        message="Se perderán todos los datos ingresados. Esta acción no se puede deshacer."
-        confirmText="Sí, cancelar"
-        cancelText="Continuar editando"
-        type="warning"
-        icon="⚠️"
-        onConfirm={confirmBackToGroups}
-        onCancel={() => setShowCancelConfirmation(false)}
-      />
-
-      {/* Alerta de confirmación para eliminar participante */}
-      <ConfirmationAlert
-        visible={showRemoveParticipantConfirmation}
-        title="¿Eliminar participante?"
-        message={`¿Estás seguro de que quieres eliminar a ${
-          participantToRemove
-            ? participants.find((p) => p.id === participantToRemove)?.name ||
-              "este participante"
-            : "este participante"
-        } del grupo?`}
-        confirmText="Sí, eliminar"
-        cancelText="Cancelar"
-        type="danger"
-        icon="👥"
-        onConfirm={confirmRemoveParticipant}
-        onCancel={() => {
-          setShowRemoveParticipantConfirmation(false);
-          setParticipantToRemove(null);
-        }}
-      />
+     
 
       {/* Modal de ubicación */}
       <LocationModal

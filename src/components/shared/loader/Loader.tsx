@@ -19,12 +19,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 32,
-    backgroundColor: "#fff",
-    borderRadius: 50,
     width: 150,
     alignSelf: "center",
-    borderWidth: 1,
-    borderColor: colors.belandOrange
   },
   loadingText: {
     fontSize: 14,

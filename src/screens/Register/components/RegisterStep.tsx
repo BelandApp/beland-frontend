@@ -1,6 +1,6 @@
 import { View, Text } from "react-native";
 import { CustomInput, PhoneInput } from "src/components/shared";
-import ThemedButton from "src/components/shared/buttons/Themed.button";
+import { Button } from "@components/shared";
 import { RegisterFormData } from "../RegisterScreen";
 import { styles } from "../styles";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
@@ -48,16 +48,16 @@ const RegisterStep: React.FC<RegisterStepProps> = ({
         secureTextEntry
         error={errors.password}
       />
-      <ThemedButton
-        label="Registrarse"
+      <Button
+        title="Registrarse"
         onPress={handleRegister}
         variant="secondary"
         isLoading={isLoading}
       />
       <View style={styles.containerRow}>
         <Text style={styles.subtitle}>¿Ya tienes cuenta? </Text>
-        <ThemedButton
-          label="Ingresar"
+        <Button
+          title="Ingresar"
           onPress={() => navigate("Login")}
           style={styles.buttonLink}
           isLoading={isLoading}

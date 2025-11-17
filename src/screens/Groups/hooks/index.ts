@@ -1,4 +1,3 @@
-export { useGroupsTabs } from "./useGroupsTabs";
 export { useGroupsNavigation } from "./useGroupsNavigation";
 export { useGroups } from "./useGroups";
 export { useGroupsUtils } from "./useGroupsUtils";

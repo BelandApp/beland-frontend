@@ -1,14 +1,10 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
-import { BeCoinIcon } from "../icons/BeCoinIcon";
-import { useBeCoinsStore } from "../../stores/useBeCoinsStore";
+import { BeCoinIcon } from "@components/icons";
+import { useBeCoinsStore } from "@stores/useBeCoinsStore";
 import {
-  formatBeCoins,
-  formatBeCoinsWithValue,
-  BECOIN_CONFIG,
   convertBeCoinsToUSD,
-} from "../../constants";
-import { colors } from "../../styles/colors";
+} from "@constants/index";
 
 interface BeCoinsBalanceProps {
   onPress?: () => void;

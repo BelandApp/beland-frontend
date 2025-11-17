@@ -1,10 +1,4 @@
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import {
   makeRedirectUri,
   useAuthRequest,
@@ -12,7 +6,7 @@ import {
   useAutoDiscovery,
 } from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
-import { Alert, Platform } from "react-native";
+import { Platform } from "react-native";
 import Constants from "expo-constants";
 import { authService } from "src/services/auth/auth.service";
 import { TokenService } from "src/services/auth/token.service";
@@ -23,6 +17,8 @@ import { useBeCoinsStore } from "src/stores/useBeCoinsStore";
 import { useOrdersStoreAPI } from "src/stores/useOrdersStoreAPI";
 import { useCreateGroupStore } from "src/stores/useCreateGroupStore";
 import { useAuthTokenStore } from "src/stores/useAuthTokenStore";
+import { getBackendErrorMessage } from "src/services";
+import { notify } from "src/hooks/notification/notify.external";
 
 export type User = {
   id: string;
@@ -39,7 +35,10 @@ type AuthContextType = {
   user: User | null;
   token: string | null;
   isLoading: boolean;
-  loginWithEmail: (email: string, password: string) => Promise<void>;
+  loginWithEmail: (
+    email: string,
+    password: string
+  ) => Promise<{ token: string | null }>;
   handleAuth0Login: () => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
@@ -83,6 +82,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           const me = await authService.getCurrentUser(savedToken);
           setToken(savedToken);
           setUser(me);
+          // Sync with useAuthTokenStore
+          useAuthTokenStore.getState().setToken(savedToken);
+          useAuthTokenStore.getState().setUser(me);
         } catch (e) {
           await TokenService.clearToken();
         }
@@ -91,16 +93,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     })();
   }, []);
 
-  const discovery = useAutoDiscovery(`https://${auth0Domain}`);
+  const redirectUrl = makeRedirectUri({
+    path: Platform.select({ web: undefined, default: "callback" }),
+    preferLocalhost: true,
+  });
+  // Development URL:
+  // NATIVE> exp://localhost:8081/--/callback WEB> http://localhost:8081
 
+  const discovery = useAutoDiscovery(`https://${auth0Domain}`);
   const [request, response, promptAsync] = useAuthRequest(
     {
       clientId: Platform.OS === "web" ? clientWebId : clientNativeId,
-      redirectUri: makeRedirectUri({
-        scheme: scheme,
-        path: Platform.select({ web: undefined, default: "callback" }),
-        preferLocalhost: true,
-      }),
+      redirectUri: redirectUrl,
       scopes: ["openid", "profile", "email", "offline_access"],
       usePKCE: true,
       extraParams: {
@@ -119,15 +123,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           if (code) {
             const tokenResponse = await exchangeCodeAsync(
               {
-                clientId: clientWebId,
+                clientId: Platform.OS === "web" ? clientWebId : clientNativeId,
                 code,
-                redirectUri: makeRedirectUri({
-                  scheme: scheme,
-                  path: Platform.select({
-                    web: undefined,
-                    default: "callback",
-                  }),
-                }),
+                redirectUri: redirectUrl,
                 extraParams: {
                   code_verifier: request?.codeVerifier || "",
                 },
@@ -141,6 +139,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               );
               setToken(tokenResponse.accessToken);
               setUser(me);
+              // Sync with useAuthTokenStore
+              useAuthTokenStore.getState().setToken(tokenResponse.accessToken);
+              useAuthTokenStore.getState().setUser(me);
             } else {
               throw new Error("accessToken no fue recibido.");
             }
@@ -150,10 +151,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         await TokenService.clearToken();
         setUser(null);
         setToken(null);
-        Alert.alert(
-          "Error de autenticación",
-          "Fallo al iniciar sesión. Por favor, inténtelo de nuevo."
-        );
+        notify.error({ message: "Error al iniciar sesión." });
       } finally {
         setIsLoading(false);
       }
@@ -168,12 +166,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const newToken = await authService.loginWithEmail(email, password);
       await TokenService.saveToken(newToken);
       setToken(newToken);
-      setUser(await authService.getCurrentUser(newToken));
+      const userData = await authService.getCurrentUser(newToken);
+      setUser(userData);
+      // Sync with useAuthTokenStore
+      useAuthTokenStore.getState().setToken(newToken);
+      useAuthTokenStore.getState().setUser(userData);
+      return { token: newToken };
     } catch (error) {
-      Alert.alert(
-        "Error de autenticación",
-        "Fallo al iniciar sesión. Por favor, inténtelo de nuevo."
-      );
+      const message = getBackendErrorMessage(error);
+      notify.error({ message });
+      return { token: null };
     } finally {
       setIsLoading(false);
     }
@@ -255,15 +257,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
   const requireAuth = async (action: () => void | Promise<void>) => {
     if (!isAuthenticated) {
-      Alert.alert(
-        "Inicio de sesión requerido",
-        "Debes iniciar sesión para realizar esta acción.",
-        [
-          { text: "Cancelar", style: "cancel" },
-          { text: "Iniciar sesión", onPress: handleAuth0Login },
-        ]
-      );
-      return;
+      notify.confirm({
+        message: "Debes iniciar sesión para adquirir",
+        onConfirm: () => handleAuth0Login(),
+      });
     }
 
     await action();

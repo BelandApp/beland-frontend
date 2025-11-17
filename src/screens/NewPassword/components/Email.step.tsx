@@ -2,11 +2,13 @@ import { CustomInput, PhoneInput } from "src/components/shared";
 import { View, Text, TouchableHighlight } from "react-native";
 import { useState } from "react";
 import { ResetPasswordStepProps } from "src/types";
-import ThemedButton from "src/components/shared/buttons/Themed.button";
 import { useValidation } from "src/hooks/form/useValidation";
-import { useResetPassword } from "../hook/useResetPassword";
+import { Button } from "@components/shared";
 
-const EmailStep: React.FC<ResetPasswordStepProps> = ({ onSubmit, isLoading }) => {
+const EmailStep: React.FC<ResetPasswordStepProps> = ({
+  onSubmit,
+  isLoading,
+}) => {
   const [email, setEmail] = useState("");
   const { validateForm, errors } = useValidation();
   const handleSubmit = () => {
@@ -26,8 +28,8 @@ const EmailStep: React.FC<ResetPasswordStepProps> = ({ onSubmit, isLoading }) =>
         error={errors.email}
         onBlur={() => validateForm({ email })}
       />
-      <ThemedButton
-        label="Enviar"
+      <Button
+        title="Enviar"
         onPress={handleSubmit}
         variant="secondary"
         disabled={!email}

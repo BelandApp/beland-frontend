@@ -10,11 +10,6 @@ import { useAuth } from "src/context";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 export const useWalletActions = (
-  showCustomAlert?: (
-    title: string,
-    message: string,
-    type?: "success" | "error" | "info"
-  ) => void
 ) => {
    const { navigate } = useCustomNavigation();
 

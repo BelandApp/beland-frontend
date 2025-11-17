@@ -1,7 +1,7 @@
 import { CustomInput } from "src/components/shared";
-import { View, Text, TouchableHighlight } from "react-native";
+import { View, Text } from "react-native";
 import { useState } from "react";
-import ThemedButton from "src/components/shared/buttons/Themed.button";
+import { Button } from "@components/shared";
 import { ResetPasswordStepProps } from "src/types";
 import { useValidation } from "src/hooks/form/useValidation";
 const NewPasswordStep: React.FC<ResetPasswordStepProps> = ({onSubmit}) => {
@@ -22,11 +22,11 @@ const NewPasswordStep: React.FC<ResetPasswordStepProps> = ({onSubmit}) => {
         onChangeText={(text) => setPassword(text)}
         value={password}
         error={errors.password}
-        onBlur={() => validateForm({password})}
+        onBlur={() => validateForm({ password })}
       />
-      <ThemedButton
+      <Button
         onPress={handleSubmit}
-        label="Guardar"
+        title="Guardar"
         variant="secondary"
         disabled={!password}
       />

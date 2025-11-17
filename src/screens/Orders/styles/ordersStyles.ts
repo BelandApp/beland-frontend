@@ -11,7 +11,7 @@ export const ordersStyles = StyleSheet.create({
   headerContainer: {
     backgroundColor: colors.belandOrange,
     paddingHorizontal: 16,
-    paddingTop: Platform.OS === "web" ? 20 : 50, 
+    paddingTop: Platform.OS === "web" ? 20 : 50,
     paddingBottom: 24,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
@@ -44,7 +44,7 @@ export const ordersStyles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.3)",
-    height:45
+    height: 45,
   },
   deliveryButtonText: {
     color: "#FFFFFF",
@@ -106,7 +106,7 @@ export const ordersStyles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingTop: 140, // Espacio para el header fijo
+    paddingTop: 40, // Espacio para el header fijo
     paddingHorizontal: 20,
     paddingBottom: 100,
   },

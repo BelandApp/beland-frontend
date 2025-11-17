@@ -14,16 +14,15 @@ import {
   LogOut,
   LayoutDashboard,
   Store,
-  Gift,
   User,
   Settings,
   PackageIcon,
-  GiftIcon,
   Percent,
 } from "lucide-react-native";
-import { showSuccessAlert, showErrorAlert } from "../../utils/alertHelpers";
 import { authService } from "../../services/auth/auth.service";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
+import { useNotify } from "src/hooks";
+import { getBackendErrorMessage } from "src/services";
 
 interface UserMenuProps {
   style?: any;
@@ -38,8 +37,8 @@ export const UserMenu: React.FC<UserMenuProps> = ({
 }) => {
   const { navigate } = useCustomNavigation();
 
-  const { user, isLoading, handleAuth0Login, logout } = useAuth();
-
+  const { user, isLoading, logout } = useAuth();
+  const notify = useNotify()
   const [menuVisible, setMenuVisible] = useState(false);
   const [showCommerceAlert, setShowCommerceAlert] = useState(false);
   const [isChangingRole, setIsChangingRole] = useState(false);
@@ -47,7 +46,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   const handleLogout = async () => {
     setMenuVisible(false);
     await logout();
-    navigate("Login")
+    navigate("Login");
   };
 
   const toggleMenu = () => {
@@ -63,19 +62,15 @@ export const UserMenu: React.FC<UserMenuProps> = ({
     try {
       const resp = await authService.changeRoleToCommerce();
       setShowCommerceAlert(false);
-      showSuccessAlert(
-        "¡Ya eres comerciante!",
-        "Tu perfil ha sido actualizado y ahora puedes recibir pagos por QR.",
-        "OK"
-      );
+      notify.success({
+        message:
+          "Tu perfil ha sido actualizado y ahora puedes recibir pagos por QR.",
+      });
       await authService.getCurrentUser(resp.token);
     } catch (err) {
       setShowCommerceAlert(false);
-      showErrorAlert(
-        "Error",
-        String(err) || "No se pudo cambiar el rol. Intenta nuevamente.",
-        "OK"
-      );
+      const message = getBackendErrorMessage(err);
+      notify.error({ message });
     } finally {
       setIsChangingRole(false);
     }
@@ -200,7 +195,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
               style={styles.menuItem}
               onPress={() => {
                 setMenuVisible(false);
-                navigate("Orders");
+                navigate("Orders", { screen: "OrdersList" });
               }}
             >
               <PackageIcon size={18} color="#333" />

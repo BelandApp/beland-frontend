@@ -4,17 +4,21 @@ import {
   Easing,
   StyleSheet,
   TextInput,
-  TouchableOpacity,
   Text,
   View,
+  Pressable,
+  Modal,
+  FlatList,
+  TouchableOpacity,
+  Platform,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
 import { colors } from "src/styles";
 
 interface PhoneInputProps {
   value: string;
   onChange: (text: string) => void;
   error?: string;
+  onBlur?: () => void;
 }
 
 const COUNTRY_CODES = [
@@ -23,22 +27,25 @@ const COUNTRY_CODES = [
   { code: "+34", name: "ESP" },
   { code: "+52", name: "MEX" },
   { code: "+57", name: "COL" },
-  { code: "+1", name: "USA" },
+  { code: "+1", name: "EEUU" },
 ];
 
 export const PhoneInput: React.FC<PhoneInputProps> = ({
   value,
   onChange,
   error,
+  onBlur,
+  ...props
 }) => {
   const [countryCode, setCountryCode] = useState("+54");
   const [number, setNumber] = useState(value.replace(/^\+\d+/, ""));
   const [isFocused, setIsFocused] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const animatedLabel = useRef(new Animated.Value(value ? 1 : 0)).current;
   const animatedBorder = useRef(new Animated.Value(0)).current;
 
-  // Animaciones del label y borde (idénticas al CustomInput)
+  // Animaciones del label y borde
   useEffect(() => {
     Animated.timing(animatedLabel, {
       toValue: isFocused || value ? 1 : 0,
@@ -76,94 +83,153 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
     outputRange: ["#ffffff", "#FFD700"],
   });
 
-
   const handleChange = (text: string) => {
     setNumber(text);
     onChange(`${countryCode}${text}`);
   };
 
+  const handleSelectCountry = (code: string) => {
+    setCountryCode(code);
+    onChange(`${code}${number}`);
+    setModalVisible(false);
+  };
+
   return (
-    <TouchableOpacity onPress={() => setIsFocused(true)} style={styles.button}>
-      <Animated.View
-        style={[
-          styles.container,
-          {
-            borderBottomColor: borderColor,
-          },
-        ]}
+    <>
+      <Pressable
+        tabIndex={-1}
+        accessible={false}
+        onPress={() => setIsFocused(true)}
+        style={({ pressed }) => [styles.button, { opacity: pressed ? 0.8 : 1 }]}
       >
-        <Animated.Text style={labelStyle}>Teléfono</Animated.Text>
+        <Animated.View
+          accessible={false}
+          tabIndex={-1}
+          style={[styles.container, { borderBottomColor: borderColor }]}
+        >
+          <Animated.Text style={labelStyle}>Teléfono</Animated.Text>
 
-        <View style={styles.row}>
-          <Picker
-            mode="dialog"
-            selectionColor={"white"}
-            selectedValue={countryCode}
-            onValueChange={(code) => {
-              setCountryCode(code);
-              onChange(`${code}${number}`);
-            }}
-            style={styles.picker}    
-            dropdownIconColor="white"
-          >
-            {COUNTRY_CODES.map((c) => (
-              <Picker.Item
-                key={c.code}
-                label={`${c.name} ${c.code}`}
-                value={c.code}
-                color="black"
-                style={{ backgroundColor: colors.belandOrange }}
-              />
-            ))}
-          </Picker>
+          <View style={styles.row} accessible={false} tabIndex={-1}>
+            {/* CUSTOM COUNTRY PICKER */}
+            <TouchableOpacity
+              style={styles.countryButton}
+              onPress={() => setModalVisible(true)}
+            >
+              <Text style={styles.countryText}>
+                {COUNTRY_CODES.find((c) => c.code === countryCode)?.name}{" "}
+                {countryCode}
+              </Text>
+            </TouchableOpacity>
 
-          <TextInput
-            keyboardType="phone-pad"
-            value={number}
-            onChangeText={handleChange}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            style={styles.input}
-          />
-        </View>
-      </Animated.View>
-      {error && <Text style={{ color: "red" }}>{error}</Text>}
-    </TouchableOpacity>
+            <TextInput
+              keyboardType="phone-pad"
+              value={number}
+              onChangeText={handleChange}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => {
+                setIsFocused(false);
+                onBlur && onBlur();
+              }}
+              style={styles.input}
+              {...props}
+            />
+          </View>
+        </Animated.View>
+        {error && <Text style={{ color: "red" }}>{error}</Text>}
+      </Pressable>
+
+      {/* MODAL */}
+      <Modal
+        transparent
+        animationType="fade"
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setModalVisible(false)}
+        >
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Selecciona tu país</Text>
+            <FlatList
+              data={COUNTRY_CODES}
+              keyExtractor={(item) => item.code}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.modalItem}
+                  onPress={() => handleSelectCountry(item.code)}
+                >
+                  <Text style={styles.modalItemText}>
+                    {item.name} {item.code}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </Pressable>
+      </Modal>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
   button: {
+    flex: 1,
     marginBottom: 20,
-    flexDirection: "column",
-    gap: 5,
   },
   container: {
     position: "relative",
-    outlineWidth: 0,
-    borderWidth: 0,
-    flexDirection: "column",
-    justifyContent: "center",
     borderBottomWidth: 2,
   },
   row: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+    alignItems: "flex-end",
   },
-  picker: {
-    width: 80,
-    height: "100%",
-    backgroundColor: "transparent",
-    borderWidth: 0,
+  countryButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 6,
+    marginRight: 8,
+  },
+  countryText: {
+    fontSize: 16,
     color: "white",
   },
   input: {
     flex: 1,
-    paddingVertical: 8,
     fontSize: 17,
-    fontWeight: "600",
     color: "white",
+    paddingVertical: 8,
+  },
+  // Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    width: "80%",
+    maxHeight: "60%",
+    backgroundColor: colors.belandOrange,
+    borderRadius: 16,
+    padding: 16,
+  },
+  modalTitle: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  modalItem: {
+    paddingVertical: 10,
+    borderBottomColor: "#fff2",
+    borderBottomWidth: 1,
+  },
+  modalItemText: {
+    fontSize: 16,
+    color: "white",
+    textAlign: "center",
   },
 });
 

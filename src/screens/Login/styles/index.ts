@@ -14,12 +14,12 @@ export const styles = StyleSheet.create({
   container: {
     flexDirection: "column",
     marginHorizontal: "auto",
-    marginBottom: 40,
+    marginBottom: "auto",
     padding: 20,
     gap: 5,
-    height: "auto",
+    height: Platform.OS === "web" ? "auto" : height * 0.4,
     borderRadius: 20,
-    width: width > 500 ? 400 : width * 0.9,
+    width: width > 600 ? 600 : width,
     // TODO PROBAR RESPONSIVE BACKGROUND
     // backgroundColor: colors.belandOrange,
   },

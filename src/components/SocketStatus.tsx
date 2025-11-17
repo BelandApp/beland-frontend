@@ -1,3 +1,5 @@
+// TODO VER SI ES NECESARIO ESTE COMPONENTE
+
 import React from "react";
 import { View, Text, StyleSheet, Animated, Easing } from "react-native";
 import { useAuth } from "src/context/AuthContext";
@@ -5,7 +7,6 @@ import { useNotification } from "src/hooks/NotificationContext";
 
 const SocketStatus = () => {
   // const { socketData } = useSocket()
-  // TODO VER SI ES NECESARIO ESTE COMPONENTE
   const socketData = {
     success: true,
     message: "",

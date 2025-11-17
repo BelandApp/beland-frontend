@@ -4,30 +4,24 @@ import {
   Text,
   TouchableOpacity,
   Modal,
-  Alert,
   Platform,
   ActivityIndicator,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { colors } from "../../../styles/colors";
+import { colors } from "@/styles/colors";
 import { modalStyles } from "../styles";
 import { AddressForm } from "./AddressForm";
 import {
   addressService,
   CreateAddressRequest,
-} from "../../../services/addressService";
+} from "@/services/addressService";
 import { CartService } from "@services/core";
-import { apiRequest } from "../../../services/api";
-import { useOrdersStoreAPI } from "../../../stores/useOrdersStoreAPI";
-import { useCartStore, CartProduct } from "../../../stores/useCartStore";
-import { useCustomAlert } from "../../../hooks/useCustomAlert";
-import { CustomAlert } from "../../../components/ui/CustomAlert";
+import { apiRequest } from "@/services/api";
+import { useOrdersStoreAPI } from "@/stores/useOrdersStoreAPI";
+import { useCartStore, CartProduct } from "@/stores/useCartStore";
 import { useAuth } from "src/context";
-import {
-  DeliveryAddress,
-  OrderItem,
-  CreateOrderRequest,
-} from "../../../types/Order";
+import { DeliveryAddress, OrderItem, CreateOrderRequest } from "@/types/Order";
+import { useNotify } from "src/hooks";
 
 interface OrderDeliveryModalProps {
   visible: boolean;
@@ -43,14 +37,12 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
   onOrderCreated,
 }) => {
   const [currentStep, setCurrentStep] = useState<ModalStep>("address_form");
-
+  const notify = useNotify();
   const { createOrder, isLoading } = useOrdersStoreAPI();
   const { products: cartProducts, clearCart } = useCartStore();
   const [userAddresses, setUserAddresses] = React.useState<any[]>([]);
   const [loadingAddresses, setLoadingAddresses] = React.useState(false);
   const [addingNewAddress, setAddingNewAddress] = React.useState(false);
-  const { showAlert, alertConfig, showCustomAlert, hideAlert } =
-    useCustomAlert();
   const { requireAuth } = useAuth();
 
   // Cargar direcciones de usuario cuando el modal se abre
@@ -136,11 +128,9 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
           // Pasar el id de la dirección creada para actualizar el carrito antes de crear la orden
           handleCreateOrder(toOrderAddress, created.id);
         } catch (e: any) {
-          console.error("Error creando dirección de usuario:", e);
-          Alert.alert(
-            "Error",
-            "No se pudo guardar la dirección. Intenta de nuevo."
-          );
+          notify.error({
+            message: "No se pudo guardar la dirección. Intenta de nuevo.",
+          });
         }
       })();
       return;
@@ -158,10 +148,9 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
       setCurrentStep("processing");
 
       if (cartProducts.length === 0) {
-        Alert.alert(
-          "Carrito vacío",
-          "No hay productos en el carrito para procesar."
-        );
+        notify.error({
+          message: "No hay productos en el carrito para procesar.",
+        });
         setCurrentStep("address_form");
         onClose();
         return;
@@ -186,11 +175,10 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
             method: "PUT",
           });
         } catch (e) {
-          console.error("❌ Failed to update cart with address:", e);
-          Alert.alert(
-            "Error",
-            "No se pudo actualizar el carrito con la dirección seleccionada. Intenta de nuevo."
-          );
+          notify.error({
+            message:
+              "No se pudo actualizar el carrito con la dirección seleccionada.",
+          });
           setCurrentStep("address_form");
           return;
         }
@@ -279,10 +267,7 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
             }
           }
         } catch (attachErr) {
-          console.error(
-            "[OrderDeliveryModal] Failed to attach fallback deliveryAddress:",
-            attachErr
-          );
+          // Failed to attach fallback deliveryAddress
         }
 
         clearCart();
@@ -290,38 +275,28 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
         onClose();
 
         setTimeout(() => {
-          showCustomAlert(
-            "¡Orden creada exitosamente!",
-            `Tu orden ${newOrder.id.slice(
+          notify.success({
+            message: `Tu orden ${newOrder.id.slice(
               -8
             )} ha sido creada exitosamente.\n\n💰 Total: $${newOrder.total.toFixed(
               2
             )}`,
-            "success"
-          );
-        }, 300); // Small delay to ensure modal is fully closed
+          });
+        }, 300);
       });
     } catch (error) {
-      console.error("❌ Error creating order:", error);
-
       setCurrentStep("address_form");
-      Alert.alert(
-        "Error",
-        `No se pudo crear la orden: ${
+      notify.error({
+        message: `No se pudo crear la orden: ${
           error instanceof Error ? error.message : "Error desconocido"
         }`,
-        [{ text: "OK" }]
-      );
+      });
     }
   };
 
   const handleCancel = () => {
     setCurrentStep("address_form");
     onClose();
-  };
-
-  const handleAlertClose = () => {
-    hideAlert();
   };
 
   const renderAddressForm = () => (
@@ -589,32 +564,6 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
           </View>
         </Modal>
       )}
-
-      <CustomAlert
-        visible={showAlert}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        type={alertConfig.type}
-        onClose={handleAlertClose}
-        primaryButton={{
-          text: "Ver mis órdenes",
-          onPress: () => {
-            hideAlert();
-            // Use setTimeout to ensure alert closes before opening orders modal
-            setTimeout(() => {
-              if (onOrderCreated) {
-                onOrderCreated("latest-order");
-              }
-            }, 100);
-          },
-        }}
-        secondaryButton={{
-          text: "Seguir comprando",
-          onPress: () => {
-            hideAlert();
-          },
-        }}
-      />
     </>
   );
 };

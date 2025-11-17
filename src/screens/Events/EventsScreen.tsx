@@ -2,17 +2,14 @@ import React from "react";
 import {
   RefreshControl,
   ScrollView,
-  Text,
   StyleSheet,
   View,
 } from "react-native";
-import { ThemedHeader } from "src/components/shared/headers/Header";
-import { BeCoinsBalance } from "src/components/ui";
+import { BeCoinsBalance, ThemedHeader, CustomLoader } from "@components/shared";
 import { colors } from "src/styles";
 import { useUserBalance } from "src/hooks";
 import { useEvents } from "src/hooks/event/useEvents";
 import { EventsTabs } from "./components/EventTabs";
-import { CustomLoader } from "src/components/shared/loader/Loader";
 
 const EventsScreen = () => {
   const { availableEvents, acquiredEvents, refreshing, onRefresh, isLoading } =
@@ -35,6 +32,7 @@ const EventsScreen = () => {
             refreshing={refreshing}
             onRefresh={onRefresh}
             colors={[colors.primary]}
+            style={{padding:0}}
           />
         }
       >
@@ -55,7 +53,7 @@ const EventsScreen = () => {
 const styles = StyleSheet.create({
   content: { flex: 1 },
   scroll: {
-    paddingVertical: 16,
+    flex: 1,
   },
 });
 

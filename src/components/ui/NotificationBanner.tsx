@@ -1,3 +1,5 @@
+// TODO REFACTORIZAR PARA REACT NATIVE
+
 import React from "react";
 import "../../styles/notificationBanner.css";
 import { useNotification } from "../../hooks/NotificationContext";

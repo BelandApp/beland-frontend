@@ -67,7 +67,11 @@ export interface UserWithdraw {
 }
 
 class WithdrawServiceClass extends CoreApiService {
-  protected basePath = "/withdraw-account";
+  private readonly ENDPOINTS = {
+    WITHDRAW_ACCOUNTS: "withdraw-account",
+    WITHDRAW_ACCOUNT_TYPES: "withdraw-account-type",
+    USER_WITHDRAW: "user-withdraw",
+  } as const;
 
   // Account Management
   /**
@@ -78,14 +82,14 @@ class WithdrawServiceClass extends CoreApiService {
     limit: number = 10
   ): Promise<PaginatedResponse<WithdrawAccount>> {
     const queryString = this.buildQueryString({ page, limit });
-    return this.get(`?${queryString}`);
+    return this.get(`${this.ENDPOINTS.WITHDRAW_ACCOUNTS}?${queryString}`);
   }
 
   /**
    * Get specific withdraw account by ID
    */
   async getWithdrawAccount(id: string): Promise<WithdrawAccount> {
-    return this.get(id);
+    return this.get(`${this.ENDPOINTS.WITHDRAW_ACCOUNTS}/${id}`);
   }
 
   /**
@@ -94,7 +98,7 @@ class WithdrawServiceClass extends CoreApiService {
   async createWithdrawAccount(
     data: CreateWithdrawAccountRequest
   ): Promise<WithdrawAccount> {
-    return this.post("", data);
+    return this.post(this.ENDPOINTS.WITHDRAW_ACCOUNTS, data);
   }
 
   /**
@@ -104,28 +108,28 @@ class WithdrawServiceClass extends CoreApiService {
     id: string,
     data: UpdateWithdrawAccountRequest
   ): Promise<WithdrawAccount> {
-    return this.put(id, data);
+    return this.put(`${this.ENDPOINTS.WITHDRAW_ACCOUNTS}/${id}`, data);
   }
 
   /**
    * Deactivate withdraw account
    */
   async deactivateWithdrawAccount(id: string): Promise<void> {
-    return this.put(`disactive/${id}`);
+    return this.put(`${this.ENDPOINTS.WITHDRAW_ACCOUNTS}/disactive/${id}`);
   }
 
   /**
    * Delete withdraw account permanently
    */
   async deleteWithdrawAccount(id: string): Promise<void> {
-    return this.delete(id);
+    return this.delete(`${this.ENDPOINTS.WITHDRAW_ACCOUNTS}/${id}`);
   }
 
   /**
    * Reactivate withdraw account
    */
   async activateWithdrawAccount(id: string): Promise<void> {
-    return this.put(`active/${id}`);
+    return this.put(`${this.ENDPOINTS.WITHDRAW_ACCOUNTS}/active/${id}`);
   }
 
   // Account Types
@@ -133,7 +137,7 @@ class WithdrawServiceClass extends CoreApiService {
    * Get all available account types
    */
   async getWithdrawAccountTypes(): Promise<WithdrawAccountType[]> {
-    return this.request("/withdraw-account-type", { method: "GET" });
+    return this.get(this.ENDPOINTS.WITHDRAW_ACCOUNT_TYPES);
   }
 
   // Withdraw Operations
@@ -150,10 +154,7 @@ class WithdrawServiceClass extends CoreApiService {
       throw new Error("Debe seleccionar una cuenta de destino");
     }
 
-    return this.request("/user-withdraw/withdraw", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
+    return this.post(`${this.ENDPOINTS.USER_WITHDRAW}/withdraw`, data);
   }
 
   /**
@@ -164,7 +165,7 @@ class WithdrawServiceClass extends CoreApiService {
     limit: number = 10
   ): Promise<PaginatedResponse<UserWithdraw>> {
     const queryString = this.buildQueryString({ page, limit });
-    return this.request(`/user-withdraw?${queryString}`, { method: "GET" });
+    return this.get(`${this.ENDPOINTS.USER_WITHDRAW}?${queryString}`);
   }
 
   // Utility Methods

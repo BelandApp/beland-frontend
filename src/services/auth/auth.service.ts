@@ -93,6 +93,20 @@ export const authService = {
     const data = await res.json();
     return data.message;
   },
+  async resendRegisterCode(email: string) {
+     const res = await fetch(`${API_URL}/auth/resend-code`, {
+       method: "POST",
+       headers: {
+         "Content-Type": "application/json",
+       },
+       body: JSON.stringify(email),
+     });
+    if (!res.ok) {
+      throw new Error(res.statusText);
+    }
+    const data = await res.json();
+    return data.message;
+  },
   async checkRegisterCode(FormData: { code: string; email: string }) {
     const res = await fetch(`${API_URL}/auth/signup-register`, {
       method: "POST",
@@ -107,7 +121,7 @@ export const authService = {
     const data = await res.json();
     return data.token;
   },
-  async sendCodeToEmail(email: string) {
+  async sendCodeToEmailForgotPassword(email: string) {
     try {
       const res = await fetch(`${API_URL}/auth/forgot-password-code/${email}`, {
         method: "POST",
@@ -116,7 +130,7 @@ export const authService = {
         throw new Error(res.statusText);
       }
       const data = await res.json();
-      return data.token;
+      return data.message;
     } catch (error) {
       alert(error);
     }
@@ -137,7 +151,7 @@ export const authService = {
         throw new Error(res.statusText);
       }
       const data = await res.json();
-      return data.token;
+      return data.message;
     } catch (error) {
       alert(error);
     }

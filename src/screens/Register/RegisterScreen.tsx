@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -6,17 +6,12 @@ import {
   Dimensions,
   TouchableOpacity,
 } from "react-native";
-import { CustomAlert } from "../../components/ui/CustomAlert";
-import { LoginWave } from "src/components/ui/waves/Login.wave";
-import BelandLogo from "src/components/icons/BelandLogo";
+import { LoginWave } from "@/components/ui";
+import { BelandLogo } from "@/components/icons";
 import { styles } from "./styles";
 import { CircleArrowLeftIcon } from "lucide-react-native";
-import { authService } from "src/services/auth/auth.service";
-import { useValidation } from "src/hooks/form/useValidation";
-import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import RegisterStep from "./components/RegisterStep";
 import { useRegister } from "./hook/useRegister";
-import ThemedButton from "src/components/shared/buttons/Themed.button";
 import CodeStep from "../NewPassword/components/Code.step";
 
 export type RegisterFormData = {
@@ -24,23 +19,21 @@ export type RegisterFormData = {
   password: string;
   confirmPassword: string;
   username: string;
-  address: string;
   phone: string;
-  country: string;
-  city: string;
   full_name: string;
   profile_picture_url?: string;
+  address: string;
+  city: string;
+  country: string;
 };
 export default function RegisterScreen() {
   const { width, height } = Dimensions.get("window");
   const {
     FormData,
-    alert,
     step,
     handleRegister,
     isLoading,
     navigate,
-    setAlert,
     onChangeText,
     handleReSendCode,
     handleStepBack,
@@ -59,7 +52,7 @@ export default function RegisterScreen() {
         style={styles.logo}
       />
       <TouchableOpacity
-        onPress={() => navigate("MainTabs")}
+        onPress={() => navigate("MainTabs", { screen: "Home" })}
         style={styles.backButton}
       >
         <CircleArrowLeftIcon size={32} color="#FFF" />
@@ -87,14 +80,6 @@ export default function RegisterScreen() {
           />
         )}
       </View>
-      {/* CustomAlert para errores y demo */}
-      <CustomAlert
-        visible={alert.visible}
-        title={alert.title}
-        message={alert.message}
-        type={alert.type}
-        onClose={() => setAlert({ ...alert, visible: false })}
-      />
     </ScrollView>
   );
 }

@@ -14,11 +14,11 @@ import {
   PurchaseModal,
   InsufficientBalanceModal,
 } from "../../Community/components";
-import { resourceService, walletService } from "src/services";
+import { getBackendErrorMessage, ResourceService, WalletService } from "src/services";
 
 import { calculateResourcePrice } from "src/utils";
 import { useAuth } from "src/context";
-import { useUserBalance, useCustomAlert } from "src/hooks";
+import { useNotify, useUserBalance } from "src/hooks";
 
 type Resource = any;
 
@@ -34,10 +34,15 @@ const getCardWidth = () => {
 };
 
 export const CatalogCommunitySection: React.FC = () => {
+  const notify = useNotify()
+  const isWeb = Platform.OS === "web";
+  const { balance, refetch: refetchBalance } = useUserBalance();
+  const { canPerformAction,handleAuth0Login } = useAuth();
+  
+  // TODO MOVER A UN HOOK
   const [communityResources, setCommunityResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(false);
   const [showCommunity, setShowCommunity] = useState(false);
-
   const [purchaseModalVisible, setPurchaseModalVisible] = useState(false);
   const [insufficientBalanceModalVisible, setInsufficientBalanceModalVisible] =
     useState(false);
@@ -54,11 +59,6 @@ export const CatalogCommunitySection: React.FC = () => {
   const itemWidthRef = useRef<number>(getCardWidth());
   const currentIndexRef = useRef(0);
 
-  const isWeb = Platform.OS === "web";
-
-  const { balance, refetch: refetchBalance } = useUserBalance();
-  const { canPerformAction } = useAuth();
-  const { showCustomAlert } = useCustomAlert();
 
   const updateCommunityNav = () => {
     const idx = currentIndexRef.current || 0;
@@ -71,10 +71,11 @@ export const CatalogCommunitySection: React.FC = () => {
   const loadCommunityResources = async (page = 1, limit = 6) => {
     setLoading(true);
     try {
-      const resp = await resourceService.getResources({ page, limit });
-      setCommunityResources(resp.resources || []);
+      const resp = await ResourceService.getResourceTypes();
+      setCommunityResources(resp || []);
     } catch (err) {
-      console.error("Error cargando recursos de comunidad:", err);
+      const message = getBackendErrorMessage(err)
+      notify.error({ message })
     } finally {
       setLoading(false);
     }
@@ -150,14 +151,17 @@ export const CatalogCommunitySection: React.FC = () => {
 
   const handleCommunityPurchasePress = async (resource: Resource) => {
     if (!canPerformAction) {
-      showCustomAlert("Inicia sesión para comprar", "Necesitas una cuenta");
+      notify.confirm({
+        message: "Debes iniciar sesión para comprar recursos",
+        onConfirm: () => handleAuth0Login(),
+      })
       return;
     }
 
     try {
       await refetchBalance();
     } catch (e) {
-      console.warn("No se pudo refrescar balance:", e);
+      notify.error({ message: "Error al obtener el balance" });
     }
 
     setSelectedCommunityResource(resource);
@@ -176,7 +180,7 @@ export const CatalogCommunitySection: React.FC = () => {
   const handleCommunityModalConfirm = async (quantity: number) => {
     if (!selectedCommunityResource) return;
     try {
-      const response = await walletService.purchaseResource(
+      const response = await WalletService.purchaseResource(
         selectedCommunityResource.id,
         quantity
       );
@@ -191,20 +195,12 @@ export const CatalogCommunitySection: React.FC = () => {
       setPurchaseModalVisible(false);
       setSelectedCommunityResource(null);
       loadCommunityResources(1, 6);
-      showCustomAlert(
-        "¡Compra Exitosa!",
-        "Compra realizada correctamente",
-        "success"
-      );
+      notify.success({ message: "Compra realizada con exito" });
     } catch (error) {
       console.error("Error comprando recurso desde catálogo:", error);
       setPurchaseModalVisible(false);
       setSelectedCommunityResource(null);
-      showCustomAlert(
-        "Error en la compra",
-        "No se pudo completar la compra",
-        "error"
-      );
+      notify.error({ message: "Hubo un problema al comprar el recurso" });
     }
   };
 
