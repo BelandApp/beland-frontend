@@ -3,18 +3,16 @@ import {
   View,
   Text,
   FlatList,
-  ActivityIndicator,
   StyleSheet,
-  TouchableOpacity,
 } from "react-native";
 import { ResourceService } from "@services/core";
 import UserResourceCard from "./components/UserResourceCard";
-import { useCustomAlert } from "src/hooks/useCustomAlert";
-import { Gift, Filter } from "lucide-react-native";
 import { ThemedHeader } from "src/components/shared/headers/Header";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { CustomLoader, useThemedTabs } from "src/components";
 import ThemedTabs from "src/components/shared/Tabs/ThemedTabs";
+import { useNotify } from "src/hooks";
+import { getBackendErrorMessage } from "src/services";
 
 const UserResourcesScreen: React.FC = () => {
   const { tabs, onTabChange, filterWithTab, getFilteredByActiveTab } =
@@ -49,8 +47,8 @@ const UserResourcesScreen: React.FC = () => {
 
       setItems(resourceData || []);
     } catch (err) {
-      console.error("Error cargando beneficios del usuario:", err);
-      showCustomAlert("Error", "No se pudieron cargar tus beneficios", "error");
+      const message = getBackendErrorMessage(err)
+      notify.error({ message })
     } finally {
       setLoading(false);
     }
@@ -69,8 +67,7 @@ const UserResourcesScreen: React.FC = () => {
   // TODO FIN 
   
   const filtered = getFilteredByActiveTab(items, filters);
-
-  const { showCustomAlert } = useCustomAlert();
+  const notify = useNotify()
   const { navigate } = useCustomNavigation();
 
   if (loading) {
@@ -94,7 +91,7 @@ const UserResourcesScreen: React.FC = () => {
               navigate("QR", { pendingRedemption: it });
             }}
             onDetails={(it) => {
-              showCustomAlert("Detalle", JSON.stringify(it), "info");
+              notify.info({ message: `Detalle: ${JSON.stringify(it)}` });
             }}
           />
         )}

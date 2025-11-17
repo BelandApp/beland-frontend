@@ -6,7 +6,6 @@ import {
   ScrollView,
   StyleSheet,
   Animated,
-  Alert,
 } from "react-native";
 import {
   ArrowLeftRight,
@@ -16,23 +15,19 @@ import {
   DollarSign,
   RotateCcw,
   SquareChevronDown,
-  CheckCircle2,
 } from "lucide-react-native";
 import { useEventStore } from "src/stores/Event";
 import { colors } from "src/styles";
 import { useAuth } from "src/context";
-import { useCustomAlert } from "src/hooks";
-import { CustomAlert } from "@components/shared";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
+import { useNotify } from "src/hooks";
 
 export const EventModal = ({ route }: { route: any }) => {
   const { id } = route.params;
+  const notify = useNotify()
   const { getEvent } = useEventStore();
   const event = getEvent(id);  const { navigate, goBack } = useCustomNavigation();
-
-  const { showCustomAlert, alertConfig, showAlert, hideAlert } =
-    useCustomAlert();
-  const { canPerformAction } = useAuth();
+  const { canPerformAction, handleAuth0Login } = useAuth();
   const [visibleImage, setVisibleImage] = useState(0);
 
   if (!event) return null;
@@ -85,11 +80,7 @@ export const EventModal = ({ route }: { route: any }) => {
 
   const handleBuy = async () => {
     if (!canPerformAction) {
-      showCustomAlert(
-        "Inicia sesión",
-        "Debes iniciar sesión para comprar",
-        "error"
-      );
+     notify.confirm({ message: "Debe iniciar sesión para adquirir", onConfirm: () => handleAuth0Login() });
       return;
     }
     navigate("NewPaymentScreen", {
@@ -208,13 +199,6 @@ export const EventModal = ({ route }: { route: any }) => {
           </View>
         </ScrollView>
       </View>
-      <CustomAlert
-        visible={showAlert}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        type={alertConfig.type}
-        onClose={hideAlert}
-      />
     </View>
   );
 };

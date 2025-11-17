@@ -17,15 +17,18 @@ import {
   WithdrawService,
   WithdrawAccount,
 } from "../../services/withdrawService";
-import { CustomAlert } from "@components/shared";
 import { useWalletData } from "./hooks/useWalletData";
+import { getBackendErrorMessage } from "src/services";
+import { useNotify } from "src/hooks";
 
 const CanjearScreen: React.FC<{
   navigation: any;
   route?: any;
   balance?: number;
 }> = ({ navigation, route, balance: propBalance }) => {
-  const { user } = useAuth();
+  const { user, handleAuth0Login } = useAuth();
+  const notify = useNotify();
+  // TODO MOVER A UN HOOK
   const [amount, setAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [selectedWithdrawAccount, setSelectedWithdrawAccount] =
@@ -36,15 +39,6 @@ const CanjearScreen: React.FC<{
   const [loadingAccounts, setLoadingAccounts] = useState(true);
   const [showAccountSelector, setShowAccountSelector] = useState(false);
 
-  // Estados para CustomAlert
-  const [showErrorAlert, setShowErrorAlert] = useState(false);
-  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
-  const [showConfirmAlert, setShowConfirmAlert] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
-
-  // Ref para evitar múltiples alerts
-  const isShowingAlert = useRef(false);
 
   const balance =
     useBeCoinsStore((state: { balance: number }) => state.balance) ?? 0;
@@ -75,10 +69,8 @@ const CanjearScreen: React.FC<{
       }
     } catch (error) {
       console.error("Error cargando cuentas de retiro:", error);
-      setErrorMessage(
-        "No se pudieron cargar las cuentas de retiro. Verifica tu conexión e intenta nuevamente."
-      );
-      setShowErrorAlert(true);
+      const message = getBackendErrorMessage(error);
+      notify.error({ message: message || "Error cargando cuentas de retiro" });
     } finally {
       setLoadingAccounts(false);
     }
@@ -91,36 +83,43 @@ const CanjearScreen: React.FC<{
 
   const handleBuy = async () => {
     if (!isAmountValid) {
-      setErrorMessage(
-        "Por favor ingresa un monto válido dentro de tu saldo disponible."
-      );
-      setShowErrorAlert(true);
+      notify.error({
+        message:
+          "Por favor ingresa un monto valido dentro de tu saldo disponible.",
+      });
+
       return;
     }
 
     if (!selectedWithdrawAccount) {
-      setErrorMessage(
-        "Por favor selecciona una cuenta donde recibir tu dinero."
-      );
-      setShowErrorAlert(true);
+      notify.error({
+        message: "Por favor selecciona una cuenta donde recibir tu dinero.",
+      });
       return;
     }
 
     if (!user?.id) {
-      setErrorMessage("Usuario no autenticado");
-      setShowErrorAlert(true);
+      notify.confirm({
+        message: "Debes iniciar sesión para adquirir",
+        onConfirm: () => handleAuth0Login(),
+      });
       return;
     }
-
-    // Mostrar confirmación
-    setShowConfirmAlert(true);
+    notify.confirm({
+      message: selectedWithdrawAccount
+        ? `¿Estás seguro de que quieres retirar ${formatUSDPrice(
+            convertBeCoinsToUSD(parsedAmount)
+          )} USD (${parsedAmount} BeCoins) a tu cuenta ${getAccountNameForConfirmation(
+            selectedWithdrawAccount
+          )}?`
+        : "¿Confirmas esta operación?",
+      onConfirm: () => confirmWithdraw(),
+    });
   };
 
   const confirmWithdraw = async () => {
     try {
-      setShowConfirmAlert(false);
       setIsLoading(true);
-
       // Solicitar el retiro
       const withdrawRequest = {
         amountBecoin: parsedAmount,
@@ -142,15 +141,13 @@ const CanjearScreen: React.FC<{
         }
 
         // Mostrar éxito
-        setSuccessMessage(
-          `¡Retiro exitoso! Se han transferido ${formatUSDPrice(
+        notify.success({
+          message: `¡Retiro exitoso! Se han transferido ${formatUSDPrice(
             convertBeCoinsToUSD(parsedAmount)
           )} USD a tu cuenta ${getAccountNameForConfirmation(
             selectedWithdrawAccount!
-          )}.`
-        );
-        setShowSuccessAlert(true);
-
+          )}.`,
+        });
         // Limpiar formulario
         setAmount("");
         setSelectedWithdrawAccount(null);
@@ -164,9 +161,7 @@ const CanjearScreen: React.FC<{
       } else if (error?.response?.data?.message) {
         errorMessage = error.response.data.message;
       }
-
-      setErrorMessage(errorMessage);
-      setShowErrorAlert(true);
+      notify.error({ message: errorMessage });
     } finally {
       setIsLoading(false);
     }
@@ -507,53 +502,6 @@ const CanjearScreen: React.FC<{
           </View>
         </View>
       </Modal>
-
-      {/* CustomAlert para errores */}
-      <CustomAlert
-        visible={showErrorAlert}
-        type="error"
-        title="Error"
-        message={errorMessage}
-        onClose={() => setShowErrorAlert(false)}
-      />
-
-      {/* CustomAlert para éxito */}
-      <CustomAlert
-        visible={showSuccessAlert}
-        type="success"
-        title="¡Retiro exitoso!"
-        message={successMessage}
-        onClose={() => {
-          setShowSuccessAlert(false);
-          // Navegar de vuelta al wallet después del éxito
-          navigation.goBack();
-        }}
-      />
-
-      {/* CustomAlert para confirmación */}
-      <CustomAlert
-        visible={showConfirmAlert}
-        type="info"
-        title="Confirmar retiro"
-        message={
-          selectedWithdrawAccount
-            ? `¿Estás seguro de que quieres retirar ${formatUSDPrice(
-                convertBeCoinsToUSD(parsedAmount)
-              )} USD (${parsedAmount} BeCoins) a tu cuenta ${getAccountNameForConfirmation(
-                selectedWithdrawAccount
-              )}?`
-            : "¿Confirmas esta operación?"
-        }
-        primaryButton={{
-          text: "Confirmar",
-          onPress: confirmWithdraw,
-        }}
-        secondaryButton={{
-          text: "Cancelar",
-          onPress: () => setShowConfirmAlert(false),
-        }}
-        onClose={() => setShowConfirmAlert(false)}
-      />
     </View>
   );
 };

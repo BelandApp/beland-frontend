@@ -16,7 +16,7 @@ export const useLogin = () => {
   if (isAuthenticated) navigate("MainTabs", { screen: "Home" });
   const handleLogin = async () => {
     if (!FormData.email.trim() || !FormData.password.trim()) {
-      notify.error("Debes ingresar tu correo y contraseña");
+      notify.error({message:"Debes ingresar tu correo y contraseña"});
       return;
     }
     try {
@@ -34,7 +34,7 @@ export const useLogin = () => {
       navigate("MainTabs", { screen: "Home" });
     } catch (error) {
       const message = getBackendErrorMessage(error);
-      notify.error(message);
+      notify.error({message});
     }
   };
   return {
