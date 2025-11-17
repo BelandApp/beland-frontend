@@ -24,6 +24,7 @@ import { NotificationBanner } from "./src/components/ui/NotificationBanner";
 import PayphoneSuccessScreen from "./src/screens/Wallet/PayphoneSuccessScreen";
 import SocketStatus from "./src/components/SocketStatus";
 import { usePaymentSocket } from "src/hooks/usePaymentSocket";
+import { useOrderSocket } from "src/hooks/useOrderSocket";
 import { colors } from "src/styles";
 import { GlobalNotification } from "src/components/shared/notification/GlobalNotification";
 
@@ -36,11 +37,14 @@ const AppContent = () => {
   const [currentRoute, setCurrentRoute] = useState<string | undefined>(
     undefined
   );
-  // Conexión global a sockets para notificaciones
+  // Conexión global a sockets para notificaciones de pagos
   usePaymentSocket(() => {});
 
+  // Conexión global a sockets para notificaciones de órdenes (para admins)
+  useOrderSocket(() => {});
+
   // Padding dinámico para web móvil
- 
+
   useEffect(() => {
     const configureSystemBars = async () => {
       if (Platform.OS === "android") {
@@ -95,6 +99,8 @@ const AppContent = () => {
     currentRoute !== "QR" &&
     currentRoute !== "RecyclingMap" &&
     currentRoute !== "user-dashboard" &&
+    currentRoute !== "OrdersManagement" &&
+    currentRoute !== "OrderAdminDetail" &&
     currentRoute &&
     !walletActionScreens.includes(currentRoute) &&
     !!user;
@@ -146,7 +152,7 @@ const AppContent = () => {
         linking={linking}
       >
         <RootStackNavigator />
-        <GlobalNotification/>
+        <GlobalNotification />
         {shouldShowQRButton && <FloatingQRButton onPress={handleQRPress} />}
       </NavigationContainer>
     </View>
