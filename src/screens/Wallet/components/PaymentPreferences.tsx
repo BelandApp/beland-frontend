@@ -43,22 +43,12 @@ export const PaymentPreferences: React.FC<PaymentPreferencesProps> = ({
   const loadAccounts = async () => {
     try {
       setLoading(true);
-      console.log("📋 Cargando cuentas de retiro...");
+
       const response = await WithdrawService.getWithdrawAccounts();
-      console.log("📋 Respuesta completa:", response);
 
       // Validación defensiva: asegurar que response.data sea un array
       const accountsData = Array.isArray(response.data) ? response.data : [];
 
-      console.log("📋 Cuentas obtenidas:", accountsData);
-      accountsData.forEach((account, index) => {
-        console.log(`📋 Cuenta ${index + 1}:`, {
-          id: account.id,
-          owner_name: account.owner_name,
-          is_active: account.is_active,
-          type: account.type?.name || account.withdraw_account_type?.name,
-        });
-      });
       setAccounts(accountsData);
     } catch (error) {
       console.error("❌ Error cargando cuentas:", error);
