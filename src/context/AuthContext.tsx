@@ -1,6 +1,5 @@
 import React, {
   createContext,
-  useCallback,
   useContext,
   useEffect,
   useState,
@@ -12,7 +11,7 @@ import {
   useAutoDiscovery,
 } from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
-import { Alert, Platform } from "react-native";
+import { Platform } from "react-native";
 import Constants from "expo-constants";
 import { authService } from "src/services/auth/auth.service";
 import { TokenService } from "src/services/auth/token.service";
@@ -148,7 +147,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         await TokenService.clearToken();
         setUser(null);
         setToken(null);
-        notify.error("Error al iniciar sesión.");
+        notify.error({message:"Error al iniciar sesión."});
       } finally {
         setIsLoading(false);
       }
@@ -167,7 +166,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return { token: newToken };
     } catch (error) {
       const message = getBackendErrorMessage(error);
-      notify.error(message);
+      notify.error({message});
       return {token:null}
     } finally {
       setIsLoading(false);
@@ -250,15 +249,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
   const requireAuth = async (action: () => void | Promise<void>) => {
     if (!isAuthenticated) {
-      Alert.alert(
-        "Inicio de sesión requerido",
-        "Debes iniciar sesión para realizar esta acción.",
-        [
-          { text: "Cancelar", style: "cancel" },
-          { text: "Iniciar sesión", onPress: handleAuth0Login },
-        ]
-      );
-      return;
+      notify.confirm({
+        message: "Debes iniciar sesión para adquirir",
+        onConfirm: () => handleAuth0Login(),
+     })
     }
 
     await action();

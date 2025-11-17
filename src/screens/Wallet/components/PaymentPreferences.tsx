@@ -10,11 +10,12 @@ import {
 import { Plus, CreditCard, Building2, MoreVertical } from "lucide-react-native";
 import PayphoneIcon from "src/components/icons/PayphoneIcon";
 import {
-  withdrawService,
+  WithdrawService,
   WithdrawAccount,
 } from "../../../services/withdrawService";
 import { AddWithdrawAccountModal } from "./AddWithdrawAccountModal";
-import { CustomAlert } from "@components/shared";
+import { useNotify } from "src/hooks";
+import { getBackendErrorMessage } from "src/services";
 
 interface PaymentPreferencesProps {
   onRefresh?: () => void;
@@ -23,6 +24,8 @@ interface PaymentPreferencesProps {
 export const PaymentPreferences: React.FC<PaymentPreferencesProps> = ({
   onRefresh,
 }) => {
+  const notify = useNotify();
+  // TODO HACER UN HOOK
   const [accounts, setAccounts] = useState<WithdrawAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -32,13 +35,6 @@ export const PaymentPreferences: React.FC<PaymentPreferencesProps> = ({
     id: string;
     name: string;
   } | null>(null);
-  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
-  const [showErrorAlert, setShowErrorAlert] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-
-  // Ref para evitar múltiples alerts
-  const isShowingAlert = useRef(false);
-
   // Cargar cuentas al montar el componente
   useEffect(() => {
     loadAccounts();
@@ -48,9 +44,9 @@ export const PaymentPreferences: React.FC<PaymentPreferencesProps> = ({
     try {
       setLoading(true);
       console.log("📋 Cargando cuentas de retiro...");
-      const response = await withdrawService.getWithdrawAccounts();
-      console.log("📋 Cuentas obtenidas:", response.accounts);
-      response.accounts.forEach((account: any, index: string) => {
+      const response = await WithdrawService.getWithdrawAccounts();
+      console.log("📋 Cuentas obtenidas:", response.data);
+      response.data.forEach((account, index) => {
         console.log(`📋 Cuenta ${index + 1}:`, {
           id: account.id,
           owner_name: account.owner_name,
@@ -58,12 +54,10 @@ export const PaymentPreferences: React.FC<PaymentPreferencesProps> = ({
           type: account.type?.name,
         });
       });
-      setAccounts(response.accounts);
+      setAccounts(response.data);
     } catch (error) {
-      console.error("❌ Error cargando cuentas:", error);
-      console.error(
-        "No se pudieron cargar las cuentas de retiro. Intenta nuevamente."
-      );
+      const message = getBackendErrorMessage(error);
+      notify.error({ message: message || "Error cargando cuentas de retiro" });
       // En una implementación real, podrías mostrar un toast o un mensaje en la UI
     } finally {
       setLoading(false);
@@ -72,11 +66,6 @@ export const PaymentPreferences: React.FC<PaymentPreferencesProps> = ({
 
   const handleAddMethod = async () => {
     try {
-      // Prevenir múltiples alerts
-      if (isShowingAlert.current) {
-        return;
-      }
-
       // Cerrar el modal inmediatamente
       setShowAddModal(false);
 
@@ -84,17 +73,10 @@ export const PaymentPreferences: React.FC<PaymentPreferencesProps> = ({
       await loadAccounts(); // Recargar lista
       onRefresh?.(); // Notificar al componente padre
 
-      // Mostrar alert de éxito usando CustomAlert
-      isShowingAlert.current = true;
-      setShowSuccessAlert(true);
-
-      // Cerrar automáticamente después de 3 segundos
-      setTimeout(() => {
-        setShowSuccessAlert(false);
-        isShowingAlert.current = false;
-      }, 3000);
+      notify.success({message:"Cuenta creada exitosamente"});
     } catch (error: any) {
-      console.error("Error refrescando cuentas:", error);
+      const message = getBackendErrorMessage(error);
+      notify.error({ message: message || "Error creando cuenta de retiro" });
     }
   };
 
@@ -182,7 +164,7 @@ export const PaymentPreferences: React.FC<PaymentPreferencesProps> = ({
       setLoading(true);
       setShowDeleteModal(false);
       console.log("📞 Llamando a withdrawService.deleteWithdrawAccount...");
-      await withdrawService.deleteWithdrawAccount(accountToDelete.id);
+      await WithdrawService.deleteWithdrawAccount(accountToDelete.id);
       console.log("✅ Eliminación completada");
       // No mostrar alert, solo recargar la lista
       console.log("🔄 Recargando lista de cuentas...");
@@ -201,10 +183,7 @@ export const PaymentPreferences: React.FC<PaymentPreferencesProps> = ({
       } else if (error?.message) {
         message = error.message;
       }
-
-      // Mostrar error usando CustomAlert
-      setErrorMessage(message);
-      setShowErrorAlert(true);
+      notify.error({ message });
     } finally {
       setLoading(false);
       setAccountToDelete(null);
@@ -219,7 +198,7 @@ export const PaymentPreferences: React.FC<PaymentPreferencesProps> = ({
 
   const handleActivateAccount = async (accountId: string) => {
     try {
-      await withdrawService.activateWithdrawAccount(accountId);
+      await WithdrawService.activateWithdrawAccount(accountId);
       // No usamos Alert.alert aquí tampoco
       await loadAccounts();
       closeMethodMenu();
@@ -398,27 +377,6 @@ export const PaymentPreferences: React.FC<PaymentPreferencesProps> = ({
           </View>
         </View>
       </Modal>
-
-      {/* CustomAlert para cuenta creada exitosamente */}
-      <CustomAlert
-        visible={showSuccessAlert}
-        type="success"
-        title="¡Cuenta agregada!"
-        message="Tu cuenta de retiro ha sido creada exitosamente y ya está disponible para usar."
-        onClose={() => {
-          setShowSuccessAlert(false);
-          isShowingAlert.current = false;
-        }}
-      />
-
-      {/* CustomAlert para errores */}
-      <CustomAlert
-        visible={showErrorAlert}
-        type="error"
-        title="Error"
-        message={errorMessage}
-        onClose={() => setShowErrorAlert(false)}
-      />
     </View>
   );
 };
@@ -426,7 +384,6 @@ export const PaymentPreferences: React.FC<PaymentPreferencesProps> = ({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "#fff",
-    marginHorizontal: 20,
     marginTop: 24,
     borderRadius: 16,
     padding: 20,

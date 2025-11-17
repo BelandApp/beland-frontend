@@ -1,13 +1,15 @@
 import { useNotificationStore } from "@/stores/notificationStore";
 // Function para mostrar notificaciones FUERA de un componente react, por ej. services
+type NotifyBase = { message: string};
+type NotifyConfirm = NotifyBase & { onConfirm: () => void; onCancel?: () => void };
 export const notify = {
-  success: (message: string) =>
+  success: ({ message }: NotifyBase) =>
     useNotificationStore.getState().show({ type: "success", message }),
-  error: (message: string) =>
+  error: ({ message }: NotifyBase) =>
     useNotificationStore.getState().show({ type: "error", message }),
-  info: (message: string) =>
+  info: ({ message }: NotifyBase) =>
     useNotificationStore.getState().show({ type: "info", message }),
-  confirm: (message: string, onConfirm: () => void, onCancel?: () => void) =>
+  confirm: ({message, onConfirm, onCancel}: NotifyConfirm) =>
     useNotificationStore.getState().show({
       type: "confirm",
       message,

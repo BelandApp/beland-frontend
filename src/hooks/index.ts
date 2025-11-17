@@ -1,5 +1,4 @@
 // Hooks principales
-export * from "./useCustomAlert";
 export * from "./useUserResources";
 export * from "./useCart";
 export * from "./useCartSync";

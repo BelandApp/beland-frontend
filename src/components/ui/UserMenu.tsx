@@ -19,9 +19,10 @@ import {
   PackageIcon,
   Percent,
 } from "lucide-react-native";
-import { showSuccessAlert, showErrorAlert } from "../../utils/alertHelpers";
 import { authService } from "../../services/auth/auth.service";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
+import { useNotify } from "src/hooks";
+import { getBackendErrorMessage } from "src/services";
 
 interface UserMenuProps {
   style?: any;
@@ -37,7 +38,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   const { navigate } = useCustomNavigation();
 
   const { user, isLoading, logout } = useAuth();
-
+  const notify = useNotify()
   const [menuVisible, setMenuVisible] = useState(false);
   const [showCommerceAlert, setShowCommerceAlert] = useState(false);
   const [isChangingRole, setIsChangingRole] = useState(false);
@@ -61,18 +62,15 @@ export const UserMenu: React.FC<UserMenuProps> = ({
     try {
       const resp = await authService.changeRoleToCommerce();
       setShowCommerceAlert(false);
-      showSuccessAlert({
-        title: "¡Ya eres comerciante!",
-        message: "Tu perfil ha sido actualizado y ahora puedes recibir pagos por QR."}
-      );
+      notify.success({
+        message:
+          "Tu perfil ha sido actualizado y ahora puedes recibir pagos por QR.",
+      });
       await authService.getCurrentUser(resp.token);
     } catch (err) {
       setShowCommerceAlert(false);
-      showErrorAlert({
-        title: "Error",
-        message:
-          String(err) || "No se pudo cambiar el rol. Intenta nuevamente.",
-      });
+      const message = getBackendErrorMessage(err);
+      notify.error({ message });
     } finally {
       setIsChangingRole(false);
     }

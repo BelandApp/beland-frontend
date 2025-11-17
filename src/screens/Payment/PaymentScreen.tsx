@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useRoute, RouteProp } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
-import { RootStackParamList } from "../../components/layout/RootStackNavigator";
-import { Alert } from "react-native";
-import { CustomAlert } from "@components/shared";
 import { TransactionContextManager } from "../../hooks/usePaymentSocket";
 import { useUserResources } from "../../hooks/useUserResources";
 import { WalletService } from "@services/core";
@@ -32,6 +28,8 @@ import { BankTransferModal } from "./components/BankTransferModal";
 // Importar tipos reales
 import { UserResource as RealUserResource } from "../../types/resource";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
+import { useNotify } from "src/hooks";
+import { getBackendErrorMessage } from "src/services";
 
 // Types del código original
 type Resource = {
@@ -80,11 +78,9 @@ type PaymentScreenRouteProp = RouteProp<
 const PaymentScreen: React.FC = () => {
   const route = useRoute<PaymentScreenRouteProp>();
    const { navigate, goBack } = useCustomNavigation();
-
+  const notify = useNotify()
 
   // Estados principales
-  const [showFreeAlert, setShowFreeAlert] = useState(false);
-  const [showPaymentSuccessAlert, setShowPaymentSuccessAlert] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<
     "payphone" | "becoin" | "bank_transfer"
   >("payphone");
@@ -524,19 +520,13 @@ const PaymentScreen: React.FC = () => {
         // Mostrar alerta según noHidden del backend o del paymentData
         const shouldStayVisible = response?.noHidden || paymentData.noHidden;
         if (shouldStayVisible) {
-          setShowFreeAlert(true);
-        } else {
-          setShowFreeAlert(true);
-          setTimeout(() => {
-            setShowFreeAlert(false);
-            goBack();
-          }, 2000);
+          notify.info(response.message);
         }
         setIsLoading(false);
         return;
       } catch (error) {
-        console.error("Error al procesar entrada gratis:", error);
-        Alert.alert("Error", "No se pudo procesar la entrada gratis");
+        const message = getBackendErrorMessage(error);
+        notify.error({ message });
         setIsLoading(false);
         return;
       }
@@ -586,7 +576,8 @@ const PaymentScreen: React.FC = () => {
       // @ts-ignore
       new window.PPaymentButtonBox(payphoneConfig).render("pp-button");
     } catch (err) {
-      Alert.alert("Error", "No se pudo cargar el widget de Payphone.");
+      const message = getBackendErrorMessage(err);
+      notify.error({ message });
       setIsLoading(false);
     }
   };
@@ -692,9 +683,11 @@ const PaymentScreen: React.FC = () => {
       });
 
       setBackendResponse(response);
-      setShowPaymentSuccessAlert(true);
+      notify.success({ message: "Compra realizada con exito" });
+      navigate("MainTabs", { screen: "Home" });
     } catch (err) {
-      setShowPaymentSuccessAlert(true);
+      const message = getBackendErrorMessage(err);
+      notify.error({ message });
     } finally {
       setIsLoading(false);
     }
@@ -763,10 +756,11 @@ const PaymentScreen: React.FC = () => {
         becoinsUsed: notificationData.becoins_used,
         commerceName: notificationData.commerce_name,
       });
-
-      setShowFreeAlert(true);
+      notify.success({ message: "Entrada gratuita realizada con exito" });
+      navigate("MainTabs", { screen: "Home" });
     } catch (err) {
-      setShowFreeAlert(true);
+      const message = getBackendErrorMessage(err);
+      notify.error({ message });
     } finally {
       setIsLoading(false);
     }
@@ -1041,72 +1035,6 @@ const PaymentScreen: React.FC = () => {
         onApplyRedemption={(redemption: Redemption | RealUserResource) => {
           applyRedemption(redemption);
           setShowDiscountsModal(false);
-        }}
-      />
-
-      {/* CustomAlert para entrada gratuita */}
-      <CustomAlert
-        visible={showFreeAlert}
-        title={
-          appliedRedemption
-            ? "¡Cupón aplicado exitosamente!"
-            : "Entrada gratuita registrada"
-        }
-        message={
-          appliedRedemption
-            ? `Tu cupón "${
-                "code" in appliedRedemption
-                  ? appliedRedemption.code
-                  : appliedRedemption.resource?.name || "Descuento"
-              }" fue aplicado correctamente. ¡Acceso gratis confirmado!`
-            : "¡Tu acceso fue confirmado!"
-        }
-        type="success"
-        primaryButton={{
-          text:
-            backendResponse?.noHidden || paymentData.noHidden
-              ? "OK"
-              : "Ir al inicio",
-          onPress: () => {
-            setShowFreeAlert(false);
-            if (!(backendResponse?.noHidden || paymentData.noHidden)) {
-             navigate("MainTabs", { screen: "Home" });
-            }
-          },
-        }}
-        onClose={() => {
-          setShowFreeAlert(false);
-          if (!(backendResponse?.noHidden || paymentData.noHidden)) {
-           navigate("MainTabs", { screen: "Home" });
-          }
-        }}
-      />
-
-      {/* CustomAlert para pago exitoso con BeCoins */}
-      <CustomAlert
-        visible={showPaymentSuccessAlert}
-        title="¡Pago exitoso!"
-        message={`Tu pago de ${usdToBeCoins(
-          Number(amount || 0)
-        ).toLocaleString()} BeCoins fue procesado correctamente.`}
-        type="success"
-        primaryButton={{
-          text:
-            backendResponse?.noHidden || paymentData.noHidden
-              ? "OK"
-              : "Ir al inicio",
-          onPress: () => {
-            setShowPaymentSuccessAlert(false);
-            if (!(backendResponse?.noHidden || paymentData.noHidden)) {
-             navigate("MainTabs", { screen: "Home" });
-            }
-          },
-        }}
-        onClose={() => {
-          setShowPaymentSuccessAlert(false);
-          if (!(backendResponse?.noHidden || paymentData.noHidden)) {
-           navigate("MainTabs", { screen: "Home" });
-          }
         }}
       />
 

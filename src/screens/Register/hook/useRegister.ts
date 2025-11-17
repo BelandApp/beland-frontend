@@ -3,7 +3,6 @@ import { useValidation } from "src/hooks/form/useValidation";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { RegisterFormData } from "../RegisterScreen";
 import { authService, getBackendErrorMessage } from "src/services";
-import { showErrorAlert, showSuccessAlert } from "src/utils/alertHelpers";
 import { notify } from "src/hooks/notification/notify.external";
 
 export const useRegister = () => {
@@ -37,17 +36,17 @@ export const useRegister = () => {
     const isValid = validateForm(FormData);
     if (!isValid) {
       setIsLoading(false);
-      notify.error("Debes completar todos los campos");
+      notify.error({message:"Debes completar todos los campos"});
       return;
     }
     try {
       setIsLoading(true);
       await authService.registerUser(FormData);
-      notify.info("Verifica tu correo");
+      notify.info({ message: "Verifica tu correo" });
       setStep("code");
     } catch (error) {
       const message = getBackendErrorMessage(error);
-      notify.error(message);
+      notify.error({message});
     } finally {
       setIsLoading(false);
     }
@@ -56,21 +55,21 @@ export const useRegister = () => {
     try {
       if (!FormData.email) return;
       await authService.resendRegisterCode(FormData.email);
-      notify.info("Verifica tu correo");
+      notify.info({ message: "Verifica tu correo" });
     } catch (error) {
       const message = getBackendErrorMessage(error);
-      notify.error(message);
+      notify.error({message});
     }
   };
   const handleVerifyCode = async (code: string) => {
     try {
       await authService.checkRegisterCode({ email: FormData.email, code });
-      notify.success("Registro exitoso, vamos a loguearte");
+      notify.success({ message: "Registro exitoso, vamos a loguearte" });
       await authService.loginWithEmail(FormData.email, FormData.password);
       navigate("MainTabs", { screen: "Home" });
     } catch (error) {
        const message = getBackendErrorMessage(error);
-       notify.error(message);
+       notify.error({message});
     }
   };
   return {
