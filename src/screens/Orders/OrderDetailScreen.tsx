@@ -26,6 +26,26 @@ type OrderDetailScreenRouteProp = RouteProp<
   "OrderDetail"
 >;
 
+// Helper function to map backend status codes to frontend status
+const mapBackendStatusToFrontend = (backendStatus: string): OrderStatus => {
+  const statusMap: Record<string, OrderStatus> = {
+    PENDING: "pending",
+    PREPARING: "preparing",
+    ON_ROUTE: "shipped",
+    DELIVERED: "delivered",
+    COLLECTED: "collected",
+    RECYCLED: "recycled",
+    CANCELLED: "cancelled",
+  };
+
+  const upperStatus = backendStatus?.toUpperCase();
+  return (
+    statusMap[upperStatus] ||
+    (backendStatus?.toLowerCase() as OrderStatus) ||
+    "pending"
+  );
+};
+
 export const OrderDetailScreen: React.FC = () => {
   const { goBack } = useCustomNavigation();
   const { success, error, confirm } = useNotify();
@@ -171,8 +191,10 @@ export const OrderDetailScreen: React.FC = () => {
           const apiData = fetched as any;
           const mappedOrder = {
             ...apiData,
-            // Map status from object to string
-            status: apiData.status?.code?.toLowerCase() || apiData.status,
+            // Map status from backend code to frontend code
+            status: mapBackendStatusToFrontend(
+              apiData.status?.code || apiData.status
+            ),
             // Map address to deliveryAddress
             deliveryAddress: apiData.address
               ? {
@@ -243,6 +265,26 @@ export const OrderDetailScreen: React.FC = () => {
     };
   }, [orderId]);
 
+  // Listen to store changes and update order automatically
+  useEffect(() => {
+    const storeOrder = getOrderById(orderId);
+    if (storeOrder && apiOrder) {
+      // Check if status or other key fields changed in store
+      const statusChanged = storeOrder.status !== apiOrder.status;
+      const updatedAtChanged =
+        new Date(storeOrder.updatedAt).getTime() !==
+        new Date(apiOrder.updatedAt).getTime();
+
+      if (statusChanged || updatedAtChanged) {
+        console.log(
+          "[OrderDetail] Store order updated, refreshing from API..."
+        );
+        // Refresh from API to get latest data
+        setApiOrder(undefined); // Force refetch
+      }
+    }
+  }, [storeOrders, orderId, getOrderById]);
+
   const baseOrder = apiOrder ?? localOrder;
   const displayOrder = enrichedOrder ?? baseOrder;
 
@@ -285,6 +327,10 @@ export const OrderDetailScreen: React.FC = () => {
         return "#5856D6";
       case "delivered":
         return "#30B0C7";
+      case "collected":
+        return "#32ADE6";
+      case "recycled":
+        return "#4CAF50";
       case "cancelled":
         return "#FF3B30";
       default:
@@ -301,9 +347,13 @@ export const OrderDetailScreen: React.FC = () => {
       case "preparing":
         return "Preparando";
       case "shipped":
-        return "Enviada";
+        return "En camino";
       case "delivered":
         return "Entregada";
+      case "collected":
+        return "Recolectada";
+      case "recycled":
+        return "Reciclada";
       case "cancelled":
         return "Cancelada";
       default:
@@ -323,6 +373,10 @@ export const OrderDetailScreen: React.FC = () => {
         return "truck-delivery-outline";
       case "delivered":
         return "check-circle";
+      case "collected":
+        return "package-check";
+      case "recycled":
+        return "recycle";
       case "cancelled":
         return "close-circle-outline";
       default:
@@ -341,6 +395,10 @@ export const OrderDetailScreen: React.FC = () => {
       case "shipped":
         return 80;
       case "delivered":
+        return 100;
+      case "collected":
+        return 100;
+      case "recycled":
         return 100;
       case "cancelled":
         return 0;
@@ -410,14 +468,16 @@ export const OrderDetailScreen: React.FC = () => {
     }
   };
 
-  const handleConfirmReception = () => {
+  const handleReturnPackaging = () => {
     confirm({
-      message: "¿Confirmas que has recibido tu orden correctamente?",
+      message:
+        "¿Confirmas que has devuelto los envases/residuos de esta orden?",
       onConfirm: async () => {
         try {
-          await confirmReception(orderId);
+          // Llamar al endpoint PUT /orders/collected
+          await OrderService.collectOrder(orderId);
           success({
-            message: "¡Perfecto! Tu orden ha sido marcada como recibida.",
+            message: "¡Genial! Recibirás BeCoins verdes por tu contribución.",
           });
           // Refrescar los datos de la orden desde el backend
           setTimeout(() => {
@@ -426,7 +486,7 @@ export const OrderDetailScreen: React.FC = () => {
           }, 1000);
         } catch (err) {
           error({
-            message: "No se pudo confirmar la recepción. Inténtalo de nuevo.",
+            message: "No se pudo registrar la devolución. Inténtalo de nuevo.",
           });
         }
       },
@@ -442,17 +502,32 @@ export const OrderDetailScreen: React.FC = () => {
       // TODO: Implementar API call para enviar feedback
       // await orderService.submitFeedback(orderId, rating, feedback);
 
-      return Promise.resolve();
-    } catch (error) {
-      throw new Error("No se pudo enviar el feedback");
+      // Cerrar el modal primero
+      setShowFeedbackModal(false);
+
+      // Mostrar mensaje de éxito después de cerrar
+      setTimeout(() => {
+        success({
+          message: "¡Gracias por tu feedback! Nos ayuda a mejorar.",
+        });
+      }, 300);
+    } catch (err) {
+      console.error("Error al enviar feedback:", err);
+      error({
+        message: "No se pudo enviar el feedback. Inténtalo de nuevo.",
+      });
+      throw err;
     }
   };
 
   const canCancelOrder =
     baseOrder.status === "pending" || baseOrder.status === "confirmed";
 
-  const canConfirmReception = baseOrder.status === "shipped";
-  const canLeaveFeedback = baseOrder.status === "delivered";
+  const canReturnPackaging = baseOrder.status === "delivered";
+  const canLeaveFeedback =
+    baseOrder.status === "delivered" ||
+    baseOrder.status === "collected" ||
+    baseOrder.status === "recycled";
 
   return (
     <SafeAreaView style={orderDetailStyles.container}>
@@ -470,7 +545,7 @@ export const OrderDetailScreen: React.FC = () => {
               Detalle de la orden
             </Text>
             <Text style={orderDetailStyles.headerSubtitle}>
-              Orden #{baseOrder.id.slice(-8)}
+              Orden #{(baseOrder as any).code || baseOrder.id.slice(-8)}
             </Text>
           </View>
         </View>
@@ -486,7 +561,7 @@ export const OrderDetailScreen: React.FC = () => {
           <View style={orderDetailStyles.heroHeader}>
             <View style={orderDetailStyles.heroInfo}>
               <Text style={orderDetailStyles.orderId}>
-                #{baseOrder.id.slice(-8)}
+                #{(baseOrder as any).code || baseOrder.id.slice(-8)}
               </Text>
               <Text style={orderDetailStyles.orderDate}>
                 {formatDate(baseOrder.createdAt)}
@@ -527,6 +602,33 @@ export const OrderDetailScreen: React.FC = () => {
             </View>
           )}
         </View>
+
+        {/* Código de Entrega - Mostrar prominentemente si la orden no está entregada aún */}
+        {(baseOrder.status === "pending" ||
+          baseOrder.status === "preparing" ||
+          baseOrder.status === "shipped") &&
+          (baseOrder as any).code && (
+            <View style={orderDetailStyles.deliveryCodeCard}>
+              <View style={orderDetailStyles.deliveryCodeHeader}>
+                <MaterialCommunityIcons
+                  name="key-variant"
+                  size={24}
+                  color={colors.belandOrange}
+                />
+                <Text style={orderDetailStyles.deliveryCodeTitle}>
+                  Código de Entrega
+                </Text>
+              </View>
+              <Text style={orderDetailStyles.deliveryCodeSubtitle}>
+                Muestra este código al delivery al recibir tu pedido
+              </Text>
+              <View style={orderDetailStyles.deliveryCodeBox}>
+                <Text style={orderDetailStyles.deliveryCode}>
+                  {(baseOrder as any).code}
+                </Text>
+              </View>
+            </View>
+          )}
 
         {/* Delivery Information */}
         <View style={orderDetailStyles.card}>
@@ -614,7 +716,10 @@ export const OrderDetailScreen: React.FC = () => {
               />
             </View>
             <Text style={orderDetailStyles.cardTitle}>
-              Productos ({(displayOrder?.items || []).length})
+              Productos (
+              {(displayOrder as any)?.total_items ||
+                (displayOrder?.items || []).length}
+              )
             </Text>
           </View>
 
@@ -776,18 +881,14 @@ export const OrderDetailScreen: React.FC = () => {
             </TouchableOpacity>
           )}
 
-          {canConfirmReception && (
+          {canReturnPackaging && (
             <TouchableOpacity
               style={orderDetailStyles.confirmButton}
-              onPress={handleConfirmReception}
+              onPress={handleReturnPackaging}
             >
-              <MaterialCommunityIcons
-                name="check-circle"
-                size={20}
-                color="white"
-              />
+              <MaterialCommunityIcons name="recycle" size={20} color="white" />
               <Text style={orderDetailStyles.confirmButtonText}>
-                Confirmar recepción
+                Devolver envases
               </Text>
             </TouchableOpacity>
           )}

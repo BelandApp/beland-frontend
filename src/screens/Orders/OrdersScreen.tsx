@@ -22,6 +22,26 @@ type OrdersScreenNavigationProp = StackNavigationProp<
   "OrdersList"
 >;
 
+// Helper function to map backend status codes to frontend status
+const mapBackendStatusToFrontend = (backendStatus: string): OrderStatus => {
+  const statusMap: Record<string, OrderStatus> = {
+    PENDING: "pending",
+    PREPARING: "preparing",
+    ON_ROUTE: "shipped",
+    DELIVERED: "delivered",
+    COLLECTED: "collected",
+    RECYCLED: "recycled",
+    CANCELLED: "cancelled",
+  };
+
+  const upperStatus = backendStatus?.toUpperCase();
+  return (
+    statusMap[upperStatus] ||
+    (backendStatus?.toLowerCase() as OrderStatus) ||
+    "pending"
+  );
+};
+
 const OrdersScreen: React.FC = () => {
   const { navigate, goBack } = useCustomNavigation();
 
@@ -104,6 +124,10 @@ const OrdersScreen: React.FC = () => {
         return "#5856D6";
       case "delivered":
         return "#30B0C7";
+      case "collected":
+        return "#32ADE6";
+      case "recycled":
+        return "#4CAF50";
       case "cancelled":
         return "#FF3B30";
       default:
@@ -120,9 +144,13 @@ const OrdersScreen: React.FC = () => {
       case "preparing":
         return "Preparando";
       case "shipped":
-        return "Enviada";
+        return "En camino";
       case "delivered":
         return "Entregada";
+      case "collected":
+        return "Recolectada";
+      case "recycled":
+        return "Reciclada";
       case "cancelled":
         return "Cancelada";
       default:
@@ -142,6 +170,10 @@ const OrdersScreen: React.FC = () => {
         return "truck-delivery-outline" as const;
       case "delivered":
         return "check-circle" as const;
+      case "collected":
+        return "package-check" as const;
+      case "recycled":
+        return "recycle" as const;
       case "cancelled":
         return "close-circle-outline" as const;
       default:
@@ -291,7 +323,9 @@ const OrdersScreen: React.FC = () => {
         <View style={ordersStyles.orderCardHeader}>
           <View style={ordersStyles.orderMainInfo}>
             <View style={ordersStyles.orderIdRow}>
-              <Text style={ordersStyles.orderId}>#{order.id.slice(-8)}</Text>
+              <Text style={ordersStyles.orderId}>
+                #{(order as any).code || order.id.slice(-8)}
+              </Text>
               <View
                 style={[
                   ordersStyles.statusIndicator,
@@ -314,7 +348,10 @@ const OrdersScreen: React.FC = () => {
               {formatCurrency(order.total)}
             </Text>
             <Text style={ordersStyles.orderItemCount}>
-              {order.items.length} item{order.items.length !== 1 ? "s" : ""}
+              {(order as any).total_items || order.items?.length || 0} item
+              {((order as any).total_items || order.items?.length || 0) !== 1
+                ? "s"
+                : ""}
             </Text>
           </View>
         </View>
@@ -360,7 +397,9 @@ const OrdersScreen: React.FC = () => {
                 ordersStyles.progressBar,
                 {
                   width:
-                    order.status === "delivered"
+                    order.status === "delivered" ||
+                    order.status === "collected" ||
+                    order.status === "recycled"
                       ? "100%"
                       : order.status === "shipped"
                       ? "75%"

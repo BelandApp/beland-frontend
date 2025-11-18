@@ -14,7 +14,7 @@ import { colors } from "../../../styles/colors";
 interface FeedbackModalProps {
   visible: boolean;
   onClose: () => void;
-  onSubmit: (rating: number, feedback: string) => void;
+  onSubmit: (rating: number, feedback: string) => Promise<void>;
   orderId: string;
   loading?: boolean;
 }
@@ -28,14 +28,23 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
 }) => {
   const [rating, setRating] = useState(0);
   const [feedback, setFeedback] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = () => {
-    if (rating === 0) return;
-    onSubmit(rating, feedback);
+  const handleSubmit = async () => {
+    if (rating === 0 || isSubmitting) return;
 
-    // Reset values
-    setRating(0);
-    setFeedback("");
+    setIsSubmitting(true);
+    try {
+      await onSubmit(rating, feedback);
+
+      // Reset values after successful submit
+      setRating(0);
+      setFeedback("");
+    } catch (error) {
+      console.error("Error submitting feedback:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleClose = () => {
@@ -52,7 +61,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
           key={i}
           onPress={() => setRating(i)}
           style={styles.starButton}
-          disabled={loading}
+          disabled={loading || isSubmitting}
         >
           <MaterialCommunityIcons
             name={i <= rating ? "star" : "star-outline"}
@@ -108,7 +117,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
             multiline
             numberOfLines={4}
             maxLength={500}
-            editable={!loading}
+            editable={!loading && !isSubmitting}
           />
 
           <Text style={styles.characterCount}>
@@ -119,7 +128,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
             <TouchableOpacity
               style={styles.cancelButton}
               onPress={handleClose}
-              disabled={loading}
+              disabled={loading || isSubmitting}
             >
               <Text style={styles.cancelButtonText}>Cancelar</Text>
             </TouchableOpacity>
@@ -128,12 +137,12 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
               style={[
                 styles.submitButton,
                 rating === 0 && styles.submitButtonDisabled,
-                loading && styles.submitButtonLoading,
+                (loading || isSubmitting) && styles.submitButtonLoading,
               ]}
               onPress={handleSubmit}
-              disabled={rating === 0 || loading}
+              disabled={rating === 0 || loading || isSubmitting}
             >
-              {loading ? (
+              {loading || isSubmitting ? (
                 <Text style={styles.submitButtonText}>Enviando...</Text>
               ) : (
                 <>
