@@ -3,8 +3,10 @@ export type OrderStatus =
   | "confirmed" // Pago confirmado, preparando
   | "preparing" // En preparación
   | "ready" // Listo para envío
-  | "shipped" // Enviado
+  | "shipped" // Enviado (en camino)
   | "delivered" // Entregado
+  | "collected" // Recolectado (residuos)
+  | "recycled" // Reciclado
   | "cancelled" // Cancelado
   | "refunded"; // Reembolsado
 

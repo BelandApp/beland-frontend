@@ -10,6 +10,26 @@ import { OrderService, CartService, CreateOrderDto } from "@services/core";
 import { useCartStore } from "./useCartStore";
 import { useAuthTokenStore } from "./useAuthTokenStore";
 
+// Helper function to map backend status codes to frontend status
+const mapBackendStatusToFrontend = (backendStatus: string): OrderStatus => {
+  const statusMap: Record<string, OrderStatus> = {
+    PENDING: "pending",
+    PREPARING: "preparing",
+    ON_ROUTE: "shipped",
+    DELIVERED: "delivered",
+    COLLECTED: "collected",
+    RECYCLED: "recycled",
+    CANCELLED: "cancelled",
+  };
+
+  const upperStatus = backendStatus?.toUpperCase();
+  return (
+    statusMap[upperStatus] ||
+    (backendStatus?.toLowerCase() as OrderStatus) ||
+    "pending"
+  );
+};
+
 // Import dinámico de AsyncStorage solo en mobile
 let AsyncStorage: any = undefined;
 if (typeof navigator !== "undefined" && navigator.product === "ReactNative") {
@@ -493,7 +513,9 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
             }
           : undefined,
         subtotal: parseFloat(apiOrder.subtotal_amount) || 0,
-        status: apiOrder.status?.code?.toLowerCase() || apiOrder.status,
+        status: mapBackendStatusToFrontend(
+          apiOrder.status?.code || apiOrder.status
+        ),
         createdAt: apiOrder.created_at
           ? new Date(apiOrder.created_at)
           : new Date(),
@@ -568,7 +590,9 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
             }
           : undefined,
         subtotal: parseFloat(apiOrder.subtotal_amount) || 0,
-        status: apiOrder.status?.code?.toLowerCase() || apiOrder.status,
+        status: mapBackendStatusToFrontend(
+          apiOrder.status?.code || apiOrder.status
+        ),
         createdAt: apiOrder.created_at
           ? new Date(apiOrder.created_at)
           : new Date(),
@@ -642,23 +666,42 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
     set({ isLoading: true, error: undefined });
 
     try {
-      console.log("🌐 Store API: Confirming reception via API:", orderId);
-      const updatedOrder = await OrderService.updateOrderStatus(
-        orderId,
-        "delivered"
+      console.log(
+        "🌐 Store API: User confirming reception (local update):",
+        orderId
       );
 
-      if (updatedOrder) {
-        // Update local state with the updated order from backend
-        get().updateOrderFromApi(updatedOrder);
-        console.log("✅ Store API: Reception confirmed");
-        // reception confirmed
-        set({ isLoading: false });
-        return true;
-      }
+      // Note: The backend marks orders as delivered via the delivery person with a code.
+      // User confirmation is just a local acknowledgment that they received the order.
+      // We don't need to call the backend here, the order is already marked as delivered.
 
-      set({ isLoading: false });
-      return false;
+      set((state) => {
+        const updatedOrders = state.orders.map((order) =>
+          order.id === orderId
+            ? {
+                ...order,
+                // User has acknowledged receipt
+                // Could add a local flag here if needed: userConfirmedReceipt: true
+              }
+            : order
+        );
+
+        const newState = {
+          ...state,
+          orders: updatedOrders,
+          currentOrder:
+            state.currentOrder?.id === orderId
+              ? updatedOrders.find((o) => o.id === orderId)
+              : state.currentOrder,
+          isLoading: false,
+        };
+
+        saveOrdersState(newState);
+        return newState;
+      });
+
+      console.log("✅ Store API: User acknowledged reception");
+      return true;
     } catch (error) {
       console.error("❌ Store API: Error confirming reception:", error);
       set({
@@ -738,8 +781,10 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
       // Map API response to frontend format
       const mappedOrder = {
         ...apiOrder,
-        // Map status from object to string
-        status: apiOrder.status?.code?.toLowerCase() || apiOrder.status,
+        // Map status from backend code to frontend code
+        status: mapBackendStatusToFrontend(
+          apiOrder.status?.code || apiOrder.status
+        ),
         // Map address to deliveryAddress
         deliveryAddress: apiOrder.address
           ? {
