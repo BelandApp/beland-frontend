@@ -3,6 +3,7 @@ export type ResetPasswordStepProps = {
   isLoading?: boolean;
 };
 export interface CodeStepProps extends ResetPasswordStepProps {
+  FormData: FormCodeCheck;
   onStepBack: () => void;
   onResendCode: () => void;
 }

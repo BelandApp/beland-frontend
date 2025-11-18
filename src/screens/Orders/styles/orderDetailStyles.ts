@@ -559,4 +559,57 @@ export const orderDetailStyles = StyleSheet.create({
     fontWeight: "700",
     color: "white",
   },
+
+  // Delivery Code Card
+  deliveryCodeCard: {
+    backgroundColor: "white",
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: colors.belandOrange,
+    ...Platform.select({
+      ios: {
+        shadowColor: colors.belandOrange,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  deliveryCodeHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+    gap: 10,
+  },
+  deliveryCodeTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1C1C1E",
+  },
+  deliveryCodeSubtitle: {
+    fontSize: 14,
+    color: "#8E8E93",
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  deliveryCodeBox: {
+    backgroundColor: "#FFF5F2",
+    borderRadius: 12,
+    padding: 20,
+    alignItems: "center",
+    borderWidth: 2,
+    borderStyle: "dashed",
+    borderColor: colors.belandOrange,
+  },
+  deliveryCode: {
+    fontSize: 48,
+    fontWeight: "800",
+    color: colors.belandOrange,
+    letterSpacing: 8,
+  },
 });

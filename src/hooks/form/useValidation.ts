@@ -18,12 +18,14 @@ export const useValidation = () => {
       password
     );
 
-  /** Número de teléfono: validación sencilla sin prefijo todavía */
+  /** Número de teléfono: validación con prefijo */ 
   const validatePhone = (phone: string) =>
-    /^\+?[1-9]\d{1,3}\d{6,14}$/.test(phone.replace(/\s+/g, ""));
+    /^\+[1-9]\d{7,14}$/.test(phone.replace(/\s+/g, ""));
+
 
   // Codigo de verificacion enviado al mail
   const validateCode = (code: string) => /^\d{6}$/.test(code.replace(/\s+/g, ""));
+
   /** Validación genérica de formulario */
   const validateForm = (data: {
     name?: string;

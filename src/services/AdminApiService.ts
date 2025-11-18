@@ -474,8 +474,54 @@ export class AdminApiService extends CoreApiService {
   }
 
   // =================== ORDERS MANAGEMENT ===================
-  async getOrders(page: number = 1, limit: number = 10): Promise<AdminOrder[]> {
-    return this.get<AdminOrder[]>(`orders?page=${page}&limit=${limit}`);
+  async getOrders(
+    page: number = 1,
+    limit: number = 10
+  ): Promise<{
+    data: AdminOrder[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    const response = await this.get<any>(`orders?page=${page}&limit=${limit}`);
+
+    // Normalizar respuesta - puede venir como array directo o como objeto con data
+    if (Array.isArray(response)) {
+      // Si es un array directo [orders, total]
+      if (response.length === 2 && Array.isArray(response[0])) {
+        return {
+          data: response[0],
+          total: response[1] || response[0].length,
+          page,
+          limit,
+        };
+      }
+      // Si es un array de órdenes directamente
+      return {
+        data: response,
+        total: response.length,
+        page,
+        limit,
+      };
+    }
+
+    // Si viene como objeto con data y total
+    if (response.data && Array.isArray(response.data)) {
+      return {
+        data: response.data,
+        total: response.total || response.data.length,
+        page: response.page || page,
+        limit: response.limit || limit,
+      };
+    }
+
+    // Fallback
+    return {
+      data: [],
+      total: 0,
+      page,
+      limit,
+    };
   }
 
   async updateOrderStatus(
@@ -527,7 +573,7 @@ export class AdminApiService extends CoreApiService {
         totalUsers: usersResp.total || 0,
         totalProducts: productsResp.total || 0,
         totalEvents: eventsResp.total || 0,
-        totalOrders: Array.isArray(ordersResp) ? ordersResp.length : 0,
+        totalOrders: ordersResp.total || 0,
         totalOrganizations: Array.isArray(orgsResp) ? orgsResp.length : 0,
         revenueThisMonth: 0, // This needs backend calculation
         activeEvents: 0, // This needs backend calculation
@@ -535,6 +581,7 @@ export class AdminApiService extends CoreApiService {
 
       return metrics;
     } catch (error: any) {
+      console.error("Error fetching dashboard metrics:", error);
       throw new Error("Error fetching dashboard metrics");
     }
   }

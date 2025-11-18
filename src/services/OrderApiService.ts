@@ -336,6 +336,16 @@ class OrderServiceClass extends CoreApiService {
   }
 
   /**
+   * Mark order as collected (user returns packaging)
+   * Returns the order with a recycling code that can be used at recycling centers
+   */
+  async collectOrder(orderId: string): Promise<Order> {
+    const params = new URLSearchParams();
+    params.append("order_id", orderId);
+    return this.put(`orders/collected?${params.toString()}`);
+  }
+
+  /**
    * Add tracking information to order (admin/system use)
    */
   async addTracking(

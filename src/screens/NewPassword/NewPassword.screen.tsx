@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   Dimensions,
 } from "react-native";
-import { CustomInput } from "src/components/shared";
 import { LoginWave } from "src/components/ui/waves/Login.wave";
 import { colors } from "src/styles";
 import EmailStep from "./components/Email.step";
@@ -22,6 +21,7 @@ export const NewPasswordScreen = () => {
   const { navigate } = useCustomNavigation();
   const { width, height } = Dimensions.get("window");
   const {
+    FormData,
     handleCode,
     handleMail,
     handlePassword,
@@ -59,6 +59,7 @@ export const NewPasswordScreen = () => {
             onResendCode={handleReSendCode}
             onStepBack={handleStepBack}
             isLoading={isLoading}
+            FormData={FormData}
           />
         )}
         {step === "password" && <NewPasswordStep onSubmit={handlePassword} />}
