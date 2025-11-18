@@ -101,6 +101,8 @@ const AppContent = () => {
     currentRoute !== "user-dashboard" &&
     currentRoute !== "OrdersManagement" &&
     currentRoute !== "OrderAdminDetail" &&
+    currentRoute !== "EventModal" &&
+    currentRoute !== "AcquiredEventModal" &&
     currentRoute &&
     !walletActionScreens.includes(currentRoute) &&
     !!user;
