@@ -11,6 +11,7 @@ import { Pressable, StyleSheet, View, Text, Image } from "react-native";
 import { Event } from "src/stores/Event";
 import { colors } from "src/styles";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
+import { convertBeCoinsToUSD, formatUSDPrice } from "src/constants/currency";
 
 export const EventCard: React.FC<Event> = ({
   id,
@@ -88,9 +89,19 @@ export const EventCard: React.FC<Event> = ({
           </View>
         </View>
         <View style={styles.footer}>
-          <View style={styles.textContainer}>
-            <BadgeDollarSign color={colors.belandOrange} />
-            <Text style={styles.eventPrice}>{price_becoin} Becoin</Text>
+          <View style={styles.priceSection}>
+            <View style={styles.textContainer}>
+              <BadgeDollarSign color={colors.belandOrange} />
+              <Text style={styles.eventPrice}>{price_becoin} Becoin</Text>
+            </View>
+            {/* Badge de precio en USD más distintivo */}
+            <View style={styles.usdBadge}>
+              <Text style={styles.usdBadgeLabel}>≈ </Text>
+              <Text style={styles.usdBadgePrice}>
+                ${formatUSDPrice(convertBeCoinsToUSD(Number(price_becoin)))}
+              </Text>
+              <Text style={styles.usdBadgeCurrency}> USD</Text>
+            </View>
           </View>
           <SquareChevronUp />
         </View>
@@ -181,5 +192,36 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 2,
+  },
+  priceSection: {
+    flexDirection: "column",
+    gap: 6,
+    alignItems: "flex-start",
+  },
+  usdBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: colors.belandOrange,
+  },
+  usdBadgeLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.belandOrange,
+  },
+  usdBadgePrice: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: colors.belandOrange,
+  },
+  usdBadgeCurrency: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.belandOrange,
+    opacity: 0.8,
   },
 });

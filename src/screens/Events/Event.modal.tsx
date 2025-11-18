@@ -21,12 +21,14 @@ import { colors } from "src/styles";
 import { useAuth } from "src/context";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { useNotify } from "src/hooks";
+import { convertBeCoinsToUSD, formatUSDPrice } from "src/constants/currency";
 
 export const EventModal = ({ route }: { route: any }) => {
   const { id } = route.params;
-  const notify = useNotify()
+  const notify = useNotify();
   const { getEvent } = useEventStore();
-  const event = getEvent(id);  const { navigate, goBack } = useCustomNavigation();
+  const event = getEvent(id);
+  const { navigate, goBack } = useCustomNavigation();
   const { canPerformAction, handleAuth0Login } = useAuth();
   const [visibleImage, setVisibleImage] = useState(0);
 
@@ -80,7 +82,10 @@ export const EventModal = ({ route }: { route: any }) => {
 
   const handleBuy = async () => {
     if (!canPerformAction) {
-     notify.confirm({ message: "Debe iniciar sesión para adquirir", onConfirm: () => handleAuth0Login() });
+      notify.confirm({
+        message: "Debe iniciar sesión para adquirir",
+        onConfirm: () => handleAuth0Login(),
+      });
       return;
     }
     navigate("NewPaymentScreen", {
@@ -165,9 +170,23 @@ export const EventModal = ({ route }: { route: any }) => {
               <Text style={styles.description}>{description}</Text>
 
               <View style={styles.section}>
-                <View style={styles.infoRow}>
-                  <DollarSign size={18} color={colors.primary} />
-                  <Text style={styles.infoStrong}>{price_becoin} Becoins</Text>
+                <View style={styles.priceContainer}>
+                  <View style={styles.infoRow}>
+                    <DollarSign size={18} color={colors.primary} />
+                    <Text style={styles.infoStrong}>
+                      {price_becoin} Becoins
+                    </Text>
+                  </View>
+                  {/* Badge de precio en USD */}
+                  <View style={styles.usdPriceBadge}>
+                    <Text style={styles.usdPriceText}>
+                      ≈ $
+                      {formatUSDPrice(
+                        convertBeCoinsToUSD(Number(price_becoin))
+                      )}{" "}
+                      USD
+                    </Text>
+                  </View>
                 </View>
                 <View style={styles.infoRow}>
                   <Ticket size={18} color={colors.textSecondary} />
@@ -282,6 +301,28 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: 20,
+  },
+  priceContainer: {
+    flexDirection: "column",
+    gap: 8,
+    marginBottom: 8,
+  },
+  usdPriceBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: colors.belandOrange,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  usdPriceText: {
+    color: "white",
+    fontSize: 15,
+    fontWeight: "700",
   },
   refundBox: {
     flexDirection: "row",
