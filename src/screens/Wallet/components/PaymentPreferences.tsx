@@ -43,22 +43,18 @@ export const PaymentPreferences: React.FC<PaymentPreferencesProps> = ({
   const loadAccounts = async () => {
     try {
       setLoading(true);
-      console.log("📋 Cargando cuentas de retiro...");
+
       const response = await WithdrawService.getWithdrawAccounts();
-      console.log("📋 Cuentas obtenidas:", response.data);
-      response.data.forEach((account, index) => {
-        console.log(`📋 Cuenta ${index + 1}:`, {
-          id: account.id,
-          owner_name: account.owner_name,
-          is_active: account.is_active,
-          type: account.type?.name,
-        });
-      });
-      setAccounts(response.data);
+
+      // Validación defensiva: asegurar que response.data sea un array
+      const accountsData = Array.isArray(response.data) ? response.data : [];
+
+      setAccounts(accountsData);
     } catch (error) {
+      console.error("❌ Error cargando cuentas:", error);
       const message = getBackendErrorMessage(error);
       notify.error({ message: message || "Error cargando cuentas de retiro" });
-      // En una implementación real, podrías mostrar un toast o un mensaje en la UI
+      setAccounts([]); // Establecer array vacío en caso de error
     } finally {
       setLoading(false);
     }
@@ -73,7 +69,7 @@ export const PaymentPreferences: React.FC<PaymentPreferencesProps> = ({
       await loadAccounts(); // Recargar lista
       onRefresh?.(); // Notificar al componente padre
 
-      notify.success({message:"Cuenta creada exitosamente"});
+      notify.success({ message: "Cuenta creada exitosamente" });
     } catch (error: any) {
       const message = getBackendErrorMessage(error);
       notify.error({ message: message || "Error creando cuenta de retiro" });
@@ -87,14 +83,10 @@ export const PaymentPreferences: React.FC<PaymentPreferencesProps> = ({
       accountTypeName.includes("payphone") ||
       account.provider?.toLowerCase() === "payphone"
     ) {
-      return (
-        <View style={styles.methodIconMP}>
-          <PayphoneIcon />
-        </View>
-      );
+      return <PayphoneIcon />;
     }
 
-    return <Building2 size={20} color="#333" />;
+    return <Building2 size={18} color="#666" />;
   };
 
   const getMethodTitle = (account: WithdrawAccount) => {
@@ -229,70 +221,43 @@ export const PaymentPreferences: React.FC<PaymentPreferencesProps> = ({
           style={styles.addButton}
           onPress={() => setShowAddModal(true)}
         >
-          <Plus size={20} color="#FF6B35" />
+          <Plus size={18} color="#FF6B35" />
         </TouchableOpacity>
       </View>
 
       {accounts.length === 0 ? (
         <View style={styles.emptyState}>
-          <CreditCard size={48} color="#ccc" />
-          <Text style={styles.emptyTitle}>No tienes cuentas de retiro</Text>
-          <Text style={styles.emptySubtitle}>
-            Agrega tu primera cuenta para retirar tus BeCoins
-          </Text>
-          <TouchableOpacity
-            style={styles.emptyButton}
-            onPress={() => setShowAddModal(true)}
-          >
-            <Plus size={16} color="#fff" />
-            <Text style={styles.emptyButtonText}>Agregar cuenta</Text>
-          </TouchableOpacity>
+          <CreditCard size={24} color="#999" strokeWidth={1.5} />
+          <Text style={styles.emptyText}>No hay cuentas agregadas</Text>
         </View>
       ) : (
         <View style={styles.methodsList}>
           {accounts.map((account, index) => (
-            <View
-              key={account.id}
-              style={[
-                styles.methodCard,
-                index % 2 === 1 && styles.methodCardRight,
-                !account.is_active && styles.methodCardInactive,
-              ]}
-            >
-              {/* Header con estado y botón de opciones */}
-              <View style={styles.cardHeader}>
-                <View style={styles.leftSpacer} />
-                <View style={styles.rightSection}>
-                  {!account.is_active && (
-                    <View style={styles.inactiveBadge}>
-                      <Text style={styles.inactiveBadgeText}>Inactiva</Text>
-                    </View>
-                  )}
-                  <TouchableOpacity
-                    style={styles.optionsButton}
-                    onPress={() => handleMethodOptions(account)}
-                  >
-                    <MoreVertical size={16} color="#666" />
-                  </TouchableOpacity>
+            <View key={account.id} style={styles.methodCard}>
+              <View style={styles.methodRow}>
+                <View style={styles.methodIconSimple}>
+                  {getMethodIcon(account)}
                 </View>
-              </View>
-
-              <View style={styles.methodContent}>
-                <View style={styles.methodIcon}>{getMethodIcon(account)}</View>
                 <View style={styles.methodInfo}>
-                  <View style={styles.methodHeader}>
-                    <Text style={styles.methodTitle} numberOfLines={1}>
-                      {getMethodTitle(account)}
-                    </Text>
-                  </View>
+                  <Text style={styles.methodTitle} numberOfLines={1}>
+                    {getMethodTitle(account)}
+                  </Text>
                   <Text style={styles.methodSubtitle} numberOfLines={1}>
                     {getMethodSubtitle(account)}
                   </Text>
-                  <Text style={styles.methodAlias} numberOfLines={1}>
-                    {account.alias}
-                  </Text>
                 </View>
+                <TouchableOpacity
+                  style={styles.deleteButton}
+                  onPress={() => handleMethodOptions(account)}
+                >
+                  <MoreVertical size={20} color="#999" strokeWidth={2} />
+                </TouchableOpacity>
               </View>
+              {!account.is_active && (
+                <View style={styles.inactiveLabel}>
+                  <Text style={styles.inactiveLabelText}>Inactiva</Text>
+                </View>
+              )}
 
               {/* Menu de opciones */}
               {activeMethodMenu === account.id && (
@@ -384,197 +349,96 @@ export const PaymentPreferences: React.FC<PaymentPreferencesProps> = ({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "#fff",
-    marginTop: 24,
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    marginTop: 16,
+    borderRadius: 8,
+    padding: 16,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 16,
   },
   title: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: "600",
     color: "#333",
   },
   addButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#FFF5F2",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#FF6B35",
-  },
-  loadingContainer: {
-    alignItems: "center",
-    paddingVertical: 32,
-  },
-  loadingText: {
-    fontSize: 14,
-    color: "#666",
-    marginTop: 12,
-  },
-  emptyState: {
-    alignItems: "center",
-    paddingVertical: 32,
-  },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  emptySubtitle: {
-    fontSize: 14,
-    color: "#666",
-    textAlign: "center",
-    marginBottom: 24,
-    lineHeight: 20,
-  },
-  emptyButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FF6B35",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 20,
-    gap: 8,
-  },
-  emptyButtonText: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  methodsList: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
-    justifyContent: "space-between",
-  },
-  methodCard: {
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 12,
-    backgroundColor: "#f9f9f9",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#f0f0f0",
-    width: "48%", // Para que quepan 2 lado a lado
-    minHeight: 120,
-  },
-  methodCardRight: {
-    marginLeft: 0, // Sin margen adicional ya que flexWrap maneja el espaciado
-  },
-  methodCardInactive: {
-    backgroundColor: "#f5f5f5",
-    opacity: 0.7,
-  },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    width: "100%",
-    minHeight: 24,
-    marginBottom: 8,
-  },
-  leftSpacer: {
-    flex: 1,
-  },
-  rightSection: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  methodContent: {
-    flexDirection: "column", // Cambiado a column para layout vertical
-    alignItems: "center",
-    flex: 1,
-    width: "100%",
-  },
-  methodIcon: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "#fff",
+    backgroundColor: "#f5f5f5",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 8,
+  },
+  loadingContainer: {
+    alignItems: "center",
+    paddingVertical: 20,
+  },
+  loadingText: {
+    fontSize: 13,
+    color: "#999",
+    marginTop: 8,
+  },
+  emptyState: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 20,
+    gap: 8,
+  },
+  emptyText: {
+    fontSize: 13,
+    color: "#999",
+  },
+  methodsList: {
+    gap: 8,
+  },
+  methodCard: {
+    backgroundColor: "#FAFAFA",
+    borderRadius: 8,
+    padding: 12,
     borderWidth: 1,
-    borderColor: "#e0e0e0",
-    alignSelf: "center",
+    borderColor: "#F0F0F0",
   },
-  methodIconMP: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+  methodRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
   },
-  methodIconText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "bold",
+  methodIconSimple: {
+    width: 32,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
   },
   methodInfo: {
     flex: 1,
-    alignItems: "center",
-    width: "100%",
-  },
-  methodHeader: {
-    justifyContent: "center",
-    marginBottom: 4,
   },
   methodTitle: {
-    fontSize: 13,
-    fontWeight: "600",
+    fontSize: 14,
+    fontWeight: "500",
     color: "#333",
-    textAlign: "center",
-  },
-  defaultBadge: {
-    backgroundColor: "#7FB069",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
-    alignSelf: "flex-end",
-  },
-  defaultBadgeText: {
-    color: "#fff",
-    fontSize: 9,
-    fontWeight: "600",
-  },
-  inactiveBadge: {
-    backgroundColor: "#FF6B6B",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
-    alignSelf: "flex-end",
-  },
-  inactiveBadgeText: {
-    color: "#fff",
-    fontSize: 9,
-    fontWeight: "600",
+    marginBottom: 2,
   },
   methodSubtitle: {
-    fontSize: 11,
+    fontSize: 12,
     color: "#666",
-    marginBottom: 2,
-    textAlign: "center",
   },
-  methodAlias: {
-    fontSize: 10,
-    color: "#999",
-    textAlign: "center",
-  },
-  optionsButton: {
+  deleteButton: {
     padding: 4,
+  },
+  inactiveLabel: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: "#F0F0F0",
+  },
+  inactiveLabelText: {
+    fontSize: 11,
+    color: "#FF6B6B",
+    fontWeight: "500",
   },
   // Estilos para el menú de opciones
   menuOverlay: {

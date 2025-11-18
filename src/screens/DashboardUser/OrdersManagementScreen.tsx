@@ -5,19 +5,19 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   StyleSheet,
-  ScrollView,
+  RefreshControl,
 } from "react-native";
+import { useNotify } from "src/hooks";
+import { useOrderSocket } from "src/hooks/useOrderSocket";
 import { OrderService } from "@services/core";
 import { Order as ApiOrder } from "@services/OrderApiService";
 import { ThemedHeader } from "src/components/shared/headers/Header";
 import { useAuth } from "src/context";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { colors } from "src/styles/colors";
-import { SocketService } from "src/services/SocketService";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { VerificationCodeModal } from "src/components/shared/modals/VerificationCodeModal";
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f8f9fa" },
@@ -68,6 +68,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     minWidth: 80,
     alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
   },
   statusText: {
     color: "white",
@@ -186,27 +188,33 @@ const styles = StyleSheet.create({
 export const OrdersManagementScreen: React.FC = () => {
   const [orders, setOrders] = useState<ApiOrder[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [verificationModalVisible, setVerificationModalVisible] =
+    useState(false);
+  const [pendingDeliveryOrderId, setPendingDeliveryOrderId] = useState<
+    string | null
+  >(null);
+  const [pendingDeliveryOrderNumber, setPendingDeliveryOrderNumber] =
+    useState<string>("");
   const { user } = useAuth();
   const { navigate } = useCustomNavigation();
+  const notify = useNotify();
 
-  const loadOrders = useCallback(async () => {
-    setLoading(true);
+  const loadOrders = useCallback(async (isRefresh = false) => {
+    if (isRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
+
     try {
       // Traer órdenes (sin filtro para admin)
       const res = await OrderService.getOrders({ page: 1, limit: 50 });
 
-      // Diagnostic - show raw response shape (helps track backend variants)
-      console.log("OrdersManagement: raw getOrders response:", res);
-
       // Map several possible response shapes into an array of orders:
-      // 1) PaginatedResponse: { data: Order[], total, page, limit }
-      // 2) Wrapped: { data: { data: Order[], total } }
-      // 3) Tuple: [Order[], total]
-      // 4) Direct array: Order[]
       let data: any[] = [];
 
       if (Array.isArray(res)) {
-        // Could be [orders, total] or directly an array of orders
         if (res.length > 0 && Array.isArray(res[0])) {
           data = res[0];
         } else {
@@ -224,22 +232,38 @@ export const OrdersManagementScreen: React.FC = () => {
         } else if (Array.isArray((res as any).orders)) {
           data = (res as any).orders;
         } else {
-          // Fallback: try to find the first array-valued property
           const found = Object.values(res).find((v) => Array.isArray(v));
           if (found) data = found as any[];
         }
       }
 
-      console.log(
-        "OrdersManagement: mapped orders count:",
-        (data || []).length
-      );
-      setOrders((data || []) as ApiOrder[]);
+      // Cargar detalles completos de cada orden para obtener user y address
+      // Esto es necesario porque el endpoint de lista no incluye estas relaciones
+      if (data && data.length > 0) {
+        const ordersWithDetails = await Promise.all(
+          data.map(async (order) => {
+            try {
+              const fullOrder = await OrderService.getOrder(order.id);
+              return fullOrder;
+            } catch (err) {
+              console.error(
+                `Failed to load details for order ${order.id}:`,
+                err
+              );
+              return order;
+            }
+          })
+        );
+        // Forzar creación de nuevo array para que React detecte el cambio
+        setOrders([...ordersWithDetails] as ApiOrder[]);
+      } else {
+        setOrders([...(data || [])] as ApiOrder[]);
+      }
     } catch (err) {
       console.error("OrdersManagement: error loading orders", err);
-      Alert.alert("Error", "No se pudieron cargar las órdenes");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, []);
 
@@ -247,53 +271,10 @@ export const OrdersManagementScreen: React.FC = () => {
     loadOrders();
   }, [loadOrders]);
 
-  // Real-time updates: subscribe to socket events if backend emits them
-  useEffect(() => {
-    let socket: SocketService | null = null;
-    let mounted = true;
-
-    const initSocket = async () => {
-      try {
-        let token: string | null = null;
-        if (typeof window !== "undefined") {
-          token = window.localStorage.getItem("access_token");
-        } else {
-          token = await AsyncStorage.getItem("access_token");
-        }
-
-        if (!token) return;
-
-        socket = new SocketService();
-        socket.connect(token);
-
-        socket.onOrderCreated((data: any) => {
-          console.log("Socket orderCreated received:", data);
-          if (!mounted) return;
-          // Reload list when a new order arrives
-          loadOrders();
-        });
-
-        socket.onOrderUpdated((data: any) => {
-          console.log("Socket orderUpdated received:", data);
-          if (!mounted) return;
-          // Reload list on updates
-          loadOrders();
-        });
-      } catch (err) {
-        console.warn("OrdersManagement: socket init failed", err);
-      }
-    };
-
-    initSocket();
-
-    return () => {
-      mounted = false;
-      try {
-        socket?.disconnect();
-      } catch {}
-      socket = null;
-    };
-  }, [loadOrders]);
+  // Recargar órdenes cuando se cree o actualice una orden (el socket global maneja las notificaciones)
+  useOrderSocket(() => {
+    loadOrders();
+  });
 
   const handleChangeStatus = async (
     orderId: string,
@@ -303,55 +284,137 @@ export const OrdersManagementScreen: React.FC = () => {
     try {
       await OrderService.updateOrderStatus(orderId, status);
       await loadOrders();
-      Alert.alert("OK", `Estado actualizado a ${status}`);
+      notify.success({
+        message: `Estado actualizado a ${
+          typeof status === "object" ? (status as any)?.code : status
+        }`,
+      });
     } catch (err) {
       console.error("OrdersManagement: could not update status", err);
-      Alert.alert("Error", "No se pudo actualizar el estado");
+
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "No se pudo actualizar el estado de la orden";
+
+      notify.error({ message: errorMessage });
     } finally {
       setLoading(false);
     }
   };
 
   const handleCancel = (orderId: string) => {
-    Alert.alert("Cancelar orden", "¿Confirma cancelar esta orden?", [
-      { text: "No", style: "cancel" },
-      {
-        text: "Sí",
-        style: "destructive",
-        onPress: async () => {
-          setLoading(true);
-          try {
-            await OrderService.cancelOrder(orderId);
-            await loadOrders();
-            Alert.alert("OK", "Orden cancelada");
-          } catch (err) {
-            console.error("OrdersManagement: cancel error", err);
-            Alert.alert("Error", "No se pudo cancelar la orden");
-          } finally {
-            setLoading(false);
-          }
-        },
+    notify.confirm({
+      message: "¿Confirma cancelar esta orden?",
+      onConfirm: async () => {
+        setLoading(true);
+        try {
+          await OrderService.cancelOrder(orderId);
+          await loadOrders();
+          notify.success({ message: "Orden cancelada" });
+        } catch (err) {
+          console.error("OrdersManagement: cancel error", err);
+          notify.error({ message: "No se pudo cancelar la orden" });
+        } finally {
+          setLoading(false);
+        }
       },
-    ]);
+    });
+  };
+
+  const handleDeliverOrder = (orderId: string, orderNumber: string) => {
+    setPendingDeliveryOrderId(orderId);
+    setPendingDeliveryOrderNumber(orderNumber);
+    setVerificationModalVisible(true);
+  };
+
+  const handleConfirmDelivery = async (code: number) => {
+    if (!pendingDeliveryOrderId) return;
+
+    try {
+      await OrderService.deliverOrder(pendingDeliveryOrderId, code);
+      await loadOrders();
+      notify.success({ message: "Orden marcada como entregada" });
+    } catch (err) {
+      console.error("OrdersManagement: delivery error", err);
+      throw err; // Re-throw para que el modal muestre el error
+    }
   };
 
   const renderItem = ({ item }: { item: ApiOrder }) => {
-    // Defensive guards: some API items may be partial; avoid calling slice on undefined
-    const shortId = item && item.id ? String(item.id).slice(-8) : undefined;
-    const displayId =
-      item && (item.order_number ?? shortId)
-        ? item.order_number ?? shortId
-        : "---";
-    const createdAt =
-      item && item.created_at ? new Date(item.created_at) : undefined;
+    // Mapeo defensivo de datos según la estructura real del backend
+    const orderId = item?.id || "";
+    const shortId = orderId ? String(orderId).slice(-8) : "---";
 
-    // Normalize status: handle both object and string cases
-    const status =
-      typeof item?.status === "object"
-        ? (item?.status as any)?.code
-        : item?.status;
+    // El backend devuelve "code" en lugar de "order_number"
+    const orderCode = (item as any)?.code;
+    const orderNumber = orderCode ? `#${orderCode}` : `#${shortId}`;
 
-    // Get status color and display info
+    const createdAt = item?.created_at ? new Date(item.created_at) : null;
+
+    // Normalizar status: el backend devuelve un objeto status con código
+    const rawStatus = item?.status;
+
+    // Mapear códigos del backend a códigos del frontend
+    const mapBackendStatusToFrontend = (backendStatus: string): string => {
+      const statusMap: Record<string, string> = {
+        PENDING: "pending",
+        PREPARING: "processing",
+        ON_ROUTE: "shipped",
+        DELIVERED: "delivered",
+        CANCELLED: "cancelled",
+        COLLECTED: "collected",
+        RECYCLED: "recycled",
+      };
+      return (
+        statusMap[backendStatus.toUpperCase()] || backendStatus.toLowerCase()
+      );
+    };
+
+    let status = "unknown";
+    if (typeof rawStatus === "object" && rawStatus !== null) {
+      const code = (rawStatus as any)?.code;
+      if (code) {
+        status = mapBackendStatusToFrontend(code);
+      }
+    } else if (typeof rawStatus === "string") {
+      status = mapBackendStatusToFrontend(rawStatus);
+    }
+
+    // Debug temporal para ver el status
+    if (orderId === "b170fbb2-d308-43f4-9900-9f6c7a0841fb") {
+      console.log("🔍 DEBUG Order Status:", {
+        orderId,
+        rawStatus,
+        rawStatusType: typeof rawStatus,
+        rawStatusCode: (rawStatus as any)?.code,
+        rawStatusId: (rawStatus as any)?.id,
+        mappedStatus: status,
+        fullItemStatus: item?.status,
+      });
+    }
+
+    // Usuario: ahora sí tenemos el objeto user completo
+    const user = (item as any)?.user;
+    const userName =
+      user?.full_name ||
+      user?.username ||
+      user?.email ||
+      `Usuario ${String((item as any)?.user_id || "").slice(0, 8)}`;
+
+    // Dirección: ahora sí tenemos el objeto address completo
+    const address = (item as any)?.address;
+    const addressDisplay = address
+      ? `${address.addressLine1 || ""}${
+          address.city ? `, ${address.city}` : ""
+        }`
+      : "Sin dirección especificada";
+
+    // Productos: el backend devuelve total_items
+    const totalItems = (item as any)?.total_items || 0;
+
+    // Monto total
+    const totalAmount = Number((item as any)?.total_amount || 0).toFixed(2); // Get status color and display info
     const getStatusInfo = (status: string) => {
       switch (status) {
         case "pending":
@@ -382,6 +445,18 @@ export const OrdersManagementScreen: React.FC = () => {
             text: "Cancelada",
             icon: "close-circle-outline",
           };
+        case "collected":
+          return {
+            color: "#34C759",
+            text: "Recolectada",
+            icon: "recycle",
+          };
+        case "recycled":
+          return {
+            color: "#4CAF50",
+            text: "Reciclada",
+            icon: "leaf",
+          };
         default:
           return {
             color: "#8E8E93",
@@ -391,17 +466,17 @@ export const OrdersManagementScreen: React.FC = () => {
       }
     };
 
-    const statusInfo = getStatusInfo(status || "");
+    const statusInfo = getStatusInfo(status);
 
     return (
       <TouchableOpacity
         style={styles.card}
         activeOpacity={0.9}
-        onPress={() => navigate("OrderAdminDetail", { orderId: item?.id })}
+        onPress={() => navigate("OrderAdminDetail", { orderId: orderId })}
       >
         <View style={styles.cardHeader}>
           <View style={styles.orderInfo}>
-            <Text style={styles.orderId}>#{displayId}</Text>
+            <Text style={styles.orderId}>{orderNumber}</Text>
             <Text style={styles.orderDate}>
               {createdAt
                 ? createdAt.toLocaleDateString("es-ES", {
@@ -411,19 +486,23 @@ export const OrdersManagementScreen: React.FC = () => {
                     hour: "2-digit",
                     minute: "2-digit",
                   })
-                : ""}
+                : "Fecha desconocida"}
             </Text>
           </View>
           <View style={styles.statusAndAmount}>
-            <Text style={styles.amountText}>{`$${Number(
-              item?.total_amount || 0
-            ).toFixed(2)}`}</Text>
+            <Text style={styles.amountText}>${totalAmount}</Text>
             <View
               style={[
                 styles.statusBadge,
                 { backgroundColor: statusInfo.color },
               ]}
             >
+              <MaterialCommunityIcons
+                name={statusInfo.icon as any}
+                size={12}
+                color="white"
+                style={{ marginRight: 4 }}
+              />
               <Text style={styles.statusText}>{statusInfo.text}</Text>
             </View>
           </View>
@@ -437,11 +516,7 @@ export const OrdersManagementScreen: React.FC = () => {
               color={colors.textSecondary}
               style={styles.userIcon}
             />
-            <Text style={styles.userText}>
-              {(item as any)?.user?.full_name ??
-                (item as any)?.user_id ??
-                "Usuario desconocido"}
-            </Text>
+            <Text style={styles.userText}>{userName}</Text>
           </View>
 
           <View style={styles.addressInfo}>
@@ -452,7 +527,7 @@ export const OrdersManagementScreen: React.FC = () => {
               style={styles.addressIcon}
             />
             <Text style={styles.addressText} numberOfLines={2}>
-              {item?.shipping_address?.street ?? "Dirección no especificada"}
+              {addressDisplay}
             </Text>
           </View>
 
@@ -464,32 +539,19 @@ export const OrdersManagementScreen: React.FC = () => {
               style={styles.itemsIcon}
             />
             <Text style={styles.itemsText}>
-              {item?.items?.reduce(
-                (total, orderItem) => total + (orderItem.quantity || 0),
-                0
-              ) || 0}{" "}
-              producto
-              {(item?.items?.reduce(
-                (total, orderItem) => total + (orderItem.quantity || 0),
-                0
-              ) || 0) !== 1
-                ? "s"
-                : ""}
+              {totalItems} producto{totalItems !== 1 ? "s" : ""}
             </Text>
           </View>
         </View>
 
         <View style={styles.actions}>
           <View style={styles.actionButtons}>
-            {/* Only allow incremental status transition: next step depends on current status */}
+            {/* Only allow incremental status transition */}
             {(() => {
-              const hasId = !!item?.id;
-
               const getNextStatus = (
-                s?: string
+                s: string
               ): { next?: string; label?: string; icon?: string } => {
-                if (!s) return {};
-                // Define incremental flow: pending/confirmed -> processing -> shipped -> delivered
+                // Define incremental flow
                 if (s === "pending" || s === "confirmed")
                   return {
                     next: "processing",
@@ -502,13 +564,6 @@ export const OrdersManagementScreen: React.FC = () => {
                     label: "Enviar",
                     icon: "truck-delivery",
                   };
-                if (s === "shipped")
-                  return {
-                    next: "delivered",
-                    label: "Entregar",
-                    icon: "check-circle",
-                  };
-                // delivered or cancelled -> no next action
                 return {};
               };
 
@@ -516,13 +571,12 @@ export const OrdersManagementScreen: React.FC = () => {
 
               return (
                 <>
-                  {next.next ? (
+                  {next.next && orderId ? (
                     <TouchableOpacity
                       style={styles.actionButton}
                       onPress={() =>
-                        hasId && handleChangeStatus(item.id, next.next as any)
+                        handleChangeStatus(orderId, next.next as any)
                       }
-                      disabled={!hasId}
                     >
                       <MaterialCommunityIcons
                         name={next.icon as any}
@@ -533,12 +587,31 @@ export const OrdersManagementScreen: React.FC = () => {
                     </TouchableOpacity>
                   ) : null}
 
+                  {/* Delivered button: opens verification modal */}
+                  {status === "shipped" && orderId ? (
+                    <TouchableOpacity
+                      style={[
+                        styles.actionButton,
+                        { backgroundColor: "#30B0C7" },
+                      ]}
+                      onPress={() => handleDeliverOrder(orderId, orderNumber)}
+                    >
+                      <MaterialCommunityIcons
+                        name="check-circle"
+                        size={14}
+                        color="white"
+                      />
+                      <Text style={styles.actionText}> Entregar</Text>
+                    </TouchableOpacity>
+                  ) : null}
+
                   {/* Cancel button: allow canceling unless already delivered or cancelled */}
-                  {status !== "delivered" && status !== "cancelled" ? (
+                  {status !== "delivered" &&
+                  status !== "cancelled" &&
+                  orderId ? (
                     <TouchableOpacity
                       style={[styles.actionButton, styles.actionButtonDanger]}
-                      onPress={() => hasId && handleCancel(item.id)}
-                      disabled={!hasId}
+                      onPress={() => handleCancel(orderId)}
                     >
                       <MaterialCommunityIcons
                         name="close-circle"
@@ -555,7 +628,7 @@ export const OrdersManagementScreen: React.FC = () => {
 
           <TouchableOpacity
             style={styles.viewDetailButton}
-            onPress={() => navigate("OrderAdminDetail", { orderId: item?.id })}
+            onPress={() => navigate("OrderAdminDetail", { orderId: orderId })}
           >
             <MaterialCommunityIcons
               name="eye"
@@ -585,16 +658,55 @@ export const OrdersManagementScreen: React.FC = () => {
         >
           <ActivityIndicator size="large" color={colors.belandOrange} />
         </View>
+      ) : orders.length === 0 ? (
+        <View style={styles.emptyState}>
+          <MaterialCommunityIcons
+            name="package-variant"
+            size={64}
+            color={colors.textSecondary}
+            style={styles.emptyIcon}
+          />
+          <Text style={styles.emptyTitle}>No hay órdenes</Text>
+          <Text style={styles.emptySubtitle}>
+            Las órdenes de los usuarios aparecerán aquí
+          </Text>
+        </View>
       ) : (
         <FlatList
           data={orders}
-          keyExtractor={(o, idx) =>
-            o?.id ?? `${o?.order_number ?? "order"}-${idx}`
-          }
+          extraData={orders}
+          keyExtractor={(o, idx) => {
+            // Incluir el status en el key para forzar re-render cuando cambie
+            const status =
+              typeof o?.status === "object"
+                ? (o.status as any)?.code
+                : o?.status;
+            return `${o?.id || idx}-${status || "unknown"}`;
+          }}
           renderItem={renderItem}
           contentContainerStyle={styles.list}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => loadOrders(true)}
+              colors={[colors.belandOrange]}
+              tintColor={colors.belandOrange}
+            />
+          }
         />
       )}
+
+      {/* Verification Code Modal */}
+      <VerificationCodeModal
+        visible={verificationModalVisible}
+        onClose={() => {
+          setVerificationModalVisible(false);
+          setPendingDeliveryOrderId(null);
+          setPendingDeliveryOrderNumber("");
+        }}
+        onConfirm={handleConfirmDelivery}
+        orderNumber={pendingDeliveryOrderNumber}
+      />
     </View>
   );
 };

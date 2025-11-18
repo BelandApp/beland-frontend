@@ -171,6 +171,64 @@ class OrderServiceClass extends CoreApiService {
   }
 
   /**
+   * Get orders for the authenticated user
+   */
+  async getUserOrders(
+    query: OrderQuery = {}
+  ): Promise<PaginatedResponse<Order>> {
+    const queryString = this.buildQueryString(query);
+    const endpoint = queryString
+      ? `${this.ENDPOINTS.ORDERS}/user?${queryString}`
+      : `${this.ENDPOINTS.ORDERS}/user`;
+
+    const raw = await this.get<any>(endpoint);
+
+    // Normalize response same as getOrders
+    let data: Order[] = [];
+    let total = 0;
+    const page = query.page ?? 1;
+    let limit = query.limit ?? 0;
+
+    if (Array.isArray(raw)) {
+      if (raw.length > 0 && Array.isArray(raw[0])) {
+        data = raw[0] as Order[];
+        total = Number(raw[1] ?? data.length) || data.length;
+      } else {
+        data = raw as Order[];
+        total = data.length;
+      }
+    } else if (raw && typeof raw === "object") {
+      if (Array.isArray(raw.data)) {
+        data = raw.data as Order[];
+        total = Number(raw.total ?? data.length) || data.length;
+      } else if (raw.data && raw.data.data && Array.isArray(raw.data.data)) {
+        data = raw.data.data as Order[];
+        total = Number(raw.data.total ?? data.length) || data.length;
+      } else if (Array.isArray(raw.orders)) {
+        data = raw.orders as Order[];
+        total = Number(raw.total ?? data.length) || data.length;
+      } else {
+        const found = Object.values(raw).find((v) => Array.isArray(v));
+        if (found) {
+          data = found as Order[];
+          total = Number((raw as any).total ?? data.length) || data.length;
+        }
+      }
+    }
+
+    if (!limit || limit <= 0) limit = data.length || 50;
+    const totalPages = limit > 0 ? Math.max(1, Math.ceil(total / limit)) : 1;
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages,
+    } as PaginatedResponse<Order>;
+  }
+
+  /**
    * Get a single order by ID
    */
   async getOrder(id: string): Promise<Order> {
@@ -196,9 +254,7 @@ class OrderServiceClass extends CoreApiService {
   async cancelOrder(orderId: string, reason?: string): Promise<Order> {
     const params = new URLSearchParams();
     params.append("order_id", orderId);
-    if (reason) {
-      params.append("observation", reason);
-    }
+    params.append("observation", reason || "Cancelado por el administrador");
     return this.put(`${this.ENDPOINTS.CANCEL_ORDER}?${params.toString()}`);
   }
 
@@ -231,13 +287,52 @@ class OrderServiceClass extends CoreApiService {
 
   /**
    * Update order status (admin/system use)
+   * Maps frontend status to backend-specific endpoints
+   * Note: 'delivered' status requires a verification code and should use deliverOrder() method instead
    */
   async updateOrderStatus(
     orderId: string,
     status: Order["status"],
     notes?: string
   ): Promise<Order> {
-    return this.patch<Order>(`orders/${orderId}/status`, { status, notes });
+    const params = new URLSearchParams();
+    params.append("order_id", orderId);
+    if (notes) {
+      params.append("observation", notes);
+    }
+
+    // Map status to backend endpoints
+    switch (status.toLowerCase()) {
+      case "processing":
+        return this.put(`orders/preparing?${params.toString()}`);
+      case "shipped":
+        return this.put(`orders/on-route?${params.toString()}`);
+      case "delivered":
+        // Note: In production, this should prompt for a delivery code
+        // For now, we'll throw an error to prevent issues
+        throw new Error(
+          "Para marcar como entregado, se requiere un código de verificación. Use el método deliverOrder() en su lugar."
+        );
+      case "cancelled":
+        return this.put(`orders/cancelled?${params.toString()}`);
+      default:
+        throw new Error(
+          `Status "${status}" no tiene un endpoint configurado en el backend`
+        );
+    }
+  }
+
+  /**
+   * Mark order as delivered with verification code
+   */
+  async deliverOrder(
+    orderId: string,
+    verificationCode: number
+  ): Promise<Order> {
+    const params = new URLSearchParams();
+    params.append("order_id", orderId);
+    params.append("code", verificationCode.toString());
+    return this.put(`orders/delivered?${params.toString()}`);
   }
 
   /**

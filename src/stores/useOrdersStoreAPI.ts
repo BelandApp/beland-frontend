@@ -457,7 +457,7 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
 
     try {
       console.log("🌐 Store API: Loading user orders from API...");
-      const response = await OrderService.getOrders();
+      const response = await OrderService.getUserOrders();
       // TODO: Map API response to store types - temporary conversion
       const orders = (response.data || []).map((apiOrder: any) => ({
         ...apiOrder,
