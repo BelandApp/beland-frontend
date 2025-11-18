@@ -1,10 +1,11 @@
-import React from "react";
+import React, { use } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { BeCoinIcon } from "@components/icons";
 import { useBeCoinsStore } from "@stores/useBeCoinsStore";
 import {
   convertBeCoinsToUSD,
 } from "@constants/index";
+import { useCustomNavigation } from "src/hooks";
 
 interface BeCoinsBalanceProps {
   onPress?: () => void;
@@ -27,7 +28,7 @@ export const BeCoinsBalance: React.FC<BeCoinsBalanceProps> = ({
 }) => {
   const { balance: storeBalance, locked_balance: storeLockedBalance } =
     useBeCoinsStore();
-
+  const {navigate} = useCustomNavigation();
   // Usar el balance de props si está disponible, sino usar el del store
   const currentBalance = propBalance !== undefined ? propBalance : storeBalance;
   const currentLockedBalance =
@@ -81,12 +82,10 @@ export const BeCoinsBalance: React.FC<BeCoinsBalanceProps> = ({
 
   const sizeStyles = getSizeStyles();
 
-  const Component = onPress ? TouchableOpacity : View;
-
   return (
-    <Component
+    <TouchableOpacity
       style={[sizeStyles.container, style]}
-      onPress={onPress}
+      onPress={onPress ? onPress : ()=>navigate("MainTabs", { screen: "Wallet" })}
       activeOpacity={onPress ? 0.8 : 1}
     >
       <BeCoinIcon width={sizeStyles.icon} height={sizeStyles.icon} />
@@ -103,7 +102,7 @@ export const BeCoinsBalance: React.FC<BeCoinsBalanceProps> = ({
           ${usdValue.toFixed(2)} USD
         </Text>
       </View>
-    </Component>
+    </TouchableOpacity>
   );
 };
 

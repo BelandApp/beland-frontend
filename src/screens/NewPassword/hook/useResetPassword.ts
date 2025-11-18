@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
-import { authService } from "src/services";
+import { notify } from "src/hooks/notification/notify.external";
+import { authService, getBackendErrorMessage } from "src/services";
 
 export const useResetPassword = () => {
   const [step, setStep] = useState<"email" | "code" | "password">("email");
@@ -15,43 +16,57 @@ export const useResetPassword = () => {
   // --ACTIONS--
   const handleMail = async (email: string) => {
     setFormData({ ...FormData, email });
-    setLoading(true);
-    const res = await authService.sendCodeToEmailForgotPassword(email);
-    console.log(res)
-    setLoading(false);
-    // if (!res) return;
-    //  TODO notificar al usuario
-    setStep("code");
+    try {
+      setLoading(true);
+      const res = await authService.sendCodeToEmailForgotPassword(email);
+      setStep("code");
+    } catch (error) {
+      const message = getBackendErrorMessage(error);
+      notify.error({ message });
+    } finally {
+      setLoading(false);
+    }
   };
   const handleCode = async (code: string) => {
     setFormData({ ...FormData, code });
-    console.log(FormData)
-    setLoading(true);
-    const res = await authService.checkCode({
-      email: FormData.email,
-      code,
-    });
-    setLoading(false);
-    if (!res) return;
-    //  TODO notificar al usuario
-    setStep("password");
+    try {
+      setLoading(true);
+      const res = await authService.checkCode({
+        email: FormData.email,
+        code,
+      });
+      setStep("password");
+    } catch (error) {
+      const message = getBackendErrorMessage(error);
+      notify.error({ message });
+    } finally {
+      setLoading(false);
+    }
   };
   const handlePassword = async (password: string) => {
     setFormData({ ...FormData, password, confirmPassword: password });
-    setLoading(true);
-    const res = await authService.resetPassword(FormData);
-    setLoading(false);
-    if (!res) return;
-    //  TODO notificar al usuario
-    navigate("MainTabs", { screen: "Home" });
+    try {
+      setLoading(true);
+      await authService.resetPassword(FormData);
+      notify.success({ message: "Contraseña actualizada" });
+      navigate("MainTabs", { screen: "Home" });
+    } catch (error) {
+      const message = getBackendErrorMessage(error);
+      notify.error({ message });
+    } finally {
+      setLoading(false);
+    }
   };
   const handleStepBack = () => {
     setStep("email");
   };
   const handleReSendCode = async () => {
-    if (!FormData.email) return;
+    if (!FormData.email) {
+      notify.error({ message: "Debes indicar tu correo" });
+      return;
+    }
     await authService.sendCodeToEmailForgotPassword(FormData.email);
-    //  TODO notificar al usuario
+    notify.info({ message: "Verifica tu correo" });
   };
   return {
     step,

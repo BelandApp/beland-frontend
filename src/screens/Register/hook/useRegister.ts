@@ -4,12 +4,14 @@ import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { RegisterFormData } from "../RegisterScreen";
 import { authService, getBackendErrorMessage } from "src/services";
 import { notify } from "src/hooks/notification/notify.external";
+import {  useAuth } from "src/context";
 
 export const useRegister = () => {
   const [step, setStep] = useState<"register" | "code">("register");
   const [isLoading, setIsLoading] = useState(false);
   const { navigate } = useCustomNavigation();
   const { validateForm, errors } = useValidation();
+  const {loginWithEmail} =useAuth()
   const [FormData, setFormData] = useState<RegisterFormData>({
     full_name: "",
     username: "",
@@ -65,7 +67,7 @@ export const useRegister = () => {
     try {
       await authService.checkRegisterCode({ email: FormData.email, code });
       notify.success({ message: "Registro exitoso, vamos a loguearte" });
-      await authService.loginWithEmail(FormData.email, FormData.password);
+      await loginWithEmail(FormData.email, FormData.password);
       navigate("MainTabs", { screen: "Home" });
     } catch (error) {
        const message = getBackendErrorMessage(error);

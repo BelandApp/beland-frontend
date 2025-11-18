@@ -5,6 +5,7 @@ import { CodeStepProps } from "src/types";
 import { Button } from "@components/shared";
 import { useValidation } from "src/hooks/form/useValidation";
 const CodeStep: React.FC<CodeStepProps> = ({
+  FormData,
   onSubmit,
   onResendCode,
   onStepBack,
@@ -31,7 +32,7 @@ const CodeStep: React.FC<CodeStepProps> = ({
   return (
     <View>
       <Text style={{ marginBottom: 5, color: "#ffffffaa" }}>
-        Introduce el código enviado a tu mail
+        Introduce el código enviado a tu mail: {FormData.email}
       </Text>
       <CustomInput
         label="Código"

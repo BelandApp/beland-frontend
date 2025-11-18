@@ -29,7 +29,7 @@ export const authService = {
       body: JSON.stringify({ email, password }),
     });
     if (!res.ok) {
-      throw new Error(res.statusText);
+      throw new Error("Credenciales incorrectas");
     }
     const data = await res.json();
     return data.token;
@@ -94,13 +94,13 @@ export const authService = {
     return data.message;
   },
   async resendRegisterCode(email: string) {
-     const res = await fetch(`${API_URL}/auth/resend-code`, {
-       method: "POST",
-       headers: {
-         "Content-Type": "application/json",
-       },
-       body: JSON.stringify(email),
-     });
+    const res = await fetch(`${API_URL}/auth/resend-code`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(email),
+    });
     if (!res.ok) {
       throw new Error(res.statusText);
     }
@@ -122,56 +122,47 @@ export const authService = {
     return data.token;
   },
   async sendCodeToEmailForgotPassword(email: string) {
-    try {
-      const res = await fetch(`${API_URL}/auth/forgot-password-code/${email}`, {
-        method: "POST",
-      });
-      if (!res.ok) {
-        throw new Error(res.statusText);
-      }
-      const data = await res.json();
-      return data.message;
-    } catch (error) {
-      alert(error);
+    const res = await fetch(`${API_URL}/auth/forgot-password-code/${email}`, {
+      method: "POST",
+    });
+    if(res.status === 404) {
+      return "El correo no se encuentra registrado";
     }
+    if (!res.ok) {
+      throw new Error(res.statusText);
+    }
+    const data = await res.json();
+    return data.message;
   },
   async checkCode(FormData: FormCodeCheck) {
-    try {
-      const res = await fetch(
-        `${API_URL}/auth/forgot-password-verification-code`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(FormData),
-        }
-      );
-      if (!res.ok) {
-        throw new Error(res.statusText);
-      }
-      const data = await res.json();
-      return data.message;
-    } catch (error) {
-      alert(error);
-    }
-  },
-  async resetPassword(FormData: FormResetPassword) {
-    try {
-      const res = await fetch(`${API_URL}/auth/reset-password`, {
+    const res = await fetch(
+      `${API_URL}/auth/forgot-password-verification-code`,
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(FormData),
-      });
-      if (!res.ok) {
-        throw new Error(res.statusText);
       }
-      const data = await res.json();
-      return data.token;
-    } catch (error) {
-      alert(error);
+    );
+    if (!res.ok) {
+      throw new Error(res.statusText);
     }
+    const data = await res.json();
+    return data.message;
+  },
+  async resetPassword(FormData: FormResetPassword) {
+    const res = await fetch(`${API_URL}/auth/reset-password`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(FormData),
+    });
+    if (!res.ok) {
+      throw new Error(res.statusText);
+    }
+    const data = await res.json();
+    return data.token;
   },
 };
