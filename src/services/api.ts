@@ -14,6 +14,7 @@ const defaultHeaders = {
 };
 
 const getBackendErrorMessage = (err: any): string => {
+  if(err?.status === 401) return "Sesión expirada. Inicia sesión nuevamente.";
   return (
     err?.body?.message ||
     err?.message ||
