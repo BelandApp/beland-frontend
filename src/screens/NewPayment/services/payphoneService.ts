@@ -32,11 +32,12 @@ function loadPayphoneScript(): Promise<void> {
 export const payWithPayphone = async (
   amount: number,
   productId: string,
-  user: User
+  user: User,
 ): Promise<void> => {
   if (isWeb) {
     await loadPayphoneScript();
     const payphoneToken = process.env.EXPO_PUBLIC_PAYPHONE_TOKEN;
+    localStorage.setItem("payphone_token", payphoneToken);
     const payphoneConfig = {
       token: payphoneToken,
       clientTransactionId: `TX-${Date.now()}`,
@@ -44,7 +45,7 @@ export const payWithPayphone = async (
       amountWithoutTax: Math.round(amount * 100), //TODO Asegurar que sea un entero
       currency: "USD",
       storeId: process.env.EXPO_PUBLIC_PAYPHONE_STOREID,
-      reference: "Pago QR Beland",
+      reference: `Pago de ${user.full_name} por productoId: ${productId}`,
       callback: `${window.location.origin}/wallet/payphone-success`,
     };
     // @ts-ignore
