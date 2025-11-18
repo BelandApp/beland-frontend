@@ -29,7 +29,7 @@ export const authService = {
       body: JSON.stringify({ email, password }),
     });
     if (!res.ok) {
-      throw new Error(res.statusText);
+      throw new Error("Credenciales incorrectas");
     }
     const data = await res.json();
     return data.token;

@@ -23,6 +23,7 @@ export default function LoginScreen() {
     FormData,
     isLoading,
     isAuthenticated,
+    errors
   } = useLogin();
   if (isAuthenticated) navigate("MainTabs", { screen: "Home" });
   return (
@@ -49,12 +50,14 @@ export default function LoginScreen() {
           onChangeText={(email) => setFormData({ ...FormData, email })}
           value={FormData.email}
           keyboardType="email-address"
+          error={errors.email}
         />
         <CustomInput
           label="Contraseña"
           onChangeText={(password) => setFormData({ ...FormData, password })}
           value={FormData.password}
           secureTextEntry
+          error={errors.password}
         />
         <Button
           title="Ingresar"
