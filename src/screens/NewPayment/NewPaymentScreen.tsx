@@ -6,7 +6,6 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  Dimensions,
 } from "react-native";
 import { RouteProp, useRoute } from "@react-navigation/native";
 import { useAuth } from "src/context";
@@ -21,6 +20,7 @@ import {
 import { BankTransfer } from "../Payment/components/BankTransfer";
 import { AdquisitionForm } from "./components/AdquisitionForm";
 import { PaymentMethodSelector } from "../Payment";
+import { useUserBalance } from "src/hooks";
 
 export type PaymentScreenRoute = {
   product: {
@@ -44,19 +44,12 @@ export const NewPaymentScreen = () => {
   const { product, company, total_amount, canEditAmount, canBuyForOthers } =
     params;
   const { user } = useAuth();
-  const [method, setMethod] = useState("Tarjetas");
-  const [customAmount, setCustomAmount] = useState(
-    total_amount?.toString() ?? ""
-  );
-  const isFree = !total_amount || total_amount === 0;
-  if (!user) return null;
-  const {
-    loading,
-    handlePayment,
-    handleFreeAcquisition,
-    status,
-    changeStatus,
-  } = usePaymentHandler(user);
+  const { balance } = useUserBalance();
+  if (!user || !total_amount || !product.id) return null;
+
+  const { loading, isFree, Form, setForm, handlePayment, canPurchase } =
+    usePaymentHandler(user, total_amount, product.id, balance);
+
   return (
     <View style={styles.content}>
       <ThemedHeader title="Compra" canGoBack />
@@ -65,8 +58,7 @@ export const NewPaymentScreen = () => {
         showsVerticalScrollIndicator={false}
       >
         <CompanyHeader company={company} total_amount={total_amount || 0} />
-
-        {status === "methods" && isFree && (
+        {isFree && (
           <View style={styles.container}>
             <Text>
               Esta entrada es gratuita, recuerda llevar tu reciclable o deberas
@@ -74,43 +66,25 @@ export const NewPaymentScreen = () => {
             </Text>
           </View>
         )}
-
-        {status === "methods" && !isFree && (
+        <AdquisitionForm
+          canBuyForOthers={canBuyForOthers}
+          loading={loading}
+          Form={Form}
+          setForm={setForm}
+          canPurchase={canPurchase}
+          onSubmit={() => handlePayment()}
+        />
+        {/* {status === "methods" && !isFree && (
           <PaymentMethodsSelector
             method={method}
             onSelect={setMethod}
             canEditAmount={canEditAmount}
             customAmount={customAmount}
             onChangeAmount={setCustomAmount}
-            onConfirm={() =>
-              handlePayment({
-                method,
-                productId: product.id,
-                amount: Number(customAmount),
-              })
-            }
+            onConfirm={() => handleAdquisition()}
             loading={loading}
           />
-        )}
-        {status === "payment" && (
-          <View style={styles.paymentContainer}>
-            <TouchableOpacity
-              onPress={() => changeStatus("methods")}
-              style={styles.buttonChange}
-            >
-              <Text style={styles.buttonChangeText}>Cambiar metodo</Text>
-            </TouchableOpacity>
-            {method === PaymentMethod.Transferencia && <BankTransfer />}
-            {method === PaymentMethod.Tarjetas && <View id="pp-button"></View>}
-          </View>
-        )}
-
-        <AdquisitionForm
-          onSubmit={(eventDto) => handleFreeAcquisition(eventDto)}
-          product={product}
-          canBuyForOthers={canBuyForOthers}
-          loading={loading}
-        />
+        )} */}
       </ScrollView>
     </View>
   );

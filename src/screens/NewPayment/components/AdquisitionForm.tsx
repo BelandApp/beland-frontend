@@ -1,128 +1,128 @@
+import { useNavigation } from "@react-navigation/native";
 import React, { useState } from "react";
 import {
   StyleSheet,
   View,
   Text,
   TextInput,
-  TouchableOpacity,
-  Platform,
-  Dimensions,
 } from "react-native";
-import { CustomInput } from "src/components/shared";
+import { Button, CustomLoader } from "src/components";
 import { useAuth } from "src/context";
 import { colors } from "src/design-system";
+import { useCustomNavigation } from "src/hooks";
+import { notify } from "src/hooks/notification/notify.external";
 type Props = {
-  product: { id: string };
+  Form: any;
+  setForm: any;
+  canPurchase: boolean;
+  onSubmit: () => void;
   canBuyForOthers?: boolean;
-  onSubmit: (recipient?: {
-    holder_name: string;
-    holder_phone: string;
-    holder_email: string;
-    holder_instagram_tiktok: string;
-  }) => void;
   loading?: boolean;
 };
 export const AdquisitionForm: React.FC<Props> = ({
+  Form,
+  setForm,
   canBuyForOthers,
-  onSubmit,
-  product,
   loading,
+  canPurchase,
+  onSubmit
 }) => {
   const { user } = useAuth();
-  const [form, setForm] = useState({
-    holder_name: "",
-    holder_email: "",
-    holder_phone: "",
-    holder_instagram_tiktok: "",
-    event_pass_id: product.id,
-  });
+  const {navigate} =useCustomNavigation()
   const [isForOther, setIsForOther] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   const handleSubmit = () => {
     if (!isForOther) {
-      form.holder_email = user!.email;
-      form.holder_name = user!.full_name;
+      Form.holder_email = user!.email;
+      Form.holder_name = user!.full_name;
     }
-    onSubmit(form);
+    if (
+      !Form.holder_name ||
+      !Form.holder_email ||
+      !Form.holder_phone ||
+      !Form.holder_instagram_tiktok
+    ) {
+      notify.error({ message: "Todos los campos son obligatorios" });
+      return;
+    }
+    onSubmit()
+    setIsSaved(true);
   };
-  return (
+  const handleRrecharge = () => {
+    navigate("RechargeScreen")
+  }
+  return isSaved ? (
+    <View style={styles.form}>
+      <Text>Comprando para:</Text>
+      <View style={styles.toggleContainer}>
+        <Text>{Form.holder_name}</Text>
+        <Text>Email: {Form.holder_email}</Text>
+      </View>
+     <CustomLoader/>
+    </View>
+  ) : (
     <View style={styles.form}>
       {canBuyForOthers && (
         <View style={styles.toggleContainer}>
-          <TouchableOpacity
+          <Text>La entrada es: </Text>
+          <Button
+            title={"Para mi"}
             onPress={() => setIsForOther(false)}
-            style={[
-              styles.toggleButton,
-              !isForOther && styles.toggleButtonActive,
-            ]}
-          >
-            <Text
-              style={!isForOther ? styles.toggleTextActive : styles.toggleText}
-            >
-              Es para mí
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
+            variant={isForOther ? "inline" : "primary"}
+          />
+          <Button
+            title={"Para otro"}
             onPress={() => setIsForOther(true)}
-            style={[
-              styles.toggleButton,
-              isForOther && styles.toggleButtonActive,
-            ]}
-          >
-            <Text
-              style={isForOther ? styles.toggleTextActive : styles.toggleText}
-            >
-              Para otra persona
-            </Text>
-          </TouchableOpacity>
+            variant={!isForOther ? "inline" : "primary"}
+          />
         </View>
       )}
       {isForOther && (
         <>
           <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Nombre completo</Text>
+            <Text>Nombre completo</Text>
             <TextInput
               style={styles.input}
-              value={form.holder_name}
-              onChangeText={(e) => setForm({ ...form, holder_name: e })}
+              value={Form.holder_name}
+              onChangeText={(e) => setForm({ ...Form, holder_name: e })}
             />
           </View>
           <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Email</Text>
+            <Text>Email</Text>
             <TextInput
               style={styles.input}
-              value={form.holder_email}
-              onChangeText={(e) => setForm({ ...form, holder_email: e })}
+              value={Form.holder_email}
+              onChangeText={(e) => setForm({ ...Form, holder_email: e })}
             />
           </View>
         </>
       )}
       <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Teléfono</Text>
+        <Text>Teléfono</Text>
         <TextInput
           textContentType="telephoneNumber"
           keyboardType="phone-pad"
           style={styles.input}
-          value={form.holder_phone.toLocaleString()}
-          onChangeText={(text) => setForm({ ...form, holder_phone: text })}
+          value={Form.holder_phone.toLocaleString()}
+          onChangeText={(text) => setForm({ ...Form, holder_phone: text })}
         />
       </View>
       <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Instagram</Text>
+        <Text>Instagram</Text>
         <TextInput
           style={styles.input}
-          value={form.holder_instagram_tiktok}
-          onChangeText={(e) => setForm({ ...form, holder_instagram_tiktok: e })}
+          value={Form.holder_instagram_tiktok}
+          onChangeText={(e) => setForm({ ...Form, holder_instagram_tiktok: e })}
         />
       </View>
-      <TouchableOpacity
-        onPress={handleSubmit}
-        disabled={loading}
-        style={[styles.button, loading && styles.buttonDisabled]}
-      >
-        <Text style={styles.buttonText}>
-          {loading ? "Procesando..." : "Adquirir"}
-        </Text>
-      </TouchableOpacity>
+      <Button
+        title={canPurchase ? "Comprar" : "Fondos insuficientes, recargar"}
+        onPress={canPurchase ? handleSubmit : handleRrecharge}
+        isLoading={loading}
+      />
+      <Text style={{ textAlign: "center", fontSize: 12, fontStyle: "italic" }}>
+        Se usará tus becoins
+      </Text>
     </View>
   );
 };
@@ -131,12 +131,13 @@ const styles = StyleSheet.create({
   inputContainer: {
     backgroundColor: "white",
   },
-  inputLabel: {},
   toggleContainer: {
     flexDirection: "row",
-    justifyContent: "space-around",
+    gap: 16,
     marginVertical: 10,
+    alignItems:"center"
   },
+
   toggleButton: {
     paddingVertical: 8,
     paddingHorizontal: 16,
