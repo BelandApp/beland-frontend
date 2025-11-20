@@ -545,7 +545,7 @@ export const OrderDetailScreen: React.FC = () => {
               Detalle de la orden
             </Text>
             <Text style={orderDetailStyles.headerSubtitle}>
-              Orden #{(baseOrder as any).code || baseOrder.id.slice(-8)}
+              Orden #{baseOrder.id.substring(0, 8).toUpperCase()}
             </Text>
           </View>
         </View>
@@ -561,7 +561,7 @@ export const OrderDetailScreen: React.FC = () => {
           <View style={orderDetailStyles.heroHeader}>
             <View style={orderDetailStyles.heroInfo}>
               <Text style={orderDetailStyles.orderId}>
-                #{(baseOrder as any).code || baseOrder.id.slice(-8)}
+                #{baseOrder.id.substring(0, 8).toUpperCase()}
               </Text>
               <Text style={orderDetailStyles.orderDate}>
                 {formatDate(baseOrder.createdAt)}

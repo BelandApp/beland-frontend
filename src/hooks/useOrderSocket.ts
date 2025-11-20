@@ -8,6 +8,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 /**
  * Hook para escuchar eventos de órdenes a través de sockets
  * Se conecta globalmente en la app para notificar al admin de nuevas órdenes
+ *
+ * NOTA: El backend emite las órdenes en el evento 'payment-success' junto con pagos y event-pass.
+ * Diferenciamos por la estructura de datos: órdenes tienen { order_id, total_becoin, items }
  */
 export function useOrderSocket(onOrderCreated?: (data: any) => void) {
   const { user } = useAuth();
@@ -15,7 +18,7 @@ export function useOrderSocket(onOrderCreated?: (data: any) => void) {
   const socketService = useRef<SocketService | null>(null);
 
   useEffect(() => {
-    // Solo conectar si el usuario es admin
+    // Solo conectar si hay usuario autenticado
     if (!user?.id) return;
 
     let isMounted = true;
@@ -38,43 +41,51 @@ export function useOrderSocket(onOrderCreated?: (data: any) => void) {
       socketService.current = new SocketService();
       socketService.current.connect(token);
 
-      // Escuchar cuando se crea una nueva orden
-      socketService.current.onOrderCreated(
-        (data: {
-          order?: any;
-          orderNumber?: string;
-          user?: any;
-          totalAmount?: number;
+      // El backend emite órdenes en 'payment-success'
+      // Diferenciamos por la estructura de datos
+      socketService.current.onPaymentSuccess(
+        async (data: {
+          order_id?: string;
+          total_becoin?: number;
+          items?: number;
           [key: string]: any;
         }) => {
           if (!isMounted) return;
 
+          // Verificar si es una notificación de orden (tiene order_id, total_becoin, items)
+          const isOrderNotification =
+            data?.order_id &&
+            data?.total_becoin !== undefined &&
+            data?.items !== undefined;
+
+          if (!isOrderNotification) {
+            // No es una orden, ignorar (puede ser pago o event-pass)
+            return;
+          }
+
           console.log("[OrderSocket] Order created event received:", data);
 
-          // Extraer información de la orden
-          const orderNumber =
-            data?.order?.orderNumber || data?.orderNumber || "N/A";
-          const userName =
-            data?.order?.user?.name || data?.user?.name || "Cliente";
-          const userPhone = data?.order?.user?.phone || data?.user?.phone || "";
-          const userEmail = data?.order?.user?.email || data?.user?.email || "";
-          const totalAmount =
-            data?.order?.totalAmount ||
-            data?.order?.total_amount ||
-            data?.totalAmount ||
-            0;
+          // Extraer información básica de la orden
+          const orderNumber = data.order_id || "N/A";
+          // Convertir total_becoin a número (puede venir como string)
+          const totalBecoin = parseFloat(String(data.total_becoin || 0));
 
-          // Mostrar notificación con NotificationBanner
+          // Crear ID corto para visualización (primeros 8 caracteres)
+          const shortOrderId =
+            orderNumber.length > 8 ? orderNumber.substring(0, 8) : orderNumber;
+
+          // Mostrar notificación con la información disponible
+          // NOTA: No mostramos cantidad de items porque el backend envía null
+          // (intenta convertir array items a número con +savedOrder.items)
           showNotification({
-            title: "🛒 Nueva Orden Recibida",
-            message: `Orden #${orderNumber} de ${userName}`,
-            amount: Number(totalAmount),
-            persistent: true, // Persistente para que el admin deba confirmar que la vio
+            title: "Nueva Orden",
+            message: `Orden #${shortOrderId}\nMonto: $${totalBecoin.toLocaleString()}`,
+            amount: totalBecoin,
+            persistent: true,
             meta: {
-              name: `Orden #${orderNumber}`,
-              user_name: userName,
-              user_phone: userPhone,
-              user_email: userEmail,
+              type: "order",
+              order_id: orderNumber,
+              total_becoin: totalBecoin,
             },
           });
 
@@ -82,23 +93,6 @@ export function useOrderSocket(onOrderCreated?: (data: any) => void) {
           if (onOrderCreated) {
             onOrderCreated(data);
           }
-        }
-      );
-
-      // Escuchar cuando se actualiza una orden (opcional)
-      socketService.current.onOrderUpdated(
-        (data: {
-          order?: any;
-          orderNumber?: string;
-          status?: string;
-          [key: string]: any;
-        }) => {
-          if (!isMounted) return;
-
-          console.log("[OrderSocket] Order updated event received:", data);
-
-          // Aquí podrías agregar lógica para mostrar notificaciones de cambios de estado
-          // si el backend lo requiere en el futuro
         }
       );
     };
