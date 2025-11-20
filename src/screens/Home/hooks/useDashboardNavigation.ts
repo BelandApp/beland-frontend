@@ -1,33 +1,51 @@
-
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 export const useDashboardNavigation = () => {
-  const {navigate}=useCustomNavigation()
+  const { navigate } = useCustomNavigation();
 
-  const handleMenuPress = () => {
-    // TODO Navegar a configuración
-    console.log("Menu pressed");
+  const navigateViewHistory = () => {
+    navigate("HistoryScreen");
   };
-
-  const handleViewHistory = () => {
-    // Navegar a la pantalla de historial
-   navigate("HistoryScreen");
-  };
-
-  const handleCoinsPress = () => {
-    // Acción para presionar en las monedas
-    console.log("Coins pressed");
-  };
-
-  const handleRecyclingMapPress = () => {
-    // Navegar a la pantalla completa del mapa de reciclaje
+  const navigateRecyclingMapPress = () => {
     navigate("RecyclingMap");
+  };
+  const navigateRecharge = () => {
+    navigate("RechargeScreen");
+  };
+
+  const navigateSend = () => {
+    navigate("SendScreen");
+  };
+
+  const navigateExchange = () => {
+    navigate("CanjearScreen");
+  };
+
+  const navigateReceive = () => {
+    navigate("ReceiveScreen");
+  };
+
+  const navigateCollect = () => {
+    navigate("CobrarScreen");
+  };
+
+  const navigateCommunity = () => {
+    navigate("MainTabs", { screen: "Community" });
+  };
+
+  const navigateDelivery = () => {
+    navigate("MainTabs", { screen: "Catalog" });
   };
 
   return {
-    handleMenuPress,
-    handleViewHistory,
-    handleCoinsPress,
-    handleRecyclingMapPress,
+    navigateViewHistory,
+    navigateRecyclingMapPress,
+    navigateRecharge,
+    navigateSend,
+    navigateExchange,
+    navigateReceive,
+    navigateCollect,
+    navigateCommunity,
+    navigateDelivery,
   };
 };
