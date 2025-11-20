@@ -344,11 +344,13 @@ export const OrdersManagementScreen: React.FC = () => {
   const renderItem = ({ item }: { item: ApiOrder }) => {
     // Mapeo defensivo de datos según la estructura real del backend
     const orderId = item?.id || "";
-    const shortId = orderId ? String(orderId).slice(-8) : "---";
+    const shortId = orderId
+      ? String(orderId).substring(0, 8).toUpperCase()
+      : "---";
 
-    // El backend devuelve "code" en lugar de "order_number"
-    const orderCode = (item as any)?.code;
-    const orderNumber = orderCode ? `#${orderCode}` : `#${shortId}`;
+    // Usar los primeros 8 caracteres del UUID como identificador
+    // NOTA: code es el código de confirmación de 4 dígitos, NO el ID de la orden
+    const orderNumber = `#${shortId}`;
 
     const createdAt = item?.created_at ? new Date(item.created_at) : null;
 

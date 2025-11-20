@@ -324,7 +324,7 @@ const OrdersScreen: React.FC = () => {
           <View style={ordersStyles.orderMainInfo}>
             <View style={ordersStyles.orderIdRow}>
               <Text style={ordersStyles.orderId}>
-                #{(order as any).code || order.id.slice(-8)}
+                #{order.id.substring(0, 8).toUpperCase()}
               </Text>
               <View
                 style={[

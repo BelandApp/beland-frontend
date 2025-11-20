@@ -176,6 +176,17 @@ export function usePaymentSocket(onPaymentSuccess: (data: any) => void) {
           commerce_name?: string;
           [key: string]: any;
         }) => {
+          // Ignorar notificaciones de ORDEN (las maneja useOrderSocket)
+          const isOrderNotification =
+            data?.order_id &&
+            data?.total_becoin !== undefined &&
+            data?.items !== undefined;
+
+          if (isOrderNotification) {
+            // Es una orden, ignorar aquí (useOrderSocket la maneja)
+            return;
+          }
+
           // Detectar notificación de EventPass (consume) por campos específicos
           const isEventPassNotification =
             data &&

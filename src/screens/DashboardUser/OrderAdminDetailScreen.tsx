@@ -400,11 +400,9 @@ export const OrderAdminDetailScreen: React.FC = () => {
   const statusDisplayName = getStatusDisplayName(status);
 
   // Mapeo de datos de la orden usando la estructura real del backend
-  const orderCode = (order as any)?.code;
-  const orderNumber = orderCode
-    ? `#${orderCode}`
-    : orderId
-    ? `#${String(orderId).slice(-8)}`
+  // NOTA: code es el código de confirmación de 4 dígitos, NO el ID de la orden
+  const orderNumber = orderId
+    ? `#${String(orderId).substring(0, 8).toUpperCase()}`
     : "---";
   const createdAt = order?.created_at ? new Date(order.created_at) : null;
 
