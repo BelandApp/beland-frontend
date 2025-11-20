@@ -3,64 +3,67 @@ import { Alert } from "react-native";
 import { becoinService } from "../services/becoinService";
 import { payWithPayphone } from "../services/payphoneService";
 import { convertBeCoinsToUSD } from "src/constants";
-import { User } from "src/context";
+import { useAuth, User } from "src/context";
 import { PaymentMethod } from "../components/PaymentMehotdSelector";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
+import { notify } from "src/hooks/notification/notify.external";
+import { getBackendErrorMessage } from "src/services";
 
-export const usePaymentHandler = (user?: User) => {
+export const usePaymentHandler = (
+  user: User,
+  total_amount: number,
+  productId: string,
+  balance: number
+) => {
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState<"methods" | "payment">("methods");
-  const {navigate} =useCustomNavigation()
-  const changeStatus = (newStatus: "methods" | "payment") =>
-    setStatus(newStatus);
-  const handlePayment = async ({
-    method,
-    productId,
-    amount,
-  }: {
-    method: string;
-    productId: string;
-    amount: number;
-  }) => {
-    if (!user) return Alert.alert("Error", "Usuario no autenticado");
+  const { navigate } = useCustomNavigation();
+  const { handleAuth0Login } = useAuth();
+  const isFree = !total_amount || total_amount === 0;
+ const canPurchase = balance >= total_amount;
+  const [Form, setForm] = useState({
+    holder_name: "",
+    holder_email: "",
+    holder_phone: "",
+    holder_instagram_tiktok: "",
+    event_pass_id: productId,
+  });
+
+  const handlePayment = async () => {
+    if (!user) {
+      notify.confirm({
+        message: "Debes estar logueado",
+        onConfirm: () => handleAuth0Login(),
+      });
+      return;
+    }
+    if(!canPurchase && !isFree){
+      notify.confirm({
+        message: "No tienes suficiente saldo",
+        onConfirm: () => navigate("RechargeScreen"),
+      });
+      return;
+    }
     try {
       setLoading(true);
-      setStatus("payment");
-      if (method === PaymentMethod.Tarjetas) {
-        const usd = convertBeCoinsToUSD(amount);
-        await payWithPayphone(usd, productId, user);
-      } else if (method === PaymentMethod.BeCoins) {
-        await becoinService.buyEventPass(amount, productId, user);
-      }
-
-      Alert.alert("Éxito", "Pago completado con éxito 🎉");
+      await becoinService.acquireProduct(Form);
        navigate("MainTabs", { screen: "Community" });
     } catch (error) {
       console.error(error);
-      Alert.alert("Error", "No se pudo procesar el pago");
+      const message = getBackendErrorMessage(error);
+      notify.error({ message });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFreeAcquisition = async (eventDto: any) => {
-    if (!user) return Alert.alert("Error", "Usuario no autenticado");
-    try {
-      setLoading(true);
-      await becoinService.acquireFreeProduct(eventDto);
-      navigate("MainTabs", { screen: "Community" });
-    } catch {
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  
+  
   return {
+    Form,
+    setForm,
     loading,
-    status,
+    isFree,
+    canPurchase,
     handlePayment,
-    handleFreeAcquisition,
-    setStatus,
-    changeStatus,
   };
 };
