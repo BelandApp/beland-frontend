@@ -1,16 +1,25 @@
+// Componente Input con animaciones, recibe por props:
+// label: string,
+// value: string,
+// onChangeText: (text: string) => void,
+// --OptionalProps--
+// secureTextEntry?: boolean,
+// keyboardType?: "numeric" | "default"
+//variant?: "underline" | "filled"
+
 import { EyeClosed, EyeOff } from "lucide-react-native";
 import React, { useState, useRef, useEffect } from "react";
 import {
   TextInput,
   Animated,
   Easing,
-  StyleSheet,
   Text,
   TextInputProps,
   Pressable,
-  Platform,
+  View,
 } from "react-native";
 import "@styles/inputs.css";
+import { InputStyles, variantStyles } from "./InputStyles";
 
 interface CustomInputProps extends TextInputProps {
   label: string;
@@ -19,15 +28,9 @@ interface CustomInputProps extends TextInputProps {
   secureTextEntry?: boolean;
   error?: string;
   onBlur?: () => void;
+  variant?: "underline" | "filled";
+  icon?: React.ReactNode;
 }
-
-// Componente Input con animaciones, recibe por props:
-// label: string,
-// value: string,
-// onChangeText: (text: string) => void,
-// --OptionalProps--
-// secureTextEntry?: boolean,
-// keyboardType?:
 
 export const CustomInput: React.FC<CustomInputProps> = ({
   label,
@@ -37,8 +40,12 @@ export const CustomInput: React.FC<CustomInputProps> = ({
   keyboardType = "default",
   error,
   onBlur,
+  placeholder,
+  variant = "underline",
+  icon,
   ...props
 }) => {
+  const selectedVariant = variantStyles[variant];
   const [isFocused, setIsFocused] = useState(false);
   const [isSecure, setIsSecure] = useState(secureTextEntry);
 
@@ -75,7 +82,6 @@ export const CustomInput: React.FC<CustomInputProps> = ({
       inputRange: [0, 1],
       outputRange: [17, 13],
     }),
-    color: "#ffffffaa",
   };
 
   const borderColor = animatedBorder.interpolate({
@@ -90,24 +96,23 @@ export const CustomInput: React.FC<CustomInputProps> = ({
   return (
     <Pressable
       onPress={handleFocus}
-      style={({ pressed }) => [
-        styles.button,
-        { opacity: pressed ? 0.8 : 1, },
-      ]}
       accessible={false}
+      style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
       tabIndex={-1}
     >
       <Animated.View
         accessible={false}
         tabIndex={-1}
         style={[
-          styles.container,
-          {
-            borderBottomColor: borderColor,
-          },
+          InputStyles.baseContainer,
+          selectedVariant.container,
+          variant === "underline" && { borderBottomColor: borderColor },
         ]}
       >
-        <Animated.Text style={labelStyle} accessible={false}>
+        <Animated.Text
+          style={[labelStyle, selectedVariant.label]}
+          accessible={false}
+        >
           {label}
         </Animated.Text>
         <TextInput
@@ -117,55 +122,34 @@ export const CustomInput: React.FC<CustomInputProps> = ({
           onChangeText={onChangeText}
           secureTextEntry={isSecure}
           keyboardType={keyboardType}
-          style={styles.input}
+          style={[InputStyles.baseInput, selectedVariant.input]}
           onFocus={() => setIsFocused(true)}
           onBlur={() => {
             setIsFocused(false);
             onBlur && onBlur();
           }}
+          placeholder={!isFocused ? "" : placeholder}
           {...props}
         />
         {secureTextEntry &&
           (isSecure ? (
-            <EyeOff color="white" onPress={() => setIsSecure(!isSecure)} />
+            <EyeOff
+              color={variant === "filled" ? "black" : "white"}
+              onPress={() => setIsSecure(!isSecure)}
+            />
           ) : (
-            <EyeClosed color="white" onPress={() => setIsSecure(!isSecure)} />
+            <EyeClosed
+              color={variant === "filled" ? "black" : "white"}
+              onPress={() => setIsSecure(!isSecure)}
+            />
           ))}
+        {icon && icon}
       </Animated.View>
-      {error && <Text style={styles.textError}>{error}</Text>}
+      <View style={InputStyles.errorContainer}>
+        {error && <Text style={InputStyles.textError}>{error}</Text>}
+      </View>
     </Pressable>
   );
 };
-
-const styles = StyleSheet.create({
-  button: {
-    flex: 1,
-    marginBottom: 20,
-    flexDirection: "column",
-    gap: 5,
-  },
-  container: {
-    position: "relative",
-    outlineWidth: 0,
-    borderWidth: 0,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: Platform.OS === "web" ? "center" : "flex-end",
-    borderBottomWidth: 2,
-    paddingBottom: Platform.OS === "web" ? 0 : 4,
-  },
-  input: {
-    flex: 1,
-    paddingVertical: Platform.OS === "web" ? 8 : 10,
-    fontSize: 17, 
-    fontWeight: "600",
-    color: "white",
-    borderStyle: "solid",
-    borderWidth: 1,
-    borderColor: "transparent",
-    outlineColor: "transparent",
-  },
-  textError: { color: "red", fontSize: 12, maxWidth: 300 },
-});
 
 export default CustomInput;
