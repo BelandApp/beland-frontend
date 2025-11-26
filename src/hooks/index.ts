@@ -9,6 +9,8 @@ export * from "./useUserBalance";
 export * from "./useProducts";
 export * from "./event/useEvents";
 export * from "./notification/useNotify";
+export * from "./useBeCoinsPrice";
+export * from "./useRecentRecipients";
 // Hooks de utilidad
 export * from "./useErrorHandler";
 export * from "./useLoadingState";

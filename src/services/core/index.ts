@@ -114,3 +114,10 @@ export type {
   WithdrawRequest,
   UserWithdraw,
 } from "../withdrawService";
+
+// Transaction service
+export { TransactionService } from "../TransactionApiService";
+export type {
+  Transaction as TransactionType,
+  RecentRecipient,
+} from "../TransactionApiService";
