@@ -256,6 +256,13 @@ class ProductServiceClass extends CoreApiService {
   }
 
   /**
+   * Create a new category (admin only)
+   */
+  async createCategory(data: { name: string }): Promise<Category> {
+    return this.post<Category>(this.ENDPOINTS.CATEGORIES, data);
+  }
+
+  /**
    * Get products by category
    */
   async getProductsByCategory(

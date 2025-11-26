@@ -18,7 +18,7 @@ import type {
   UpdateProductDto,
   Category,
 } from "@/services/ProductApiService";
-import { useNotify } from "@/hooks";
+import { useNotify, useBeCoinsPrice } from "@/hooks";
 
 interface ProductFormModalProps {
   visible: boolean;
@@ -34,6 +34,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   onSuccess,
 }) => {
   const notify = useNotify();
+  const { usdToBeCoins } = useBeCoinsPrice();
   const isEditing = !!product;
 
   // Form state
@@ -49,6 +50,9 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   // Categories
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [creatingCategory, setCreatingCategory] = useState(false);
 
   // UI state
   const [loading, setLoading] = useState(false);
@@ -97,6 +101,31 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       setCategories([]);
     } finally {
       setLoadingCategories(false);
+    }
+  };
+
+  const handleCreateCategory = async () => {
+    if (!newCategoryName.trim()) {
+      notify.error({ message: "El nombre de la categoría es requerido" });
+      return;
+    }
+
+    try {
+      setCreatingCategory(true);
+      await ProductService.createCategory({
+        name: newCategoryName.trim(),
+      });
+      notify.success({ message: "Categoría creada exitosamente" });
+      setShowCategoryModal(false);
+      setNewCategoryName("");
+      await loadCategories();
+    } catch (error: any) {
+      console.error("Error creating category:", error);
+      const message =
+        error.response?.data?.message || "Error al crear categoría";
+      notify.error({ message });
+    } finally {
+      setCreatingCategory(false);
     }
   };
 
@@ -256,60 +285,79 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 {errors.price && (
                   <Text style={styles.errorText}>{errors.price}</Text>
                 )}
+                {formData.price > 0 && (
+                  <View style={styles.conversionBadge}>
+                    <MaterialCommunityIcons
+                      name="cash-multiple"
+                      size={14}
+                      color="#7DA244"
+                    />
+                    <Text style={styles.conversionText}>
+                      ≈ {usdToBeCoins(formData.price).toFixed(2)} BC
+                    </Text>
+                  </View>
+                )}
               </View>
             </View>
 
             {/* Categoría */}
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Categoría</Text>
+              <View style={styles.labelRow}>
+                <Text style={styles.label}>Categoría</Text>
+                <TouchableOpacity
+                  style={styles.addCategoryButton}
+                  onPress={() => setShowCategoryModal(true)}
+                >
+                  <MaterialCommunityIcons
+                    name="plus-circle"
+                    size={16}
+                    color="#7DA244"
+                  />
+                  <Text style={styles.addCategoryText}>Agregar categoría</Text>
+                </TouchableOpacity>
+              </View>
               {loadingCategories ? (
                 <ActivityIndicator size="small" color="#7DA244" />
               ) : (
-                <View style={styles.selectContainer}>
-                  <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    style={styles.categoriesScroll}
+                <View style={styles.categoriesGrid}>
+                  <TouchableOpacity
+                    style={[
+                      styles.categoryButton,
+                      !formData.category_id && styles.categoryButtonActive,
+                    ]}
+                    onPress={() => handleChange("category_id", "")}
                   >
-                    <TouchableOpacity
+                    <Text
                       style={[
-                        styles.categoryChip,
-                        !formData.category_id && styles.categoryChipActive,
+                        styles.categoryButtonText,
+                        !formData.category_id &&
+                          styles.categoryButtonTextActive,
                       ]}
-                      onPress={() => handleChange("category_id", "")}
+                    >
+                      Sin categoría
+                    </Text>
+                  </TouchableOpacity>
+                  {categories.map((category) => (
+                    <TouchableOpacity
+                      key={category.id}
+                      style={[
+                        styles.categoryButton,
+                        formData.category_id === category.id &&
+                          styles.categoryButtonActive,
+                      ]}
+                      onPress={() => handleChange("category_id", category.id)}
                     >
                       <Text
                         style={[
-                          styles.categoryChipText,
-                          !formData.category_id &&
-                            styles.categoryChipTextActive,
+                          styles.categoryButtonText,
+                          formData.category_id === category.id &&
+                            styles.categoryButtonTextActive,
                         ]}
                       >
-                        Sin categoría
+                        {category.name}
                       </Text>
                     </TouchableOpacity>
-                    {categories.map((category) => (
-                      <TouchableOpacity
-                        key={category.id}
-                        style={[
-                          styles.categoryChip,
-                          formData.category_id === category.id &&
-                            styles.categoryChipActive,
-                        ]}
-                        onPress={() => handleChange("category_id", category.id)}
-                      >
-                        <Text
-                          style={[
-                            styles.categoryChipText,
-                            formData.category_id === category.id &&
-                              styles.categoryChipTextActive,
-                          ]}
-                        >
-                          {category.name}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
+                  ))}
                 </View>
               )}
             </View>
@@ -363,6 +411,75 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
           </View>
         </View>
       </View>
+
+      {/* Modal de Nueva Categoría */}
+      <Modal
+        visible={showCategoryModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowCategoryModal(false)}
+      >
+        <View style={styles.categoryModalOverlay}>
+          <View style={styles.categoryModalContent}>
+            <View style={styles.categoryModalHeader}>
+              <Text style={styles.categoryModalTitle}>Nueva Categoría</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowCategoryModal(false);
+                  setNewCategoryName("");
+                }}
+                style={styles.closeButton}
+              >
+                <MaterialCommunityIcons
+                  name="close"
+                  size={24}
+                  color="#6b7280"
+                />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.categoryModalBody}>
+              <Text style={styles.label}>
+                Nombre <Text style={styles.required}>*</Text>
+              </Text>
+              <TextInput
+                style={styles.input}
+                value={newCategoryName}
+                onChangeText={setNewCategoryName}
+                placeholder="Ingresa el nombre de la categoría"
+                autoFocus
+              />
+            </View>
+
+            <View style={styles.categoryModalFooter}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => {
+                  setShowCategoryModal(false);
+                  setNewCategoryName("");
+                }}
+                disabled={creatingCategory}
+              >
+                <Text style={styles.cancelButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.submitButton,
+                  creatingCategory && styles.submitButtonDisabled,
+                ]}
+                onPress={handleCreateCategory}
+                disabled={creatingCategory}
+              >
+                {creatingCategory ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text style={styles.submitButtonText}>Crear</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </Modal>
   );
 };
@@ -374,6 +491,44 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
+    zIndex: 1000,
+  },
+  categoryModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+    zIndex: 2000,
+  },
+  categoryModalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    width: "100%",
+    maxWidth: 400,
+  },
+  categoryModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+  },
+  categoryModalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#111827",
+  },
+  categoryModalBody: {
+    padding: 20,
+  },
+  categoryModalFooter: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: "#e5e7eb",
   },
   modalContent: {
     backgroundColor: "#fff",
@@ -443,36 +598,66 @@ const styles = StyleSheet.create({
     color: "#ef4444",
     marginTop: 4,
   },
-  selectContainer: {
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 8,
-    backgroundColor: "#f9fafb",
-  },
-  categoriesScroll: {
-    padding: 8,
-  },
-  categoryChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+  conversionBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: "#f0f9ff",
     borderRadius: 6,
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    marginRight: 8,
+    alignSelf: "flex-start",
   },
-  categoryChipActive: {
+  conversionText: {
+    fontSize: 12,
+    color: "#7DA244",
+    fontWeight: "600",
+    marginLeft: 4,
+  },
+  labelRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  addCategoryButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  addCategoryText: {
+    fontSize: 12,
+    color: "#7DA244",
+    fontWeight: "600",
+    marginLeft: 4,
+  },
+  categoriesGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginHorizontal: -4,
+  },
+  categoryButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: "#f3f4f6",
+    margin: 4,
+    minWidth: "30%",
+    alignItems: "center",
+  },
+  categoryButtonActive: {
     backgroundColor: "#7DA244",
-    borderColor: "#7DA244",
   },
-  categoryChipText: {
+  categoryButtonText: {
     fontSize: 13,
     color: "#6b7280",
     fontWeight: "500",
   },
-  categoryChipTextActive: {
+  categoryButtonTextActive: {
     color: "#fff",
   },
+
   imagePreview: {
     marginTop: 12,
     alignItems: "center",

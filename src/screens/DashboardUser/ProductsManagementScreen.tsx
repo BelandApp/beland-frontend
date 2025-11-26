@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   TextInput,
   Modal,
-  Alert,
   useWindowDimensions,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -128,28 +127,23 @@ export const ProductsManagementScreen: React.FC = () => {
   };
 
   const handleDeleteProduct = async (productId: string) => {
-    Alert.alert(
-      "Confirmar eliminación",
-      "¿Estás seguro de que deseas eliminar este producto?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await ProductService.deleteProduct(productId);
-              notify.success({ message: "Producto eliminado exitosamente" });
-              // Refrescar forzando un cambio en los filtros
-              setFilters((prev) => ({ ...prev }));
-            } catch (error) {
-              console.error("Error deleting product:", error);
-              notify.error({ message: "Error al eliminar producto" });
-            }
-          },
-        },
-      ]
-    );
+    notify.confirm({
+      message: "¿Estás seguro de que deseas eliminar este producto?",
+      onConfirm: async () => {
+        try {
+          await ProductService.deleteProduct(productId);
+          notify.success({ message: "Producto eliminado exitosamente" });
+          // Refrescar forzando un cambio en los filtros
+          setFilters((prev) => ({ ...prev }));
+        } catch (error) {
+          console.error("Error deleting product:", error);
+          notify.error({ message: "Error al eliminar producto" });
+        }
+      },
+      onCancel: () => {
+        // Opcional: acción al cancelar
+      },
+    });
   };
 
   const handleFormSuccess = () => {
