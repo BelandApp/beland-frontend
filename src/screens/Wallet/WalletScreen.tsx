@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import {
   View,
   ScrollView,
@@ -8,14 +8,14 @@ import {
   StyleSheet,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { WaveBottomGray } from "../../components/icons";
+import { WaveBottomGray, ThemedHeader } from "@/components";
+import { useAuth } from "@/context";
 import {
   WalletBalanceCard,
   WalletActions,
   RecentTransactions,
   PaymentPreferences,
 } from "./components";
-import { useAuth } from "src/context";
 import {
   useWalletData,
   useWalletActions,
@@ -23,11 +23,10 @@ import {
   usePaymentPreferences,
 } from "./hooks";
 import { containerStyles } from "./styles";
-import { ThemedHeader } from "src/components/shared/headers/Header";
 
 export const WalletScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
-  const { user, isAuthenticated, handleAuth0Login, canPerformAction } = useAuth();
-
+  const { user, isAuthenticated, handleAuth0Login, canPerformAction } =
+    useAuth();
   const { walletData, refetch: refetchWallet } = useWalletData();
   const { mainWalletActions } = useWalletActions();
   const {
@@ -59,41 +58,46 @@ export const WalletScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   // Si no está autenticado, mostrar pantalla de login amigable
   if (!isAuthenticated) {
     return (
-      <View style={styles.authRequiredContainer}>
-        <View style={styles.authRequiredContent}>
-          <Text style={styles.authRequiredTitle}>💰 Tu Billetera Digital</Text>
-          <Text style={styles.authRequiredSubtitle}>
-            Gestiona tus BeCoins, realiza recargas y transacciones de forma
-            segura
-          </Text>
+      <>
+        <ThemedHeader title="Billetera" />
+        <View style={styles.authRequiredContainer}>
+          <View style={styles.authRequiredContent}>
+            <Text style={styles.authRequiredTitle}>
+              💰 Tu Billetera Digital
+            </Text>
+            <Text style={styles.authRequiredSubtitle}>
+              Gestiona tus BeCoins, realiza recargas y transacciones de forma
+              segura
+            </Text>
 
-          <View style={styles.authRequiredFeatures}>
-            <Text style={styles.authRequiredFeature}>
-              • Consulta tu saldo en tiempo real
-            </Text>
-            <Text style={styles.authRequiredFeature}>
-              • Recarga monedas fácilmente
-            </Text>
-            <Text style={styles.authRequiredFeature}>
-              • Historial de transacciones completo
-            </Text>
-            <Text style={styles.authRequiredFeature}>
-              • Transferencias seguras
+            <View style={styles.authRequiredFeatures}>
+              <Text style={styles.authRequiredFeature}>
+                • Consulta tu saldo en tiempo real
+              </Text>
+              <Text style={styles.authRequiredFeature}>
+                • Recarga monedas fácilmente
+              </Text>
+              <Text style={styles.authRequiredFeature}>
+                • Historial de transacciones completo
+              </Text>
+              <Text style={styles.authRequiredFeature}>
+                • Transferencias seguras
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.authRequiredButton}
+              onPress={handleAuth0Login}
+            >
+              <Text style={styles.authRequiredButtonText}>Iniciar Sesión</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.authRequiredFooter}>
+              Crea tu cuenta gratuita y comienza a usar tu billetera digital
             </Text>
           </View>
-
-          <TouchableOpacity
-            style={styles.authRequiredButton}
-            onPress={handleAuth0Login}
-          >
-            <Text style={styles.authRequiredButtonText}>Iniciar Sesión</Text>
-          </TouchableOpacity>
-
-          <Text style={styles.authRequiredFooter}>
-            Crea tu cuenta gratuita y comienza a usar tu billetera digital
-          </Text>
         </View>
-      </View>
+      </>
     );
   }
 
@@ -111,14 +115,14 @@ export const WalletScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               walletData={walletData}
               avatarUrl={user?.profile_picture_url}
             />
+            <WalletActions actions={mainWalletActions} />
             {/* Preferencias de pago */}
             <PaymentPreferences
-              // methods={paymentPreferences.methods}
-              // onAddMethod={addPaymentMethod}
-              // onDeleteMethod={deletePaymentMethod}
-              // onSetDefault={setDefaultPaymentMethod}
+            // methods={paymentPreferences.methods}
+            // onAddMethod={addPaymentMethod}
+            // onDeleteMethod={deletePaymentMethod}
+            // onSetDefault={setDefaultPaymentMethod}
             />
-            <WalletActions actions={mainWalletActions} />
 
             {/* Transacciones recientes */}
             <RecentTransactions

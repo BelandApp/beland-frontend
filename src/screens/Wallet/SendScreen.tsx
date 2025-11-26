@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -6,43 +6,65 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  Modal,
+  ActivityIndicator,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuth } from "@/context/AuthContext";
-import { PaymentService, WalletService } from "@services/core";
+import { WalletService } from "@services/core";
 import Constants from "expo-constants";
 import { useWalletData } from "../Wallet/hooks/useWalletData";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
-import { useNotify } from "src/hooks";
+import { useNotify, useBeCoinsPrice, useRecentRecipients } from "src/hooks";
 import { getBackendErrorMessage } from "src/services";
+import RecentRecipients from "./components/RecentRecipients";
+
+type Tab = "amount" | "contacts";
 
 const SendScreen = () => {
   const { navigate, goBack } = useCustomNavigation();
   const { walletData, refetch } = useWalletData();
   const { user, handleAuth0Login } = useAuth();
-  const [amount, setAmount] = useState("");
-  const [address, setAddress] = useState("");
-  const [currency] = useState("becoin");
+  const { pricePerBeCoin, usdToBeCoins, beCoinsToUsd } = useBeCoinsPrice();
+  const {
+    recipients,
+    loading: loadingRecipients,
+    refetch: refetchRecipients,
+  } = useRecentRecipients();
   const notify = useNotify();
+
+  // Estados principales
+  const [activeTab, setActiveTab] = useState<Tab>("amount");
+  const [amountUsd, setAmountUsd] = useState("");
+  const [address, setAddress] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  // Para mostrar datos en la alerta de éxito
-  const [sentAmount, setSentAmount] = useState("");
-  const [sentCurrency, setSentCurrency] = useState("");
-  const [sentAddress, setSentAddress] = useState("");
-
-  // Verificar si usar modo demo
+  // Verificar modo demo
   const useDemoMode = Constants.expoConfig?.extra?.useDemoMode === "true";
 
-  const validateTransfer = (): boolean => {
-    const transferAmount = parseFloat(amount);
+  // Calcular equivalente en BeCoins
+  const beCoinsAmount = useMemo(() => {
+    const usd = parseFloat(amountUsd);
+    if (isNaN(usd) || usd <= 0) return 0;
+    return usdToBeCoins(usd);
+  }, [amountUsd, usdToBeCoins]);
 
-    if (!amount || isNaN(transferAmount) || transferAmount <= 0) {
-      notify.error({ message: "Por favor ingresa un monto valido" });
+  // Saldo disponible en USD
+  const balanceUsd = useMemo(() => {
+    return beCoinsToUsd(walletData.balance);
+  }, [walletData.balance, beCoinsToUsd]);
+
+  // Validar transferencia
+  const validateTransfer = (): boolean => {
+    const transferAmount = parseFloat(amountUsd);
+
+    if (!amountUsd || isNaN(transferAmount) || transferAmount <= 0) {
+      notify.error({ message: "Por favor ingresa un monto válido" });
       return false;
     }
 
-    if (transferAmount > walletData.balance) {
+    if (beCoinsAmount > walletData.balance) {
       notify.error({
         message: "Saldo insuficiente para realizar la transferencia",
       });
@@ -51,70 +73,62 @@ const SendScreen = () => {
 
     if (!address.trim()) {
       notify.error({
-        message: "Por favor ingresa un alias o número de teléfono",
+        message: "Por favor ingresa un alias",
       });
       return false;
     }
+
     return true;
   };
 
+  // Manejar envío
   const handleSend = async () => {
     if (!validateTransfer()) return;
+
+    setShowConfirmModal(false);
     setIsLoading(true);
+
     try {
       if (useDemoMode) {
-        // Modo demo: simular transferencia
-        notify.info({message:"Estas en modo DEMO"})
+        notify.info({ message: "Estás en modo DEMO" });
         await new Promise((resolve) => setTimeout(resolve, 1500));
-        setSentAmount(amount);
-        setSentCurrency(currency);
-        setSentAddress(address);
         notify.success({
-          message: `Se han enviado ${amount} BECOINS a ${address}`,
+          message: `Se han enviado $${amountUsd} USD (${beCoinsAmount.toFixed(
+            2
+          )} BECOINS) a ${address}`,
         });
-
-        // Actualizar datos de la wallet
         refetch();
       } else {
-        // Modo producción: transferencia real usando nueva funcionalidad
         if (!user?.email) {
           notify.confirm({
-            message: "Debes iniciar sesión para adquirir",
+            message: "Debes iniciar sesión para transferir",
             onConfirm: () => handleAuth0Login(),
           });
           return;
         }
 
-        const amountNumber = parseFloat(amount);
-        const recipientIdentifier = address.trim();
+        const recipientIdentifier = address.trim().toUpperCase();
 
-        try {
-          // Realizar la transferencia usando WalletService
-          const transferResult = await WalletService.transferToAlias(
-            recipientIdentifier,
-            amountNumber
-          );
+        const transferResult = await WalletService.transferToAlias(
+          recipientIdentifier,
+          beCoinsAmount
+        );
 
-          if (transferResult) {
-            // Transferencia completada exitosamente
-            setSentAmount(amount);
-            setSentCurrency(currency);
-            setSentAddress(address);
-            notify.success({
-              message: `Se han enviado ${amount} BECOINS a ${address}`,
-            });
+        if (transferResult) {
+          notify.success({
+            message: `Transferencia exitosa de $${amountUsd} USD a ${address}`,
+          });
+          refetch();
 
-            // Actualizar datos de la wallet
-            refetch();
-          }
-        } catch (error) {
-          const message = getBackendErrorMessage(error);
-          notify.error({ message: message || "Error en transferencia" });
+          // Esperar un momento antes de recargar contactos para dar tiempo a que se registre en la BD
+          setTimeout(() => {
+            refetchRecipients();
+          }, 1500);
         }
       }
 
       // Limpiar formulario
-      setAmount("");
+      setAmountUsd("");
       setAddress("");
     } catch (error) {
       console.error("Error en transferencia:", error);
@@ -125,90 +139,286 @@ const SendScreen = () => {
     }
   };
 
-  return (
-    <>
-      <ScrollView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => goBack()} style={styles.backButton}>
-            <MaterialCommunityIcons name="arrow-left" size={24} color="#fff" />
-          </TouchableOpacity>
-          <Text style={styles.title}>Enviar BeCoins</Text>
-        </View>
+  // Manejar selección de contacto reciente
+  const handleSelectRecipient = (recipient: any) => {
+    // Extraer el alias del email (parte antes del @)
+    const emailAlias = recipient.email.split("@")[0];
+    // Convertir a mayúsculas (requisito del sistema)
+    setAddress(emailAlias.toUpperCase());
+    setActiveTab("amount");
+  };
 
-        {/* Monto */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Monto a enviar </Text>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.amountInput}
-              placeholder="0"
-              value={amount}
-              onChangeText={setAmount}
-              keyboardType="numeric"
-              maxLength={10}
-            />
-          </View>
-        </View>
+  // Montos predefinidos en USD
+  const presetAmounts = [5, 10, 20, 50];
 
-        {/* Destinatario */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Destinatario</Text>
-          <View style={styles.recipientContainer}>
-            <TextInput
-              style={styles.recipientInput}
-              placeholder="Alias o número de teléfono"
-              value={address}
-              onChangeText={setAddress}
-              keyboardType="default"
-            />
-            <TouchableOpacity
-              style={styles.qrButton}
-              onPress={() => navigate("QR")}
-            >
+  const renderAmountTab = () => (
+    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
+      {/* Destinatario */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Destinatario</Text>
+        <View style={styles.recipientContainer}>
+          <MaterialCommunityIcons
+            name="at"
+            size={20}
+            color="#9ca3af"
+            style={styles.recipientIcon}
+          />
+          <TextInput
+            style={styles.recipientInput}
+            placeholder="Alias del destinatario"
+            value={address}
+            onChangeText={(text) => setAddress(text.toUpperCase())}
+            autoCapitalize="characters"
+            keyboardType="default"
+          />
+          {address.length > 0 && (
+            <TouchableOpacity onPress={() => setAddress("")}>
               <MaterialCommunityIcons
-                name="qrcode-scan"
-                size={24}
-                color="#4ecdc4"
+                name="close-circle"
+                size={20}
+                color="#9ca3af"
               />
             </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Información del saldo */}
-        <View style={styles.balanceInfo}>
-          <View style={styles.balanceRow}>
-            <Text style={styles.balanceLabel}>Saldo disponible:</Text>
-            <Text style={styles.balanceAmount}>
-              {Math.floor(walletData.balance)} BECOINS
-            </Text>
-          </View>
-          {walletData.locked_balance && walletData.locked_balance > 0 && (
-            <View style={styles.lockedBalanceInfo}>
-              <Text style={styles.lockedBalanceLabel}>Balance bloqueado:</Text>
-              <Text style={styles.lockedBalanceAmount}>
-                {Math.floor(walletData.locked_balance)} BECOINS
-              </Text>
-            </View>
           )}
         </View>
+        <Text style={styles.helperText}>
+          Los alias solo se escriben en MAYÚSCULAS
+        </Text>
+      </View>
 
-        {/* Botón enviar */}
+      {/* Monto en USD */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Monto en USD</Text>
+        <View style={styles.amountContainer}>
+          <Text style={styles.currencySymbol}>$</Text>
+          <TextInput
+            style={styles.amountInput}
+            placeholder="0.00"
+            value={amountUsd}
+            onChangeText={setAmountUsd}
+            keyboardType="decimal-pad"
+            maxLength={10}
+          />
+          <Text style={styles.currencyCode}>USD</Text>
+        </View>
+
+        {/* Equivalente en BeCoins */}
+        {beCoinsAmount > 0 && (
+          <View style={styles.equivalentContainer}>
+            <MaterialCommunityIcons
+              name="swap-horizontal"
+              size={16}
+              color="#7DA244"
+            />
+            <Text style={styles.equivalentText}>
+              ≈ {beCoinsAmount.toFixed(2)} BECOINS
+            </Text>
+          </View>
+        )}
+
+        {/* Montos predefinidos */}
+        <View style={styles.presetsContainer}>
+          {presetAmounts.map((amount) => (
+            <TouchableOpacity
+              key={amount}
+              style={[
+                styles.presetButton,
+                amountUsd === amount.toString() && styles.presetButtonActive,
+              ]}
+              onPress={() => setAmountUsd(amount.toString())}
+            >
+              <Text
+                style={[
+                  styles.presetText,
+                  amountUsd === amount.toString() && styles.presetTextActive,
+                ]}
+              >
+                ${amount}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      {/* Información del saldo */}
+      <View style={styles.balanceCard}>
+        <View style={styles.balanceHeader}>
+          <MaterialCommunityIcons name="wallet" size={20} color="#7DA244" />
+          <Text style={styles.balanceTitle}>Saldo disponible</Text>
+        </View>
+        <View style={styles.balanceAmounts}>
+          <Text style={styles.balanceUsd}>${balanceUsd.toFixed(2)} USD</Text>
+          <Text style={styles.balanceBecoins}>
+            {Math.floor(walletData.balance)} BECOINS
+          </Text>
+        </View>
+      </View>
+
+      {/* Botón enviar */}
+      <TouchableOpacity
+        style={[
+          styles.sendButton,
+          { opacity: amountUsd && address && !isLoading ? 1 : 0.5 },
+        ]}
+        disabled={!amountUsd || !address || isLoading}
+        onPress={() => setShowConfirmModal(true)}
+      >
+        {isLoading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <>
+            <MaterialCommunityIcons name="send" size={20} color="#fff" />
+            <Text style={styles.sendButtonText}>ENVIAR TRANSFERENCIA</Text>
+          </>
+        )}
+      </TouchableOpacity>
+    </ScrollView>
+  );
+
+  const renderContactsTab = () => {
+    // Si el usuario no está autenticado, mostrar mensaje
+    if (!user?.email) {
+      return (
+        <View style={styles.emptyContainer}>
+          <MaterialCommunityIcons
+            name="account-alert"
+            size={48}
+            color="#f59e0b"
+          />
+          <Text style={styles.emptyText}>
+            Debes iniciar sesión para ver tus contactos
+          </Text>
+          <TouchableOpacity
+            style={styles.loginButton}
+            onPress={handleAuth0Login}
+          >
+            <Text style={styles.loginButtonText}>Iniciar Sesión</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    return (
+      <RecentRecipients
+        recipients={recipients}
+        onSelectRecipient={handleSelectRecipient}
+        loading={loadingRecipients}
+        onRefresh={refetchRecipients}
+      />
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => goBack()} style={styles.backButton}>
+          <MaterialCommunityIcons name="arrow-left" size={24} color="#fff" />
+        </TouchableOpacity>
+        <Text style={styles.title}>Enviar Dinero</Text>
         <TouchableOpacity
-          style={[
-            styles.sendButton,
-            { opacity: amount && address && !isLoading ? 1 : 0.5 },
-          ]}
-          disabled={!amount || !address || isLoading}
-          onPress={handleSend}
+          onPress={() => navigate("QR")}
+          style={styles.qrButton}
         >
-          <Text style={styles.sendButtonText}>
-            {isLoading ? "ENVIANDO..." : "ENVIAR"}
+          <MaterialCommunityIcons name="qrcode-scan" size={24} color="#fff" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Tabs */}
+      <View style={styles.tabsContainer}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === "amount" && styles.tabActive]}
+          onPress={() => setActiveTab("amount")}
+        >
+          <MaterialCommunityIcons
+            name="cash"
+            size={20}
+            color={activeTab === "amount" ? "#4ecdc4" : "#9ca3af"}
+          />
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "amount" && styles.tabTextActive,
+            ]}
+          >
+            Monto
           </Text>
         </TouchableOpacity>
 
-        {/* El selector de moneda ha sido eliminado, solo se permite BeCoins */}
-      </ScrollView>
-    </>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === "contacts" && styles.tabActive]}
+          onPress={() => setActiveTab("contacts")}
+        >
+          <MaterialCommunityIcons
+            name="account-group"
+            size={20}
+            color={activeTab === "contacts" ? "#4ecdc4" : "#9ca3af"}
+          />
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "contacts" && styles.tabTextActive,
+            ]}
+          >
+            Contactos
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Contenido de tabs */}
+      {activeTab === "amount" ? renderAmountTab() : renderContactsTab()}
+
+      {/* Modal de confirmación */}
+      <Modal
+        visible={showConfirmModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowConfirmModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <MaterialCommunityIcons
+                name="information"
+                size={48}
+                color="#4ecdc4"
+              />
+            </View>
+            <Text style={styles.modalTitle}>Confirmar Transferencia</Text>
+            <View style={styles.modalDetails}>
+              <View style={styles.modalRow}>
+                <Text style={styles.modalLabel}>Destinatario:</Text>
+                <Text style={styles.modalValue}>{address}</Text>
+              </View>
+              <View style={styles.modalRow}>
+                <Text style={styles.modalLabel}>Monto:</Text>
+                <Text style={styles.modalValue}>${amountUsd} USD</Text>
+              </View>
+              <View style={styles.modalRow}>
+                <Text style={styles.modalLabel}>Equivalente:</Text>
+                <Text style={styles.modalValue}>
+                  {beCoinsAmount.toFixed(2)} BECOINS
+                </Text>
+              </View>
+            </View>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalButtonCancel}
+                onPress={() => setShowConfirmModal(false)}
+              >
+                <Text style={styles.modalButtonCancelText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalButtonConfirm}
+                onPress={handleSend}
+              >
+                <Text style={styles.modalButtonConfirmText}>Confirmar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </View>
   );
 };
 
@@ -220,6 +430,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 16,
     paddingTop: 50,
@@ -228,7 +439,6 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 24,
   },
   backButton: {
-    marginRight: 16,
     padding: 8,
     borderRadius: 8,
     backgroundColor: "rgba(255,255,255,0.2)",
@@ -238,6 +448,43 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#fff",
   },
+  qrButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: "rgba(255,255,255,0.2)",
+  },
+  tabsContainer: {
+    flexDirection: "row",
+    backgroundColor: "#fff",
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+  },
+  tab: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 2,
+    borderBottomColor: "transparent",
+  },
+  tabActive: {
+    borderBottomColor: "#4ecdc4",
+  },
+  tabText: {
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#9ca3af",
+  },
+  tabTextActive: {
+    color: "#4ecdc4",
+  },
+  tabContent: {
+    flex: 1,
+  },
   section: {
     margin: 16,
     marginBottom: 24,
@@ -245,126 +492,146 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#333",
+    color: "#111827",
     marginBottom: 12,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  amountInput: {
-    flex: 1,
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#333",
-    padding: 16,
-  },
-  currencySelector: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 8,
-    paddingVertical: 8,
-    backgroundColor: "#f0f9ff",
-    borderRadius: 8,
-    marginRight: 2,
-    width: 50,
-    flex: 1,
-    flexWrap: "wrap",
-  },
-  currencyText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#4ecdc4",
-    marginRight: 2,
-    maxWidth: 45,
-    overflow: "hidden",
-    textAlign: "center",
   },
   recipientContainer: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#fff",
     borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  recipientIcon: {
+    marginRight: 8,
   },
   recipientInput: {
     flex: 1,
     fontSize: 16,
-    color: "#333",
-    padding: 16,
-  },
-  qrButton: {
+    color: "#111827",
     padding: 12,
-    marginRight: 8,
-    borderRadius: 8,
-    backgroundColor: "#f0f9ff",
   },
-  balanceInfo: {
-    flexDirection: "column",
-    justifyContent: "flex-start",
-    alignItems: "stretch",
-    backgroundColor: "#fff",
-    margin: 16,
-    padding: 16,
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  balanceRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  balanceLabel: {
-    fontSize: 14,
-    color: "#666",
-  },
-  balanceAmount: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#4ecdc4",
-  },
-  lockedBalanceInfo: {
+  helperText: {
     marginTop: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: "#e5e7eb",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    width: "100%",
-  },
-  lockedBalanceLabel: {
     fontSize: 12,
-    color: "#9ca3af",
-  },
-  lockedBalanceAmount: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#9ca3af",
+    color: "#6b7280",
     fontStyle: "italic",
   },
+  amountContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 2,
+    borderColor: "#4ecdc4",
+  },
+  currencySymbol: {
+    fontSize: 32,
+    fontWeight: "700",
+    color: "#4ecdc4",
+    marginRight: 8,
+  },
+  amountInput: {
+    flex: 1,
+    fontSize: 32,
+    fontWeight: "700",
+    color: "#111827",
+  },
+  currencyCode: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#6b7280",
+    marginLeft: 8,
+  },
+  equivalentContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: "#f0fdf4",
+    borderRadius: 8,
+  },
+  equivalentText: {
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#7DA244",
+  },
+  presetsContainer: {
+    flexDirection: "row",
+    marginTop: 16,
+    gap: 8,
+  },
+  presetButton: {
+    flex: 1,
+    paddingVertical: 12,
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    alignItems: "center",
+  },
+  presetButtonActive: {
+    backgroundColor: "#eff6ff",
+    borderColor: "#4ecdc4",
+  },
+  presetText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#6b7280",
+  },
+  presetTextActive: {
+    color: "#4ecdc4",
+  },
+  balanceCard: {
+    margin: 16,
+    marginTop: 8,
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  balanceHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  balanceTitle: {
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#6b7280",
+  },
+  balanceAmounts: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  balanceUsd: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#111827",
+  },
+  balanceBecoins: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#7DA244",
+  },
   sendButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: "#4ecdc4",
     margin: 16,
     padding: 18,
     borderRadius: 12,
-    alignItems: "center",
     shadowColor: "#4ecdc4",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -372,93 +639,108 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   sendButtonText: {
+    marginLeft: 8,
     color: "#fff",
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
   },
   modalOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
-    zIndex: 1000,
   },
   modalContent: {
     backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 20,
-    width: "80%",
-    maxWidth: 300,
+    borderRadius: 20,
+    padding: 24,
+    width: "85%",
+    maxWidth: 400,
   },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
-    textAlign: "center",
+  modalHeader: {
+    alignItems: "center",
     marginBottom: 16,
   },
-  currencyOption: {
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#111827",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  modalDetails: {
+    backgroundColor: "#f9fafb",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+  },
+  modalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
+    paddingVertical: 8,
   },
-  currencyOptionSelected: {
-    backgroundColor: "#f0f9ff",
+  modalLabel: {
+    fontSize: 14,
+    color: "#6b7280",
   },
-  currencyOptionText: {
-    fontSize: 16,
-    color: "#333",
-  },
-  currencyOptionTextSelected: {
+  modalValue: {
+    fontSize: 14,
     fontWeight: "600",
-    color: "#4ecdc4",
+    color: "#111827",
   },
-  modalCloseButton: {
-    marginTop: 8,
-    padding: 12,
-    borderRadius: 8,
-    backgroundColor: "#f5f5f5",
+  modalButtons: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  modalButtonCancel: {
+    flex: 1,
+    paddingVertical: 14,
+    backgroundColor: "#f3f4f6",
+    borderRadius: 10,
     alignItems: "center",
   },
-  modalCloseButtonText: {
+  modalButtonCancelText: {
     fontSize: 16,
-    color: "#666",
+    fontWeight: "600",
+    color: "#6b7280",
   },
-  successContainer: {
+  modalButtonConfirm: {
+    flex: 1,
+    paddingVertical: 14,
+    backgroundColor: "#4ecdc4",
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  modalButtonConfirmText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#fff",
+  },
+  emptyContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f8f9fa",
-    padding: 20,
+    paddingVertical: 60,
+    paddingHorizontal: 40,
   },
-  successTitle: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#4ecdc4",
-    marginRight: 4,
-    maxWidth: 55,
-    overflow: "hidden",
-    textAlign: "right",
-
-    marginBottom: 24,
-  },
-  closeButton: {
-    backgroundColor: "#4ecdc4",
-    paddingHorizontal: 32,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  closeButtonText: {
-    color: "#fff",
+  emptyText: {
+    marginTop: 16,
     fontSize: 16,
     fontWeight: "600",
+    color: "#6b7280",
+    textAlign: "center",
+  },
+  loginButton: {
+    marginTop: 24,
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    backgroundColor: "#4ecdc4",
+    borderRadius: 10,
+  },
+  loginButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#fff",
   },
 });
 

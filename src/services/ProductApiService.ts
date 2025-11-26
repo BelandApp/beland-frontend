@@ -102,6 +102,12 @@ class ProductServiceClass extends CoreApiService {
         price_becoin: string;
         image_url?: string;
         category_id: string;
+        category?: {
+          id: string;
+          name: string;
+          description?: string;
+          image_url?: string;
+        };
         created_at: string;
         deleted_at?: string;
       }>;
@@ -118,8 +124,20 @@ class ProductServiceClass extends CoreApiService {
         description: backendProduct.description,
         price: parseFloat(backendProduct.price),
         cost: parseFloat(backendProduct.cost),
+        price_becoin: backendProduct.price_becoin
+          ? parseFloat(backendProduct.price_becoin)
+          : undefined,
         image_url: backendProduct.image_url,
         category_id: backendProduct.category_id,
+        category: backendProduct.category
+          ? {
+              id: backendProduct.category.id,
+              name: backendProduct.category.name,
+              description: backendProduct.category.description,
+              image_url: backendProduct.category.image_url,
+              is_active: true,
+            }
+          : undefined,
         is_active: !backendProduct.deleted_at, // If deleted_at is null, product is active
         created_at: backendProduct.created_at,
         updated_at: backendProduct.created_at, // Backend doesn't have updated_at, use created_at
@@ -148,6 +166,12 @@ class ProductServiceClass extends CoreApiService {
       price_becoin: string;
       image_url?: string;
       category_id: string;
+      category?: {
+        id: string;
+        name: string;
+        description?: string;
+        image_url?: string;
+      };
       created_at: string;
       deleted_at?: string;
     }>(`${this.ENDPOINTS.PRODUCTS}/${id}`);
@@ -159,8 +183,20 @@ class ProductServiceClass extends CoreApiService {
       description: backendProduct.description,
       price: parseFloat(backendProduct.price),
       cost: parseFloat(backendProduct.cost),
+      price_becoin: backendProduct.price_becoin
+        ? parseFloat(backendProduct.price_becoin)
+        : undefined,
       image_url: backendProduct.image_url,
       category_id: backendProduct.category_id,
+      category: backendProduct.category
+        ? {
+            id: backendProduct.category.id,
+            name: backendProduct.category.name,
+            description: backendProduct.category.description,
+            image_url: backendProduct.category.image_url,
+            is_active: true,
+          }
+        : undefined,
       is_active: !backendProduct.deleted_at,
       created_at: backendProduct.created_at,
       updated_at: backendProduct.created_at,
@@ -197,11 +233,19 @@ class ProductServiceClass extends CoreApiService {
   /**
    * Get all categories
    */
-  async getCategories(): Promise<Category[]> {
-    const [categories] = await this.get<[Category[], number]>(
+  async getCategories(): Promise<PaginatedResponse<Category>> {
+    const response = await this.get<[Category[], number]>(
       this.ENDPOINTS.CATEGORIES
     );
-    return categories;
+    const [categories, total] = response;
+
+    return {
+      data: categories,
+      total: total,
+      page: 1,
+      limit: total,
+      totalPages: 1,
+    };
   }
 
   /**
@@ -209,6 +253,13 @@ class ProductServiceClass extends CoreApiService {
    */
   async getCategory(id: string): Promise<Category> {
     return this.get<Category>(`${this.ENDPOINTS.CATEGORIES}/${id}`);
+  }
+
+  /**
+   * Create a new category (admin only)
+   */
+  async createCategory(data: { name: string }): Promise<Category> {
+    return this.post<Category>(this.ENDPOINTS.CATEGORIES, data);
   }
 
   /**

@@ -15,33 +15,23 @@ import {
 } from "@/components/icons";
 import { useAuth } from "src/context";
 import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
-import { useNotify } from "src/hooks";
+import { useCustomNavigation, useNotify } from "src/hooks";
 
 interface QuickAction {
   id: string;
   label: string;
   icon: React.ComponentType<any>;
-  onPress?: () => void;
+  onPress: () => void;
   color: string;
   bgColor: string;
 }
 
-interface QuickActionsProps {
-  onRecharge?: () => void;
-  onSend?: () => void;
-  onReceive?: () => void;
-  onCollect?: () => void;
-  onExchange?: () => void;
-}
 
-export const QuickActions: React.FC<QuickActionsProps> = ({
-  onRecharge,
-  onSend,
-  onReceive,
-  onCollect,
-  onExchange,
+
+export const QuickActions = ({
 }) => {
   const { user } = useAuth();
+  const {navigate}=useCustomNavigation()
   const { isMobile, isDesktop } = useResponsiveLayout();
 
   // Ocultar QuickActions si el usuario no está logueado
@@ -54,7 +44,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
       id: "recharge",
       label: "Recargar",
       icon: RechargeIcon,
-      onPress: onRecharge,
+      onPress: ()=>navigate("RechargeScreen"),
       color: "#1E40AF",
       bgColor: "#DBEAFE",
     },
@@ -62,7 +52,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
       id: "send",
       label: "Enviar",
       icon: SendIcon,
-      onPress: onSend,
+      onPress: ()=>navigate("SendScreen"),
       color: "#DC2626",
       bgColor: "#FEE2E2",
     },
@@ -70,7 +60,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
       id: "receive",
       label: "Recibir",
       icon: ReceiveIcon,
-      onPress: onReceive,
+      onPress: ()=>navigate("ReceiveScreen"),
       color: "#059669",
       bgColor: "#D1FAE5",
     },
@@ -78,7 +68,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
       id: "exchange",
       label: "Canjear",
       icon: ExchangeIcon,
-      onPress: onExchange,
+      onPress: ()=>navigate("CanjearScreen"),
       color: "#EA580C",
       bgColor: "#FED7AA",
     },
@@ -107,17 +97,12 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
       id: "collect",
       label: "Cobrar",
       icon: CobrarIcon,
-      onPress: onCollect,
+      onPress: () => navigate("CobrarScreen"),
       color: "#7C3AED",
       bgColor: "#EDE9FE",
     });
   }
 
-  const handlePress = (action: QuickAction) => {
-    if (action.onPress) {
-      action.onPress();
-    }
-  };
 
   // Estilos dinámicos para centrar según el dispositivo
   const dynamicStyles = StyleSheet.create({
@@ -160,7 +145,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
                   dynamicStyles.actionButton,
                   { borderColor: action.color + "20" },
                 ]}
-                onPress={() => handlePress(action)}
+                onPress={action.onPress}
                 activeOpacity={0.8}
               >
                 <View

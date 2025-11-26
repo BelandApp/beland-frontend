@@ -10,15 +10,16 @@ import {
   Modal,
   FlatList,
   TouchableOpacity,
-  Platform,
 } from "react-native";
 import { colors } from "src/styles";
+import { InputStyles, variantStyles } from "./InputStyles";
 
 interface PhoneInputProps {
   value: string;
   onChange: (text: string) => void;
   error?: string;
   onBlur?: () => void;
+  variant?: "underline" | "filled";
 }
 
 const COUNTRY_CODES = [
@@ -35,8 +36,10 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
   onChange,
   error,
   onBlur,
+  variant = "underline",
   ...props
 }) => {
+  const selectedVariant = variantStyles[variant];
   const [countryCode, setCountryCode] = useState("+54");
   const [number, setNumber] = useState(value.replace(/^\+\d+/, ""));
   const [isFocused, setIsFocused] = useState(false);
@@ -105,7 +108,11 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
         <Animated.View
           accessible={false}
           tabIndex={-1}
-          style={[styles.container, { borderBottomColor: borderColor }]}
+          style={[
+            InputStyles.baseContainer,
+            selectedVariant.container,
+            variant === "underline" && { borderBottomColor: borderColor },
+          ]}
         >
           <Animated.Text style={labelStyle}>Teléfono</Animated.Text>
 
@@ -130,12 +137,14 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
                 setIsFocused(false);
                 onBlur && onBlur();
               }}
-              style={styles.input}
+              style={[InputStyles.baseInput, selectedVariant.label]}
               {...props}
             />
           </View>
         </Animated.View>
-        {error && <Text style={{ color: "red" }}>{error}</Text>}
+        <View style={InputStyles.errorContainer}>
+          {error && <Text style={InputStyles.textError}>{error}</Text>}
+        </View>
       </Pressable>
 
       {/* MODAL */}
@@ -175,7 +184,6 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
 const styles = StyleSheet.create({
   button: {
     flex: 1,
-    marginBottom: 20,
   },
   container: {
     position: "relative",
@@ -193,12 +201,6 @@ const styles = StyleSheet.create({
   countryText: {
     fontSize: 16,
     color: "white",
-  },
-  input: {
-    flex: 1,
-    fontSize: 17,
-    color: "white",
-    paddingVertical: 8,
   },
   // Modal
   modalOverlay: {

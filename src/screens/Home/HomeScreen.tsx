@@ -22,12 +22,12 @@ import { ThemedHeader } from "src/components/shared/headers/Header";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 export const HomeScreen = () => {
-  const {navigate} = useCustomNavigation()
+  const { navigate } = useCustomNavigation();
   const {
-    handleMenuPress,
-    handleViewHistory,
-    handleCoinsPress,
-    handleRecyclingMapPress,
+    navigateViewHistory,
+    navigateRecyclingMapPress,
+    navigateCommunity,
+    navigateDelivery,
   } = useDashboardNavigation();
   const { userStats, activities } = useDashboardData();
   const { transactions } = useWalletTransactions();
@@ -45,34 +45,6 @@ export const HomeScreen = () => {
     ? lockedBalance
     : undefined;
 
-  // TODO REFACTOR Handlers para acciones rápidas
-  const handleRecharge = () => {
-    navigate("RechargeScreen");
-  };
-
-  const handleSend = () => {
-    navigate("SendScreen");
-  };
-
-  const handleExchange = () => {
-    navigate("CanjearScreen");
-  };
-
-  const handleReceive = () => {
-    navigate("ReceiveScreen");
-  };
-
-  const handleCollect = () => {
-    navigate("CobrarScreen");
-  };
-
-  const handleCommunity = () => {
-    navigate("MainTabs", {screen:"Community"});
-  };
-
-  const handleDelivery = () => {
-    navigate("MainTabs", { screen: "Catalog" });
-  };
   if (Platform.OS === "web") {
     const dynamicStyles = StyleSheet.create({
       featuresGrid: {
@@ -90,30 +62,27 @@ export const HomeScreen = () => {
     return (
       <View style={webStyles.container}>
         <ThemedHeader title="Inicio" logo />
-        <ScrollView style={webStyles.scrollView} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={webStyles.scrollView}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={dynamicStyles.content}>
             <HeroSection
               balance={balance}
               locked_balance={lockedBalanceToPass}
               estimatedValue={estimatedValue.toFixed(2)}
             />
-            <QuickActions
-              onRecharge={handleRecharge}
-              onSend={handleSend}
-              onReceive={handleReceive}
-              onCollect={handleCollect}
-              onExchange={handleExchange}
-            />
+            <QuickActions />
 
             <View style={dynamicStyles.featuresGrid}>
               <FeatureCard
                 type="recycling"
                 data={{ bottlesRecycled: userStats?.bottlesRecycled ?? 0 }}
-                onPress={handleRecyclingMapPress}
+                onPress={navigateRecyclingMapPress}
               />
 
-              <FeatureCard type="delivery" onPress={handleDelivery} />
-              <FeatureCard type="community" onPress={handleCommunity} />
+              <FeatureCard type="delivery" onPress={navigateDelivery} />
+              <FeatureCard type="community" onPress={navigateCommunity} />
             </View>
 
             <StatsCard
@@ -139,12 +108,7 @@ export const HomeScreen = () => {
           balance={balance}
           estimatedValue={estimatedValue.toFixed(2)}
         />
-        <QuickActions
-          onRecharge={handleRecharge}
-          onSend={handleSend}
-          onReceive={handleReceive}
-          onCollect={handleCollect}
-        />
+        <QuickActions />
 
         <StatsCard
           becoins={balance}
@@ -155,15 +119,15 @@ export const HomeScreen = () => {
         <FeatureCard
           type="recycling"
           data={{ bottlesRecycled: userStats?.bottlesRecycled ?? 0 }}
-          onPress={handleRecyclingMapPress}
+          onPress={navigateRecyclingMapPress}
         />
-        <FeatureCard type="community" onPress={handleCommunity} />
+        <FeatureCard type="community" onPress={navigateCommunity} />
 
         <RecentTransactions transactions={transactions ?? []} />
 
         <ActivitySection
           activities={activities}
-          onViewHistory={handleViewHistory}
+          onViewHistory={navigateViewHistory}
         />
 
         <HomeWave />
