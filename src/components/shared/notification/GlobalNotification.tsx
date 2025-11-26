@@ -52,6 +52,42 @@ const toastConfig = {
       text1NumberOfLines={2}
     />
   ),
+  cartItem: ({ text1, props }: ToastConfigParams<ConfirmProps>) => (
+    <View
+      style={{
+        width: "50%",
+        maxWidth: 300,
+        backgroundColor: "white",
+        flexDirection: "row",
+        alignItems: "center",
+        borderRadius: 10,
+        padding: 15,
+        borderLeftColor: "green",
+        borderLeftWidth: 4,
+        justifyContent: "center",
+        gap: 12,
+        shadowColor: "#000",
+        shadowOffset: {
+          width: 0,
+          height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+      }}
+    >
+      <Text>{text1}</Text>
+      <Button
+        title="Ver"
+        variant="secondary"
+        onPress={() => {
+          notificationAsync(NotificationFeedbackType.Success);
+          props?.onConfirm?.();
+          Toast.hide();
+        }}
+      />
+    </View>
+  ),
   confirm: ({ text1, props }: ToastConfigParams<ConfirmProps>) => (
     <View
       style={{
@@ -111,16 +147,16 @@ const toastConfig = {
 
 export const GlobalNotification = () => {
   const { current, clear } = useNotificationStore();
-
+  const isConfirmAndRun = current?.type === "confirm" || current?.type === "cartItem";
   useEffect(() => {
     if (!current) return;
-    if(current.type === "confirm") notificationAsync(NotificationFeedbackType.Warning);
+    if (isConfirmAndRun) notificationAsync(NotificationFeedbackType.Warning);
     Toast.show({
       type: current.type,
       text1: current.message,
       props: {
-        onConfirm: current.type === "confirm" ? current.onConfirm : undefined,
-        onCancel: current.type === "confirm" ? current.onCancel : undefined,
+        onConfirm: isConfirmAndRun ? current.onConfirm : undefined,
+        onCancel: isConfirmAndRun ? current.onCancel : undefined,
       },
       autoHide: current.type !== "confirm",
       visibilityTime: current.type !== "confirm" ? 3000 : undefined,
