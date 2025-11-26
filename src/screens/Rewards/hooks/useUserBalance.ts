@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Reward } from "../types";
-import { formatUSDPrice } from "../../../constants";
-import { useBeCoinsStore } from "../../../stores/useBeCoinsStore";
+import { useBeCoinsStore } from "@/stores";
 
 export const useUserBalance = () => {
   const { balance, getBeCoinsInUSD, redeemReward } = useBeCoinsStore();

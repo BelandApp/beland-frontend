@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Platform,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import { BeCoinIcon } from "../../../components/icons/BeCoinIcon";
 import { TreesIcon, CommunityIcon } from "../../../components/icons";
@@ -13,14 +14,14 @@ interface HeroSectionProps {
   balance: number;
   locked_balance?: number;
   estimatedValue: string;
-  onGetStarted?: () => void;
+  isLoading: boolean;
 }
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
   balance,
   locked_balance,
   estimatedValue,
-  onGetStarted,
+ isLoading
 }) => {
   return (
     <View style={styles.container}>
@@ -37,17 +38,24 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <BeCoinIcon width={32} height={32} />
             <View style={styles.balanceInfo}>
               <Text style={styles.balanceAmount}>
-                {balance.toLocaleString()}
+                {isLoading ? <ActivityIndicator /> : balance.toLocaleString()}
               </Text>
               <Text style={styles.balanceLabel}>BeCoins</Text>
               {locked_balance && locked_balance > 0 && (
                 <Text style={styles.lockedBalanceLabel}>
-                  {locked_balance.toLocaleString()} bloqueados
+                  {isLoading ? (
+                    <ActivityIndicator />
+                  ) : (
+                    locked_balance.toLocaleString()
+                  )}{" "}
+                  bloqueados
                 </Text>
               )}
             </View>
             <View style={styles.usdValue}>
-              <Text style={styles.usdAmount}>${estimatedValue}</Text>
+              <Text style={styles.usdAmount}>
+                ${isLoading ? <ActivityIndicator /> : estimatedValue}
+              </Text>
               <Text style={styles.usdLabel}>USD aprox.</Text>
             </View>
           </View>

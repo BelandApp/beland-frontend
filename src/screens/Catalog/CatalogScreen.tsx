@@ -191,7 +191,11 @@ export const CatalogScreen = () => {
     setAddingProductId(product.id);
     addProductToCart({ ...product, quantity: 1 });
     setAddingProductId(null);
-    notify.success({ message: "Producto agregado al carrito" });
+    notify.confirm({
+      message: "Producto agregado al carrito",
+      onConfirm: () => setShowCart(true),
+      onCancel: () => {},
+    })
   };
 
   return (

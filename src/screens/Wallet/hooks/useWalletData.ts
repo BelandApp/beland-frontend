@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import { WalletData } from "../types";
 import { formatUSDPrice } from "../../../constants";
-import { useBeCoinsStore } from "../../../stores/useBeCoinsStore";
+import { useBeCoinsStore } from "@/stores";
 import { useAuth } from "@/context/AuthContext";
 import { PaymentService, Wallet } from "@services/core";
+import { getBackendErrorMessage } from "src/services";
 
 export const useWalletData = () => {
   const { user } = useAuth();
-  const { balance, setBalance, setLockedBalance } = useBeCoinsStore();
+  const { balance, syncFromBackend } = useBeCoinsStore();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [fullWalletData, setFullWalletData] = useState<Wallet | null>(null);
 
   const fetchWalletData = async () => {
@@ -18,7 +18,6 @@ export const useWalletData = () => {
     }
 
     setLoading(true);
-    setError(null);
 
     try {
       const wallet = await PaymentService.getWallet();
@@ -42,18 +41,12 @@ export const useWalletData = () => {
           : isNaN(wallet.locked_balance)
           ? 0
           : wallet.locked_balance || 0;
-
       // Actualizar el store con el balance real del backend
-      setBalance(backendBalance);
-      setLockedBalance(backendLockedBalance);
+      syncFromBackend({ balance: backendBalance, locked_balance: backendLockedBalance });
       // Guardar los datos completos de la wallet
       setFullWalletData(wallet);
-
-      // Nota: Las transferencias pendientes no están disponibles en el backend actual
     } catch (err: any) {
-      console.warn("API no disponible, usando datos locales:", err);
-      setError(null); // No mostrar error, usar datos locales como fallback
-      // En caso de error de red, mantener datos locales silenciosamente
+      const message = getBackendErrorMessage(err);
     } finally {
       setLoading(false);
     }
@@ -66,7 +59,7 @@ export const useWalletData = () => {
   }, [user?.email]);
 
   const walletData: WalletData = {
-    balance: balance, // Balance del store (actualizado desde backend o demo)
+    balance: balance, // Balance del store (actualizado desde backend)
     locked_balance: fullWalletData?.locked_balance ?? 0, // Balance bloqueado del backend (propiedades reales)
     estimatedValue: formatUSDPrice(balance * 0.05), // Valor estimado en USD (solo conversión directa)
     alias: fullWalletData?.alias ?? undefined, // Alias real del backend
@@ -74,9 +67,8 @@ export const useWalletData = () => {
 
   return {
     walletData,
-    fullWalletData, // Datos completos de la wallet del backend
+    fullWalletData, 
     loading,
-    error,
     refetch: fetchWalletData,
   };
 };

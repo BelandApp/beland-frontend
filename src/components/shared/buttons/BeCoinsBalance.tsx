@@ -1,7 +1,7 @@
 import React, { use } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { BeCoinIcon } from "@components/icons";
-import { useBeCoinsStore } from "@stores/useBeCoinsStore";
+import { useBeCoinsStore } from "@/stores";
 import {
   convertBeCoinsToUSD,
 } from "@constants/index";

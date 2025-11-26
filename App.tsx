@@ -1,8 +1,7 @@
 import React, { useRef, useState, useEffect, useMemo } from "react";
-import { ActivityIndicator, Platform } from "react-native";
-import { useBeCoinsStoreHydration } from "./src/stores/useBeCoinsStore";
+import { Platform } from "react-native";
 
-import { View, StyleSheet } from "react-native";
+import { View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import * as NavigationBar from "expo-navigation-bar";
 import { setStatusBarHidden } from "expo-status-bar";
@@ -27,11 +26,12 @@ import { usePaymentSocket } from "src/hooks/usePaymentSocket";
 import { useOrderSocket } from "src/hooks/useOrderSocket";
 import { colors } from "src/styles";
 import { GlobalNotification } from "src/components/shared/notification/GlobalNotification";
+import { useBeCoinsAutoRefresh } from "src/stores/becoin/useBeCoinsAutoRefresh";
 
 const AppContent = () => {
-  // Declarar todos los hooks al inicio, sin condicionales
-  const { user, isLoading } = useAuth();
-  const isBeCoinsLoaded = useBeCoinsStoreHydration();
+  const { user } = useAuth();
+  const { lastSyncedAt } = useBeCoinsAutoRefresh()
+  console.log('ultima sincronizacion de la wallet', lastSyncedAt)
   const navigationRef =
     useRef<NavigationContainerRef<RootStackParamList>>(null);
   const [currentRoute, setCurrentRoute] = useState<string | undefined>(

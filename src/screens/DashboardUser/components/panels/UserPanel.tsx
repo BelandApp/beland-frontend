@@ -7,7 +7,7 @@ import {
   Alert,
 } from "react-native";
 import { useAuth } from "src/context";
-import { useBeCoinsStore } from "src/stores/useBeCoinsStore";
+import { useBeCoinsStore } from "@/stores";
 import DashboardWrapper from "../DashboardWrapper";
 import { useUserProfileForm } from "src/hooks/user/useUserProfileForm";
 import ProfileImagePicker from "../imagePicker/ProfileImagePicker";
@@ -18,7 +18,7 @@ import {styles} from "../../styles/styles"
 export const UserPanel: React.FC = () => {
   const { user, isLoading, setUser } = useAuth();
   const form = useUserProfileForm(user, setUser);
-  const globalBeCoinsBalance = useBeCoinsStore((s) => s.balance);
+  const {balance} = useBeCoinsStore();
 
   if (!user) {
     return (
@@ -35,7 +35,7 @@ export const UserPanel: React.FC = () => {
 
   const parsedUserBalance =
     Number((user as any)?.current_balance ?? (user as any)?.coins ?? 0) || 0;
-  const storeBalanceNum = Number(globalBeCoinsBalance ?? 0) || 0;
+  const storeBalanceNum = Number(balance ?? 0) || 0;
   const beCoinsToShow =
     storeBalanceNum > 0 ? storeBalanceNum : parsedUserBalance;
 

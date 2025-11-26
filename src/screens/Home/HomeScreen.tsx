@@ -5,7 +5,6 @@ import {
   QuickActions,
   FeatureCard,
   StatsCard,
-  ActivitySection,
 } from "./components";
 import { RecentTransactions } from "@/screens/Wallet/components/RecentTransactions";
 import {
@@ -13,16 +12,12 @@ import {
   useDashboardData,
   useResponsiveLayout,
 } from "./hooks";
-import { useWalletTransactions } from "../Wallet/hooks";
-import { useBeCoinsStore } from "../../stores/useBeCoinsStore";
-import { LoginWave } from "src/components/ui/waves/Login.wave";
+import { useWalletData, useWalletTransactions } from "../Wallet/hooks";
+import { useBeCoinsStore } from "@/stores";
 import { HomeWave } from "src/components/ui/waves/Home.wave";
-import { colors } from "src/styles";
 import { ThemedHeader } from "src/components/shared/headers/Header";
-import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 export const HomeScreen = () => {
-  const { navigate } = useCustomNavigation();
   const {
     navigateViewHistory,
     navigateRecyclingMapPress,
@@ -32,7 +27,7 @@ export const HomeScreen = () => {
   const { userStats, activities } = useDashboardData();
   const { transactions } = useWalletTransactions();
   const { getBeCoinsInUSD } = useBeCoinsStore();
-  const { isMobile } = useResponsiveLayout();
+  const { loading}=useWalletData()
 
   // Usar la constante centralizada para el cálculo de USD
   const balance = userStats?.coinsAmount ?? 0;
@@ -45,36 +40,25 @@ export const HomeScreen = () => {
     ? lockedBalance
     : undefined;
 
-  if (Platform.OS === "web") {
-    const dynamicStyles = StyleSheet.create({
-      featuresGrid: {
-        flexDirection: isMobile ? "column" : "row",
-        gap: isMobile ? 16 : 24,
-        marginVertical: isMobile ? 16 : 24,
-        flexWrap: "wrap",
-      },
-      content: {
-        ...webStyles.content,
-        paddingBottom: isMobile ? 80 : 120,
-      },
-    });
+
 
     return (
-      <View style={webStyles.container}>
+      <View style={styles.container}>
         <ThemedHeader title="Inicio" logo />
         <ScrollView
-          style={webStyles.scrollView}
+          style={styles.scrollView}
           showsVerticalScrollIndicator={false}
         >
-          <View style={dynamicStyles.content}>
+          <View style={styles.content}>
             <HeroSection
               balance={balance}
               locked_balance={lockedBalanceToPass}
               estimatedValue={estimatedValue.toFixed(2)}
+              isLoading={loading}
             />
             <QuickActions />
 
-            <View style={dynamicStyles.featuresGrid}>
+            <View style={styles.featuresGrid}>
               <FeatureCard
                 type="recycling"
                 data={{ bottlesRecycled: userStats?.bottlesRecycled ?? 0 }}
@@ -99,55 +83,10 @@ export const HomeScreen = () => {
     );
   }
 
-  // Mobile version - mismo diseño pero con layout adaptado
-  return (
-    <View style={styles.safeArea}>
-      <ThemedHeader logo />
-      <ScrollView style={styles.scrollView}>
-        <HeroSection
-          balance={balance}
-          estimatedValue={estimatedValue.toFixed(2)}
-        />
-        <QuickActions />
+  
 
-        <StatsCard
-          becoins={balance}
-          bottlesRecycled={userStats?.bottlesRecycled ?? 0}
-          estimatedValue={estimatedValue.toFixed(2)}
-        />
-
-        <FeatureCard
-          type="recycling"
-          data={{ bottlesRecycled: userStats?.bottlesRecycled ?? 0 }}
-          onPress={navigateRecyclingMapPress}
-        />
-        <FeatureCard type="community" onPress={navigateCommunity} />
-
-        <RecentTransactions transactions={transactions ?? []} />
-
-        <ActivitySection
-          activities={activities}
-          onViewHistory={navigateViewHistory}
-        />
-
-        <HomeWave />
-      </ScrollView>
-    </View>
-  );
-};
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#ffff",
-  },
-  scrollView: {
-    flex: 1,
-    backgroundColor: "#ffff",
-  },
-});
-
-const webStyles = StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -160,5 +99,11 @@ const webStyles = StyleSheet.create({
     alignSelf: "center",
     padding: 16,
     paddingBottom: 120,
+  },
+  featuresGrid: {
+    flexDirection:"row",
+    gap:  24,
+    marginVertical: 24,
+    flexWrap: "wrap",
   },
 });

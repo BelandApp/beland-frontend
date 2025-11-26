@@ -1,7 +1,7 @@
 import { create } from "zustand";
-const { persist, createJSONStorage } = require("zustand/middleware");
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
+const { persist, createJSONStorage } = require("zustand/middleware");
 
 export type BasicEvent ={
   id: string;

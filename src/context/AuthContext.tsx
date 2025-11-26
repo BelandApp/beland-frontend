@@ -13,7 +13,7 @@ import { TokenService } from "src/services/auth/token.service";
 import { Storage } from "src/services/auth/storage.service";
 // Stores to reset on logout
 import { useCartStore } from "src/stores/useCartStore";
-import { useBeCoinsStore } from "src/stores/useBeCoinsStore";
+import { useBeCoinsStore } from "@/stores";
 import { useOrdersStoreAPI } from "src/stores/useOrdersStoreAPI";
 import { useCreateGroupStore } from "src/stores/useCreateGroupStore";
 import { useAuthTokenStore } from "src/stores/useAuthTokenStore";
@@ -99,7 +99,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   });
   // Development URL:
   // NATIVE> exp://localhost:8081/--/callback WEB> http://localhost:8081
-
+  console.log(auth0Audience)
+  
   const discovery = useAutoDiscovery(`https://${auth0Domain}`);
   const [request, response, promptAsync] = useAuthRequest(
     {

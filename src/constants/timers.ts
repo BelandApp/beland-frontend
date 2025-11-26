@@ -1,0 +1,1 @@
+export  const SYNC_INTERVAL_1_HOUR = 60 * 60 * 1000; // 1 hour

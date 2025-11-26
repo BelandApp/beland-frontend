@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, Platform } from "react-native";
+import { View, Text, StyleSheet, Platform, Dimensions } from "react-native";
 import { BeCoinIcon } from "../../../components/icons/BeCoinIcon";
 import { RecycleIcon, WaterIcon } from "../../../components/icons";
 
@@ -52,11 +52,16 @@ export const StatsCard: React.FC<StatsCardProps> = ({
             >
               {stat.icon}
             </View>
-            <Text style={[styles.statValue, { color: stat.color }]}>
-              {stat.value}
-            </Text>
-            <Text style={styles.statLabel}>{stat.label}</Text>
-            <Text style={styles.statSublabel}>{stat.sublabel}</Text>
+
+            <View style={styles.textContainer}>
+              <View style={styles.textContainer}>
+                <Text style={[styles.statValue, { color: stat.color }]}>
+                  {stat.value}
+                </Text>
+                <Text style={styles.statLabel}>{stat.label}</Text>
+              </View>
+              <Text style={styles.statSublabel}>{stat.sublabel}</Text>
+            </View>
           </View>
         ))}
       </View>
@@ -91,11 +96,15 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
   },
   statsGrid: {
-    flexDirection: Platform.OS === "web" ? "row" : "column",
+    flexDirection: Dimensions.get("window").width > 600 ? "row" : "column",
     gap: Platform.OS === "web" ? 24 : 16,
+    justifyContent: "space-between",
   },
   statItem: {
-    flex: Platform.OS === "web" ? 1 : undefined,
+    width: Dimensions.get("window").width > 600 ? "30%" : "100%", // 3 items en un row,
+    flexDirection: Dimensions.get("window").width > 600 ? "column" : "row",
+    justifyContent:
+      Dimensions.get("window").width > 600 ? "center" : "space-evenly",
     alignItems: "center",
     padding: Platform.OS === "web" ? 20 : 18,
     backgroundColor: "#F8FAFC",
@@ -129,5 +138,8 @@ const styles = StyleSheet.create({
     color: "#64748B",
     textAlign: "center",
     fontWeight: "500",
+  },
+  textContainer: {
+    alignItems: "center",
   },
 });

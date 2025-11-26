@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { PaymentService } from "@services/core";
 import { useAuth } from "src/context";
-import { useBeCoinsStore } from "../stores/useBeCoinsStore";
+import { useBeCoinsStore } from "@/stores";
 
 export const useUserBalance = () => {
   const [balance, setBalance] = useState(0);
