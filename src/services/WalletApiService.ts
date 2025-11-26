@@ -140,7 +140,9 @@ class WalletServiceClass extends CoreApiService {
    * Find wallet by alias
    */
   async findWalletByAlias(alias: string): Promise<Wallet> {
-    return this.get(`alias/${alias}`);
+    // Normalize alias to lowercase to match database format
+    const normalizedAlias = alias.toLowerCase().trim();
+    return this.get(`alias/${normalizedAlias}`);
   }
 
   /**
