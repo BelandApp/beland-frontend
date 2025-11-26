@@ -20,9 +20,15 @@ import {
   Percent,
 } from "lucide-react-native";
 import { authService } from "../../services/auth/auth.service";
+import { TokenService } from "../../services/auth/token.service";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { useNotify } from "src/hooks";
 import { getBackendErrorMessage } from "src/services";
+import { OrganizationRegistrationModal } from "./OrganizationRegistrationModal";
+import {
+  organizationService,
+  CreateOrganizationDto,
+} from "src/services/OrganizationApiService";
 
 interface UserMenuProps {
   style?: any;
@@ -38,10 +44,10 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   const { navigate } = useCustomNavigation();
 
   const { user, isLoading, logout } = useAuth();
-  const notify = useNotify()
+  const notify = useNotify();
   const [menuVisible, setMenuVisible] = useState(false);
-  const [showCommerceAlert, setShowCommerceAlert] = useState(false);
-  const [isChangingRole, setIsChangingRole] = useState(false);
+  const [showOrganizationModal, setShowOrganizationModal] = useState(false);
+  const [isCreatingOrganization, setIsCreatingOrganization] = useState(false);
 
   const handleLogout = async () => {
     setMenuVisible(false);
@@ -57,22 +63,122 @@ export const UserMenu: React.FC<UserMenuProps> = ({
     setMenuVisible(false);
     navigate("UserDashboardScreen");
   };
-  const handleChangeRoleToCommerce = async () => {
-    setIsChangingRole(true);
+
+  const handleOpenOrganizationModal = async () => {
+    setMenuVisible(false);
+
+    if (!user?.id) {
+      notify.error({ message: "Usuario no encontrado" });
+      return;
+    }
+
+    // Check if user already has an organization
     try {
-      const resp = await authService.changeRoleToCommerce();
-      setShowCommerceAlert(false);
+      const existingOrganization =
+        await organizationService.getUserOrganization(user.id);
+      if (existingOrganization) {
+        notify.error({
+          message:
+            "Ya tienes una organización registrada. Solo puedes tener una organización por usuario.",
+        });
+        return;
+      }
+      // If no organization exists, open the modal
+      setShowOrganizationModal(true);
+    } catch (error) {
+      console.error("Error checking organization:", error);
+      // If there's an error checking, allow opening the modal anyway
+      setShowOrganizationModal(true);
+    }
+  };
+
+  const handleCreateOrganization = async (
+    data: Omit<CreateOrganizationDto, "user_id">
+  ) => {
+    if (!user?.id) {
+      notify.error({ message: "Usuario no encontrado" });
+      return;
+    }
+
+    setIsCreatingOrganization(true);
+    try {
+      // Filter out empty optional fields to avoid backend validation errors
+      const cleanedData: Partial<CreateOrganizationDto> = {
+        name: data.name,
+        user_id: user.id,
+      };
+
+      // Only include optional fields if they have valid values
+      if (data.legal_name?.trim())
+        cleanedData.legal_name = data.legal_name.trim();
+      if (data.ruc?.trim()) cleanedData.ruc = data.ruc.trim();
+      if (data.category?.trim()) cleanedData.category = data.category.trim();
+      if (data.description?.trim())
+        cleanedData.description = data.description.trim();
+      if (data.phone?.trim() && data.phone.length >= 5)
+        cleanedData.phone = data.phone.trim();
+      if (data.email?.trim() && data.email.includes("@"))
+        cleanedData.email = data.email.trim();
+      if (data.address?.trim() && data.address.length >= 5)
+        cleanedData.address = data.address.trim();
+      if (data.city?.trim() && data.city.length >= 2)
+        cleanedData.city = data.city.trim();
+      if (data.province?.trim() && data.province.length >= 2)
+        cleanedData.province = data.province.trim();
+      if (data.country?.trim()) cleanedData.country = data.country.trim();
+      if (
+        data.website?.trim() &&
+        (data.website.startsWith("http://") ||
+          data.website.startsWith("https://"))
+      ) {
+        cleanedData.website = data.website.trim();
+      }
+      if (data.logo_url?.trim()) cleanedData.logo_url = data.logo_url.trim();
+
+      // Step 1: Create organization
+      try {
+        await organizationService.createOrganization(
+          cleanedData as CreateOrganizationDto
+        );
+      } catch (orgError) {
+        const message = getBackendErrorMessage(orgError);
+        notify.error({ message });
+        throw orgError; // Re-throw to prevent continuing
+      }
+
+      // Step 2: Change user role to COMMERCE
+      let roleChangeResponse;
+      try {
+        roleChangeResponse = await authService.changeRoleToCommerce();
+      } catch (roleError) {
+        // Organization was created but role change failed
+        console.error("Role change failed:", roleError);
+        // Don't show error since organization was created successfully
+        // The role will be updated when they refresh or login again
+      }
+
+      // Step 3: Refresh user data if role change was successful
+      if (roleChangeResponse?.token) {
+        try {
+          await authService.getCurrentUser(roleChangeResponse.token);
+        } catch (userError) {
+          console.error("User refresh failed:", userError);
+          // Don't show error, the user data will refresh on next navigation
+        }
+      }
+
+      // Close the modal
+      setShowOrganizationModal(false);
+
+      // Show success message
       notify.success({
-        message:
-          "Tu perfil ha sido actualizado y ahora puedes recibir pagos por QR.",
+        message: "¡Tu organización ha sido registrada exitosamente!",
       });
-      await authService.getCurrentUser(resp.token);
     } catch (err) {
-      setShowCommerceAlert(false);
-      const message = getBackendErrorMessage(err);
-      notify.error({ message });
+      // Only reach here if organization creation failed
+      console.error("Error in organization creation:", err);
     } finally {
-      setIsChangingRole(false);
+      setIsCreatingOrganization(false);
     }
   };
   if (isLoading) {
@@ -218,10 +324,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
             ) && (
               <TouchableOpacity
                 style={styles.menuItem}
-                onPress={() => {
-                  setMenuVisible(false);
-                  setShowCommerceAlert(true);
-                }}
+                onPress={handleOpenOrganizationModal}
               >
                 <Store size={18} color="#333" />
                 <Text style={styles.menuItemText}>Hacerme comerciante</Text>
@@ -240,50 +343,13 @@ export const UserMenu: React.FC<UserMenuProps> = ({
         </Pressable>
       </Modal>
 
-      {/* Modal para confirmar cambio de rol a comerciante */}
-      {showCommerceAlert && (
-        <Modal
-          transparent={true}
-          visible={showCommerceAlert}
-          animationType="fade"
-        >
-          <Pressable
-            style={styles.overlay}
-            onPress={() => setShowCommerceAlert(false)}
-          />
-          <View style={[styles.menuDropdown, { top: 120 }]}>
-            <Text style={{ fontWeight: "bold", fontSize: 16, marginBottom: 8 }}>
-              ¿Quieres convertirte en comerciante?
-            </Text>
-            <Text style={{ marginBottom: 16 }}>
-              Esto actualizará tu perfil y habilitará la recepción de pagos por
-              QR.
-            </Text>
-            <TouchableOpacity
-              style={[styles.menuItem, { backgroundColor: "#1E90FF" }]}
-              onPress={handleChangeRoleToCommerce}
-              disabled={isChangingRole}
-            >
-              <Text style={[styles.menuItemText, { color: "#fff" }]}>
-                Confirmar
-              </Text>
-              {isChangingRole && (
-                <ActivityIndicator
-                  size="small"
-                  color="#fff"
-                  style={{ marginLeft: 8 }}
-                />
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.menuItem, { marginTop: 8 }]}
-              onPress={() => setShowCommerceAlert(false)}
-            >
-              <Text style={styles.menuItemText}>Cancelar</Text>
-            </TouchableOpacity>
-          </View>
-        </Modal>
-      )}
+      {/* Modal de registro de organización */}
+      <OrganizationRegistrationModal
+        visible={showOrganizationModal}
+        onClose={() => setShowOrganizationModal(false)}
+        onSubmit={handleCreateOrganization}
+        isLoading={isCreatingOrganization}
+      />
     </View>
   );
 };
