@@ -357,10 +357,7 @@ const SuperAdminPanel: React.FC = () => {
         navigate("OrdersManagement");
         break;
       case "products":
-        Alert.alert(
-          "Próximamente",
-          "La gestión de productos estará disponible próximamente."
-        );
+        navigate("ProductsManagement");
         break;
       default:
         Alert.alert(

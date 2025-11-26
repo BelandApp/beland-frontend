@@ -43,6 +43,7 @@ import {
   UsersManagementScreen,
   OrdersManagementScreen,
   OrderAdminDetailScreen,
+  ProductsManagementScreen,
 } from "@screens/DashboardUser";
 // TODO arreglar pantallas en carpeta raiz
 import { HistoryScreen, RecyclingMapScreen } from "../../screens";
@@ -224,6 +225,11 @@ export const RootStackNavigator = () => {
       <Stack.Screen
         name="UsersManagement"
         component={UsersManagementScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ProductsManagement"
+        component={ProductsManagementScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen
