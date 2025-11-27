@@ -1,5 +1,5 @@
 import React from "react";
-import { View, ScrollView, Platform, StyleSheet } from "react-native";
+import { View, ScrollView, Platform, StyleSheet, Dimensions } from "react-native";
 import {
   HeroSection,
   QuickActions,
@@ -64,7 +64,6 @@ export const HomeScreen = () => {
                 data={{ bottlesRecycled: userStats?.bottlesRecycled ?? 0 }}
                 onPress={navigateRecyclingMapPress}
               />
-
               <FeatureCard type="delivery" onPress={navigateDelivery} />
               <FeatureCard type="community" onPress={navigateCommunity} />
             </View>
@@ -101,7 +100,7 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
   },
   featuresGrid: {
-    flexDirection:"row",
+    flexDirection:Dimensions.get("window").width > 600 ? "row" : "column",
     gap:  24,
     marginVertical: 24,
     flexWrap: "wrap",

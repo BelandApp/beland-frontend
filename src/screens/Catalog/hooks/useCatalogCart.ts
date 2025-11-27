@@ -4,13 +4,12 @@ import { useCartStore } from "../../../stores/useCartStore";
 import { useCartSync } from "../../../hooks/useCartSync";
 import { useAuth } from "@/context/AuthContext";
 import { ProductCardType } from "../components/ProductCard";
+import { notify } from "src/hooks/notification/notify.external";
 
 export const useCatalogCart = () => {
-  const { canPerformAction, loginWithAuth0 } = useAuth();
+  const { canPerformAction, handleAuth0Login, isAuthenticated } = useAuth();
   const [showCart, setShowCart] = useState(false);
   const [addingProductId, setAddingProductId] = useState<string | null>(null);
-  const [showAuthAlert, setShowAuthAlert] = useState(false);
-
   const {
     addProduct: addProductToCart,
     addProductToServer,
@@ -29,24 +28,24 @@ export const useCatalogCart = () => {
   }, [performCartSync]);
 
   useEffect(() => {
-    syncCart();
+    if (isAuthenticated) syncCart();
   }, [syncCart]);
 
   // Manejar agregar producto al carrito
   const handleAddProduct = useCallback(
     async (product: ProductCardType) => {
-      if (!canPerformAction) {
-        setShowAuthAlert(true);
-        return;
+      if (!isAuthenticated) {
+        notify.confirm({
+          message: "Debes iniciar sesión para agregar productos al carrito.",
+          onConfirm: () => handleAuth0Login(),
+        })
+        return
       }
-
       // Normalizar campo de imagen
       const imageField =
         (product as any).image_url || (product as any).image || "";
-
+      setAddingProductId(product.id);
       try {
-        setAddingProductId(product.id);
-
         const success = await addProductToServer({
           id: product.id,
           name: product.name,
@@ -57,6 +56,11 @@ export const useCatalogCart = () => {
 
         if (success) {
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          notify.cartItem({
+            message: "Producto agregado al carrito",
+            onConfirm: () => setShowCart(true),
+            onCancel: () => {},
+          });
         } else {
           // Fallback local add
           addProductToCart({
@@ -90,24 +94,18 @@ export const useCatalogCart = () => {
   const openCart = useCallback(() => setShowCart(true), []);
   const closeCart = useCallback(() => setShowCart(false), []);
 
-  // Cerrar alerta de autenticación
-  const closeAuthAlert = useCallback(() => setShowAuthAlert(false), []);
-
   return {
     // State
     showCart,
-    addingProductId,
-    showAuthAlert,
     cartProducts,
     isSyncing,
     syncError,
-
+    isAuthenticated,
+    addingProductId,
     // Actions
     handleAddProduct,
     openCart,
     closeCart,
-    closeAuthAlert,
-    syncCart,
-    loginWithAuth0,
+    handleAuth0Login,
   };
 };

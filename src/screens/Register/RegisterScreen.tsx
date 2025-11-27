@@ -73,6 +73,7 @@ export default function RegisterScreen() {
         )}
         {step === "code" && (
           <CodeStep
+            FormData={FormData}
             onResendCode={handleReSendCode}
             onStepBack={handleStepBack}
             onSubmit={handleVerifyCode}

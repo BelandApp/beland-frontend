@@ -5,7 +5,7 @@ import Toast, {
 } from "react-native-toast-message";
 import { useEffect } from "react";
 import { useNotificationStore } from "@/stores/notificationStore";
-import { View, Text } from "react-native";
+import { View, Text, Dimensions } from "react-native";
 import { Brain, CheckCircle, CircleAlert, InfoIcon } from "lucide-react-native";
 import { colors } from "src/styles";
 import { Button } from "../buttons";
@@ -91,7 +91,7 @@ const toastConfig = {
   confirm: ({ text1, props }: ToastConfigParams<ConfirmProps>) => (
     <View
       style={{
-        width: "70%",
+        width: Dimensions.get("window").width > 600 ? 400 : "90%",
         backgroundColor: "white",
         borderRadius: 10,
         padding: 15,

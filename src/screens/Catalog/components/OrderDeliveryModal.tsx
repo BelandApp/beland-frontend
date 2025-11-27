@@ -1,12 +1,6 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Modal,
-  Platform,
-  ActivityIndicator,
-} from "react-native";
+import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
+import Modal from "react-native-modal";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors } from "@/styles/colors";
 import { modalStyles } from "../styles";
@@ -21,7 +15,9 @@ import { useOrdersStoreAPI } from "@/stores/useOrdersStoreAPI";
 import { useCartStore, CartProduct } from "@/stores/useCartStore";
 import { useAuth } from "src/context";
 import { DeliveryAddress, OrderItem, CreateOrderRequest } from "@/types/Order";
-import { useNotify } from "src/hooks";
+import { useCustomNavigation, useNotify } from "src/hooks";
+import { Button } from "src/components";
+import { ArrowDown } from "lucide-react-native";
 
 interface OrderDeliveryModalProps {
   visible: boolean;
@@ -38,6 +34,7 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
 }) => {
   const [currentStep, setCurrentStep] = useState<ModalStep>("address_form");
   const notify = useNotify();
+  const {navigate}=useCustomNavigation()
   const { createOrder, isLoading } = useOrdersStoreAPI();
   const { products: cartProducts, clearCart } = useCartStore();
   const [userAddresses, setUserAddresses] = React.useState<any[]>([]);
@@ -187,7 +184,12 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
       // Usar requireAuth para proteger la creación de la orden
       await requireAuth(async () => {
         let newOrder = await createOrder(orderRequest);
-
+        notify.cartItem({
+          message: "Tu orden ha sido creada exitosamente!",
+          onConfirm: () => {
+            navigate("Orders",{screen:"OrdersList"});
+          }
+        })
         try {
           const hasDelivery =
             newOrder &&
@@ -275,13 +277,7 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
         onClose();
 
         setTimeout(() => {
-          notify.success({
-            message: `Tu orden ${newOrder.id.slice(
-              -8
-            )} ha sido creada exitosamente.\n\n💰 Total: $${newOrder.total.toFixed(
-              2
-            )}`,
-          });
+         
         }, 300);
       });
     } catch (error) {
@@ -320,69 +316,77 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
 
     return (
       <View>
-        <View style={{ paddingHorizontal: 12, paddingBottom: 12 }}>
-          <Text style={{ fontSize: 18, fontWeight: "700", color: "#333" }}>
-            Selecciona una dirección
-          </Text>
-        </View>
+        <View
+          style={{
+            flexWrap: "wrap",
+            flexDirection: "row",
+            marginHorizontal: "auto",
+          }}
+        >
+          {userAddresses.length === 0 ? (
+            <View style={{ padding: 20 }}>
+              <Text style={{ color: "#666" }}>
+                No tienes direcciones guardadas. Puedes agregar una nueva.
+              </Text>
+            </View>
+          ) : (
+            userAddresses.map((a, idx) => {
+              const primary =
+                a.addressLine1 ||
+                a.address_line_1 ||
+                a.street ||
+                a.address ||
+                "";
+              const secondary =
+                a.addressLine2 || a.address_line_2 || a.additionalInfo || "";
+              const alias = a.alias || a.label || a.name || "";
+              const city = a.city || a.town || "";
+              const state = a.state || a.province || "";
+              const postal = a.postalCode || a.postal_code || a.zip || "";
 
-        {userAddresses.length === 0 ? (
-          <View style={{ padding: 20 }}>
-            <Text style={{ color: "#666" }}>
-              No tienes direcciones guardadas. Puedes agregar una nueva.
-            </Text>
-          </View>
-        ) : (
-          userAddresses.map((a, idx) => {
-            const primary =
-              a.addressLine1 || a.address_line_1 || a.street || a.address || "";
-            const secondary =
-              a.addressLine2 || a.address_line_2 || a.additionalInfo || "";
-            const alias = a.alias || a.label || a.name || "";
-            const city = a.city || a.town || "";
-            const state = a.state || a.province || "";
-            const postal = a.postalCode || a.postal_code || a.zip || "";
+              let line1 = "";
+              if (alias) line1 = alias;
+              else if (primary) line1 = primary;
+              else {
+                const parts = [secondary, city, state, postal].filter(Boolean);
+                line1 = parts.join(", ");
+              }
 
-            let line1 = "";
-            if (alias) line1 = alias;
-            else if (primary) line1 = primary;
-            else {
-              const parts = [secondary, city, state, postal].filter(Boolean);
-              line1 = parts.join(", ");
-            }
+              if (!line1) {
+                const compact = [a.id, a.user_id, a.address, a.alias]
+                  .filter(Boolean)
+                  .join(" • ");
+                line1 = compact || "(sin dirección)";
+              }
 
-            if (!line1) {
-              const compact = [a.id, a.user_id, a.address, a.alias]
-                .filter(Boolean)
-                .join(" • ");
-              line1 = compact || "(sin dirección)";
-            }
+              return (
+                <View
+                  key={a.id || `${a.user_id || "addr"}-${idx}`}
+                  style={{
+                    backgroundColor: "#e6e2e2ff",
+                    marginHorizontal: 12,
+                    minHeight: 130,
+                    justifyContent: "space-between",
+                    flexDirection: "column",
+                    gap: 8,
+                    marginBottom: 12,
+                    borderRadius: 10,
+                    padding: 12,
+                    elevation: 2,
+                  }}
+                >
+                  <Text style={{ fontWeight: "700" }}>{line1}</Text>
+                  <Text style={{ color: "#666" }}>
+                    {city}
+                    {state ? `, ${state}` : ""}
+                    {postal ? ` • ${postal}` : ""}
+                  </Text>
+                  {secondary ? (
+                    <Text style={{ color: "#666" }}>Ref: {secondary}</Text>
+                  ) : null}
 
-            return (
-              <View
-                key={a.id || `${a.user_id || "addr"}-${idx}`}
-                style={{
-                  backgroundColor: "white",
-                  marginHorizontal: 12,
-                  marginBottom: 12,
-                  borderRadius: 10,
-                  padding: 12,
-                  elevation: 2,
-                }}
-              >
-                <Text style={{ fontWeight: "700" }}>{line1}</Text>
-                {secondary ? (
-                  <Text style={{ color: "#666" }}>{secondary}</Text>
-                ) : null}
-                <Text style={{ color: "#666", marginTop: 6 }}>
-                  {city}
-                  {state ? `, ${state}` : ""}
-                  {postal ? ` • ${postal}` : ""}
-                </Text>
-
-                <View style={{ flexDirection: "row", marginTop: 8, gap: 8 }}>
-                  <TouchableOpacity
-                    style={[modalStyles.cancelButton, { flex: 1 }]}
+                  <Button
+                    title="Enviar orden"
                     onPress={() => {
                       const toOrderAddress: DeliveryAddress = {
                         street: a.addressLine1,
@@ -397,24 +401,19 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
                       // Pasar el id de la dirección para que se actualice el carrito antes de crear la orden
                       handleCreateOrder(toOrderAddress, a.id);
                     }}
-                  >
-                    <Text style={modalStyles.cancelButtonText}>Usar esta</Text>
-                  </TouchableOpacity>
+                  />
                 </View>
-              </View>
-            );
-          })
-        )}
+              );
+            })
+          )}
+        </View>
 
-        <View style={{ padding: 12 }}>
-          <TouchableOpacity
-            style={modalStyles.continueGroupButton}
+        <View style={{ padding: 12, marginHorizontal: "auto" }}>
+          <Button
+            title=" Agregar nueva dirección"
             onPress={() => setAddingNewAddress(true)}
-          >
-            <Text style={modalStyles.continueGroupButtonText}>
-              Agregar nueva dirección
-            </Text>
-          </TouchableOpacity>
+            variant="ghost"
+          />
         </View>
       </View>
     );
@@ -467,103 +466,30 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
 
   return (
     <>
-      {Platform.OS === "web" ? (
-        <>
-          {visible &&
-            (currentStep === "address_form" ? (
-              addingNewAddress ? (
-                renderAddressForm()
-              ) : (
-                <View
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: "rgba(0,0,0,0.45)",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    zIndex: 1000,
-                  }}
-                >
-                  <View
-                    style={[
-                      modalStyles.modalContent,
-                      modalStyles.modalContentLarge,
-                      { maxWidth: 900, width: "80%" },
-                    ]}
-                  >
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        justifyContent: "flex-end",
-                      }}
-                    >
-                      <TouchableOpacity
-                        onPress={handleCancel}
-                        style={{ padding: 6 }}
-                      >
-                        <Text
-                          style={{ fontSize: 18, color: colors.textSecondary }}
-                        >
-                          ×
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                    {renderAddressCards()}
-                  </View>
-                </View>
-              )
-            ) : (
-              // Simple processing overlay for web
-              <View
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  backgroundColor: "rgba(0,0,0,0.45)",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  zIndex: 1000,
-                }}
-              >
-                <View
-                  style={[
-                    modalStyles.modalContent,
-                    modalStyles.modalContentLarge,
-                    { maxWidth: 720 },
-                  ]}
-                >
-                  {renderProcessing()}
-                </View>
-              </View>
-            ))}
-        </>
-      ) : (
-        // Native: keep using Modal
-        <Modal
-          visible={visible}
-          transparent
-          animationType="slide"
-          onRequestClose={handleCancel}
-        >
-          <View style={modalStyles.modalOverlay}>
-            <View
-              style={[
-                modalStyles.modalContent,
-                currentStep === "address_form" && modalStyles.modalContentLarge,
-              ]}
-            >
-              {currentStep === "address_form" &&
-                (addingNewAddress ? renderAddressForm() : renderAddressCards())}
-              {currentStep === "processing" && renderProcessing()}
-            </View>
+      <Modal
+        isVisible={visible}
+        onBackdropPress={onClose}
+        onSwipeComplete={onClose}
+        style={modalStyles.modalOverlay}
+        propagateSwipe
+      >
+        <View style={modalStyles.modalContent}>
+          <View style={modalStyles.modalHeader}>
+            <Text style={{ fontSize: 18, fontWeight: "700", color: "#333" }}>
+              Selecciona una dirección:
+            </Text>
+            <Button
+              title="cerrar"
+              variant="onlyIcon"
+              icon={<ArrowDown color={colors.belandOrange} />}
+              onPress={onClose}
+            />
           </View>
-        </Modal>
-      )}
+          {currentStep === "address_form" &&
+            (addingNewAddress ? renderAddressForm() : renderAddressCards())}
+          {currentStep === "processing" && renderProcessing()}
+        </View>
+      </Modal>
     </>
   );
 };

@@ -9,6 +9,13 @@ export const notify = {
     useNotificationStore.getState().show({ type: "error", message }),
   info: ({ message }: NotifyBase) =>
     useNotificationStore.getState().show({ type: "info", message }),
+  cartItem: ({message, onConfirm, onCancel}: NotifyConfirm) =>
+    useNotificationStore.getState().show({
+      type: "cartItem",
+      message,
+      onConfirm,
+      onCancel,
+  }),
   confirm: ({message, onConfirm, onCancel}: NotifyConfirm) =>
     useNotificationStore.getState().show({
       type: "confirm",

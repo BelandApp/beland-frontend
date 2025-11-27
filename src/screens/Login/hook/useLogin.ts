@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useAuth } from "src/context";
-import { useCustomNavigation, useValidation } from "src/hooks";
+import { useCustomNavigation, useUserValidation } from "src/hooks";
 import { notify } from "src/hooks/notification/notify.external";
 import { getBackendErrorMessage } from "src/services";
 
 export const useLogin = () => {
   const { navigate } = useCustomNavigation();
-  const { validateForm, errors } = useValidation();
+  const { validateForm, errors } = useUserValidation();
   const { handleAuth0Login, loginWithEmail, isAuthenticated, isLoading } =
     useAuth();
   const [FormData, setFormData] = useState({

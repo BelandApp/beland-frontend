@@ -3,7 +3,7 @@ import { View, Text, TouchableHighlight, StyleSheet } from "react-native";
 import { useEffect, useState } from "react";
 import { CodeStepProps } from "src/types";
 import { Button } from "@components/shared";
-import { useValidation } from "src/hooks/form/useValidation";
+import { useUserValidation } from "@/hooks";
 const CodeStep: React.FC<CodeStepProps> = ({
   FormData,
   onSubmit,
@@ -13,7 +13,7 @@ const CodeStep: React.FC<CodeStepProps> = ({
 }) => {
   const [code, setCode] = useState("");
   const [count, setCount] = useState<number>(50);
-  const {validateForm, errors}=useValidation()
+  const { validateForm, errors } = useUserValidation();
   setTimeout(() => {
     if (count > 0) {
       setCount(count - 1);

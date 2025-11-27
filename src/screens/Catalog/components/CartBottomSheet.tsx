@@ -6,9 +6,9 @@ import {
   FlatList,
   Image,
   StyleSheet,
+  Dimensions,
 } from "react-native";
 import Modal from "react-native-modal";
-import { useCartStore } from "../../../stores/useCartStore";
 import { useUserBalance } from "../../../hooks/useUserBalance";
 import {
   convertUSDToBeCoins,
@@ -22,6 +22,7 @@ import { getBackendErrorMessage } from "src/services";
 import { Button } from "src/components";
 import { ArrowDown, ClosedCaption, X } from "lucide-react-native";
 import { colors } from "src/styles";
+import { useCartStore } from "src/stores/useCartStore";
 
 interface CartBottomSheetProps {
   visible: boolean;
@@ -36,14 +37,8 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
   onCheckout,
   onNavigateToRecharge,
 }) => {
-  const {
-    products,
-    removeProduct,
-    removeProductFromServer,
-    updateQuantity,
-    updateQuantityOnServer,
-    clearCart,
-  } = useCartStore();
+  const { products, removeProduct, updateQuantity, clearCart } =
+    useCartStore();
   const notify = useNotify();
   const total = products.reduce((sum, p) => sum + p.price * p.quantity, 0);
   const { balance } = useUserBalance();
@@ -54,14 +49,12 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
 
   const handleRemoveProduct = async (productId: string) => {
     try {
-      const success = await removeProductFromServer(productId);
-      notify.info({ message: "Producto eliminado del carrito" });
+      removeProduct(productId);
+      notify.success({ message: "Producto eliminado del carrito" });
+      if (products.length <= 1) onClose();
     } catch (error) {
-      console.error("❌ CartBottomSheet: Error removing product:", error);
       const message = getBackendErrorMessage(error);
       notify.error({ message });
-      // En caso de error, aún eliminar localmente
-      removeProduct(productId);
     }
   };
 
@@ -70,11 +63,10 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
     newQuantity: number
   ) => {
     try {
-      const success = await updateQuantityOnServer(productId, newQuantity);
-    } catch (error) {
-      console.error("❌ CartBottomSheet: Error updating quantity:", error);
-      // En caso de error, aún actualizar localmente
       updateQuantity(productId, newQuantity);
+    } catch (error) {
+      const message = getBackendErrorMessage(error);
+      notify.error({ message });
     }
   };
 
@@ -83,8 +75,8 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
       <Modal
         isVisible={visible}
         onBackdropPress={onClose}
-        style={styles.modal}
         onSwipeComplete={onClose}
+        style={styles.modal}
         propagateSwipe
       >
         <View style={styles.sheet}>
@@ -97,11 +89,16 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
                 onPress={clearCart}
                 disabled={products.length === 0}
               />
-              <Button title="cerrar" variant="onlyIcon" icon={<ArrowDown color={colors.belandOrange}/>} onPress={onClose} />
+              <Button
+                title="cerrar"
+                variant="onlyIcon"
+                icon={<ArrowDown color={colors.belandOrange} />}
+                onPress={onClose}
+              />
             </View>
           </View>
 
-          <View style={{ maxHeight: 400, minHeight: 100 }}>
+          <View style={styles.itemContainer}>
             {products.length === 0 ? (
               <View style={styles.emptyContainer}>
                 <Text style={styles.emptyText}>Tu carrito está vacío</Text>
@@ -129,6 +126,9 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
                           {formatBeCoins(convertUSDToBeCoins(item.price))}
                         </Text>
                       </View>
+                    </View>
+                    <View style={styles.qtyContainer}>
+                      <Text>Cantidad</Text>
                       <View style={styles.qtyRow}>
                         <TouchableOpacity
                           onPress={() =>
@@ -152,6 +152,7 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
                     </View>
                     <TouchableOpacity
                       onPress={() => handleRemoveProduct(item.id)}
+                      style={styles.removeContainer}
                     >
                       <Text style={styles.remove}>✕</Text>
                     </TouchableOpacity>
@@ -185,7 +186,6 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
                 onCheckout && onCheckout();
               }}
             />
-            
           </View>
         </View>
       </Modal>
@@ -213,8 +213,10 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 18,
     borderTopRightRadius: 18,
     padding: 16,
-    minHeight: 200,
+    minHeight: Dimensions.get("window").height * 0.8,
     maxHeight: "95%",
+    flexDirection: "column",
+    justifyContent: "space-between",
   },
   header: {
     flexDirection: "row",
@@ -226,6 +228,12 @@ const styles = StyleSheet.create({
   title: { fontSize: 20, fontWeight: "bold" },
   clear: { color: "#FF6B35", fontWeight: "600" },
   emptyContainer: { alignItems: "center", padding: 32 },
+  itemContainer: {
+    justifyContent: "flex-start",
+    maxHeight: "75%",
+    minHeight: 100,
+    marginBottom:"auto"
+  },
   emptyText: { color: "#888", fontSize: 16 },
   itemRow: {
     flexDirection: "row",
@@ -233,10 +241,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     backgroundColor: "#f7f7f7",
     borderRadius: 10,
-    padding: 8,
   },
   image: { width: 48, height: 48, borderRadius: 8, marginRight: 10 },
-  itemInfo: { flex: 1 },
+  itemInfo: { flex: 1, paddingVertical: 10, paddingLeft: 10 },
   itemName: { fontWeight: "600", fontSize: 16 },
   itemPrice: { color: "#888", fontSize: 14 },
   itemPriceBecoins: {
@@ -257,7 +264,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   qty: { fontSize: 16, fontWeight: "bold", marginHorizontal: 4 },
-  remove: { color: "#FF6B35", fontSize: 20, marginLeft: 8 },
+  qtyContainer: {
+    alignItems: "center",
+  },
+
   footer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -278,4 +288,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   checkoutText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
+  remove: { color: "#f9f4f3ff", fontSize: 20, marginHorizontal: 10 },
+  removeContainer: {
+    backgroundColor: "#6BA43A",
+    height: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    borderTopRightRadius: 10,
+    borderBottomRightRadius: 10,
+  },
 });

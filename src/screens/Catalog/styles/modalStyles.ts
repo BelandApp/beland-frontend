@@ -3,22 +3,20 @@ import { colors } from "../../../styles/colors";
 
 export const modalStyles = StyleSheet.create({
   // Modal base
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center" as const,
-  },
+  modalOverlay: { justifyContent: "flex-end", margin: 0 },
   modalContent: {
     backgroundColor: "white",
-    borderRadius: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     paddingTop: 20,
     paddingHorizontal: 20,
     paddingBottom: 34, // Para el safe area en iPhone
     minHeight: 300,
+    marginTop: "auto",
   },
   modalHeader: {
-    alignItems: "center" as const,
-    marginBottom: 24,
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   modalTitle: {
     fontSize: 18,
@@ -217,7 +215,8 @@ export const modalStyles = StyleSheet.create({
   // Larger modal content for forms
   modalContentLarge: {
     backgroundColor: "white",
-    borderRadius: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     paddingTop: 20,
     paddingHorizontal: 20,
     paddingBottom: 34,

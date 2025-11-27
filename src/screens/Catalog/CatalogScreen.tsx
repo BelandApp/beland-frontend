@@ -15,7 +15,7 @@ import {
 import { BeCoinsBalance, CustomLoader } from "@components/shared";
 
 // Hooks
-import { useCatalogFilters, useCatalogModals } from "./hooks";
+import { useCatalogCart, useCatalogFilters, useCatalogModals } from "./hooks";
 import {
   useCartSync,
   useProducts,
@@ -24,7 +24,6 @@ import {
 } from "@/hooks";
 import { ProductService } from "@/services";
 import { ProductCardType } from "./components/ProductCard";
-import { useAuth } from "@/context";
 
 // Components
 import { FilterPanel, ProductGrid } from "./components";
@@ -33,8 +32,6 @@ import { SearchBarInput } from "@components/shared";
 import { CartBottomSheet } from "./components/CartBottomSheet";
 // Styles
 import { containerStyles, productStyles } from "./styles";
-
-import { useCartStore } from "@/stores/useCartStore";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 // Community Main Component
 import CatalogCommunitySection from "./mainComponents/CatalogCommunitySection";
@@ -43,18 +40,18 @@ import { ThemedHeader } from "@/components";
 
 export const CatalogScreen = () => {
   const { navigate } = useCustomNavigation();
-  const { canPerformAction, handleAuth0Login, isAuthenticated } = useAuth();
-
   const {
-    addProduct: addProductToCart,
-    addProductToServer,
-    products: cartProducts,
-  } = useCartStore();
+    handleAddProduct,
+    cartProducts,
+    isAuthenticated,
+    isSyncing,
+    openCart,
+    closeCart,
+    showCart,
+    addingProductId
+  } = useCatalogCart();
 
-  // Hook para sincronizar carrito con servidor
-  const { isSyncing, syncError, performCartSync } = useCartSync();
-
-  const {
+    const {
     searchText,
     setSearchText,
     filters,
@@ -65,9 +62,8 @@ export const CatalogScreen = () => {
 
   const { showDeliveryModal, openDeliveryModal, closeDeliveryModal } =
     useCatalogModals();
+  
   const notify = useNotify();
-  const [showCart, setShowCart] = useState(false);
-  const [addingProductId, setAddingProductId] = useState<string | null>(null);
   const [allCategories, setAllCategories] = useState<
     {
       id: string;
@@ -153,7 +149,7 @@ export const CatalogScreen = () => {
       try {
         const categories = await ProductService.getCategories();
         setAllCategories(
-          categories.map((cat: any) => ({ id: cat.id, name: cat.name }))
+          categories.data.map((cat: any) => ({ id: cat.id, name: cat.name }))
         );
       } catch (e: any) {
         console.error("[CATEGORIAS] Error al cargar categorías:", e);
@@ -178,26 +174,6 @@ export const CatalogScreen = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [products]);
 
-  const handleAddProduct = async (product: ProductCardType) => {
-    if (!canPerformAction) {
-      notify.confirm({
-        message: "Debes iniciar sesión para agregar productos al carrito",
-        onConfirm: () => handleAuth0Login(),
-        onCancel: () => {},
-      });
-      return;
-    }
-
-    setAddingProductId(product.id);
-    addProductToCart({ ...product, quantity: 1 });
-    setAddingProductId(null);
-    notify.confirm({
-      message: "Producto agregado al carrito",
-      onConfirm: () => setShowCart(true),
-      onCancel: () => {},
-    })
-  };
-
   return (
     <>
       {/* Header */}
@@ -213,7 +189,7 @@ export const CatalogScreen = () => {
             {isAuthenticated && (
               <TouchableOpacity
                 style={styles.headerCartBtn}
-                onPress={() => setShowCart(true)}
+                onPress={openCart}
                 activeOpacity={0.8}
               >
                 <MaterialCommunityIcons
@@ -279,7 +255,7 @@ export const CatalogScreen = () => {
         {/* <CatalogCommunitySection /> */}
 
         {loading ? (
-          <CustomLoader/>
+          <CustomLoader />
         ) : error ? (
           <Text style={{ color: "red", textAlign: "center", marginTop: 32 }}>
             Error al cargar los productos, vuelve a cargar la pantalla.
@@ -332,25 +308,18 @@ export const CatalogScreen = () => {
       {isAuthenticated && (
         <CartBottomSheet
           visible={showCart}
-          onClose={() => setShowCart(false)}
+          onClose={closeCart}
           onNavigateToRecharge={() => {
-            setShowCart(false);
+            closeCart();
             navigate("RechargeScreen");
           }}
           onCheckout={async () => {
-            setShowCart(false);
-
+            closeCart();
             if (cartProducts.length === 0) {
-              notify.error({message:"El carrito esta vacio"});
+              notify.error({ message: "El carrito esta vacio" });
               return;
             }
-
             try {
-              // Mostrar loading si es necesario
-
-              // Aquí es donde ahora procesamos el carrito al backend
-              // Pero por ahora, como aún no tienes la pantalla de direcciones,
-              // vamos a usar el modal de delivery existente
               const firstProduct = cartProducts[0];
               const fullProduct = products.find(
                 (p) => p.id === firstProduct.id
@@ -359,15 +328,14 @@ export const CatalogScreen = () => {
               if (fullProduct) {
                 openDeliveryModal(fullProduct);
               } else {
-                notify.error(
-                  {message:"El producto ya no esta disponible"}
-                )
+                notify.error({ message: "El producto ya no esta disponible" });
               }
             } catch (error) {
               console.error("Error en checkout:", error);
-              notify.error(
-                  {message:"Hubo un problema al procesar tu carrito. Inténtalo de nuevo."}
-                )
+              notify.error({
+                message:
+                  "Hubo un problema al procesar tu carrito. Inténtalo de nuevo.",
+              });
             }
           }}
         />
