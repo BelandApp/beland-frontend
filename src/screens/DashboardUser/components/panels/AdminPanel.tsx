@@ -3,16 +3,17 @@ import {
   View,
   Text,
   StyleSheet,
+  ScrollView,
   TouchableOpacity,
   Alert,
-  Dimensions,
   Animated,
+  Dimensions,
   Platform,
 } from "react-native";
 import { useAuth } from "src/context";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "src/components/layout/RootStackNavigator";
-import DashboardWrapper from "./DashboardWrapper";
+import DashboardWrapper from "../DashboardWrapper";
 import {
   adminApiService,
   DashboardMetrics,
@@ -29,7 +30,7 @@ const isWebMobile = isWeb && width <= 768;
 
 const getResponsiveCardWidth = () => {
   if (isWebDesktop) {
-    return "120%"; // 3 cards per row on desktop with proper spacing
+    return "30%"; // 3 cards per row on desktop with proper spacing
   }
   if (isWebMobile) {
     return width <= 480 ? "100%" : "48%"; // Stack on very small screens, 2 cols on larger mobile
@@ -39,7 +40,7 @@ const getResponsiveCardWidth = () => {
 
 const getResponsiveCardPadding = () => {
   if (isWebDesktop) {
-    return 24; // More padding on desktop for better visual hierarchy
+    return 22; // Slightly less padding than SuperAdmin for desktop
   }
   if (isWebMobile) {
     return width <= 480 ? 16 : 18; // Less padding on very small screens
@@ -60,23 +61,23 @@ const getResponsiveCardGap = () => {
 const getResponsiveFontSizes = () => {
   if (isWebDesktop) {
     return {
-      cardValue: 32, // Larger fonts for desktop
-      cardLabel: 16,
-      cardIcon: 24,
-      iconCircle: 48,
+      cardValue: 30, // Slightly smaller than SuperAdmin for desktop
+      cardLabel: 15,
+      cardIcon: 22,
+      iconCircle: 46,
     };
   }
   if (isWebMobile && width <= 480) {
     return {
-      cardValue: 24, // Smaller value font for very small screens
-      cardLabel: 12, // Smaller label font
-      cardIcon: 18, // Smaller icon
-      iconCircle: 40, // Smaller icon circle
+      cardValue: 22, // Smaller for admin panel on small screens
+      cardLabel: 11,
+      cardIcon: 18,
+      iconCircle: 40,
     };
   }
   return {
-    cardValue: 28,
-    cardLabel: 14,
+    cardValue: 26, // Admin panel has slightly smaller fonts than SuperAdmin
+    cardLabel: 13,
     cardIcon: 20,
     iconCircle: 44,
   };
@@ -150,7 +151,7 @@ const MetricCard = ({
           {
             width: getResponsiveCardWidth(),
             padding: getResponsiveCardPadding(),
-            minHeight: isWebDesktop ? 160 : 140, // Taller cards on desktop
+            minHeight: isWebDesktop ? 150 : 140, // Taller cards on desktop
           },
         ]}
         onPress={handlePress}
@@ -234,14 +235,14 @@ interface DashboardSection {
   screen: string;
 }
 
-const SuperAdminPanel: React.FC = () => {
+const AdminPanel: React.FC = () => {
   const { user, isLoading } = useAuth();
   const { navigate } = useCustomNavigation();
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loadingMetrics, setLoadingMetrics] = useState(true);
   const [selectedSection, setSelectedSection] = useState<string>("home");
 
-  // Dashboard sections with priority order
+  // Admin Dashboard sections (reduced from SuperAdmin)
   const dashboardSections: DashboardSection[] = [
     {
       id: "home",
@@ -254,7 +255,7 @@ const SuperAdminPanel: React.FC = () => {
     {
       id: "users",
       title: "Usuarios",
-      description: "Gestión de usuarios y permisos",
+      description: "Gestión básica de usuarios",
       icon: "US",
       color: "#34C759",
       screen: "users",
@@ -270,7 +271,7 @@ const SuperAdminPanel: React.FC = () => {
     {
       id: "events",
       title: "Eventos",
-      description: "Gestión de event-pass y tipos",
+      description: "Gestión de event-pass",
       icon: "EV",
       color: "#AF52DE",
       screen: "events",
@@ -278,50 +279,18 @@ const SuperAdminPanel: React.FC = () => {
     {
       id: "orders",
       title: "Órdenes",
-      description: "Seguimiento y estados de órdenes",
+      description: "Seguimiento de órdenes",
       icon: "OR",
       color: "#FF3B30",
       screen: "orders",
     },
     {
-      id: "organizations",
-      title: "Organizaciones",
-      description: "Aprobar/denegar fundaciones",
-      icon: "OG",
-      color: "#32D74B",
-      screen: "organizations",
-    },
-    {
       id: "inventory",
       title: "Inventario",
-      description: "Items y stock de productos",
+      description: "Items y stock",
       icon: "IN",
       color: "#5AC8FA",
       screen: "inventory",
-    },
-    {
-      id: "recycling",
-      title: "Reciclaje",
-      description: "Precios y métricas de reciclaje",
-      icon: "RE",
-      color: "#30B0C7",
-      screen: "recycling",
-    },
-    {
-      id: "finances",
-      title: "Finanzas",
-      description: "Recargas, retiros y transacciones",
-      icon: "FI",
-      color: "#FFCC00",
-      screen: "finances",
-    },
-    {
-      id: "config",
-      title: "Configuración",
-      description: "Administradores y configuración",
-      icon: "CF",
-      color: "#8E8E93",
-      screen: "config",
     },
   ];
 
@@ -399,7 +368,7 @@ const SuperAdminPanel: React.FC = () => {
         icon: "👥",
         color: "#34C759",
         trend: "up" as const,
-        percentage: 12,
+        percentage: 8,
         onPress: () => navigate("UsersManagement"),
       },
       {
@@ -408,7 +377,7 @@ const SuperAdminPanel: React.FC = () => {
         icon: "📦",
         color: "#FF9500",
         trend: "up" as const,
-        percentage: 8,
+        percentage: 5,
         onPress: () => handleSectionPress("products"),
       },
       {
@@ -417,35 +386,17 @@ const SuperAdminPanel: React.FC = () => {
         icon: "🛍️",
         color: "#FF3B30",
         trend: "up" as const,
-        percentage: 15,
+        percentage: 12,
         onPress: () => handleSectionPress("orders"),
       },
       {
-        label: "Organizaciones",
-        value: metrics.totalOrganizations.toLocaleString(),
-        icon: "🏢",
-        color: "#32D74B",
-        trend: "neutral" as const,
-        percentage: 3,
-        onPress: () => handleSectionPress("organizations"),
-      },
-      {
         label: "Eventos",
-        value: metrics.totalEvents.toLocaleString(),
+        value: metrics.activeEvents.toLocaleString(),
         icon: "🎪",
         color: "#AF52DE",
-        trend: "up" as const,
-        percentage: 20,
+        trend: "neutral" as const,
+        percentage: 3,
         onPress: () => navigate("EventsManagement"),
-      },
-      {
-        label: "Ingresos",
-        value: `${metrics.revenueThisMonth.toLocaleString()} BC`,
-        icon: "💰",
-        color: "#FFCC00",
-        trend: "up" as const,
-        percentage: 25,
-        onPress: () => handleSectionPress("finances"),
       },
     ];
 
@@ -522,7 +473,7 @@ const SuperAdminPanel: React.FC = () => {
 
   return (
     <DashboardWrapper
-      title={`Panel SuperAdmin - ${user?.full_name || "Administrador"}`}
+      title={`Panel Admin - ${user?.full_name || "Administrador"}`}
       isLoading={isLoading}
     >
       <View style={styles.container}>
@@ -531,44 +482,39 @@ const SuperAdminPanel: React.FC = () => {
           <View style={styles.welcomeHeader}>
             <View>
               <Text style={styles.welcomeTitle}>
-                Bienvenido, {user?.full_name || user?.email?.split("@")[0]}
+                Hola, {user?.full_name || user?.email?.split("@")[0]}
               </Text>
               <Text style={styles.welcomeSubtitle}>
-                Dashboard de Administración Beland
+                Panel de Administración Beland
               </Text>
-              <Text style={styles.welcomeDate}>
-                {new Date().toLocaleDateString("es-ES", {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </Text>
+              <Text style={styles.roleIndicator}>Rol: Administrador</Text>
             </View>
             <View style={styles.systemStatus}>
               <View
                 style={[styles.statusIndicator, { backgroundColor: "#34C759" }]}
               />
-              <Text style={styles.statusText}>Sistema Operativo</Text>
+              <Text style={styles.statusText}>Online</Text>
             </View>
           </View>
 
           <View style={styles.quickStatsRow}>
             <View style={styles.quickStat}>
               <Text style={styles.quickStatValue}>
-                {metrics ? `+${(Math.random() * 50 + 10).toFixed(0)}%` : "..."}
+                {metrics ? `${metrics.totalUsers}` : "..."}
               </Text>
-              <Text style={styles.quickStatLabel}>Crecimiento</Text>
+              <Text style={styles.quickStatLabel}>Usuarios</Text>
             </View>
             <View style={styles.quickStat}>
               <Text style={styles.quickStatValue}>
-                {metrics ? `${(Math.random() * 100).toFixed(0)}%` : "..."}
+                {metrics ? `${metrics.activeEvents}` : "..."}
               </Text>
-              <Text style={styles.quickStatLabel}>Uptime</Text>
+              <Text style={styles.quickStatLabel}>Eventos</Text>
             </View>
             <View style={styles.quickStat}>
-              <Text style={styles.quickStatValue}>24/7</Text>
-              <Text style={styles.quickStatLabel}>Soporte</Text>
+              <Text style={styles.quickStatValue}>
+                {metrics ? `${metrics.totalOrders}` : "..."}
+              </Text>
+              <Text style={styles.quickStatLabel}>Órdenes</Text>
             </View>
           </View>
         </View>
@@ -587,25 +533,25 @@ const SuperAdminPanel: React.FC = () => {
               style={styles.quickActionButton}
               onPress={() => loadDashboardMetrics()}
             >
-              <Text style={styles.quickActionText}>Actualizar Métricas</Text>
+              <Text style={styles.quickActionText}>Actualizar</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.quickActionButton}
               onPress={() => navigate("UsersManagement")}
             >
-              <Text style={styles.quickActionText}>Gestionar Usuarios</Text>
+              <Text style={styles.quickActionText}>Usuarios</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.quickActionButton}
-              onPress={() => handleSectionPress("events")}
+              onPress={() => handleSectionPress("products")}
             >
-              <Text style={styles.quickActionText}>Crear Evento</Text>
+              <Text style={styles.quickActionText}>Productos</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.quickActionButton}
-              onPress={() => handleSectionPress("organizations")}
+              onPress={() => handleSectionPress("orders")}
             >
-              <Text style={styles.quickActionText}>Revisar Solicitudes</Text>
+              <Text style={styles.quickActionText}>Órdenes</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -671,7 +617,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   welcomeTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "bold",
     color: "#333",
     marginBottom: 5,
@@ -681,13 +627,13 @@ const styles = StyleSheet.create({
     color: "#666",
     marginBottom: 10,
   },
-  welcomeDate: {
+  roleIndicator: {
     fontSize: 14,
     color: "#007AFF",
     fontWeight: "500",
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "bold",
     color: "#333",
     marginBottom: 15,
@@ -733,7 +679,8 @@ const styles = StyleSheet.create({
   },
   modernMetricCard: {
     backgroundColor: "#fff",
-    // width will be set dynamically
+    flex: 1,
+    // width and padding will be set dynamically
     borderRadius: 16,
     marginBottom: 16,
     shadowColor: "#000",
@@ -752,66 +699,68 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   iconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: "center",
     alignItems: "center",
   },
   cardIcon: {
-    fontSize: 22,
+    fontSize: 20,
     color: "#fff",
     fontWeight: "bold",
   },
   trendBadge: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 14,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
     gap: 4,
   },
   trendIcon: {
-    fontSize: 12,
+    fontSize: 10,
     color: "#fff",
     fontWeight: "bold",
   },
   trendPercentage: {
-    fontSize: 11,
+    fontSize: 10,
     color: "#fff",
     fontWeight: "600",
   },
   cardValue: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: "bold",
     color: "#1a1a1a",
     marginBottom: 6,
     letterSpacing: -0.5,
   },
   cardLabel: {
-    fontSize: 14,
+    fontSize: 13,
     color: "#666",
     fontWeight: "500",
-    lineHeight: 18,
+    lineHeight: 16,
     marginBottom: 10,
   },
   decorativeLine: {
-    height: 4,
+    height: 3,
     borderRadius: 2,
-    marginTop: 6,
+    marginTop: 4,
   },
   metricsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
+    gap: 10,
   },
   metricCard: {
     backgroundColor: "#fff",
-    width: "48%",
+    flex: 1,
+    minWidth: "45%",
+    maxWidth: "48%",
     padding: 15,
     borderRadius: 12,
     alignItems: "center",
-    marginBottom: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -819,7 +768,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   metricValue: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "bold",
     marginBottom: 5,
   },
@@ -835,14 +784,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
+    gap: 10,
   },
   sectionCard: {
     backgroundColor: "#fff",
-    width: "48%",
+    flex: 1,
+    minWidth: "45%",
+    maxWidth: "48%",
     padding: 15,
     borderRadius: 12,
     alignItems: "center",
-    marginBottom: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -866,7 +817,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   sectionCardTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "600",
     color: "#333",
     textAlign: "center",
@@ -885,18 +836,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
+    gap: 10,
   },
   quickActionButton: {
     backgroundColor: "#007AFF",
-    width: "48%",
+    flex: 1,
+    minWidth: "45%",
+    maxWidth: "48%",
     padding: 12,
     borderRadius: 8,
     alignItems: "center",
-    marginBottom: 10,
   },
   quickActionText: {
     color: "#fff",
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "600",
   },
   loadingText: {
@@ -913,4 +866,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SuperAdminPanel;
+export default AdminPanel;

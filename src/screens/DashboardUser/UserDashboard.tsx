@@ -1,10 +1,10 @@
 import React from "react";
 import { useAuth } from "src/context";
-import SuperAdminPanel from "./components/SuperAdminPanel";
-import AdminPanel from "./components/AdminPanel";
-import LeaderPanel from "./components/LeaderPanel";
-import EmpresaPanel from "./components/EmpresaPanel";
-import {UserPanel }from "./components/panels";
+import SuperAdminPanel from "./components/panels/SuperAdminPanel";
+import AdminPanel from "./components/panels/AdminPanel";
+import LeaderPanel from "./components/panels/LeaderPanel";
+import EmpresaPanel from "./components/panels/EmpresaPanel";
+import { UserPanel } from "./components/panels";
 import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 
 export const UserDashboard: React.FC = () => {

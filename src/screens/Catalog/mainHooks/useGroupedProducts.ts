@@ -34,13 +34,25 @@ export const useGroupedProducts = (
           categoryName = categoryInfo.name;
         } else {
           // Si no encontramos la categoría en allCategories, usar el product.category como fallback
-          categoryName = (product as any).category || "Sin categoría";
+          const categoryObj = (product as any).category;
+          categoryName =
+            typeof categoryObj === "object" && categoryObj?.name
+              ? categoryObj.name
+              : typeof categoryObj === "string"
+              ? categoryObj
+              : "Sin categoría";
           categoryId = `fallback_${product.category_id}`;
         }
       } else if ((product as any).category) {
-        // Si no hay category_id pero sí hay category string
-        categoryName = (product as any).category;
-        categoryId = `string_${(product as any).category}`;
+        // Si no hay category_id pero sí hay category (puede ser string u objeto)
+        const categoryObj = (product as any).category;
+        categoryName =
+          typeof categoryObj === "object" && categoryObj?.name
+            ? categoryObj.name
+            : typeof categoryObj === "string"
+            ? categoryObj
+            : "Sin categoría";
+        categoryId = `string_${categoryName}`;
       }
 
       if (!groups[categoryId]) {

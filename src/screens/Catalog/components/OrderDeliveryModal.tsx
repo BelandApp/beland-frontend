@@ -274,15 +274,25 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
 
         onClose();
 
-        setTimeout(() => {
-          notify.success({
-            message: `Tu orden ${newOrder.id.slice(
-              -8
-            )} ha sido creada exitosamente.\n\n💰 Total: $${newOrder.total.toFixed(
-              2
-            )}`,
-          });
-        }, 300);
+        // Mostrar notificación de éxito
+        if (newOrder && newOrder.id) {
+          setTimeout(() => {
+            notify.success({
+              message: `Tu orden ${newOrder.id.slice(
+                -8
+              )} ha sido creada exitosamente.\n\n💰 Total: $${
+                newOrder.total?.toFixed(2) || "0.00"
+              }`,
+            });
+          }, 300);
+        } else {
+          // Si no hay newOrder, mostrar notificación genérica
+          setTimeout(() => {
+            notify.success({
+              message: "Tu orden ha sido creada exitosamente",
+            });
+          }, 300);
+        }
       });
     } catch (error) {
       setCurrentStep("address_form");

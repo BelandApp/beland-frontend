@@ -16,13 +16,6 @@ const mapBackendTransactionToFrontend = (
     ""
   ).toLowerCase();
 
-  console.log(
-    "[Transacción] typeName recibido:",
-    typeName,
-    "estructura completa:",
-    backendTransaction
-  );
-
   if (typeName.includes("recarga") || typeName.includes("recharge")) {
     type = "recharge";
   } else if (
@@ -167,18 +160,9 @@ export const useWalletTransactions = () => {
       // Determinar si usar modo demo o producción
       const isDemoMode = process.env.EXPO_PUBLIC_USE_DEMO_MODE === "true";
 
-      console.log("🔧 useWalletTransactions configuración:");
-      console.log("- isDemoMode:", isDemoMode);
-      console.log("- walletId:", walletId);
-
       if (!isDemoMode) {
         try {
-          // Modo producción: usar API real de transacciones de wallet
-          console.log("🔄 Obteniendo transacciones del wallet:", walletId);
-
           const response = await WalletService.getTransactions(1, 20, walletId);
-
-          console.log("📦 Respuesta del backend:", response);
 
           // La respuesta viene en formato [transacciones[], total]
           const transactionsData = Array.isArray(response[0])
@@ -190,11 +174,6 @@ export const useWalletTransactions = () => {
             mapBackendTransactionToFrontend
           );
 
-          console.log(
-            "✅ Transacciones mapeadas:",
-            mappedTransactions.length,
-            mappedTransactions
-          );
           setTransactions(mappedTransactions);
         } catch (apiError: any) {
           console.warn("API no disponible, usando modo demo:", apiError);

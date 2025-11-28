@@ -276,8 +276,17 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
       };
 
       const newOrder = await OrderService.createOrder(orderData);
+
+      console.log("[OrdersStoreAPI] Raw response from OrderService:", newOrder);
+
       // Use a mutable variable for potential patching before saving/returning
-      let orderToSave: any = newOrder.order;
+      // Handle different response structures: newOrder.order OR newOrder directly
+      let orderToSave: any = newOrder.order || newOrder;
+
+      console.log(
+        "[OrdersStoreAPI] orderToSave (newOrder.order || newOrder):",
+        orderToSave
+      );
 
       // Convert date strings to Date objects
       if (orderToSave) {

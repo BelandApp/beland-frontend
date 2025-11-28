@@ -105,6 +105,7 @@ const AppContent = () => {
     currentRoute !== "AcquiredEventModal" &&
     currentRoute !== "NewPaymentScreen" &&
     currentRoute !== "ProductsManagement" &&
+    currentRoute !== "UserDashboardScreen" &&
     currentRoute &&
     !walletActionScreens.includes(currentRoute) &&
     !!user;
