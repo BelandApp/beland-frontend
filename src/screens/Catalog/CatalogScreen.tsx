@@ -151,10 +151,29 @@ export const CatalogScreen = () => {
     // en lugar de ids si es posible.
     (async () => {
       try {
-        const categories = await ProductService.getCategories();
-        setAllCategories(
-          categories.map((cat: any) => ({ id: cat.id, name: cat.name }))
-        );
+        const response = await ProductService.getCategories();
+
+        // Manejar diferentes estructuras de respuesta del backend
+        let categoriesArray: any[] = [];
+
+        if (Array.isArray(response)) {
+          categoriesArray = response;
+        } else if (response && typeof response === "object") {
+          // Si es un objeto con data
+          if (Array.isArray(response.data)) {
+            categoriesArray = response.data;
+          } else if (response.data && Array.isArray(response.data.data)) {
+            categoriesArray = response.data.data;
+          } else if (Array.isArray(response.categories)) {
+            categoriesArray = response.categories;
+          }
+        }
+
+        if (categoriesArray.length > 0) {
+          setAllCategories(
+            categoriesArray.map((cat: any) => ({ id: cat.id, name: cat.name }))
+          );
+        }
       } catch (e: any) {
         console.error("[CATEGORIAS] Error al cargar categorías:", e);
         // No hacemos fallback inmediato aquí: si falla el servicio, intentamos
@@ -275,7 +294,7 @@ export const CatalogScreen = () => {
         {/* <CatalogCommunitySection /> */}
 
         {loading ? (
-          <CustomLoader/>
+          <CustomLoader />
         ) : error ? (
           <Text style={{ color: "red", textAlign: "center", marginTop: 32 }}>
             Error al cargar los productos, vuelve a cargar la pantalla.
@@ -337,7 +356,7 @@ export const CatalogScreen = () => {
             setShowCart(false);
 
             if (cartProducts.length === 0) {
-              notify.error({message:"El carrito esta vacio"});
+              notify.error({ message: "El carrito esta vacio" });
               return;
             }
 
@@ -355,15 +374,14 @@ export const CatalogScreen = () => {
               if (fullProduct) {
                 openDeliveryModal(fullProduct);
               } else {
-                notify.error(
-                  {message:"El producto ya no esta disponible"}
-                )
+                notify.error({ message: "El producto ya no esta disponible" });
               }
             } catch (error) {
               console.error("Error en checkout:", error);
-              notify.error(
-                  {message:"Hubo un problema al procesar tu carrito. Inténtalo de nuevo."}
-                )
+              notify.error({
+                message:
+                  "Hubo un problema al procesar tu carrito. Inténtalo de nuevo.",
+              });
             }
           }}
         />

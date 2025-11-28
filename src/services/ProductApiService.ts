@@ -234,10 +234,34 @@ class ProductServiceClass extends CoreApiService {
    * Get all categories
    */
   async getCategories(): Promise<PaginatedResponse<Category>> {
-    const response = await this.get<[Category[], number]>(
-      this.ENDPOINTS.CATEGORIES
-    );
-    const [categories, total] = response;
+    const response = await this.get<any>(this.ENDPOINTS.CATEGORIES);
+
+    // Handle different response structures from backend
+    let categories: Category[] = [];
+    let total = 0;
+
+    if (Array.isArray(response)) {
+      // [categories, total] tuple or direct array
+      if (response.length === 2 && Array.isArray(response[0])) {
+        categories = response[0];
+        total = response[1] || categories.length;
+      } else {
+        categories = response;
+        total = categories.length;
+      }
+    } else if (response && typeof response === "object") {
+      // Object with data property
+      if (Array.isArray(response.data)) {
+        categories = response.data;
+        total = response.total || categories.length;
+      } else if (response.data && Array.isArray(response.data.data)) {
+        categories = response.data.data;
+        total = response.data.total || categories.length;
+      } else if (Array.isArray(response.categories)) {
+        categories = response.categories;
+        total = response.total || categories.length;
+      }
+    }
 
     return {
       data: categories,
