@@ -33,8 +33,6 @@ import { CartBottomSheet } from "./components/CartBottomSheet";
 // Styles
 import { containerStyles, productStyles } from "./styles";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-// Community Main Component
-import CatalogCommunitySection from "./mainComponents/CatalogCommunitySection";
 import { useGroupedProducts } from "./mainHooks/useGroupedProducts";
 import { ThemedHeader } from "@/components";
 
@@ -249,10 +247,7 @@ export const CatalogScreen = () => {
           </Text>
         </TouchableOpacity>
 
-        {/* Sección Comunidad integrada dentro del Catálogo
-            Mostrar solo si hay recursos o si está cargando (para evitar mostrar
-            un título vacío cuando no existan beneficios). */}
-        {/* <CatalogCommunitySection /> */}
+    
 
         {loading ? (
           <CustomLoader />
@@ -344,7 +339,8 @@ export const CatalogScreen = () => {
       <OrderDeliveryModal
         visible={showDeliveryModal}
         onClose={closeDeliveryModal}
-        onOrderCreated={(orderId: string) => {
+        onCancel={openCart}
+        onOrderCreated={() => {
           // Navigate to Orders tab to see the created order
           navigate("Orders", { screen: "OrdersList" });
         }}

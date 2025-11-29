@@ -16,7 +16,7 @@ interface ConfirmProps extends BaseToastProps {
   onCancel?: () => void;
 }
 
-const toastConfig = {
+export const toastConfig = {
   success: (props: BaseToastProps) => (
     <BaseToast
       {...props}
@@ -161,10 +161,13 @@ export const GlobalNotification = () => {
       autoHide: current.type !== "confirm",
       visibilityTime: current.type !== "confirm" ? 3000 : undefined,
       position: "top",
+      onPress() {
+          Toast.hide()
+      },
     });
 
     clear();
   }, [current]);
 
-  return <Toast config={toastConfig} />;
+  return null;
 };

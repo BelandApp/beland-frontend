@@ -6,7 +6,6 @@ import {
   FlatList,
   Image,
   StyleSheet,
-  Dimensions,
 } from "react-native";
 import Modal from "react-native-modal";
 import { useUserBalance } from "../../../hooks/useUserBalance";
@@ -23,6 +22,8 @@ import { Button } from "src/components";
 import { ArrowDown, ClosedCaption, X } from "lucide-react-native";
 import { colors } from "src/styles";
 import { useCartStore } from "src/stores/useCartStore";
+import Toast from "react-native-toast-message";
+import { toastConfig } from "src/components/shared/notification/GlobalNotification";
 
 interface CartBottomSheetProps {
   visible: boolean;
@@ -37,8 +38,7 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
   onCheckout,
   onNavigateToRecharge,
 }) => {
-  const { products, removeProduct, updateQuantity, clearCart } =
-    useCartStore();
+  const { products, removeProduct, updateQuantity, clearCart } = useCartStore();
   const notify = useNotify();
   const total = products.reduce((sum, p) => sum + p.price * p.quantity, 0);
   const { balance } = useUserBalance();
@@ -69,7 +69,6 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
       notify.error({ message });
     }
   };
-
   return (
     <>
       <Modal
@@ -188,8 +187,8 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
             />
           </View>
         </View>
+        <Toast config={toastConfig} />
       </Modal>
-
       {/* Modal de saldo insuficiente reutilizable */}
       <InsufficientBalanceModal
         visible={insufficientModalVisible}
@@ -213,7 +212,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 18,
     borderTopRightRadius: 18,
     padding: 16,
-    minHeight: Dimensions.get("window").height * 0.8,
+    minHeight: "80%",
     maxHeight: "95%",
     flexDirection: "column",
     justifyContent: "space-between",
@@ -232,7 +231,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     maxHeight: "75%",
     minHeight: 100,
-    marginBottom:"auto"
+    marginBottom: "auto",
   },
   emptyText: { color: "#888", fontSize: 16 },
   itemRow: {

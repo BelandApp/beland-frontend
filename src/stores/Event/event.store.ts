@@ -61,7 +61,7 @@ type EventStore = {
   updateEvent: (event: Event) => void;
 };
 
-export const useEventStore = create<EventStore>()(
+export const eventStore = create<EventStore>()(
   persist(
     (set: any, get: any) => ({
       availableEvents: [],

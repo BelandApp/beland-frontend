@@ -16,7 +16,7 @@ import {
   SquareChevronDown,
   CheckCircle2,
 } from "lucide-react-native";
-import { useEventStore } from "src/stores/Event";
+import { eventStore } from "@/stores";
 import { colors } from "src/styles";
 import { eventsService } from "src/services/events";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
@@ -24,7 +24,7 @@ import { useNotify } from "src/hooks";
 
 export const AcquiredEventModal = ({ route }: { route: any }) => {
   const { id_modal } = route.params;
-  const { getAcquiredEvent } = useEventStore();
+  const { getAcquiredEvent } = eventStore();
   const event = getAcquiredEvent(id_modal);
   const { navigate, goBack } = useCustomNavigation();
   const notify = useNotify()

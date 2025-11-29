@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { colors } from "src/styles";
 import { InputStyles, variantStyles } from "./InputStyles";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 interface PhoneInputProps {
   value: string;
@@ -20,6 +21,7 @@ interface PhoneInputProps {
   error?: string;
   onBlur?: () => void;
   variant?: "underline" | "filled";
+  icon?: boolean;
 }
 
 const COUNTRY_CODES = [
@@ -30,21 +32,37 @@ const COUNTRY_CODES = [
   { code: "+57", name: "COL" },
   { code: "+1", name: "EEUU" },
 ];
-
+const parsePhoneValue = (value: string) => {
+  if (!value.startsWith("+")) return { code: "+54", number: value };
+  const sortedCodes = [...COUNTRY_CODES].sort(
+    (a, b) => b.code.length - a.code.length
+  );
+  for (const entry of sortedCodes) {
+    if (value.startsWith(entry.code)) {
+      return {
+        code: entry.code,
+        number: value.replace(entry.code, "").replace(/\D/g, ""),
+      };
+    }
+  }
+  // fallback en caso de no reconocer el código
+  return { code: "+54", number: value.replace(/\D/g, "") };
+};
 export const PhoneInput: React.FC<PhoneInputProps> = ({
   value,
   onChange,
   error,
   onBlur,
   variant = "underline",
+  icon = false,
   ...props
 }) => {
   const selectedVariant = variantStyles[variant];
-  const [countryCode, setCountryCode] = useState("+54");
-  const [number, setNumber] = useState(value.replace(/^\+\d+/, ""));
+  const initial = parsePhoneValue(value);
+  const [countryCode, setCountryCode] = useState(initial.code);
+  const [number, setNumber] = useState(initial.number);
   const [isFocused, setIsFocused] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-
   const animatedLabel = useRef(new Animated.Value(value ? 1 : 0)).current;
   const animatedBorder = useRef(new Animated.Value(0)).current;
 
@@ -87,7 +105,8 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
   });
 
   const handleChange = (text: string) => {
-    setNumber(text);
+    const clean = text.replace(/\D/g, "");
+    setNumber(clean);
     onChange(`${countryCode}${text}`);
   };
 
@@ -114,7 +133,9 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
             variant === "underline" && { borderBottomColor: borderColor },
           ]}
         >
-          <Animated.Text style={labelStyle}>Teléfono</Animated.Text>
+          <Animated.Text style={[labelStyle, selectedVariant.label]}>
+            Teléfono
+          </Animated.Text>
 
           <View style={styles.row} accessible={false} tabIndex={-1}>
             {/* CUSTOM COUNTRY PICKER */}
@@ -122,7 +143,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
               style={styles.countryButton}
               onPress={() => setModalVisible(true)}
             >
-              <Text style={styles.countryText}>
+              <Text style={[styles.countryText, selectedVariant.label]}>
                 {COUNTRY_CODES.find((c) => c.code === countryCode)?.name}{" "}
                 {countryCode}
               </Text>
@@ -137,9 +158,17 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
                 setIsFocused(false);
                 onBlur && onBlur();
               }}
-              style={[InputStyles.baseInput, selectedVariant.label]}
+              style={[InputStyles.baseInput, selectedVariant.input]}
               {...props}
             />
+            {icon && (
+              <MaterialCommunityIcons
+                name="phone-outline"
+                size={20}
+                color="#666"
+                style={styles.icon}
+              />
+            )}
           </View>
         </Animated.View>
         <View style={InputStyles.errorContainer}>
@@ -185,13 +214,17 @@ const styles = StyleSheet.create({
   button: {
     flex: 1,
   },
+  icon: {
+    margin: 12,
+  },
   container: {
     position: "relative",
     borderBottomWidth: 2,
   },
   row: {
     flexDirection: "row",
-    alignItems: "flex-end",
+    alignItems: "center",
+    flex: 1,
   },
   countryButton: {
     paddingVertical: 8,

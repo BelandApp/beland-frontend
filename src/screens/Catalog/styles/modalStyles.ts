@@ -11,12 +11,18 @@ export const modalStyles = StyleSheet.create({
     paddingTop: 20,
     paddingHorizontal: 20,
     paddingBottom: 34, // Para el safe area en iPhone
-    minHeight: 300,
+    minHeight: "80%",
+    maxHeight: "95%",
     marginTop: "auto",
   },
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
+  },
+  headerTitle: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
   },
   modalTitle: {
     fontSize: 18,

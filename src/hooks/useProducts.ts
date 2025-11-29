@@ -20,7 +20,7 @@ export function useProducts(initialQuery: ProductQuery = {}) {
         setProducts(res.data);
         setTotal(res.total);
         setPage(res.page);
-        setLimit(res.limit);
+        setLimit(res.limit);      
       } catch (err: any) {
         setError(err.message || "Error al cargar productos");
       } finally {

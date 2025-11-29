@@ -24,7 +24,15 @@ export type User = {
   id: string;
   email: string;
   full_name: string;
+  username?: string;
+  phone?: string;
   profile_picture_url?: string;
+  country?: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
+  created_at?: string;
+  updated_at?: string;
   auth0_id?: string;
   role?: string;
   role_name?: string;

@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useMemo } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Platform } from "react-native";
 
 import { View } from "react-native";
@@ -25,13 +25,13 @@ import SocketStatus from "./src/components/SocketStatus";
 import { usePaymentSocket } from "src/hooks/usePaymentSocket";
 import { useOrderSocket } from "src/hooks/useOrderSocket";
 import { colors } from "src/styles";
-import { GlobalNotification } from "src/components/shared/notification/GlobalNotification";
 import { useBeCoinsAutoRefresh } from "src/stores/becoin/useBeCoinsAutoRefresh";
+import { GlobalNotification, toastConfig } from "src/components/shared/notification/GlobalNotification";
+import Toast from "react-native-toast-message";
 
 const AppContent = () => {
   const { user } = useAuth();
-  const { lastSyncedAt } = useBeCoinsAutoRefresh()
-  console.log('ultima sincronizacion de la wallet', lastSyncedAt)
+  useBeCoinsAutoRefresh();
   const navigationRef =
     useRef<NavigationContainerRef<RootStackParamList>>(null);
   const [currentRoute, setCurrentRoute] = useState<string | undefined>(
@@ -44,7 +44,7 @@ const AppContent = () => {
   useOrderSocket(() => {});
 
   // Padding dinámico para web móvil
-
+Toast.show({ type: "success", text1: "Ahora sí funciona 🔥" });
   useEffect(() => {
     const configureSystemBars = async () => {
       if (Platform.OS === "android") {
@@ -156,7 +156,8 @@ const AppContent = () => {
         linking={linking}
       >
         <RootStackNavigator />
-        <GlobalNotification />
+ 
+        <Toast config={toastConfig} />
         {shouldShowQRButton && <FloatingQRButton onPress={handleQRPress} />}
       </NavigationContainer>
     </View>
@@ -169,7 +170,9 @@ const App = () => {
       <AuthProvider>
         <NotificationProvider>
           {/* <SocketStatus /> */}
+          <Toast config={toastConfig} />
           <AppContent />
+          <GlobalNotification />
           <NotificationBanner />
         </NotificationProvider>
       </AuthProvider>
