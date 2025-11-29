@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Dimensions } from "react-native";
 import { Button, CustomLoader } from "src/components";
 import { OrderDeliveryModalStyles as styles } from "./styles";
 import { DeliveryAddress } from "src/types";
@@ -19,10 +19,11 @@ export const SelectAddress: React.FC<AddressSelectorProps> = ({
   if (loadingAddresses) {
     return <CustomLoader />;
   }
-
+  const isMobile = Dimensions.get("window").width <= 600;
+  const Wrapper = isMobile ? ScrollView : View;
   return (
     <View style={styles.selectContainer}>
-      <View style={styles.selectWrapper}>
+      <Wrapper style={isMobile ? null : styles.selectWrapper}>
         {addresses.length === 0 ? (
           <View style={{ padding: 20 }}>
             <Text style={{ color: "#666" }}>
@@ -90,7 +91,7 @@ export const SelectAddress: React.FC<AddressSelectorProps> = ({
             );
           })
         )}
-      </View>
+      </Wrapper>
 
       <View style={styles.actionsContainer}>
         <Button

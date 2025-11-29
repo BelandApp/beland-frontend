@@ -44,7 +44,6 @@ const AppContent = () => {
   useOrderSocket(() => {});
 
   // Padding dinámico para web móvil
-Toast.show({ type: "success", text1: "Ahora sí funciona 🔥" });
   useEffect(() => {
     const configureSystemBars = async () => {
       if (Platform.OS === "android") {

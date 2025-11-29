@@ -15,7 +15,7 @@ import { CreateOrderRequest, DeliveryAddress, OrderItem } from "src/types";
 export type DeliveryStep = "select" | "form" | "processing";
 export type preOrderType = {
   products: any[];
-  address: DeliveryAddress;
+  address: UserAddress;
   addressId: string;
 };
 export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
@@ -105,11 +105,11 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
     if (!selectedAddressId || !selectedAddress) {
       return notify.error({ message: "Selecciona una dirección" });
     }
+    let result = false
 
     await requireAuth(async () => {
       try {
         const cart = await CartService.getCart();
-
         await apiRequest(
           `/carts/address/${cart.id}?address_id=${selectedAddressId}`,
           {
@@ -137,11 +137,13 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
         notify.success({ message: "Orden creada!" });
         clearCart();
         onOrderCreated?.(order.id);
+        result = true
       } catch (e) {
         notify.error({ message: getBackendErrorMessage(e) });
         setStep("select");
       }
     });
+    return result
   }, [products, selectedAddress, selectedAddressId]);
 
   /** ---------------- CANCEL BEHAVIOR ---------------- */

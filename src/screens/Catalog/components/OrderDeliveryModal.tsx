@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { OrderDeliveryModalStyles as styles } from "./orderSteps/styles";
 import { useOrderDelivery } from "../hooks";
 import Modal from "react-native-modal";
@@ -43,6 +43,12 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
     onCancel();
     onClose();
   }
+  const handleSubmit =async () => {
+    const ok = await submitOrder()
+    if (ok) {
+      onClose();
+    }
+  }
   return (
     <Modal
       style={styles.overlay}
@@ -80,7 +86,7 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
 
         {step === "processing" && (
           <ConfirmOrder
-            onSubmit={submitOrder}
+            onSubmit={handleSubmit}
             preOrder={preOrder}
             onCancel={() => setStep("select")}
           />

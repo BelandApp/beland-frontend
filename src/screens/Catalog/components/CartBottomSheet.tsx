@@ -6,6 +6,7 @@ import {
   FlatList,
   Image,
   StyleSheet,
+  ScrollView,
 } from "react-native";
 import Modal from "react-native-modal";
 import { useUserBalance } from "../../../hooks/useUserBalance";
@@ -97,7 +98,7 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
             </View>
           </View>
 
-          <View style={styles.itemContainer}>
+          <ScrollView contentContainerStyle={styles.itemContainer}>
             {products.length === 0 ? (
               <View style={styles.emptyContainer}>
                 <Text style={styles.emptyText}>Tu carrito está vacío</Text>
@@ -162,7 +163,7 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
                 keyboardShouldPersistTaps="handled"
               />
             )}
-          </View>
+          </ScrollView>
           <View style={styles.footer}>
             <View>
               <Text style={styles.total}>
@@ -206,7 +207,7 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
 };
 
 const styles = StyleSheet.create({
-  modal: { justifyContent: "flex-end", margin: 0 },
+  modal: { justifyContent: "flex-end", margin:0 },
   sheet: {
     backgroundColor: "#fff",
     borderTopLeftRadius: 18,
@@ -216,6 +217,7 @@ const styles = StyleSheet.create({
     maxHeight: "95%",
     flexDirection: "column",
     justifyContent: "space-between",
+    marginTop:"auto"
   },
   header: {
     flexDirection: "row",
@@ -229,7 +231,6 @@ const styles = StyleSheet.create({
   emptyContainer: { alignItems: "center", padding: 32 },
   itemContainer: {
     justifyContent: "flex-start",
-    maxHeight: "75%",
     minHeight: 100,
     marginBottom: "auto",
   },

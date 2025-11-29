@@ -2,6 +2,9 @@ import { Dimensions, StyleSheet } from "react-native";
 
 export const OrderDeliveryModalStyles = StyleSheet.create({
   overlay: { justifyContent: "flex-end", margin: 0 },
+  scroll: {
+    width: "100%",
+  },
   container: {
     backgroundColor: "white",
     borderTopLeftRadius: 20,
@@ -27,8 +30,8 @@ export const OrderDeliveryModalStyles = StyleSheet.create({
   selectWrapper: {
     flexWrap: "wrap",
     flexDirection: "row",
-    justifyContent: "center",
     gap: 12,
+    marginHorizontal: "auto",
   },
   addressCard: {
     flexDirection: "column",
@@ -46,6 +49,7 @@ export const OrderDeliveryModalStyles = StyleSheet.create({
     justifyContent: "space-between",
   },
   actionsContainer: {
+    paddingTop: 12,
     marginHorizontal: "auto",
     flexDirection: "row",
     gap: 12,
