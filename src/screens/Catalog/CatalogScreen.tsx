@@ -145,10 +145,29 @@ export const CatalogScreen = () => {
     // en lugar de ids si es posible.
     (async () => {
       try {
-        const categories = await ProductService.getCategories();
-        setAllCategories(
-          categories.data.map((cat: any) => ({ id: cat.id, name: cat.name }))
-        );
+        const response = await ProductService.getCategories();
+
+        // Manejar diferentes estructuras de respuesta del backend
+        let categoriesArray: any[] = [];
+
+        if (Array.isArray(response)) {
+          categoriesArray = response;
+        } else if (response && typeof response === "object") {
+          // Si es un objeto con data
+          if (Array.isArray(response.data)) {
+            categoriesArray = response.data;
+          } else if (response.data && Array.isArray(response.data)) {
+            categoriesArray = response.data;
+          } else if (Array.isArray(response)) {
+            categoriesArray = response;
+          }
+        }
+
+        if (categoriesArray.length > 0) {
+          setAllCategories(
+            categoriesArray.map((cat: any) => ({ id: cat.id, name: cat.name }))
+          );
+        }
       } catch (e: any) {
         console.error("[CATEGORIAS] Error al cargar categorías:", e);
         // No hacemos fallback inmediato aquí: si falla el servicio, intentamos

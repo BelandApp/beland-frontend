@@ -17,13 +17,6 @@ const mapBackendTransactionToFrontend = (
     ""
   ).toLowerCase();
 
-  console.log(
-    "[Transacción] typeName recibido:",
-    typeName,
-    "estructura completa:",
-    backendTransaction
-  );
-
   if (typeName.includes("recarga") || typeName.includes("recharge")) {
     type = "recharge";
   } else if (

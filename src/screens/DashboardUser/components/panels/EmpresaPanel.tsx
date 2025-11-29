@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, Image } from "react-native";
 import { useAuth } from "src/context";
-import DashboardWrapper from "./DashboardWrapper";
+import DashboardWrapper from "../DashboardWrapper";
 
 // Datos simulados para el rol de EMPRESA
 interface EmpresaStats {
@@ -28,7 +28,7 @@ const EmpresaPanel: React.FC = () => {
             <Image
               source={{
                 uri:
-                  user.picture ||
+                  user.profile_picture_url ||
                   "https://ui-avatars.com/api/?name=Empresa&background=random",
               }}
               style={styles.profileImage}
