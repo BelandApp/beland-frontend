@@ -1,5 +1,7 @@
 import { Product } from "./Products";
 
+export * from "./Products";
+
 export interface Participant {
   id: string;
   name: string;

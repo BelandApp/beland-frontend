@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useCart } from "./useCart";
-import { useCartStore } from "../stores/useCartStore";
+import { useCartStore } from "../../stores/useCartStore";
 import { useAuth } from "@/context/AuthContext";
 
 export const useCartSync = () => {

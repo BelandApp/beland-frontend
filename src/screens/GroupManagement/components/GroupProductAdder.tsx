@@ -11,7 +11,7 @@ import {
   TextInput,
   Pressable,
 } from "react-native";
-import { useProducts } from "../../../hooks/useProducts";
+import { useProducts } from "../../../hooks/product/useProducts";
 import { useGroupAdminStore } from "../../../stores/groupStores";
 import { Product } from "@services/core";
 

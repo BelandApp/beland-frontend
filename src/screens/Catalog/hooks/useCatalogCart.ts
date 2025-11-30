@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import * as Haptics from "expo-haptics";
 import { useCartStore } from "../../../stores/useCartStore";
-import { useCartSync } from "../../../hooks/useCartSync";
+import { useCartSync } from "../../../hooks/cart/useCartSync";
 import { useAuth } from "@/context/AuthContext";
 import { ProductCardType } from "../components/ProductCard";
 import { notify } from "src/hooks/notification/notify.external";
