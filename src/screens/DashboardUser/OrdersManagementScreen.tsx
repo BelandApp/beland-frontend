@@ -189,6 +189,9 @@ export const OrdersManagementScreen: React.FC = () => {
   const [orders, setOrders] = useState<ApiOrder[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [loadingMore, setLoadingMore] = useState<boolean>(false);
+  const [hasMore, setHasMore] = useState<boolean>(true);
+  const [page, setPage] = useState<number>(1);
   const [verificationModalVisible, setVerificationModalVisible] =
     useState(false);
   const [pendingDeliveryOrderId, setPendingDeliveryOrderId] = useState<
@@ -200,16 +203,33 @@ export const OrdersManagementScreen: React.FC = () => {
   const { navigate } = useCustomNavigation();
   const notify = useNotify();
 
-  const loadOrders = useCallback(async (isRefresh = false) => {
+  // Cache para evitar recargar órdenes ya obtenidas
+  const ordersCache = React.useRef<Map<string, ApiOrder>>(new Map());
+  const abortControllerRef = React.useRef<AbortController | null>(null);
+
+  const loadOrders = useCallback(async (isRefresh = false, pageNum = 1) => {
+    // Cancelar petición anterior si existe
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    abortControllerRef.current = new AbortController();
+
     if (isRefresh) {
       setRefreshing(true);
-    } else {
+      setPage(1);
+      setHasMore(true);
+      ordersCache.current.clear(); // Limpiar cache al refrescar
+    } else if (pageNum === 1) {
       setLoading(true);
+    } else {
+      setLoadingMore(true);
     }
 
     try {
       // Traer órdenes (sin filtro para admin)
-      const res = await OrderService.getOrders({ page: 1, limit: 50 });
+      // OPTIMIZACIÓN: Reducir límite a 10 para cargar más rápido
+      const res = await OrderService.getOrders({ page: pageNum, limit: 10 });
 
       // Map several possible response shapes into an array of orders:
       let data: any[] = [];
@@ -238,34 +258,94 @@ export const OrdersManagementScreen: React.FC = () => {
       }
 
       // Cargar detalles completos de cada orden para obtener user y address
-      // Esto es necesario porque el endpoint de lista no incluye estas relaciones
+      // OPTIMIZACIÓN: Usar cache y cargar solo órdenes no cacheadas
       if (data && data.length > 0) {
-        const ordersWithDetails = await Promise.all(
-          data.map(async (order) => {
-            try {
-              const fullOrder = await OrderService.getOrder(order.id);
-              return fullOrder;
-            } catch (err) {
-              console.error(
-                `Failed to load details for order ${order.id}:`,
-                err
-              );
-              return order;
-            }
-          })
+        setHasMore(data.length >= 10); // Si trajo menos de 10, no hay más
+
+        const BATCH_SIZE = 3; // Reducir a 3 para ser más conservador
+        const ordersWithDetails: any[] = [];
+        const uncachedOrders = data.filter(
+          (order) => !ordersCache.current.has(order.id)
         );
-        // Forzar creación de nuevo array para que React detecte el cambio
-        setOrders([...ordersWithDetails] as ApiOrder[]);
+
+        // Cargar solo las órdenes no cacheadas
+        for (let i = 0; i < uncachedOrders.length; i += BATCH_SIZE) {
+          // Verificar si fue cancelado
+          if (abortControllerRef.current?.signal.aborted) {
+            console.log("Load orders aborted");
+            return;
+          }
+
+          const batch = uncachedOrders.slice(i, i + BATCH_SIZE);
+
+          const batchResults = await Promise.all(
+            batch.map(async (order) => {
+              try {
+                // Timeout de 5 segundos por petición
+                const timeoutPromise = new Promise((_, reject) =>
+                  setTimeout(() => reject(new Error("Timeout")), 5000)
+                );
+
+                const fullOrder = (await Promise.race([
+                  OrderService.getOrder(order.id),
+                  timeoutPromise,
+                ])) as ApiOrder;
+
+                // Guardar en cache
+                ordersCache.current.set(order.id, fullOrder);
+                return fullOrder;
+              } catch (err) {
+                console.error(
+                  `Failed to load details for order ${order.id}:`,
+                  err
+                );
+                // Usar datos básicos si falla
+                return order;
+              }
+            })
+          );
+
+          ordersWithDetails.push(...batchResults);
+
+          // Pausa entre lotes para no saturar el servidor
+          if (i + BATCH_SIZE < uncachedOrders.length) {
+            await new Promise((resolve) => setTimeout(resolve, 150));
+          }
+        }
+
+        // Combinar órdenes cacheadas con las nuevas
+        const allOrders = data.map(
+          (order) => ordersCache.current.get(order.id) || order
+        );
+
+        // Si es página 1 o refresh, reemplazar. Si es paginación, agregar
+        if (isRefresh || pageNum === 1) {
+          setOrders([...allOrders] as ApiOrder[]);
+        } else {
+          setOrders((prev) => [...prev, ...allOrders] as ApiOrder[]);
+        }
       } else {
-        setOrders([...(data || [])] as ApiOrder[]);
+        setHasMore(false);
+        if (isRefresh || pageNum === 1) {
+          setOrders([]);
+        }
       }
     } catch (err) {
       console.error("OrdersManagement: error loading orders", err);
     } finally {
       setLoading(false);
       setRefreshing(false);
+      setLoadingMore(false);
     }
   }, []);
+
+  const loadMoreOrders = useCallback(() => {
+    if (!loadingMore && !loading && hasMore) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      loadOrders(false, nextPage);
+    }
+  }, [loadingMore, loading, hasMore, page, loadOrders]);
 
   useEffect(() => {
     loadOrders();
@@ -687,6 +767,30 @@ export const OrdersManagementScreen: React.FC = () => {
           }}
           renderItem={renderItem}
           contentContainerStyle={styles.list}
+          onEndReached={loadMoreOrders}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            loadingMore ? (
+              <View style={{ padding: 20, alignItems: "center" }}>
+                <ActivityIndicator size="small" color={colors.belandOrange} />
+                <Text
+                  style={{
+                    marginTop: 8,
+                    color: colors.textSecondary,
+                    fontSize: 12,
+                  }}
+                >
+                  Cargando más órdenes...
+                </Text>
+              </View>
+            ) : !hasMore && orders.length > 0 ? (
+              <View style={{ padding: 20, alignItems: "center" }}>
+                <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
+                  No hay más órdenes
+                </Text>
+              </View>
+            ) : null
+          }
           refreshControl={
             <RefreshControl
               refreshing={refreshing}

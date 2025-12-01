@@ -559,30 +559,68 @@ export class AdminApiService extends CoreApiService {
   // =================== DASHBOARD METRICS ===================
   async getDashboardMetrics(): Promise<DashboardMetrics> {
     try {
-      // Consultar la primera página solo para obtener el total de cada entidad
-      const [usersResp, productsResp, eventsResp, ordersResp, orgsResp] =
-        await Promise.all([
-          this.getUsers(1, 1),
-          this.getProducts(1, 1),
-          this.getEventPasses(1, 1),
-          this.getOrders(1, 1),
-          this.getOrganizations(1, 1),
-        ]);
-
+      // Cargar métricas de forma más robusta y con manejo de errores individual
       const metrics: DashboardMetrics = {
-        totalUsers: usersResp.total || 0,
-        totalProducts: productsResp.total || 0,
-        totalEvents: eventsResp.total || 0,
-        totalOrders: ordersResp.total || 0,
-        totalOrganizations: Array.isArray(orgsResp) ? orgsResp.length : 0,
-        revenueThisMonth: 0, // This needs backend calculation
-        activeEvents: 0, // This needs backend calculation
+        totalUsers: 0,
+        totalProducts: 0,
+        totalEvents: 0,
+        totalOrders: 0,
+        totalOrganizations: 0,
+        revenueThisMonth: 0,
+        activeEvents: 0,
       };
+
+      // Cargar cada métrica individualmente para evitar que un error afecte a todas
+      try {
+        const usersResp = await this.getUsers(1, 1);
+        metrics.totalUsers = usersResp.total || 0;
+      } catch (error) {
+        console.warn("Error loading users metrics:", error);
+      }
+
+      try {
+        const productsResp = await this.getProducts(1, 1);
+        metrics.totalProducts = productsResp.total || 0;
+      } catch (error) {
+        console.warn("Error loading products metrics:", error);
+      }
+
+      try {
+        const eventsResp = await this.getEventPasses(1, 1);
+        metrics.totalEvents = eventsResp.total || 0;
+      } catch (error) {
+        console.warn("Error loading events metrics:", error);
+      }
+
+      try {
+        const ordersResp = await this.getOrders(1, 1);
+        metrics.totalOrders = ordersResp.total || 0;
+      } catch (error) {
+        console.warn("Error loading orders metrics:", error);
+      }
+
+      try {
+        const orgsResp = await this.getOrganizations(1, 1);
+        metrics.totalOrganizations = Array.isArray(orgsResp)
+          ? orgsResp.length
+          : 0;
+      } catch (error) {
+        console.warn("Error loading organizations metrics:", error);
+      }
 
       return metrics;
     } catch (error: any) {
       console.error("Error fetching dashboard metrics:", error);
-      throw new Error("Error fetching dashboard metrics");
+      // Retornar métricas vacías en lugar de fallar completamente
+      return {
+        totalUsers: 0,
+        totalProducts: 0,
+        totalEvents: 0,
+        totalOrders: 0,
+        totalOrganizations: 0,
+        revenueThisMonth: 0,
+        activeEvents: 0,
+      };
     }
   }
 }
