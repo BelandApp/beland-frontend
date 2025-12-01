@@ -7,10 +7,12 @@ import {
   ActivityIndicator,
   StyleSheet,
   RefreshControl,
+  ScrollView,
+  TextInput,
 } from "react-native";
 import { useNotify } from "src/hooks";
 import { useOrderSocket } from "src/hooks/useOrderSocket";
-import { OrderService } from "@services/core";
+import { OrderService, DeliveryStatus } from "@services/core";
 import { Order as ApiOrder } from "@services/OrderApiService";
 import { ThemedHeader } from "src/components/shared/headers/Header";
 import { useAuth } from "src/context";
@@ -183,15 +185,270 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: "center",
   },
+  filtersContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e9ecef",
+  },
+  filterButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.belandOrange,
+  },
+  filterButtonText: {
+    marginLeft: 6,
+    color: colors.belandOrange,
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  filterBadge: {
+    marginLeft: 6,
+    backgroundColor: colors.belandOrange,
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  filterBadgeText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "bold",
+  },
+  clearFilterButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+  },
+  clearFilterText: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    marginRight: 4,
+  },
+  filtersPanel: {
+    backgroundColor: "#fff",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e9ecef",
+  },
+  filterSection: {
+    marginBottom: 20,
+  },
+  filterLabelWithIcon: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 12,
+  },
+  filterLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.textPrimary,
+  },
+  statusFilters: {
+    flexDirection: "row",
+  },
+  sortButtons: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  sortButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#e9ecef",
+    backgroundColor: "#f8f9fa",
+    gap: 6,
+  },
+  sortButtonActive: {
+    backgroundColor: colors.belandOrange,
+    borderColor: colors.belandOrange,
+  },
+  sortButtonText: {
+    fontSize: 13,
+    color: colors.textPrimary,
+    fontWeight: "500",
+  },
+  sortButtonTextActive: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  priceRangeContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  priceInputWrapper: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  inputIcon: {
+    marginRight: 8,
+  },
+  priceInput: {
+    flex: 1,
+    fontSize: 14,
+    color: colors.textPrimary,
+    padding: 0,
+  },
+  dateRangeContainer: {
+    flexDirection: "column",
+    gap: 12,
+  },
+  dateInputWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  dateInput: {
+    flex: 1,
+    fontSize: 14,
+    color: colors.textPrimary,
+    padding: 0,
+  },
+  statusFilterChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: "#f8f9fa",
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: "#e9ecef",
+  },
+  statusFilterChipActive: {
+    backgroundColor: colors.belandOrange,
+    borderColor: colors.belandOrange,
+  },
+  statusFilterText: {
+    fontSize: 13,
+    color: colors.textPrimary,
+    fontWeight: "500",
+  },
+  statusFilterTextActive: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  paginationContainer: {
+    backgroundColor: "#fff",
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#e9ecef",
+    alignItems: "center",
+  },
+  paginationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    marginBottom: 8,
+  },
+  paginationButton: {
+    padding: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.belandOrange,
+    marginHorizontal: 8,
+  },
+  paginationButtonDisabled: {
+    borderColor: "#ccc",
+    opacity: 0.5,
+  },
+  paginationNumbers: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    flex: 1,
+  },
+  paginationNumberButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginHorizontal: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#e9ecef",
+    minWidth: 36,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  paginationNumberButtonActive: {
+    backgroundColor: colors.belandOrange,
+    borderColor: colors.belandOrange,
+  },
+  paginationNumberText: {
+    fontSize: 14,
+    color: colors.textPrimary,
+    fontWeight: "500",
+  },
+  paginationNumberTextActive: {
+    color: "#fff",
+    fontWeight: "700",
+  },
+  paginationInfo: {
+    marginTop: 8,
+    fontSize: 12,
+    color: colors.textSecondary,
+    textAlign: "center",
+  },
 });
+
+// Tipo para los estados de delivery ya está en OrderApiService
 
 export const OrdersManagementScreen: React.FC = () => {
   const [orders, setOrders] = useState<ApiOrder[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [refreshing, setRefreshing] = useState<boolean>(false);
-  const [loadingMore, setLoadingMore] = useState<boolean>(false);
-  const [hasMore, setHasMore] = useState<boolean>(true);
   const [page, setPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [totalOrders, setTotalOrders] = useState<number>(0);
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [minPrice, setMinPrice] = useState<string>("");
+  const [maxPrice, setMaxPrice] = useState<string>("");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+  const [showFilters, setShowFilters] = useState<boolean>(false);
+  const [deliveryStatuses, setDeliveryStatuses] = useState<DeliveryStatus[]>(
+    []
+  );
+  const [statusCodeToIdMap, setStatusCodeToIdMap] = useState<
+    Record<string, string>
+  >({});
   const [verificationModalVisible, setVerificationModalVisible] =
     useState(false);
   const [pendingDeliveryOrderId, setPendingDeliveryOrderId] = useState<
@@ -202,154 +459,163 @@ export const OrdersManagementScreen: React.FC = () => {
   const { user } = useAuth();
   const { navigate } = useCustomNavigation();
   const notify = useNotify();
-
-  // Cache para evitar recargar órdenes ya obtenidas
-  const ordersCache = React.useRef<Map<string, ApiOrder>>(new Map());
-  const abortControllerRef = React.useRef<AbortController | null>(null);
-
-  const loadOrders = useCallback(async (isRefresh = false, pageNum = 1) => {
-    // Cancelar petición anterior si existe
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-
-    abortControllerRef.current = new AbortController();
-
-    if (isRefresh) {
-      setRefreshing(true);
-      setPage(1);
-      setHasMore(true);
-      ordersCache.current.clear(); // Limpiar cache al refrescar
-    } else if (pageNum === 1) {
-      setLoading(true);
-    } else {
-      setLoadingMore(true);
-    }
-
-    try {
-      // Traer órdenes (sin filtro para admin)
-      // OPTIMIZACIÓN: Reducir límite a 10 para cargar más rápido
-      const res = await OrderService.getOrders({ page: pageNum, limit: 10 });
-
-      // Map several possible response shapes into an array of orders:
-      let data: any[] = [];
-
-      if (Array.isArray(res)) {
-        if (res.length > 0 && Array.isArray(res[0])) {
-          data = res[0];
-        } else {
-          data = res as any[];
-        }
-      } else if (res && typeof res === "object") {
-        if (Array.isArray((res as any).data)) {
-          data = (res as any).data;
-        } else if (
-          (res as any).data &&
-          (res as any).data.data &&
-          Array.isArray((res as any).data.data)
-        ) {
-          data = (res as any).data.data;
-        } else if (Array.isArray((res as any).orders)) {
-          data = (res as any).orders;
-        } else {
-          const found = Object.values(res).find((v) => Array.isArray(v));
-          if (found) data = found as any[];
-        }
-      }
-
-      // Cargar detalles completos de cada orden para obtener user y address
-      // OPTIMIZACIÓN: Usar cache y cargar solo órdenes no cacheadas
-      if (data && data.length > 0) {
-        setHasMore(data.length >= 10); // Si trajo menos de 10, no hay más
-
-        const BATCH_SIZE = 3; // Reducir a 3 para ser más conservador
-        const ordersWithDetails: any[] = [];
-        const uncachedOrders = data.filter(
-          (order) => !ordersCache.current.has(order.id)
-        );
-
-        // Cargar solo las órdenes no cacheadas
-        for (let i = 0; i < uncachedOrders.length; i += BATCH_SIZE) {
-          // Verificar si fue cancelado
-          if (abortControllerRef.current?.signal.aborted) {
-            console.log("Load orders aborted");
-            return;
-          }
-
-          const batch = uncachedOrders.slice(i, i + BATCH_SIZE);
-
-          const batchResults = await Promise.all(
-            batch.map(async (order) => {
-              try {
-                // Timeout de 5 segundos por petición
-                const timeoutPromise = new Promise((_, reject) =>
-                  setTimeout(() => reject(new Error("Timeout")), 5000)
-                );
-
-                const fullOrder = (await Promise.race([
-                  OrderService.getOrder(order.id),
-                  timeoutPromise,
-                ])) as ApiOrder;
-
-                // Guardar en cache
-                ordersCache.current.set(order.id, fullOrder);
-                return fullOrder;
-              } catch (err) {
-                console.error(
-                  `Failed to load details for order ${order.id}:`,
-                  err
-                );
-                // Usar datos básicos si falla
-                return order;
-              }
-            })
-          );
-
-          ordersWithDetails.push(...batchResults);
-
-          // Pausa entre lotes para no saturar el servidor
-          if (i + BATCH_SIZE < uncachedOrders.length) {
-            await new Promise((resolve) => setTimeout(resolve, 150));
-          }
-        }
-
-        // Combinar órdenes cacheadas con las nuevas
-        const allOrders = data.map(
-          (order) => ordersCache.current.get(order.id) || order
-        );
-
-        // Si es página 1 o refresh, reemplazar. Si es paginación, agregar
-        if (isRefresh || pageNum === 1) {
-          setOrders([...allOrders] as ApiOrder[]);
-        } else {
-          setOrders((prev) => [...prev, ...allOrders] as ApiOrder[]);
-        }
+  const loadOrders = useCallback(
+    async (
+      isRefresh = false,
+      pageNum = 1,
+      statusId = "",
+      minTotal = "",
+      maxTotal = "",
+      fechaDesde = "",
+      fechaHasta = ""
+    ) => {
+      if (isRefresh) {
+        setRefreshing(true);
+        setPage(1);
       } else {
-        setHasMore(false);
-        if (isRefresh || pageNum === 1) {
-          setOrders([]);
-        }
+        setLoading(true);
       }
-    } catch (err) {
-      console.error("OrdersManagement: error loading orders", err);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-      setLoadingMore(false);
-    }
+
+      try {
+        // Construir parámetros según el backend espera
+        const queryParams: any = { page: pageNum, limit: 5 };
+
+        if (statusId) {
+          queryParams.status_id = statusId;
+        }
+        if (minTotal) {
+          queryParams.min_total = parseFloat(minTotal);
+        }
+        if (maxTotal) {
+          queryParams.max_total = parseFloat(maxTotal);
+        }
+        if (fechaDesde) {
+          queryParams.fecha_desde = new Date(fechaDesde).toISOString();
+        }
+        if (fechaHasta) {
+          queryParams.fecha_hasta = new Date(fechaHasta).toISOString();
+        }
+
+        console.log(
+          "📋 Cargando órdenes - Página:",
+          pageNum,
+          "Filtros:",
+          queryParams
+        );
+        const res = await OrderService.getOrders(queryParams);
+
+        // Map several possible response shapes into an array of orders:
+        let data: any[] = [];
+        let total = 0;
+
+        if (Array.isArray(res)) {
+          if (res.length > 0 && Array.isArray(res[0])) {
+            data = res[0];
+            total = res[1] || data.length;
+          } else {
+            data = res as any[];
+            total = data.length;
+          }
+        } else if (res && typeof res === "object") {
+          if (Array.isArray((res as any).data)) {
+            data = (res as any).data;
+            total = (res as any).total || data.length;
+          } else if (
+            (res as any).data &&
+            (res as any).data.data &&
+            Array.isArray((res as any).data.data)
+          ) {
+            data = (res as any).data.data;
+            total = (res as any).data.total || data.length;
+          } else if (Array.isArray((res as any).orders)) {
+            data = (res as any).orders;
+            total = (res as any).total || data.length;
+          } else {
+            const found = Object.values(res).find((v) => Array.isArray(v));
+            if (found) {
+              data = found as any[];
+              total = data.length;
+            }
+          }
+        }
+
+        // Calcular total de páginas
+        const calculatedTotalPages = Math.ceil(total / 5) || 1;
+        setTotalPages(calculatedTotalPages);
+        setTotalOrders(total);
+
+        // Log para verificar si las órdenes incluyen las relaciones necesarias
+        console.log(
+          "📦 Órdenes recibidas:",
+          data.length,
+          "- Total:",
+          total,
+          "- Páginas:",
+          calculatedTotalPages
+        );
+        console.log("🔍 Primera orden tiene user?", !!data[0]?.user);
+        console.log("🔍 Primera orden tiene address?", !!data[0]?.address);
+        console.log("🔍 Primera orden tiene items?", !!data[0]?.items);
+
+        setOrders([...data] as ApiOrder[]);
+      } catch (err) {
+        console.error("OrdersManagement: error loading orders", err);
+        setOrders([]);
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    []
+  );
+
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      if (newPage >= 1 && newPage <= totalPages && newPage !== page) {
+        setPage(newPage);
+        loadOrders(false, newPage, statusFilter);
+      }
+    },
+    [totalPages, page, loadOrders, statusFilter]
+  );
+
+  // Cargar estados de delivery al montar el componente
+  useEffect(() => {
+    const loadDeliveryStatuses = async () => {
+      try {
+        const statuses = await OrderService.getDeliveryStatuses();
+        setDeliveryStatuses(statuses);
+
+        // Crear mapa de código -> ID para filtrar
+        const codeToIdMap: Record<string, string> = {};
+        statuses.forEach((status) => {
+          codeToIdMap[status.code] = status.id;
+        });
+        setStatusCodeToIdMap(codeToIdMap);
+
+        console.log("📊 Estados de delivery cargados:", statuses);
+        console.log("🗺️ Mapa código->ID:", codeToIdMap);
+      } catch (error) {
+        console.error("Error cargando estados de delivery:", error);
+      }
+    };
+
+    loadDeliveryStatuses();
   }, []);
 
-  const loadMoreOrders = useCallback(() => {
-    if (!loadingMore && !loading && hasMore) {
-      const nextPage = page + 1;
-      setPage(nextPage);
-      loadOrders(false, nextPage);
-    }
-  }, [loadingMore, loading, hasMore, page, loadOrders]);
-
   useEffect(() => {
-    loadOrders();
-  }, [loadOrders]);
+    // Convertir código de estado a ID antes de filtrar
+    const statusId = statusFilter ? statusCodeToIdMap[statusFilter] || "" : "";
+    loadOrders(false, page, statusId, minPrice, maxPrice, dateFrom, dateTo);
+  }, [
+    statusFilter,
+    minPrice,
+    maxPrice,
+    dateFrom,
+    dateTo,
+    page,
+    statusCodeToIdMap,
+  ]); // Recargar cuando cambie cualquier filtro o la página
 
   // Recargar órdenes cuando se cree o actualice una orden (el socket global maneja las notificaciones)
   useOrderSocket(() => {
@@ -424,13 +690,11 @@ export const OrdersManagementScreen: React.FC = () => {
   const renderItem = ({ item }: { item: ApiOrder }) => {
     // Mapeo defensivo de datos según la estructura real del backend
     const orderId = item?.id || "";
-    const shortId = orderId
-      ? String(orderId).substring(0, 8).toUpperCase()
-      : "---";
 
-    // Usar los primeros 8 caracteres del UUID como identificador
-    // NOTA: code es el código de confirmación de 4 dígitos, NO el ID de la orden
-    const orderNumber = `#${shortId}`;
+    // Usar order_number con formato profesional
+    const orderNumber = item?.order_number
+      ? `BL-${String(item.order_number).padStart(6, "0")}`
+      : `#${String(orderId).substring(0, 8).toUpperCase()}`;
 
     const createdAt = item?.created_at ? new Date(item.created_at) : null;
 
@@ -734,6 +998,206 @@ export const OrdersManagementScreen: React.FC = () => {
         }
       />
 
+      {/* Filtros */}
+      <View style={styles.filtersContainer}>
+        <TouchableOpacity
+          style={styles.filterButton}
+          onPress={() => setShowFilters(!showFilters)}
+        >
+          <MaterialCommunityIcons
+            name="filter-variant"
+            size={20}
+            color={colors.belandOrange}
+          />
+          <Text style={styles.filterButtonText}>Filtros</Text>
+          {(statusFilter || minPrice || maxPrice || dateFrom || dateTo) && (
+            <View style={styles.filterBadge}>
+              <Text style={styles.filterBadgeText}>
+                {
+                  [statusFilter, minPrice, maxPrice, dateFrom, dateTo].filter(
+                    Boolean
+                  ).length
+                }
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+
+        {(statusFilter || minPrice || maxPrice || dateFrom || dateTo) && (
+          <TouchableOpacity
+            style={styles.clearFilterButton}
+            onPress={() => {
+              setStatusFilter("");
+              setMinPrice("");
+              setMaxPrice("");
+              setDateFrom("");
+              setDateTo("");
+              setPage(1);
+            }}
+          >
+            <Text style={styles.clearFilterText}>Limpiar filtros</Text>
+            <MaterialCommunityIcons
+              name="close"
+              size={16}
+              color={colors.textSecondary}
+            />
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {showFilters && (
+        <View style={styles.filtersPanel}>
+          {/* Filtro de Estado */}
+          <View style={styles.filterSection}>
+            <Text style={styles.filterLabel}>Estado:</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.statusFilters}
+            >
+              {[
+                { value: "", label: "Todos" },
+                { value: "PENDING", label: "Pendiente" },
+                { value: "PREPARING", label: "En preparación" },
+                { value: "ON_ROUTE", label: "En camino" },
+                { value: "DELIVERED", label: "Entregado" },
+                { value: "CANCELLED", label: "Cancelada" },
+              ].map((item) => (
+                <TouchableOpacity
+                  key={item.value}
+                  style={[
+                    styles.statusFilterChip,
+                    statusFilter === item.value &&
+                      styles.statusFilterChipActive,
+                  ]}
+                  onPress={() => {
+                    setStatusFilter(item.value);
+                    setPage(1);
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.statusFilterText,
+                      statusFilter === item.value &&
+                        styles.statusFilterTextActive,
+                    ]}
+                  >
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
+          {/* Filtro de Precio - Rango */}
+          <View style={styles.filterSection}>
+            <View style={styles.filterLabelWithIcon}>
+              <MaterialCommunityIcons
+                name="currency-usd"
+                size={16}
+                color={colors.belandOrange}
+              />
+              <Text style={styles.filterLabel}>Rango de precio (BeCoins)</Text>
+            </View>
+            <View style={styles.priceRangeContainer}>
+              <View style={styles.priceInputWrapper}>
+                <MaterialCommunityIcons
+                  name="chevron-down"
+                  size={14}
+                  color={colors.textSecondary}
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  style={styles.priceInput}
+                  keyboardType="numeric"
+                  placeholder="Mínimo"
+                  placeholderTextColor="#999"
+                  value={minPrice}
+                  onChangeText={(text) => {
+                    setMinPrice(text);
+                    setPage(1);
+                  }}
+                />
+              </View>
+              <MaterialCommunityIcons
+                name="arrow-right"
+                size={16}
+                color={colors.textSecondary}
+              />
+              <View style={styles.priceInputWrapper}>
+                <MaterialCommunityIcons
+                  name="chevron-up"
+                  size={14}
+                  color={colors.textSecondary}
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  style={styles.priceInput}
+                  keyboardType="numeric"
+                  placeholder="Máximo"
+                  placeholderTextColor="#999"
+                  value={maxPrice}
+                  onChangeText={(text) => {
+                    setMaxPrice(text);
+                    setPage(1);
+                  }}
+                />
+              </View>
+            </View>
+          </View>
+
+          {/* Filtro de Fecha - Rango */}
+          <View style={styles.filterSection}>
+            <View style={styles.filterLabelWithIcon}>
+              <MaterialCommunityIcons
+                name="calendar-range"
+                size={16}
+                color={colors.belandOrange}
+              />
+              <Text style={styles.filterLabel}>Rango de fechas</Text>
+            </View>
+            <View style={styles.dateRangeContainer}>
+              <View style={styles.dateInputWrapper}>
+                <MaterialCommunityIcons
+                  name="calendar-start"
+                  size={16}
+                  color={colors.textSecondary}
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  style={styles.dateInput}
+                  placeholder="Desde (AAAA-MM-DD)"
+                  placeholderTextColor="#999"
+                  value={dateFrom}
+                  onChangeText={(text) => {
+                    setDateFrom(text);
+                    setPage(1);
+                  }}
+                />
+              </View>
+              <View style={styles.dateInputWrapper}>
+                <MaterialCommunityIcons
+                  name="calendar-end"
+                  size={16}
+                  color={colors.textSecondary}
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  style={styles.dateInput}
+                  placeholder="Hasta (AAAA-MM-DD)"
+                  placeholderTextColor="#999"
+                  value={dateTo}
+                  onChangeText={(text) => {
+                    setDateTo(text);
+                    setPage(1);
+                  }}
+                />
+              </View>
+            </View>
+          </View>
+        </View>
+      )}
+
       {loading ? (
         <View
           style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
@@ -754,52 +1218,111 @@ export const OrdersManagementScreen: React.FC = () => {
           </Text>
         </View>
       ) : (
-        <FlatList
-          data={orders}
-          extraData={orders}
-          keyExtractor={(o, idx) => {
-            // Incluir el status en el key para forzar re-render cuando cambie
-            const status =
-              typeof o?.status === "object"
-                ? (o.status as any)?.code
-                : o?.status;
-            return `${o?.id || idx}-${status || "unknown"}`;
-          }}
-          renderItem={renderItem}
-          contentContainerStyle={styles.list}
-          onEndReached={loadMoreOrders}
-          onEndReachedThreshold={0.5}
-          ListFooterComponent={
-            loadingMore ? (
-              <View style={{ padding: 20, alignItems: "center" }}>
-                <ActivityIndicator size="small" color={colors.belandOrange} />
-                <Text
-                  style={{
-                    marginTop: 8,
-                    color: colors.textSecondary,
-                    fontSize: 12,
-                  }}
+        <>
+          <FlatList
+            data={orders}
+            extraData={orders}
+            keyExtractor={(o, idx) => {
+              // Incluir el status en el key para forzar re-render cuando cambie
+              const status =
+                typeof o?.status === "object"
+                  ? (o.status as any)?.code
+                  : o?.status;
+              return `${o?.id || idx}-${status || "unknown"}`;
+            }}
+            renderItem={renderItem}
+            contentContainerStyle={styles.list}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={() =>
+                  loadOrders(
+                    true,
+                    1,
+                    statusFilter,
+                    minPrice,
+                    maxPrice,
+                    dateFrom,
+                    dateTo
+                  )
+                }
+                colors={[colors.belandOrange]}
+                tintColor={colors.belandOrange}
+              />
+            }
+          />
+
+          {/* Paginación */}
+          {totalPages > 1 && (
+            <View style={styles.paginationContainer}>
+              <View style={styles.paginationRow}>
+                <TouchableOpacity
+                  style={[
+                    styles.paginationButton,
+                    page === 1 && styles.paginationButtonDisabled,
+                  ]}
+                  onPress={() => handlePageChange(page - 1)}
+                  disabled={page === 1}
                 >
-                  Cargando más órdenes...
-                </Text>
+                  <MaterialCommunityIcons
+                    name="chevron-left"
+                    size={24}
+                    color={page === 1 ? "#ccc" : colors.belandOrange}
+                  />
+                </TouchableOpacity>
+
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.paginationNumbers}
+                >
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (pageNum) => (
+                      <TouchableOpacity
+                        key={pageNum}
+                        style={[
+                          styles.paginationNumberButton,
+                          page === pageNum &&
+                            styles.paginationNumberButtonActive,
+                        ]}
+                        onPress={() => handlePageChange(pageNum)}
+                      >
+                        <Text
+                          style={[
+                            styles.paginationNumberText,
+                            page === pageNum &&
+                              styles.paginationNumberTextActive,
+                          ]}
+                        >
+                          {pageNum}
+                        </Text>
+                      </TouchableOpacity>
+                    )
+                  )}
+                </ScrollView>
+
+                <TouchableOpacity
+                  style={[
+                    styles.paginationButton,
+                    page === totalPages && styles.paginationButtonDisabled,
+                  ]}
+                  onPress={() => handlePageChange(page + 1)}
+                  disabled={page === totalPages}
+                >
+                  <MaterialCommunityIcons
+                    name="chevron-right"
+                    size={24}
+                    color={page === totalPages ? "#ccc" : colors.belandOrange}
+                  />
+                </TouchableOpacity>
               </View>
-            ) : !hasMore && orders.length > 0 ? (
-              <View style={{ padding: 20, alignItems: "center" }}>
-                <Text style={{ color: colors.textSecondary, fontSize: 12 }}>
-                  No hay más órdenes
-                </Text>
-              </View>
-            ) : null
-          }
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={() => loadOrders(true)}
-              colors={[colors.belandOrange]}
-              tintColor={colors.belandOrange}
-            />
-          }
-        />
+
+              <Text style={styles.paginationInfo}>
+                Página {page} de {totalPages} ({totalOrders} órdenes)
+              </Text>
+            </View>
+          )}
+        </>
       )}
 
       {/* Verification Code Modal */}
