@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useValidation } from "src/hooks/form/useValidation";
+import { useUserValidation } from "@/hooks";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { RegisterFormData } from "../RegisterScreen";
 import { authService, getBackendErrorMessage } from "src/services";
@@ -10,7 +10,7 @@ export const useRegister = () => {
   const [step, setStep] = useState<"register" | "code">("register");
   const [isLoading, setIsLoading] = useState(false);
   const { navigate } = useCustomNavigation();
-  const { validateForm, errors } = useValidation();
+  const { validateForm, errors } = useUserValidation();
   const {loginWithEmail} =useAuth()
   const [FormData, setFormData] = useState<RegisterFormData>({
     full_name: "",

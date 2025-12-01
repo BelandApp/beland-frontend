@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, StyleSheet, Image } from "react-native";
 import { useAuth } from "src/context";
-import { useBeCoinsStore } from "src/stores/useBeCoinsStore";
+import { useBeCoinsStore } from "src/stores";
 import { useUserBalance } from "src/hooks/useUserBalance";
 import { useBeCoinsPrice } from "src/hooks/useBeCoinsPrice";
 import DashboardWrapper from "../DashboardWrapper";
@@ -107,7 +107,7 @@ export const UserPanel: React.FC = () => {
 
   const parsedUserBalance =
     Number((user as any)?.current_balance ?? (user as any)?.coins ?? 0) || 0;
-  const storeBalanceNum = Number(globalBeCoinsBalance ?? 0) || 0;
+  const storeBalanceNum = Number(balance ?? 0) || 0;
   const beCoinsToShow =
     storeBalanceNum > 0 ? storeBalanceNum : parsedUserBalance;
 

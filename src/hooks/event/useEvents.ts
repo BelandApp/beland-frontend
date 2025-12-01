@@ -1,13 +1,18 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { eventsService } from "src/services/events";
 import { useAuth } from "src/context";
-import { useEventStore, Event } from "src/stores/Event";
+import { eventStore, Event } from "@/stores";
 
 export const useEvents = () => {
   const { isAuthenticated, user } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { setAvailableEvents, setAcquiredEvents, availableEvents, acquiredEvents } = useEventStore();
+  const {
+    setAvailableEvents,
+    setAcquiredEvents,
+    availableEvents,
+    acquiredEvents,
+  } = eventStore();
   const fetchEvents = useCallback(async () => {
     try {
       setIsLoading(true);

@@ -11,7 +11,7 @@ import { colors } from "src/styles";
 import { CountdownTimer } from "./components/CountdownTimer";
 import { UseTicketButton } from "./components/UseTicketButton";
 import { EventMap } from "./components/EventMap";
-import { useEventStore } from "@stores/Event";
+import { eventStore } from "@/stores";
 import { ThemedHeader } from "@components/shared";
 import { OpenInGoogleMaps } from "./components/OpenInGoogleMaps";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
@@ -19,7 +19,7 @@ import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 export const UseEventScreen = ({ route }: { route: any }) => {
   const { id } = route.params;
-  const { getAcquiredEvent } = useEventStore();
+  const { getAcquiredEvent } = eventStore();
   const event = getAcquiredEvent(id);
   if (!event) return null;
   const {

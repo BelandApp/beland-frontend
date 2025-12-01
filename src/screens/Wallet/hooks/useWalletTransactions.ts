@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { WalletService } from "@services/core";
 import { Transaction } from "../types";
-import { convertBackendTransactionAmount } from "../../../utils/balanceConverter";
+import { getBackendErrorMessage } from "src/services";
+import { notify } from "src/hooks/notification/notify.external";
 
 // Función para mapear transacciones del backend al formato del frontend
 const mapBackendTransactionToFrontend = (
@@ -130,7 +131,6 @@ export const useWalletTransactions = () => {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [walletId, setWalletId] = useState<string | null>(null);
 
   // Obtener el wallet_id del usuario actual
@@ -154,40 +154,25 @@ export const useWalletTransactions = () => {
   const fetchTransactions = async () => {
     if (!walletId) return;
     setIsLoading(true);
-    setError(null);
-
     try {
-      // Determinar si usar modo demo o producción
-      const isDemoMode = process.env.EXPO_PUBLIC_USE_DEMO_MODE === "true";
+      const response = await WalletService.getTransactions(1, 20, walletId);
 
-      if (!isDemoMode) {
-        try {
-          const response = await WalletService.getTransactions(1, 20, walletId);
+      // La respuesta viene en formato [transacciones[], total]
+      const transactionsData = Array.isArray(response[0])
+        ? response[0]
+        : response;
 
-          // La respuesta viene en formato [transacciones[], total]
-          const transactionsData = Array.isArray(response[0])
-            ? response[0]
-            : response;
+      // Mapear transacciones del backend al formato del frontend
+      const mappedTransactions = transactionsData.map(
+        mapBackendTransactionToFrontend
+      );
 
-          // Mapear transacciones del backend al formato del frontend
-          const mappedTransactions = transactionsData.map(
-            mapBackendTransactionToFrontend
-          );
+      setTransactions(mappedTransactions);
 
-          setTransactions(mappedTransactions);
-        } catch (apiError: any) {
-          console.warn("API no disponible, usando modo demo:", apiError);
-
-          // Si hay error de red, usar datos mock como fallback
-        }
-      } else {
-        // Modo demo: usar datos mock
-        console.log("📝 Usando transacciones mock (modo demo)");
-        setTransactions([]);
-      }
+      // Si hay error de red, usar datos mock como fallback
     } catch (err: any) {
-      console.error("Error fetching transactions:", err);
-      setError(err.message || "Error al cargar transacciones");
+      const message = getBackendErrorMessage(err);
+      notify.error({ message });
     } finally {
       setIsLoading(false);
     }
@@ -204,7 +189,6 @@ export const useWalletTransactions = () => {
   return {
     transactions,
     isLoading,
-    error,
     refetch: refetchTransactions,
   };
 };

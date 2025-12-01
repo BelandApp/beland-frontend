@@ -12,7 +12,7 @@ interface NotificationConfirm extends NotificationBase {
 
 export type Notification =
   | (NotificationBase & { type: "success" | "error" | "info" })
-  | (NotificationConfirm & { type: "confirm" });
+  | (NotificationConfirm & { type: "confirm" | "cartItem" });
 
 interface NotificationStore {
   current?: Notification;

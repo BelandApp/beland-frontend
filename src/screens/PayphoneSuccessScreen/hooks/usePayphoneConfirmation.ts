@@ -85,10 +85,7 @@ export function usePayphoneConfirmation() {
         // 3. Obtener wallet del usuario
         let walletId;
         try {
-          const wallet = await WalletService.getWalletByUserId(
-            user.email,
-            user.id
-          );
+          const wallet = await WalletService.getCurrentUserWallet();
           walletId = wallet?.id;
         } catch (e) {
           setStatus(STATUS_MESSAGES.REJECTED_OR_CANCELLED);

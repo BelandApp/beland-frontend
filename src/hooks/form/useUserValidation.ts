@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export const useValidation = () => {
+export const useUserValidation = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isValid, setIsValid] = useState(true);
 
@@ -18,13 +18,13 @@ export const useValidation = () => {
       password
     );
 
-  /** Número de teléfono: validación con prefijo */ 
+  /** Número de teléfono: validación con prefijo */
   const validatePhone = (phone: string) =>
     /^\+[1-9]\d{7,14}$/.test(phone.replace(/\s+/g, ""));
 
-
   // Codigo de verificacion enviado al mail
-  const validateCode = (code: string) => /^\d{6}$/.test(code.replace(/\s+/g, ""));
+  const validateCode = (code: string) =>
+    /^\d{6}$/.test(code.replace(/\s+/g, ""));
 
   /** Validación genérica de formulario */
   const validateForm = (data: {
@@ -47,7 +47,7 @@ export const useValidation = () => {
     if (data.password !== undefined && !validatePassword(data.password))
       newErrors.password =
         "La contraseña debe tener al menos 6 caracteres, una mayúscula, una minúscula y un símbolo.";
-    if(data.code !== undefined && !validateCode(data.code))
+    if (data.code !== undefined && !validateCode(data.code))
       newErrors.code = "El código debe tener 6 dígitos.";
     setErrors(newErrors);
     const valid = Object.keys(newErrors).length === 0;

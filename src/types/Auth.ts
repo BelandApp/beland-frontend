@@ -1,9 +1,11 @@
+import { RegisterFormData } from "src/screens/Register/RegisterScreen";
+
 export type ResetPasswordStepProps = {
   onSubmit: (email: string) => void;
   isLoading?: boolean;
 };
 export interface CodeStepProps extends ResetPasswordStepProps {
-  FormData: FormCodeCheck;
+  FormData: RegisterFormData;
   onStepBack: () => void;
   onResendCode: () => void;
 }

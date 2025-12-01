@@ -1,8 +1,7 @@
-import React, { useRef, useState, useEffect, useMemo } from "react";
-import { ActivityIndicator, Platform } from "react-native";
-import { useBeCoinsStoreHydration } from "./src/stores/useBeCoinsStore";
+import React, { useRef, useState, useEffect } from "react";
+import { Platform } from "react-native";
 
-import { View, StyleSheet } from "react-native";
+import { View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import * as NavigationBar from "expo-navigation-bar";
 import { setStatusBarHidden } from "expo-status-bar";
@@ -26,12 +25,13 @@ import SocketStatus from "./src/components/SocketStatus";
 import { usePaymentSocket } from "src/hooks/usePaymentSocket";
 import { useOrderSocket } from "src/hooks/useOrderSocket";
 import { colors } from "src/styles";
-import { GlobalNotification } from "src/components/shared/notification/GlobalNotification";
+import { useBeCoinsAutoRefresh } from "src/stores/becoin/useBeCoinsAutoRefresh";
+import { GlobalNotification, toastConfig } from "src/components/shared/notification/GlobalNotification";
+import Toast from "react-native-toast-message";
 
 const AppContent = () => {
-  // Declarar todos los hooks al inicio, sin condicionales
-  const { user, isLoading } = useAuth();
-  const isBeCoinsLoaded = useBeCoinsStoreHydration();
+  const { user } = useAuth();
+  useBeCoinsAutoRefresh();
   const navigationRef =
     useRef<NavigationContainerRef<RootStackParamList>>(null);
   const [currentRoute, setCurrentRoute] = useState<string | undefined>(
@@ -44,7 +44,6 @@ const AppContent = () => {
   useOrderSocket(() => {});
 
   // Padding dinámico para web móvil
-
   useEffect(() => {
     const configureSystemBars = async () => {
       if (Platform.OS === "android") {
@@ -157,7 +156,8 @@ const AppContent = () => {
         linking={linking}
       >
         <RootStackNavigator />
-        <GlobalNotification />
+ 
+        <Toast config={toastConfig} />
         {shouldShowQRButton && <FloatingQRButton onPress={handleQRPress} />}
       </NavigationContainer>
     </View>
@@ -170,7 +170,9 @@ const App = () => {
       <AuthProvider>
         <NotificationProvider>
           {/* <SocketStatus /> */}
+          <Toast config={toastConfig} />
           <AppContent />
+          <GlobalNotification />
           <NotificationBanner />
         </NotificationProvider>
       </AuthProvider>

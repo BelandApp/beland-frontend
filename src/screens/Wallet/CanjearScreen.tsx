@@ -11,7 +11,6 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useAuth } from "src/context";
-import { useBeCoinsStore } from "../../stores/useBeCoinsStore";
 import { convertBeCoinsToUSD, formatUSDPrice } from "../../constants/currency";
 import {
   WithdrawService,
@@ -20,6 +19,7 @@ import {
 import { useWalletData } from "./hooks/useWalletData";
 import { getBackendErrorMessage } from "src/services";
 import { useNotify } from "src/hooks";
+import { useBeCoinsStore } from "src/stores";
 
 const CanjearScreen: React.FC<{
   navigation: any;
@@ -38,15 +38,7 @@ const CanjearScreen: React.FC<{
   );
   const [loadingAccounts, setLoadingAccounts] = useState(true);
   const [showAccountSelector, setShowAccountSelector] = useState(false);
-
-
-  const balance =
-    useBeCoinsStore((state: { balance: number }) => state.balance) ?? 0;
-  const lockedBalance =
-    useBeCoinsStore(
-      (state: { locked_balance: number }) => state.locked_balance
-    ) ?? 0;
-  const spendBeCoins = useBeCoinsStore((state: any) => state.spendBeCoins);
+const {balance,locked_balance, setBalance} = useBeCoinsStore()
   const { refetch } = useWalletData();
 
   // Cargar cuentas de retiro al montar el componente
@@ -131,7 +123,7 @@ const CanjearScreen: React.FC<{
 
       if (response) {
         // Actualizar balance local
-        spendBeCoins(parsedAmount);
+        setBalance(parsedAmount);
 
         // Registrar transacción local (nota: implementar si se requiere registro local)
 
@@ -305,11 +297,11 @@ const CanjearScreen: React.FC<{
           <Text style={styles.balanceAmount}>
             {balance.toLocaleString()} BeCoins
           </Text>
-          {lockedBalance > 0 && (
+          {locked_balance > 0 && (
             <View style={styles.lockedBalanceContainer}>
               <Text style={styles.lockedBalanceLabel}>Balance bloqueado</Text>
               <Text style={styles.lockedBalanceAmount}>
-                {lockedBalance.toLocaleString()} BeCoins
+                {locked_balance.toLocaleString()} BeCoins
               </Text>
             </View>
           )}

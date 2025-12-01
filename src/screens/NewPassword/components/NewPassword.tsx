@@ -3,10 +3,10 @@ import { View, Text } from "react-native";
 import { useState } from "react";
 import { Button } from "@components/shared";
 import { ResetPasswordStepProps } from "src/types";
-import { useValidation } from "src/hooks/form/useValidation";
+import { useUserValidation } from "@/hooks";
 const NewPasswordStep: React.FC<ResetPasswordStepProps> = ({onSubmit}) => {
   const [password, setPassword] = useState("");
-  const { validateForm, errors}=useValidation()
+  const { validateForm, errors } = useUserValidation();
   const handleSubmit = () => {
    const isValid = validateForm({ password });
     if(!isValid) return

@@ -1,9 +1,6 @@
 import React, {
   useEffect,
   useState,
-  useRef,
-  useMemo,
-  useLayoutEffect,
 } from "react";
 import {
   View,
@@ -11,21 +8,13 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  RefreshControl,
 } from "react-native";
 import { BeCoinsBalance, CustomLoader } from "@components/shared";
 
 // Hooks
-import { useCatalogFilters, useCatalogModals } from "./hooks";
-import {
-  useCartSync,
-  useProducts,
-  useCustomNavigation,
-  useNotify,
-} from "@/hooks";
-import { ProductService } from "@/services";
-import { ProductCardType } from "./components/ProductCard";
-import { useAuth } from "@/context";
-
+import { useCatalogCart, useCatalogFilters, useCatalogModals } from "./hooks";
+import { useCustomNavigation, useNotify } from "@/hooks";
 // Components
 import { FilterPanel, ProductGrid } from "./components";
 import { OrderDeliveryModal } from "./components/OrderDeliveryModal";
@@ -33,26 +22,23 @@ import { SearchBarInput } from "@components/shared";
 import { CartBottomSheet } from "./components/CartBottomSheet";
 // Styles
 import { containerStyles, productStyles } from "./styles";
-
-import { useCartStore } from "@/stores/useCartStore";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-// Community Main Component
-import CatalogCommunitySection from "./mainComponents/CatalogCommunitySection";
-import { useGroupedProducts } from "./mainHooks/useGroupedProducts";
 import { ThemedHeader } from "@/components";
+import { useFilteredProducts } from "./mainHooks/useFilteredProducts";
+import { useCategories } from "src/hooks/categories/useCategories";
 
 export const CatalogScreen = () => {
   const { navigate } = useCustomNavigation();
-  const { canPerformAction, handleAuth0Login, isAuthenticated } = useAuth();
-
   const {
-    addProduct: addProductToCart,
-    addProductToServer,
-    products: cartProducts,
-  } = useCartStore();
-
-  // Hook para sincronizar carrito con servidor
-  const { isSyncing, syncError, performCartSync } = useCartSync();
+    handleAddProduct,
+    cartProducts,
+    isAuthenticated,
+    isSyncing,
+    openCart,
+    closeCart,
+    showCart,
+    addingProductId,
+  } = useCatalogCart();
 
   const {
     searchText,
@@ -63,155 +49,19 @@ export const CatalogScreen = () => {
     setShowFilters,
   } = useCatalogFilters();
 
+  const {categories}=useCategories()
+  // TODO para el futuro sortear con marcas
+  const [brands, setBrands] = useState<string[]>([]);
+  const { displayGroups, loading, error, refreshProducts } = useFilteredProducts({
+    filters,
+    searchText,
+    categories,
+  });
   const { showDeliveryModal, openDeliveryModal, closeDeliveryModal } =
     useCatalogModals();
+
   const notify = useNotify();
-  const [showCart, setShowCart] = useState(false);
-  const [addingProductId, setAddingProductId] = useState<string | null>(null);
-  const [allCategories, setAllCategories] = useState<
-    {
-      id: string;
-      name: string;
-    }[]
-  >([]);
 
-  const selectedCategoryId = useMemo(
-    () => allCategories.find((cat) => cat.name === filters.categories[0])?.id,
-    [allCategories, filters.categories]
-  );
-
-  const brands: string[] = [];
-
-  // Guardar el orden inicial de las categorías para evitar reordenamientos
-  // cuando `allCategories` se carga posteriormente (evita flicker)
-  const initialCategoryOrderRef = useRef<string[] | null>(null);
-
-  const { products, loading, error, updateQuery } = useProducts({
-    page: 1,
-    category_id: undefined,
-    name: searchText,
-    sortBy: filters.sortBy || undefined,
-    order: filters.order || undefined,
-  });
-
-  // Memoize product query to avoid triggering updateQuery with equivalent objects
-  const productQuery = useMemo(() => {
-    return {
-      page: 1,
-      limit: 12,
-      name: searchText,
-      category_id: selectedCategoryId || undefined,
-      sortBy: filters.sortBy || undefined,
-      order: filters.order || undefined,
-    };
-  }, [searchText, selectedCategoryId, filters.sortBy, filters.order]);
-
-  // Agrupar productos por categoría para renderizar secciones separadas
-  // Ahora agrupamos por `category_id` (si existe) y resolvemos el nombre usando `allCategories`.
-  // Fallback: usar `product.category` (string) si no hay `category_id`, o 'Sin categoría'.
-  const groupedProducts = useGroupedProducts(products as any[], allCategories);
-
-  const displayGroups = useMemo(() => {
-    if (groupedProducts && groupedProducts.length > 0) {
-      return groupedProducts.map((g) => ({
-        categoryId: g.category_id,
-        category: g.category_name,
-        products: g.products,
-      }));
-    }
-
-    if (products && products.length > 0) {
-      return [
-        {
-          categoryId: "all_products",
-          category: "Todos",
-          products: products as ProductCardType[],
-        },
-      ];
-    }
-
-    return [] as {
-      categoryId: string;
-      category: string;
-      products: ProductCardType[];
-    }[];
-  }, [groupedProducts, products]);
-
-  const lastProductsQueryRef = useRef<string | null>(null);
-  useEffect(() => {
-    const qString = JSON.stringify(productQuery);
-    if (lastProductsQueryRef.current === qString) return;
-    lastProductsQueryRef.current = qString;
-    updateQuery(productQuery);
-  }, [productQuery]);
-
-  useLayoutEffect(() => {
-    // Cargar categorías al montar el componente para tener los nombres listos
-    // antes del primer render y así evitar flicker y mostrar nombres humanos
-    // en lugar de ids si es posible.
-    (async () => {
-      try {
-        const response = await ProductService.getCategories();
-
-        // Manejar diferentes estructuras de respuesta del backend
-        let categoriesArray: any[] = [];
-
-        if (Array.isArray(response)) {
-          categoriesArray = response;
-        } else if (response && typeof response === "object") {
-          // Si es un objeto con data
-          if (Array.isArray(response.data)) {
-            categoriesArray = response.data;
-          } else if (response.data && Array.isArray(response.data.data)) {
-            categoriesArray = response.data.data;
-          } else if (Array.isArray(response.categories)) {
-            categoriesArray = response.categories;
-          }
-        }
-
-        if (categoriesArray.length > 0) {
-          setAllCategories(
-            categoriesArray.map((cat: any) => ({ id: cat.id, name: cat.name }))
-          );
-        }
-      } catch (e: any) {
-        console.error("[CATEGORIAS] Error al cargar categorías:", e);
-        // No hacemos fallback inmediato aquí: si falla el servicio, intentamos
-        // rellenar nombres más tarde a partir de los productos disponibles.
-      }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Si las categorías no vinieron del servicio, generar un fallback a partir
-  // del campo `product.category` cuando los productos estén disponibles.
-  useLayoutEffect(() => {
-    if (allCategories && allCategories.length > 0) return;
-    if (!products || products.length === 0) return;
-
-    const cats = Array.from(
-      new Set((products || []).map((p) => (p as any).category).filter(Boolean))
-    ).map((name) => ({ id: String(name), name: String(name) }));
-
-    if (cats.length > 0) setAllCategories(cats);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [products]);
-
-  const handleAddProduct = async (product: ProductCardType) => {
-    if (!canPerformAction) {
-      notify.confirm({
-        message: "Debes iniciar sesión para agregar productos al carrito",
-        onConfirm: () => handleAuth0Login(),
-        onCancel: () => {},
-      });
-      return;
-    }
-
-    setAddingProductId(product.id);
-    addProductToCart({ ...product, quantity: 1 });
-    setAddingProductId(null);
-    notify.success({ message: "Producto agregado al carrito" });
-  };
 
   return (
     <>
@@ -228,7 +78,7 @@ export const CatalogScreen = () => {
             {isAuthenticated && (
               <TouchableOpacity
                 style={styles.headerCartBtn}
-                onPress={() => setShowCart(true)}
+                onPress={openCart}
                 activeOpacity={0.8}
               >
                 <MaterialCommunityIcons
@@ -263,6 +113,9 @@ export const CatalogScreen = () => {
         style={containerStyles.container}
         contentContainerStyle={containerStyles.contentContainer}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={loading} onRefresh={refreshProducts} />
+        }
       >
         <SearchBarInput
           searchQuery={searchText}
@@ -274,7 +127,7 @@ export const CatalogScreen = () => {
           <FilterPanel
             filters={filters}
             onFiltersChange={setFilters}
-            categories={allCategories.map((cat) => cat.name)}
+            categories={categories.map((cat) => cat.name)}
             brands={brands}
           />
         )}
@@ -288,11 +141,6 @@ export const CatalogScreen = () => {
           </Text>
         </TouchableOpacity>
 
-        {/* Sección Comunidad integrada dentro del Catálogo
-            Mostrar solo si hay recursos o si está cargando (para evitar mostrar
-            un título vacío cuando no existan beneficios). */}
-        {/* <CatalogCommunitySection /> */}
-
         {loading ? (
           <CustomLoader />
         ) : error ? (
@@ -302,7 +150,7 @@ export const CatalogScreen = () => {
         ) : (
           // Revertido a grilla de productos (estilizada)
           <View style={{ paddingVertical: 0 }}>
-            {products && products.length > 0 ? (
+            {displayGroups && displayGroups.length > 0 ? (
               // Renderizar una sección por categoría
               displayGroups.map((g) => (
                 <View key={g.categoryId} style={{ marginBottom: 18 }}>
@@ -347,35 +195,19 @@ export const CatalogScreen = () => {
       {isAuthenticated && (
         <CartBottomSheet
           visible={showCart}
-          onClose={() => setShowCart(false)}
+          onClose={closeCart}
           onNavigateToRecharge={() => {
-            setShowCart(false);
+            closeCart();
             navigate("RechargeScreen");
           }}
           onCheckout={async () => {
-            setShowCart(false);
-
+            closeCart();
             if (cartProducts.length === 0) {
               notify.error({ message: "El carrito esta vacio" });
               return;
             }
-
             try {
-              // Mostrar loading si es necesario
-
-              // Aquí es donde ahora procesamos el carrito al backend
-              // Pero por ahora, como aún no tienes la pantalla de direcciones,
-              // vamos a usar el modal de delivery existente
-              const firstProduct = cartProducts[0];
-              const fullProduct = products.find(
-                (p) => p.id === firstProduct.id
-              );
-
-              if (fullProduct) {
-                openDeliveryModal(fullProduct);
-              } else {
-                notify.error({ message: "El producto ya no esta disponible" });
-              }
+              openDeliveryModal();
             } catch (error) {
               console.error("Error en checkout:", error);
               notify.error({
@@ -390,7 +222,8 @@ export const CatalogScreen = () => {
       <OrderDeliveryModal
         visible={showDeliveryModal}
         onClose={closeDeliveryModal}
-        onOrderCreated={(orderId: string) => {
+        onCancel={openCart}
+        onOrderCreated={() => {
           // Navigate to Orders tab to see the created order
           navigate("Orders", { screen: "OrdersList" });
         }}

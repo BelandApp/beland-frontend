@@ -427,35 +427,7 @@ const OrdersScreen: React.FC = () => {
       <ThemedHeader
         title="Mis Ordenes"
         canGoBack
-        buttons={
-          <TouchableOpacity
-            style={[
-              ordersStyles.deliveryButton,
-              !canPerformAction && ordersStyles.deliveryButtonDisabled,
-            ]}
-            onPress={() => {
-              if (canPerformAction) {
-                navigate("Orders", { screen: "Delivery" });
-              }
-            }}
-            activeOpacity={canPerformAction ? 0.8 : 1}
-            disabled={!canPerformAction}
-          >
-            <MaterialCommunityIcons
-              name="truck-delivery"
-              size={20}
-              color={canPerformAction ? "white" : colors.textSecondary}
-            />
-            <Text
-              style={[
-                ordersStyles.deliveryButtonText,
-                !canPerformAction && ordersStyles.deliveryButtonTextDisabled,
-              ]}
-            >
-              Delivery
-            </Text>
-          </TouchableOpacity>
-        }
+        
       />
 
       <ScrollView

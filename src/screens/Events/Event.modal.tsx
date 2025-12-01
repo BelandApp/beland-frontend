@@ -16,7 +16,7 @@ import {
   RotateCcw,
   SquareChevronDown,
 } from "lucide-react-native";
-import { useEventStore } from "src/stores/Event";
+import { eventStore } from "@/stores";
 import { colors } from "src/styles";
 import { useAuth } from "src/context";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
@@ -26,7 +26,7 @@ import { convertBeCoinsToUSD, formatUSDPrice } from "src/constants/currency";
 export const EventModal = ({ route }: { route: any }) => {
   const { id } = route.params;
   const notify = useNotify();
-  const { getEvent } = useEventStore();
+  const { getEvent } = eventStore();
   const event = getEvent(id);
   const { navigate, goBack } = useCustomNavigation();
   const { canPerformAction, handleAuth0Login } = useAuth();

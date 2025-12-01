@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     minHeight: Platform.OS === "web" ? 120 : 100,
-    flex: Platform.OS === "web" ? 1 : undefined,
+    flex: 1,
     minWidth: Platform.OS === "web" ? 280 : undefined,
     maxWidth: "100%",
   },

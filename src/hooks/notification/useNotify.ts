@@ -16,6 +16,7 @@ export const useNotify = () => {
     error: (data: NotifyBase) => show({ type: "error", ...data }),
     info: (data: NotifyBase) => show({ type: "info", ...data }),
     confirm: (data: NotifyConfirm) => show({ type: "confirm", ...data }),
+    cartItem: (data: NotifyConfirm) => show({ type: "cartItem", ...data }),
     clear,
   };
 };
