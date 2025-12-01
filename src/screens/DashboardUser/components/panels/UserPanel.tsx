@@ -107,7 +107,7 @@ export const UserPanel: React.FC = () => {
 
   const parsedUserBalance =
     Number((user as any)?.current_balance ?? (user as any)?.coins ?? 0) || 0;
-  const storeBalanceNum = Number(balance ?? 0) || 0;
+  const storeBalanceNum = Number(globalBeCoinsBalance ?? 0) || 0;
   const beCoinsToShow =
     storeBalanceNum > 0 ? storeBalanceNum : parsedUserBalance;
 
