@@ -51,7 +51,7 @@ export const OrderDeliveryModalStyles = StyleSheet.create({
   actionsContainer: {
     paddingTop: 12,
     marginHorizontal: "auto",
-    flexDirection: "row",
+    flexDirection: Dimensions.get("window").width > 600 ? "row" : "column",
     gap: 12,
   },
 });

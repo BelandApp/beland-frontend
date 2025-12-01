@@ -3,7 +3,9 @@ import { ProductQuery, Product } from "@/types";
 import { ProductService } from "src/services";
 import { getProductCache, setProductCache } from "./productCache";
 
-export function useProducts(initialQuery: ProductQuery = {}) {
+export function useProducts(
+  initialQuery: ProductQuery = { page: 1, sortBy: "name", order: "ASC" }
+) {
   const [products, setProducts] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(initialQuery.page || 1);

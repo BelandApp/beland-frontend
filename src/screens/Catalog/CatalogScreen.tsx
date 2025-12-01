@@ -15,8 +15,6 @@ import { BeCoinsBalance, CustomLoader } from "@components/shared";
 // Hooks
 import { useCatalogCart, useCatalogFilters, useCatalogModals } from "./hooks";
 import { useCustomNavigation, useNotify } from "@/hooks";
-import { ProductService } from "@/services";
-
 // Components
 import { FilterPanel, ProductGrid } from "./components";
 import { OrderDeliveryModal } from "./components/OrderDeliveryModal";
@@ -27,7 +25,7 @@ import { containerStyles, productStyles } from "./styles";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { ThemedHeader } from "@/components";
 import { useFilteredProducts } from "./mainHooks/useFilteredProducts";
-import { Category } from "src/types";
+import { useCategories } from "src/hooks/categories/useCategories";
 
 export const CatalogScreen = () => {
   const { navigate } = useCustomNavigation();
@@ -51,9 +49,7 @@ export const CatalogScreen = () => {
     setShowFilters,
   } = useCatalogFilters();
 
-  const [categories, setCategories] = useState<{ id: string; name: string }[]>(
-    []
-  );
+  const {categories}=useCategories()
   // TODO para el futuro sortear con marcas
   const [brands, setBrands] = useState<string[]>([]);
   const { displayGroups, loading, error, refreshProducts } = useFilteredProducts({
@@ -65,15 +61,7 @@ export const CatalogScreen = () => {
     useCatalogModals();
 
   const notify = useNotify();
-  useEffect(() => {
-    ProductService.getCategories()
-      .then((res) => {
-        setCategories(
-          res.data.map((cat: Category) => ({ id: cat.id, name: cat.name }))
-        );
-      })
-      .catch(() => {});
-  }, []);
+
 
   return (
     <>

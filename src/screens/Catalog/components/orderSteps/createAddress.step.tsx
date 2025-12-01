@@ -39,7 +39,6 @@ export const CreateAddress: React.FC<AddressFormProps> = ({
     onCreateAddress,
     onCreateAndSubmit,
   });
-  console.log("FormAddres", FormData);
   return (
     <View
       style={styles.container}
@@ -186,7 +185,7 @@ export const CreateAddress: React.FC<AddressFormProps> = ({
         </View>
       </ScrollView>
       <View style={styles.rowActions}>
-        <Button title="Cancelar" onPress={onCancel} variant="ghost" />
+        {Dimensions.get("window").width > 600 && <Button title="Cancelar" onPress={onCancel} variant="ghost" />}
         <Button
           title="Guardar Dirección"
           onPress={handleCreateAddress}

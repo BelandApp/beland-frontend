@@ -42,7 +42,7 @@ export const ConfirmOrder: React.FC<ProcessingStepProps> = ({
   };
   if (isSubmitting) {
     return (
-      <View>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <View style={styles.processingIcon}>
           <MaterialCommunityIcons
             name="truck-check"
