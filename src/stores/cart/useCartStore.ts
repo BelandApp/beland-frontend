@@ -97,6 +97,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
   clearCart: () => {
     set({ items: [] });
     storage.removeItem(STORAGE_KEY);
+    CartService.clearCart();
   },
   setDeliveryType: (
     type: "group" | "home",

@@ -154,7 +154,8 @@ class CartServiceClass extends CoreApiService {
    */
   async clearCart(): Promise<{ success: boolean }> {
     const cart = await this.getCart();
-    return this.delete<{ success: boolean }>(
+    // !NOT WORKING ON BACKEND
+    return this.put<{ success: boolean }>(
       `${this.ENDPOINTS.CLEAR_CART}/${cart.id}`
     );
   }
