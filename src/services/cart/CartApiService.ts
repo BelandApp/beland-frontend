@@ -76,7 +76,6 @@ class CartServiceClass extends CoreApiService {
     SYNC_CART: "carts/sync",
     CART_ADDRESS: "carts/address",
     CART_ITEMS: "cart-items",
-    CART_ITEMS_QUANTITY: "cart-items/quantity",
   } as const;
 
   /**
@@ -127,6 +126,7 @@ class CartServiceClass extends CoreApiService {
     return this.post<CartItem>(this.ENDPOINTS.CART_ITEMS, cartItemData);
   }
 
+  // ! NOT WORKING ON BACKEND
   /**
    * Update cart item quantity
    */
@@ -135,7 +135,7 @@ class CartServiceClass extends CoreApiService {
     data: UpdateCartItemDto
   ): Promise<CartItem> {
     return this.put<CartItem>(
-      `${this.ENDPOINTS.CART_ITEMS_QUANTITY}/${itemId}`,
+      `${this.ENDPOINTS.CART_ITEMS}/${itemId}`,
       data
     );
   }

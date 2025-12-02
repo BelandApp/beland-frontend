@@ -4,7 +4,6 @@ import { storage } from "../storeEngine";
 import { getBackendErrorMessage } from "src/services";
 import { notify } from "src/hooks/notification/notify.external";
 import { convertUSDToBeCoins } from "src/constants";
-import { Car } from "lucide-react-native";
 
 const STORAGE_KEY = "@cart_intent";
 
@@ -14,6 +13,7 @@ export type CartItem = {
   price: number;
   quantity: number;
   image?: string;
+  item_id_for_delete?: string;
 };
 
 export type CartStore = {
@@ -73,10 +73,13 @@ export const useCartStore = create<CartStore>((set, get) => ({
 
   // Remover producto
   removeProduct: (productId) => {
+    const itemToDelete = get().items.find((i) => i.id === productId) 
+    if(!itemToDelete || !itemToDelete.item_id_for_delete) return
     const updated = get().items.filter((i) => i.id !== productId);
     set({ items: updated });
     storage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    CartService.removeFromCart(productId);
+    CartService.removeFromCart(itemToDelete?.item_id_for_delete);
+    console.log("Se elimino correcto")
   },
 
   // Actualizar cantidad (mínimo 1)
@@ -87,7 +90,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
     );
     set({ items: updated });
     storage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    CartService.updateCartItem(productId, { quantity });
+    CartService.addToCart({ product_id:productId, quantity });
   },
 
   // Limpiar carrito
@@ -107,11 +110,12 @@ export const useCartStore = create<CartStore>((set, get) => ({
       set({ loading: true });
       const serverCart = await CartService.getCart();
       const serverItems = serverCart.items.map((item: any) => ({
-        id: item.id,
+        id: item.product_id,
         name: item.product.name,
         price: item.product.price,
         quantity: item.quantity,
         image: item.product.image_url,
+        item_id_for_delete: item.id,
       }));
 
       if (!hasInitialized) {
@@ -151,6 +155,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
         price: item.product.price,
         quantity: item.quantity,
         image: item.product.image_url,
+        item_id_for_delete: item.id,
       }));
 
       set({
