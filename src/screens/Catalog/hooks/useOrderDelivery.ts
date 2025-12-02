@@ -5,12 +5,12 @@ import {
   UserAddress,
 } from "@/services/addressService";
 import { useOrdersStoreAPI } from "@/stores/useOrdersStoreAPI";
-import { useCartStore } from "@/stores/useCartStore";
+import { useCartStore } from "src/stores/cart/useCartStore";
 import { useNotify } from "@/hooks";
 import { useAuth } from "@/context";
 import { apiRequest, getBackendErrorMessage } from "@/services/api";
 import { CartService } from "@/services";
-import { CreateOrderRequest, DeliveryAddress, OrderItem } from "src/types";
+import { CreateOrderRequest, DeliveryAddress, OrderItem, Product } from "src/types";
 
 export type DeliveryStep = "select" | "form" | "processing";
 export type preOrderType = {
@@ -28,7 +28,7 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
   const [selectedAddress, setSelectedAddress] = useState<any>(null);
   const [preOrder, setPreOrder] = useState<preOrderType|null>(null);
   const notify = useNotify();
-  const { products, clearCart } = useCartStore();
+  const { items, clearCart } = useCartStore();
   const { createOrder } = useOrdersStoreAPI();
   const { requireAuth } = useAuth();
 
@@ -72,7 +72,7 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
 
   /** ---------------- SELECT ADDRESS (PASO 1 → 3) ---------------- */
   const selectAddress = (address: any, id: string) => {
-    if (products.length === 0) {
+    if (items.length === 0) {
       notify.error({ message: "El carrito está vacío." });
       return;
     }
@@ -80,7 +80,7 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
     setSelectedAddress(address);
     setSelectedAddressId(id);
     setPreOrder({
-      products: products,
+      products: items,
       address: address,
       addressId: id,
     });
@@ -94,7 +94,7 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
 
     selectAddress(address, id);
     setPreOrder({
-      products: products,
+      products: items,
       address: address,
       addressId: id,
     });
@@ -105,7 +105,7 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
     if (!selectedAddressId || !selectedAddress) {
       return notify.error({ message: "Selecciona una dirección" });
     }
-    let result = false
+    let result = false;
 
     await requireAuth(async () => {
       try {
@@ -121,7 +121,7 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
           deliveryAddress: selectedAddress,
           deliveryType: "home",
           paymentMethod: "becoins",
-          items: products.map((p) => ({
+          items: items.map((p) => ({
             id: p.id,
             productId: p.id,
             price: p.price,
@@ -137,14 +137,14 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
         notify.success({ message: "Orden creada!" });
         clearCart();
         onOrderCreated?.(order.id);
-        result = true
+        result = true;
       } catch (e) {
         notify.error({ message: getBackendErrorMessage(e) });
         setStep("select");
       }
     });
-    return result
-  }, [products, selectedAddress, selectedAddressId]);
+    return result;
+  }, [items, selectedAddress, selectedAddressId]);
 
   /** ---------------- CANCEL BEHAVIOR ---------------- */
   const cancelAddressCreation = () => {

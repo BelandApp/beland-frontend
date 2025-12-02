@@ -34,7 +34,7 @@ export type {
 } from "../ProductApiService";
 
 // Cart service
-export { CartService } from "../CartApiService";
+export { CartService } from "../cart/CartApiService";
 export type {
   Cart,
   CartItem,
@@ -43,7 +43,7 @@ export type {
   ApplyCouponDto,
   CouponInfo,
   CartSummary,
-} from "../CartApiService";
+} from "../cart/CartApiService";
 
 // Order service
 export { OrderService } from "../OrderApiService";

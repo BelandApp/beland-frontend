@@ -7,7 +7,7 @@ import {
   OrderSummary,
 } from "../types/Order";
 import { OrderService, CartService, CreateOrderDto } from "@services/core";
-import { useCartStore } from "./useCartStore";
+import { useCartStore } from "./cart/useCartStore";
 import { useAuthTokenStore } from "./useAuthTokenStore";
 
 // Helper function to map backend status codes to frontend status
@@ -178,15 +178,15 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
       const cartState = useCartStore.getState();
 
       // Validate cart has items
-      if (!cartState.products || cartState.products.length === 0) {
+      if (!cartState.items || cartState.items.length === 0) {
         throw new Error("No items in cart to create order");
       }
 
       console.log(
         "[OrdersStoreAPI] Local cart has items:",
-        cartState.products.length
+        cartState.items.length
       );
-      console.log("[OrdersStoreAPI] Local cart products:", cartState.products);
+      console.log("[OrdersStoreAPI] Local cart products:", cartState.items);
 
       // processing checkout with cart items (verbose logs removed)
 
@@ -202,7 +202,7 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
       // Step 1.5: If backend cart is empty but local cart has items, sync them
       if (
         (!cart.items || cart.items.length === 0) &&
-        cartState.products.length > 0
+        cartState.items.length > 0
       ) {
         console.log(
           "[OrdersStoreAPI] Backend cart is empty, syncing local items to server..."
@@ -210,7 +210,7 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
 
         try {
           // Sync each local item to the server
-          for (const localProduct of cartState.products) {
+          for (const localProduct of cartState.items) {
             console.log(
               "[OrdersStoreAPI] Syncing product to server:",
               localProduct

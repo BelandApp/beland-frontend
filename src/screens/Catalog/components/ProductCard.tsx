@@ -2,14 +2,14 @@ import React from "react";
 import { View, Text, TouchableOpacity, Image } from "react-native";
 import { productStyles } from "../styles";
 import { Product } from "@services/core";
-import { CartProduct } from "../../../stores/useCartStore";
 import {
   convertUSDToBeCoins,
   formatBeCoins,
   CURRENCY_CONFIG,
 } from "../../../constants/currency";
+import { CartItem } from "src/stores";
 
-export type ProductCardType = Product | CartProduct;
+export type ProductCardType = Product | CartItem;
 
 export interface ProductCardProps {
   product: ProductCardType;

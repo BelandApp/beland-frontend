@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -20,11 +20,12 @@ import { InsufficientBalanceModal } from "../../Community/components";
 import { useNotify } from "src/hooks";
 import { getBackendErrorMessage } from "src/services";
 import { Button } from "src/components";
-import { ArrowDown, ClosedCaption, X } from "lucide-react-native";
+import { ArrowDown } from "lucide-react-native";
 import { colors } from "src/styles";
-import { useCartStore } from "src/stores/useCartStore";
+import { useCartStore } from "src/stores/cart/useCartStore";
 import Toast from "react-native-toast-message";
 import { toastConfig } from "src/components/shared/notification/GlobalNotification";
+import { useAuth } from "src/context";
 
 interface CartBottomSheetProps {
   visible: boolean;
@@ -39,20 +40,25 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
   onCheckout,
   onNavigateToRecharge,
 }) => {
-  const { products, removeProduct, updateQuantity, clearCart } = useCartStore();
+  const { user } = useAuth();
+  const {
+    items,
+    removeProduct,
+    updateQuantity,
+    clearCart,
+    totalBecoins,
+  } = useCartStore();
   const notify = useNotify();
-  const total = products.reduce((sum, p) => sum + p.price * p.quantity, 0);
   const { balance } = useUserBalance();
   const [insufficientModalVisible, setInsufficientModalVisible] =
-    React.useState(false);
+    useState(false);
 
-  const requiredBeCoins = convertUSDToBeCoins(total);
 
   const handleRemoveProduct = async (productId: string) => {
     try {
       removeProduct(productId);
       notify.success({ message: "Producto eliminado del carrito" });
-      if (products.length <= 1) onClose();
+      if (items.length <= 1) onClose();
     } catch (error) {
       const message = getBackendErrorMessage(error);
       notify.error({ message });
@@ -87,7 +93,7 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
                 title="Vaciar"
                 variant="secondary"
                 onPress={clearCart}
-                disabled={products.length === 0}
+                disabled={items.length === 0}
               />
               <Button
                 title="cerrar"
@@ -99,13 +105,13 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
           </View>
 
           <ScrollView contentContainerStyle={styles.itemContainer}>
-            {products.length === 0 ? (
+            {items.length === 0 ? (
               <View style={styles.emptyContainer}>
                 <Text style={styles.emptyText}>Tu carrito está vacío</Text>
               </View>
             ) : (
               <FlatList
-                data={products}
+                data={items}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
                   <View style={styles.itemRow}>
@@ -168,18 +174,18 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
             <View>
               <Text style={styles.total}>
                 Total: {CURRENCY_CONFIG.CURRENCY_DISPLAY_SYMBOL}
-                {formatUSDPrice(total)}
+                {formatUSDPrice(totalBecoins())}
               </Text>
               <Text style={styles.totalBecoins}>
-                {formatBeCoins(convertUSDToBeCoins(total))}
+                {formatBeCoins(convertUSDToBeCoins(totalBecoins()))}
               </Text>
             </View>
             <Button
               title="Finalizar compra"
-              disabled={products.length === 0}
+              disabled={items.length === 0}
               onPress={() => {
                 // Verificar saldo en BeCoins antes de proceder
-                if ((balance || 0) < requiredBeCoins) {
+                if ((balance || 0) < totalBecoins()) {
                   setInsufficientModalVisible(true);
                   return;
                 }
@@ -194,7 +200,7 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
       <InsufficientBalanceModal
         visible={insufficientModalVisible}
         userBalance={balance || 0}
-        requiredAmount={requiredBeCoins}
+        requiredAmount={totalBecoins()}
         onRecharge={() => {
           setInsufficientModalVisible(false);
           onClose();
@@ -207,7 +213,7 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
 };
 
 const styles = StyleSheet.create({
-  modal: { justifyContent: "flex-end", margin:0 },
+  modal: { justifyContent: "flex-end", margin: 0 },
   sheet: {
     backgroundColor: "#fff",
     borderTopLeftRadius: 18,
@@ -217,7 +223,7 @@ const styles = StyleSheet.create({
     maxHeight: "95%",
     flexDirection: "column",
     justifyContent: "space-between",
-    marginTop:"auto"
+    marginTop: "auto",
   },
   header: {
     flexDirection: "row",
