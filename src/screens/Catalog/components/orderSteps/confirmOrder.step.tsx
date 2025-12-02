@@ -61,47 +61,140 @@ export const ConfirmOrder: React.FC<ProcessingStepProps> = ({
   }
   const isMobile = Dimensions.get("window").width <= 600;
   return (
-    <ScrollView contentContainerStyle={[styles.container, isMobile ? null : {flexGrow: 1}]}>
-      <View style={styles.cards}>
-        <Text style={styles.title}>Tu orden:</Text>
+    <ScrollView
+      contentContainerStyle={[
+        styles.container,
+        isMobile ? null : { flexGrow: 1 },
+      ]}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Products Section */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <MaterialCommunityIcons
+            name="cart-outline"
+            size={24}
+            color={colors.belandOrange}
+          />
+          <Text style={styles.sectionTitle}>Tu orden</Text>
+        </View>
         <View style={styles.productsWrapper}>
           {products.map((product: CartItem) => (
-            <View style={styles.product} key={product.id}>
-              <Text style={styles.productTitle}>{product.name}</Text>
-              <Text>Precio Unitario: Usd${product.price}</Text>
-              <Text>Cantidad: {product.quantity}</Text>
+            <View style={styles.productCard} key={product.id}>
+              <View style={styles.productHeader}>
+                <Text style={styles.productName}>{product.name}</Text>
+                <View style={styles.quantityBadge}>
+                  <Text style={styles.quantityText}>x{product.quantity}</Text>
+                </View>
+              </View>
+              <View style={styles.productDetails}>
+                <View style={styles.priceRow}>
+                  <Text style={styles.priceLabel}>Precio unitario</Text>
+                  <Text style={styles.priceValue}>Usd${product.price}</Text>
+                </View>
+                <View style={styles.priceRow}>
+                  <Text style={styles.subtotalLabel}>Subtotal</Text>
+                  <Text style={styles.subtotalValue}>
+                    Usd${(product.price * product.quantity).toFixed(2)}
+                  </Text>
+                </View>
+              </View>
             </View>
           ))}
         </View>
       </View>
-      <View style={styles.row}>
-        <View style={styles.cards}>
-          <Text style={styles.title}>Dirección de entrega:</Text>
-          <Text>Calle: {address.addressLine1}</Text>
-          <Text>Ciudad: {address.city}</Text>
-          <Text>Estado/Provincia: {address.state}</Text>
-          <Text>C.P: {address.postalCode}</Text>
+
+      {/* Address and Total Row */}
+      <View style={styles.infoRow}>
+        {/* Delivery Address */}
+        <View style={styles.infoCard}>
+          <View style={styles.sectionHeader}>
+            <MaterialCommunityIcons
+              name="map-marker"
+              size={24}
+              color={colors.belandOrange}
+            />
+            <Text style={styles.sectionTitle}>Dirección de entrega</Text>
+          </View>
+          <View style={styles.addressContent}>
+            {address.addressLine1 && (
+              <View style={styles.addressRow}>
+                <MaterialCommunityIcons
+                  name="home-outline"
+                  size={18}
+                  color="#666"
+                />
+                <Text style={styles.addressText}>{address.addressLine1}</Text>
+              </View>
+            )}
+            {address.city && (
+              <View style={styles.addressRow}>
+                <MaterialCommunityIcons name="city" size={18} color="#666" />
+                <Text style={styles.addressText}>
+                  {address.city}
+                  {address.state ? `, ${address.state}` : ""}
+                </Text>
+              </View>
+            )}
+            {address.postalCode && (
+              <View style={styles.addressRow}>
+                <MaterialCommunityIcons name="mailbox" size={18} color="#666" />
+                <Text style={styles.addressText}>
+                  C.P: {address.postalCode}
+                </Text>
+              </View>
+            )}
+            {address.country && (
+              <View style={styles.addressRow}>
+                <MaterialCommunityIcons name="earth" size={18} color="#666" />
+                <Text style={styles.addressText}>{address.country}</Text>
+              </View>
+            )}
+          </View>
         </View>
-        <View style={styles.cards}>
-          <Text style={styles.title}>Totales:</Text>
-          <Text style={styles.detailText}>
-            {products.length} artículo{products.length !== 1 ? "s" : ""}
-          </Text>
-          <Text style={styles.price}>
-            Usd$ {total} ~ Becoins: {convertUSDToBeCoins(total)}
-          </Text>
+
+        {/* Total Section */}
+        <View style={styles.totalCard}>
+          <View style={styles.sectionHeader}>
+            <MaterialCommunityIcons
+              name="receipt"
+              size={24}
+              color={colors.belandOrange}
+            />
+            <Text style={styles.sectionTitle}>Resumen</Text>
+          </View>
+          <View style={styles.totalContent}>
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>Artículos</Text>
+              <Text style={styles.totalValue}>
+                {products.length} {products.length !== 1 ? "items" : "item"}
+              </Text>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabelBold}>Total USD</Text>
+              <Text style={styles.totalPrice}>Usd$ {total}</Text>
+            </View>
+            <View style={styles.becoinsRow}>
+              <MaterialCommunityIcons
+                name="currency-usd"
+                size={20}
+                color={colors.belandGreen}
+              />
+              <Text style={styles.becoinsText}>
+                ≈ {convertUSDToBeCoins(total)} Becoins
+              </Text>
+            </View>
+          </View>
         </View>
       </View>
-      <View
-        style={{
-          paddingTop: 12,
-          marginHorizontal: "auto",
-          flexDirection: "row",
-          gap: 12,
-        }}
-      >
-        <Button title="Volver" onPress={onCancel} variant="ghost" />
-        <Button onPress={handleSubmit} title="Confirmar" />
+
+      {/* Action Buttons */}
+      <View style={styles.actionsContainer}>
+        {Dimensions.get("window").width > 600 && (
+          <Button title="Volver" onPress={onCancel} variant="ghost" />
+        )}
+        <Button onPress={handleSubmit} title="Confirmar pedido" />
       </View>
     </ScrollView>
   );
@@ -109,49 +202,192 @@ export const ConfirmOrder: React.FC<ProcessingStepProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    gap: 8,
-    justifyContent: "space-between",
+    padding: 16,
+    gap: 20,
   },
-  row: {
-    flexDirection: Dimensions.get("window").width > 600 ? "row" : "column",
-    justifyContent: "space-between",
-    gap: 30,
+  section: {
+    gap: 12,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 8,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1a1a1a",
   },
   productsWrapper: {
-    flexDirection: Dimensions.get("window").width > 600 ? "row" : "column",
-    flexWrap: "wrap",
     gap: 12,
-    width: "100%",
-    overflow: "scroll",
   },
-  processingIcon: {},
-  product: {
-    borderColor: colors.belandGreen,
-    borderBottomWidth: 2,
-    borderTopWidth: 2,
-    borderRadius: 5,
-    padding: 8,
-    width: Dimensions.get("window").width > 600 ? "48%" : "100%",
-  },
-  productTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  cards: {
-    flexDirection: "column",
-    borderRadius: 16,
-    padding: 12,
+  productCard: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.belandGreen,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 8,
     elevation: 3,
-    gap: 6,
-    flex: 1,
-    backgroundColor: "#f7f7f7",
   },
-  title: { fontSize: 18, fontWeight: "bold", marginBottom: 8 },
-  price: { fontSize: 18, fontWeight: "bold", color: colors.belandOrange },
-  subtitle: {},
-  detailText: { fontSize: 16 },
+  productHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  productName: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1a1a1a",
+    flex: 1,
+  },
+  quantityBadge: {
+    backgroundColor: colors.belandOrange,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  quantityText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  productDetails: {
+    gap: 8,
+  },
+  priceRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  priceLabel: {
+    fontSize: 14,
+    color: "#666",
+  },
+  priceValue: {
+    fontSize: 14,
+    color: "#1a1a1a",
+    fontWeight: "500",
+  },
+  subtotalLabel: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#1a1a1a",
+  },
+  subtotalValue: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: colors.belandOrange,
+  },
+  infoRow: {
+    flexDirection: "row",
+    gap: 16,
+    flexWrap: "wrap",
+  },
+  infoCard: {
+    flex: 1,
+    minWidth: 280,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  addressContent: {
+    gap: 10,
+    marginTop: 8,
+  },
+  addressRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  addressText: {
+    fontSize: 14,
+    color: "#333",
+    flex: 1,
+  },
+  totalCard: {
+    flex: 1,
+    minWidth: 280,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  totalContent: {
+    gap: 12,
+    marginTop: 8,
+  },
+  totalRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  totalLabel: {
+    fontSize: 14,
+    color: "#666",
+  },
+  totalValue: {
+    fontSize: 14,
+    color: "#1a1a1a",
+    fontWeight: "500",
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#e5e5e5",
+    marginVertical: 4,
+  },
+  totalLabelBold: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1a1a1a",
+  },
+  totalPrice: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: colors.belandOrange,
+  },
+  becoinsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 4,
+    marginTop: 4,
+  },
+  becoinsText: {
+    fontSize: 14,
+    color: colors.belandGreen,
+    fontWeight: "600",
+  },
+  actionsContainer: {
+    flexDirection: "row",
+    gap: 12,
+    justifyContent: "flex-end",
+    marginTop: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 40,
+    gap: 16,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+  },
 });
