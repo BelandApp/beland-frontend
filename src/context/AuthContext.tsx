@@ -12,7 +12,7 @@ import { authService } from "src/services/auth/auth.service";
 import { TokenService } from "src/services/auth/token.service";
 import { Storage } from "src/services/auth/storage.service";
 // Stores to reset on logout
-import { useCartStore } from "src/stores/useCartStore";
+import { useCartStore } from "src/stores/cart/useCartStore";
 import { useBeCoinsStore } from "@/stores";
 import { useOrdersStoreAPI } from "src/stores/useOrdersStoreAPI";
 import { useCreateGroupStore } from "src/stores/useCreateGroupStore";

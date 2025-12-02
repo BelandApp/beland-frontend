@@ -1,7 +1,6 @@
 import React from "react";
 import { View, Text } from "react-native";
 import { productStyles } from "../styles";
-import { CartProduct } from "../../../stores/useCartStore";
 import { ProductCard, ProductCardType } from "./ProductCard";
 
 export interface ProductGridProps {

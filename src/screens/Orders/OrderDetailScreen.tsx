@@ -20,6 +20,7 @@ import { FeedbackModal } from "./components/FeedbackModal";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { RouteProp, useRoute } from "@react-navigation/native";
 import { useNotify } from "../../hooks/notification/useNotify";
+import { ThemedHeader } from "src/components";
 
 type OrderDetailScreenRouteProp = RouteProp<
   OrdersStackParamList,
@@ -530,29 +531,13 @@ export const OrderDetailScreen: React.FC = () => {
     baseOrder.status === "recycled";
 
   return (
-    <SafeAreaView style={orderDetailStyles.container}>
-      {/* Header naranja */}
-      <View style={orderDetailStyles.headerContainer}>
-        <View style={orderDetailStyles.headerRow}>
-          <TouchableOpacity
-            style={orderDetailStyles.headerButton}
-            onPress={() => goBack()}
-          >
-            <MaterialCommunityIcons name="arrow-left" size={20} color="white" />
-          </TouchableOpacity>
-          <View style={orderDetailStyles.headerTitles}>
-            <Text style={orderDetailStyles.headerTitle}>
-              Detalle de la orden
-            </Text>
-            <Text style={orderDetailStyles.headerSubtitle}>
-              Orden #{baseOrder.id.substring(0, 8).toUpperCase()}
-            </Text>
-          </View>
-        </View>
-      </View>
-
+    <>
+      <ThemedHeader
+        canGoBack
+        title="Detalle de la orden"
+        subtitle={`Orden #${baseOrder.id.substring(0, 8).toUpperCase()}`}
+      />
       <ScrollView
-        style={orderDetailStyles.scrollView}
         contentContainerStyle={orderDetailStyles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -910,7 +895,6 @@ export const OrderDetailScreen: React.FC = () => {
           )}
         </View>
       </ScrollView>
-
       {/* Feedback Modal */}
       <FeedbackModal
         visible={showFeedbackModal}
@@ -918,7 +902,7 @@ export const OrderDetailScreen: React.FC = () => {
         onSubmit={handleFeedbackSubmit}
         orderId={orderId}
       />
-    </SafeAreaView>
+    </>
   );
 };
 

@@ -47,7 +47,7 @@ export function useCache<T>({ key, duration, fetcher }: UseCacheParams<T>) {
 
   useEffect(() => {
     load();
-  }, [load]);
+  }, []);
 
   const refresh = async () => {
     const freshData = await fetcher();

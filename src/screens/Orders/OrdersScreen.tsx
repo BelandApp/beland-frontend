@@ -429,9 +429,8 @@ const OrdersScreen: React.FC = () => {
         canGoBack
         
       />
-
       <ScrollView
-        style={ordersStyles.scrollView}
+        // style={ordersStyles.scrollView}
         contentContainerStyle={ordersStyles.scrollContent}
         refreshControl={
           <RefreshControl
@@ -441,7 +440,7 @@ const OrdersScreen: React.FC = () => {
             tintColor={colors.belandOrange}
           />
         }
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
       >
         {orders.length > 0 && renderSummaryCard()}
 

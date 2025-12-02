@@ -422,6 +422,20 @@ class OrderServiceClass extends CoreApiService {
   }> {
     return this.post(`orders/${orderId}/review`, data);
   }
+
+  /**
+   * Get all delivery statuses
+   */
+  async getDeliveryStatuses(): Promise<DeliveryStatus[]> {
+    return this.get("delivery-status");
+  }
+}
+
+// Delivery Status Type
+export interface DeliveryStatus {
+  id: string;
+  code: string;
+  name: string;
 }
 
 // Export singleton instance

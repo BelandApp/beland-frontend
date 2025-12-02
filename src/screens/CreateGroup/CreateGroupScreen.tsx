@@ -1,4 +1,4 @@
-import { useCartStore } from "@/stores/useCartStore";
+import { useCartStore } from "src/stores/cart/useCartStore";
 import { useGroupAdminStore } from "@/stores/groupStores";
 import React, { useState } from "react";
 import { View, ScrollView, Dimensions } from "react-native";

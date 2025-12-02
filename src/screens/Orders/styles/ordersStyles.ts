@@ -103,7 +103,7 @@ export const ordersStyles = StyleSheet.create({
     width: 40,
   },
   scrollView: {
-    flex: 1,
+    maxHeight: "100%",
   },
   scrollContent: {
     paddingTop: 40, // Espacio para el header fijo

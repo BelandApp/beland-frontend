@@ -3,15 +3,15 @@
  * Handles cart management, items, and checkout preparation
  */
 
-import { CoreApiService } from "./core/ApiService";
-import { Product } from "./ProductApiService";
+import { Product } from "src/types";
+import { CoreApiService } from "../core/ApiService";
 
 // Cart Types
 export interface CartItem {
   id: string;
   cart_id: string;
-  product_id: string;
   product: Product;
+  product_id: string;
   quantity: number;
   unit_price: number;
   total_price: number;
@@ -72,12 +72,10 @@ export interface CartSummary {
 class CartServiceClass extends CoreApiService {
   private readonly ENDPOINTS = {
     CART: "carts/user",
-    CART_ITEMS: "cart-items",
-    CART_SUMMARY: "carts/summary",
-    APPLY_COUPON: "carts/coupon",
-    REMOVE_COUPON: "carts/coupon",
-    CLEAR_CART: "carts/clear",
+    CLEAR_CART: "carts/clean",
     SYNC_CART: "carts/sync",
+    CART_ADDRESS: "carts/address",
+    CART_ITEMS: "cart-items",
   } as const;
 
   /**
@@ -85,13 +83,6 @@ class CartServiceClass extends CoreApiService {
    */
   async getCart(): Promise<Cart> {
     return this.get<Cart>(this.ENDPOINTS.CART);
-  }
-
-  /**
-   * Create a new cart for user
-   */
-  async createCart(data: { user_id: string }): Promise<Cart> {
-    return this.post<Cart>("carts", data);
   }
 
   /**
@@ -111,13 +102,6 @@ class CartServiceClass extends CoreApiService {
   }
 
   /**
-   * Get cart summary (totals, taxes, discounts)
-   */
-  async getCartSummary(): Promise<CartSummary> {
-    return this.get<CartSummary>(this.ENDPOINTS.CART_SUMMARY);
-  }
-
-  /**
    * Add item to cart
    */
   async addToCart(data: {
@@ -125,15 +109,8 @@ class CartServiceClass extends CoreApiService {
     quantity: number;
   }): Promise<CartItem> {
     // 1. Get or create user cart
-    let cart: Cart;
-    try {
-      cart = await this.getCart();
-    } catch (error) {
-      // If no cart exists, create one
-      const userId = await this.getCurrentUserId();
-      cart = await this.createCart({ user_id: userId });
-    }
 
+    const cart = await this.getCart();
     // 2. Get product information to obtain price
     const product = await this.getProduct(data.product_id);
 
@@ -149,6 +126,7 @@ class CartServiceClass extends CoreApiService {
     return this.post<CartItem>(this.ENDPOINTS.CART_ITEMS, cartItemData);
   }
 
+  // ! NOT WORKING ON BACKEND
   /**
    * Update cart item quantity
    */
@@ -156,7 +134,10 @@ class CartServiceClass extends CoreApiService {
     itemId: string,
     data: UpdateCartItemDto
   ): Promise<CartItem> {
-    return this.patch<CartItem>(`${this.ENDPOINTS.CART_ITEMS}/${itemId}`, data);
+    return this.put<CartItem>(
+      `${this.ENDPOINTS.CART_ITEMS}/${itemId}`,
+      data
+    );
   }
 
   /**
@@ -172,91 +153,17 @@ class CartServiceClass extends CoreApiService {
    * Clear all items from cart
    */
   async clearCart(): Promise<{ success: boolean }> {
-    return this.delete<{ success: boolean }>(this.ENDPOINTS.CLEAR_CART);
+    const cart = await this.getCart();
+    // !NOT WORKING ON BACKEND
+    return this.put<{ success: boolean }>(
+      `${this.ENDPOINTS.CLEAR_CART}/${cart.id}`
+    );
   }
 
-  /**
-   * Apply coupon to cart
-   */
-  async applyCoupon(data: ApplyCouponDto): Promise<{
-    success: boolean;
-    coupon: CouponInfo;
-    cart_summary: CartSummary;
-  }> {
-    return this.post(`${this.ENDPOINTS.APPLY_COUPON}`, data);
-  }
-
-  /**
-   * Remove applied coupon from cart
-   */
-  async removeCoupon(): Promise<{
-    success: boolean;
-    cart_summary: CartSummary;
-  }> {
-    return this.delete(`${this.ENDPOINTS.REMOVE_COUPON}`);
-  }
-
-  /**
-   * Validate coupon without applying it
-   */
-  async validateCoupon(couponCode: string): Promise<{
-    is_valid: boolean;
-    coupon?: CouponInfo;
-    message?: string;
-  }> {
-    return this.post("coupons/validate", { code: couponCode });
-  }
-
-  /**
-   * Sync cart with server (useful for offline/online sync)
-   * Note: Backend doesn't have sync endpoint, so we just return current cart
-   */
   async syncCart(localCartItems: Omit<AddToCartDto, "id">[]): Promise<Cart> {
     // TODO: Implement proper sync when backend supports it
     // For now, just return the current cart
     return this.getCart();
-  }
-
-  /**
-   * Get recommended products based on cart contents
-   */
-  async getRecommendations(limit: number = 5): Promise<Product[]> {
-    return this.get<Product[]>(`cart/recommendations?limit=${limit}`);
-  }
-
-  /**
-   * Check if cart items are still available and prices are current
-   */
-  async validateCart(): Promise<{
-    is_valid: boolean;
-    issues: {
-      type: "out_of_stock" | "price_change" | "unavailable";
-      item_id: string;
-      product_name: string;
-      message: string;
-    }[];
-    updated_cart?: Cart;
-  }> {
-    return this.post("cart/validate");
-  }
-
-  /**
-   * Quick add multiple items to cart
-   */
-  async addMultipleItems(items: AddToCartDto[]): Promise<{
-    success: boolean;
-    added_items: CartItem[];
-    failed_items: { product_id: string; reason: string }[];
-    cart: Cart;
-  }> {
-    return this.post("cart/bulk-add", { items });
-  }
-
-  /**
-   * Get cart item count (lightweight endpoint)
-   */
-  async getCartItemCount(): Promise<{ count: number }> {
-    return this.get<{ count: number }>("cart/count");
   }
 
   /**

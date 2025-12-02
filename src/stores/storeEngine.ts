@@ -24,6 +24,6 @@ const nativeStorage = {
   getAllKeys: AsyncStorage.getAllKeys,
 };
 
-// 👇 Selección automática según plataforma
+//  Selección automática según plataforma
 export const storage: StorageEngine =
   Platform.OS === "web" ? webStorage : nativeStorage;

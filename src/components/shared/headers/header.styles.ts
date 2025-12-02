@@ -28,7 +28,8 @@ export const HeaderStyles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   text: { fontSize: 24, fontWeight: "bold", color: "#FFFFFF" },
+  subtitle: { color: "#FFFFFF" },
   centerText: {
     alignItems: "center",
-  }
+  },
 });
