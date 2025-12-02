@@ -58,7 +58,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
     return cart.id;
   },
   //  Agregar producto o sumar cantidad
-  addProduct: (product) => {
+  addProduct: async (product) => {
     const { items } = get();
     const exists = items.find((i) => i.id === product.id);
     let updatedItems = exists
@@ -69,28 +69,34 @@ export const useCartStore = create<CartStore>((set, get) => ({
 
     set({ items: updatedItems });
     storage.setItem(STORAGE_KEY, JSON.stringify(updatedItems));
+    const authToken = await TokenService.getToken();
+    if (!authToken) return false;
     CartService.addToCart({ product_id: product.id, quantity: 1 });
   },
 
   // Remover producto
-  removeProduct: (productId) => {
-    const itemToDelete = get().items.find((i) => i.id === productId) 
-    if(!itemToDelete || !itemToDelete.item_id_for_delete) return
+  removeProduct: async (productId) => {
+    const itemToDelete = get().items.find((i) => i.id === productId);
+    if (!itemToDelete || !itemToDelete.item_id_for_delete) return;
     const updated = get().items.filter((i) => i.id !== productId);
     set({ items: updated });
     storage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    const authToken = await TokenService.getToken();
+    if (!authToken) return false;
     CartService.removeFromCart(itemToDelete?.item_id_for_delete);
   },
 
   // Actualizar cantidad (mínimo 1)
-  updateQuantity: (productId, quantity) => {
+  updateQuantity: async (productId, quantity) => {
     if (quantity < 1) return;
     const updated = get().items.map((i) =>
       i.id === productId ? { ...i, quantity } : i
     );
     set({ items: updated });
     storage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    CartService.addToCart({ product_id:productId, quantity });
+    const authToken = await TokenService.getToken();
+    if (!authToken) return false;
+    CartService.addToCart({ product_id: productId, quantity });
   },
 
   // Limpiar carrito
@@ -100,23 +106,27 @@ export const useCartStore = create<CartStore>((set, get) => ({
     CartService.clearCart();
   },
   logOutCart: () => {
-     set({ items: [] });
+    set({ items: [] });
     storage.removeItem(STORAGE_KEY);
+    set({hasInitialized: false});
   },
   setDeliveryType: (
     type: "group" | "home",
     groupId?: string,
     address?: string
-  ) => { },
+  ) => {},
   // Sincronizar con el back, agregar y actualizar
   syncCart: async () => {
     const authToken = await TokenService.getToken();
-    if(!authToken) return false
-    const { items, hasInitialized } = get();
+    if (!authToken) return false;
+
+    const localItems = get().items;
+
     try {
       set({ loading: true });
+
       const serverCart = await CartService.getCart();
-      const serverItems = serverCart.items.map((item: any) => ({
+      let serverItems = serverCart.items.map((item: any) => ({
         id: item.product_id,
         name: item.product.name,
         price: item.product.price,
@@ -125,52 +135,57 @@ export const useCartStore = create<CartStore>((set, get) => ({
         item_id_for_delete: item.id,
       }));
 
-      if (!hasInitialized) {
-        set({
-          items: serverItems,
-          hasInitialized: true,
-        });
+      // 1) Si el backend tiene items → ellos mandan
+      if (serverItems.length > 0) {
+        // fusionar solo items del invitado que no existan en backend
+        const serverIds = new Set(serverItems.map((i) => i.id));
+        const toSync = localItems.filter((i) => !serverIds.has(i.id));
 
-        await storage.setItem(STORAGE_KEY, JSON.stringify(serverItems));
-        return true;
-      }
-
-      const serverItemsMap = new Map(serverItems.map((i) => [i.id, i]));
-
-      for (const local of items) {
-        const match = serverItemsMap.get(local.id);
-
-        if (!match) {
+        for (const item of toSync) {
           await CartService.addToCart({
-            product_id: local.id,
-            quantity: local.quantity,
-          });
-        } else if (match.quantity !== local.quantity) {
-          await CartService.updateCartItem(match.id, {
-            quantity: local.quantity,
+            product_id: item.id,
+            quantity: item.quantity,
           });
         }
 
-        serverItemsMap.delete(local.id);
+        // refrescar carrito
+        const updated = await CartService.getCart();
+        const finalItems = updated.items.map((item: any) => ({
+          id: item.product_id,
+          name: item.product.name,
+          price: item.product.price,
+          quantity: item.quantity,
+          image: item.product.image_url,
+          item_id_for_delete: item.id,
+        }));
+
+        set({ items: finalItems, hasInitialized: true });
+        await storage.removeItem(STORAGE_KEY);
+        return true;
       }
 
-      const updatedCart = await CartService.getCart();
+      // 2) Si no hay carrito en backend → subir carrito local entero
+      for (const item of localItems) {
+        await CartService.addToCart({
+          product_id: item.id,
+          quantity: item.quantity,
+        });
+      }
 
-      const finalItems = updatedCart.items.map((item: any) => ({
-        id: item.product_id,
-        name: item.product.name,
-        price: item.product.price,
-        quantity: item.quantity,
-        image: item.product.image_url,
-        item_id_for_delete: item.id,
-      }));
-
+      const final = await CartService.getCart();
       set({
-        items: finalItems,
+        items: final.items.map((item: any) => ({
+          id: item.product_id,
+          name: item.product.name,
+          price: item.product.price,
+          quantity: item.quantity,
+          image: item.product.image_url,
+          item_id_for_delete: item.id,
+        })),
         hasInitialized: true,
       });
 
-      await storage.setItem(STORAGE_KEY, JSON.stringify(finalItems));
+      await storage.removeItem(STORAGE_KEY);
 
       return true;
     } catch (err) {
