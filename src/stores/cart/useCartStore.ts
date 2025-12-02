@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { CartService } from "@services/core";
 import { storage } from "../storeEngine";
-import { getBackendErrorMessage } from "src/services";
+import { getBackendErrorMessage, TokenService } from "src/services";
 import { notify } from "src/hooks/notification/notify.external";
 import { convertUSDToBeCoins } from "src/constants";
 
@@ -31,6 +31,7 @@ export type CartStore = {
   removeProduct: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
+  logOutCart: () => void;
   syncCart: () => Promise<boolean>;
   setDeliveryType: (
     type: "group" | "home",
@@ -68,7 +69,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
 
     set({ items: updatedItems });
     storage.setItem(STORAGE_KEY, JSON.stringify(updatedItems));
-    get().syncCart();
+    CartService.addToCart({ product_id: product.id, quantity: 1 });
   },
 
   // Remover producto
@@ -79,7 +80,6 @@ export const useCartStore = create<CartStore>((set, get) => ({
     set({ items: updated });
     storage.setItem(STORAGE_KEY, JSON.stringify(updated));
     CartService.removeFromCart(itemToDelete?.item_id_for_delete);
-    console.log("Se elimino correcto")
   },
 
   // Actualizar cantidad (mínimo 1)
@@ -99,6 +99,10 @@ export const useCartStore = create<CartStore>((set, get) => ({
     storage.removeItem(STORAGE_KEY);
     CartService.clearCart();
   },
+  logOutCart: () => {
+     set({ items: [] });
+    storage.removeItem(STORAGE_KEY);
+  },
   setDeliveryType: (
     type: "group" | "home",
     groupId?: string,
@@ -106,6 +110,8 @@ export const useCartStore = create<CartStore>((set, get) => ({
   ) => { },
   // Sincronizar con el back, agregar y actualizar
   syncCart: async () => {
+    const authToken = await TokenService.getToken();
+    if(!authToken) return false
     const { items, hasInitialized } = get();
     try {
       set({ loading: true });
