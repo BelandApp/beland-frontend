@@ -8,6 +8,7 @@ import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 type HeaderProps = {
   title?: string;
+  subtitle?: string;
   logo?: boolean;
   canGoBack?: boolean;
   onBackPress?: () => void;
@@ -17,6 +18,7 @@ type HeaderProps = {
 
 export const ThemedHeader: React.FC<HeaderProps> = ({
   title,
+  subtitle,
   logo,
   canGoBack = false,
   onBackPress,
@@ -52,13 +54,19 @@ export const ThemedHeader: React.FC<HeaderProps> = ({
             <CircleArrowLeftIcon size={32} color="#FFF" />
           </TouchableOpacity>
         )}
-        {title && (
-          <Text
-            style={[HeaderStyles.text, centerTitle && HeaderStyles.centerText]}
-          >
-            {title}
-          </Text>
-        )}
+        <View>
+          {title && (
+            <Text
+              style={[
+                HeaderStyles.text,
+                centerTitle && HeaderStyles.centerText,
+              ]}
+            >
+              {title}
+            </Text>
+          )}
+          {subtitle && <Text style={HeaderStyles.subtitle}>{subtitle}</Text>}
+        </View>
       </View>
     );
   };

@@ -26,6 +26,8 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { ThemedHeader } from "@/components";
 import { useFilteredProducts } from "./mainHooks/useFilteredProducts";
 import { useCategories } from "src/hooks/categories/useCategories";
+import { useCartStore } from "src/stores";
+import { useAuth } from "src/context";
 
 export const CatalogScreen = () => {
   const { navigate } = useCustomNavigation();
@@ -39,7 +41,7 @@ export const CatalogScreen = () => {
     showCart,
     addingProductId,
   } = useCatalogCart();
-
+  const {syncCart}=useCartStore()
   const {
     searchText,
     setSearchText,
@@ -48,10 +50,7 @@ export const CatalogScreen = () => {
     showFilters,
     setShowFilters,
   } = useCatalogFilters();
-
   const {categories}=useCategories()
-  // TODO para el futuro sortear con marcas
-  const [brands, setBrands] = useState<string[]>([]);
   const { displayGroups, loading, error, refreshProducts } = useFilteredProducts({
     filters,
     searchText,
@@ -61,8 +60,12 @@ export const CatalogScreen = () => {
     useCatalogModals();
 
   const notify = useNotify();
-
-
+  useEffect(() => {
+    isAuthenticated && syncCart();
+  },[])
+  
+  // TODO para el futuro sortear con marcas
+  const [brands, setBrands] = useState<string[]>([]);
   return (
     <>
       {/* Header */}

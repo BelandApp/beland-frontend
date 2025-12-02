@@ -9,11 +9,11 @@ import {
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors } from "src/styles";
 import { Button } from "src/components";
-import { CartProduct } from "src/stores/useCartStore";
 import { useState } from "react";
 import { preOrderType } from "../../hooks";
 import { UserAddress } from "src/services";
 import { convertUSDToBeCoins } from "src/constants";
+import { CartItem } from "src/stores";
 type ProcessingStepProps = {
   preOrder: preOrderType | null;
   onSubmit: (address: UserAddress, addressId: string) => void;
@@ -34,7 +34,7 @@ export const ConfirmOrder: React.FC<ProcessingStepProps> = ({
   }
   const { products, address, addressId } = preOrder;
   const total = products
-    .reduce((s: any, p: CartProduct) => s + p.price * p.quantity, 0)
+    .reduce((s: any, p: CartItem) => s + p.price * p.quantity, 0)
     .toFixed(2);
   const handleSubmit = () => {
     setIsSubmitting(true);
@@ -65,8 +65,8 @@ export const ConfirmOrder: React.FC<ProcessingStepProps> = ({
       <View style={styles.cards}>
         <Text style={styles.title}>Tu orden:</Text>
         <View style={styles.productsWrapper}>
-          {products.map((product: CartProduct) => (
-            <View style={styles.product}>
+          {products.map((product: CartItem) => (
+            <View style={styles.product} key={product.id}>
               <Text style={styles.productTitle}>{product.name}</Text>
               <Text>Precio Unitario: Usd${product.price}</Text>
               <Text>Cantidad: {product.quantity}</Text>

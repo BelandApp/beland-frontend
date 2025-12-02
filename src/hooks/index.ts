@@ -1,7 +1,5 @@
 // Hooks principales
 export * from "./useUserResources";
-export * from "./cart/useCart";
-export * from "./cart/useCartSync";
 export * from "./useAddresses";
 export * from "./useOrders";
 export * from "./usePaymentTypes";

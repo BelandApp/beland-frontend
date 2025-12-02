@@ -5,7 +5,7 @@ export * from "./addressService";
 // API Services
 export { UserService } from "./UserApiService";
 export { ProductService } from "./ProductApiService";
-export { CartService } from "./CartApiService";
+export { CartService } from "./cart/CartApiService";
 export { OrderService } from "./OrderApiService";
 export { GroupService } from "./GroupApiService";
 export { PaymentService } from "./PaymentApiService";

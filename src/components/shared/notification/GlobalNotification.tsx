@@ -24,7 +24,11 @@ export const toastConfig = {
         <CheckCircle style={{ paddingLeft: 2 }} color="green" />
       )}
       text1Style={{ color: "green" }}
-      style={{ alignItems: "center", minWidth: 400, borderLeftColor: "green" }}
+      style={{
+        alignItems: "center",
+        width: Dimensions.get("window").width > 600 ? 400 : "90%",
+        borderLeftColor: "green",
+      }}
       text1NumberOfLines={2}
     />
   ),
@@ -34,7 +38,11 @@ export const toastConfig = {
       renderLeadingIcon={() => (
         <CircleAlert style={{ paddingLeft: 2 }} color="red" />
       )}
-      style={{ alignItems: "center", borderLeftColor: "red", minWidth: 400 }}
+      style={{
+        alignItems: "center",
+        borderLeftColor: "red",
+        width: Dimensions.get("window").width > 600 ? 400 : "90%",
+      }}
       text1NumberOfLines={2}
     />
   ),
@@ -46,7 +54,7 @@ export const toastConfig = {
       style={{
         alignItems: "center",
         borderLeftColor: "#5584d0ff",
-        minWidth: 400,
+        width: Dimensions.get("window").width > 600 ? 400 : "90%",
       }}
       {...props}
       text1NumberOfLines={2}
@@ -55,8 +63,7 @@ export const toastConfig = {
   cartItem: ({ text1, props }: ToastConfigParams<ConfirmProps>) => (
     <View
       style={{
-        width: "50%",
-        maxWidth: 300,
+        width: Dimensions.get("window").width > 600 ? 400 : "90%",
         backgroundColor: "white",
         flexDirection: "row",
         alignItems: "center",
@@ -74,6 +81,8 @@ export const toastConfig = {
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 5,
+        position: "absolute",
+        top: 5,
       }}
     >
       <Text>{text1}</Text>
@@ -91,6 +100,8 @@ export const toastConfig = {
   confirm: ({ text1, props }: ToastConfigParams<ConfirmProps>) => (
     <View
       style={{
+        position: "absolute",
+        top: 5,
         width: Dimensions.get("window").width > 600 ? 400 : "90%",
         backgroundColor: "white",
         borderRadius: 10,
