@@ -1,7 +1,4 @@
-import React, {
-  useEffect,
-  useState,
-} from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -26,8 +23,6 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { ThemedHeader } from "@/components";
 import { useFilteredProducts } from "./mainHooks/useFilteredProducts";
 import { useCategories } from "src/hooks/categories/useCategories";
-import { useCartStore } from "src/stores";
-import { useAuth } from "src/context";
 
 export const CatalogScreen = () => {
   const { navigate } = useCustomNavigation();
@@ -41,7 +36,6 @@ export const CatalogScreen = () => {
     showCart,
     addingProductId,
   } = useCatalogCart();
-  const {syncCart}=useCartStore()
   const {
     searchText,
     setSearchText,
@@ -50,20 +44,18 @@ export const CatalogScreen = () => {
     showFilters,
     setShowFilters,
   } = useCatalogFilters();
-  const {categories}=useCategories()
-  const { displayGroups, loading, error, refreshProducts } = useFilteredProducts({
-    filters,
-    searchText,
-    categories,
-  });
+  const { categories } = useCategories();
+  const { displayGroups, loading, error, refreshProducts } =
+    useFilteredProducts({
+      filters,
+      searchText,
+      categories,
+    });
   const { showDeliveryModal, openDeliveryModal, closeDeliveryModal } =
     useCatalogModals();
 
   const notify = useNotify();
-  useEffect(() => {
-    isAuthenticated && syncCart();
-  },[])
-  
+
   // TODO para el futuro sortear con marcas
   const [brands, setBrands] = useState<string[]>([]);
   return (
@@ -78,35 +70,31 @@ export const CatalogScreen = () => {
               variant="header"
               style={containerStyles.coinsContainer}
             />
-            {isAuthenticated && (
-              <TouchableOpacity
-                style={styles.headerCartBtn}
-                onPress={openCart}
-                activeOpacity={0.8}
-              >
-                <MaterialCommunityIcons
-                  name={isSyncing ? "sync" : "cart-variant"}
-                  size={25}
-                  color={isSyncing ? "#FFA500" : "#FF6B35"}
-                  style={[
-                    styles.headerCartIcon,
-                    isSyncing && styles.syncingIcon,
-                  ]}
-                />
-                {cartProducts.length > 0 && !isSyncing && (
-                  <View style={styles.headerBadge}>
-                    <Text style={styles.headerBadgeText}>
-                      {cartProducts.length}
-                    </Text>
-                  </View>
-                )}
-                {isSyncing && (
-                  <View style={styles.syncIndicator}>
-                    <Text style={styles.syncText}>⟳</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            )}
+
+            <TouchableOpacity
+              style={styles.headerCartBtn}
+              onPress={openCart}
+              activeOpacity={0.8}
+            >
+              <MaterialCommunityIcons
+                name={isSyncing ? "sync" : "cart-variant"}
+                size={25}
+                color={isSyncing ? "#FFA500" : "#FF6B35"}
+                style={[styles.headerCartIcon, isSyncing && styles.syncingIcon]}
+              />
+              {cartProducts.length > 0 && !isSyncing && (
+                <View style={styles.headerBadge}>
+                  <Text style={styles.headerBadgeText}>
+                    {cartProducts.length}
+                  </Text>
+                </View>
+              )}
+              {isSyncing && (
+                <View style={styles.syncIndicator}>
+                  <Text style={styles.syncText}>⟳</Text>
+                </View>
+              )}
+            </TouchableOpacity>
           </>
         }
       />
@@ -195,32 +183,37 @@ export const CatalogScreen = () => {
         )}
       </ScrollView>
 
-      {isAuthenticated && (
-        <CartBottomSheet
-          visible={showCart}
-          onClose={closeCart}
-          onNavigateToRecharge={() => {
-            closeCart();
-            navigate("RechargeScreen");
-          }}
-          onCheckout={async () => {
-            closeCart();
-            if (cartProducts.length === 0) {
-              notify.error({ message: "El carrito esta vacio" });
-              return;
-            }
-            try {
-              openDeliveryModal();
-            } catch (error) {
-              console.error("Error en checkout:", error);
-              notify.error({
-                message:
-                  "Hubo un problema al procesar tu carrito. Inténtalo de nuevo.",
-              });
-            }
-          }}
-        />
-      )}
+      <CartBottomSheet
+        visible={showCart}
+        onClose={closeCart}
+        onNavigateToRecharge={() => {
+          closeCart();
+          navigate("RechargeScreen");
+        }}
+        onCheckout={async () => {
+          if (!isAuthenticated) {
+            notify.confirm({
+              message: "Para comprar debes estar logueado! Te ayudo? ",
+              onConfirm: () => navigate("Login"),
+            });
+            return;
+          }
+          closeCart();
+          if (cartProducts.length === 0) {
+            notify.error({ message: "El carrito esta vacio" });
+            return;
+          }
+          try {
+            openDeliveryModal();
+          } catch (error) {
+            console.error("Error en checkout:", error);
+            notify.error({
+              message:
+                "Hubo un problema al procesar tu carrito. Inténtalo de nuevo.",
+            });
+          }
+        }}
+      />
 
       <OrderDeliveryModal
         visible={showDeliveryModal}

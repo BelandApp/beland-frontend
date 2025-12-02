@@ -40,20 +40,22 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
   onCheckout,
   onNavigateToRecharge,
 }) => {
-  const { user } = useAuth();
+  const { isAuthenticated, handleAuth0Login,user } = useAuth();
   const {
     items,
     removeProduct,
     updateQuantity,
     clearCart,
-    totalBecoins,
+    totalBecoins,syncCart
   } = useCartStore();
   const notify = useNotify();
   const { balance } = useUserBalance();
   const [insufficientModalVisible, setInsufficientModalVisible] =
     useState(false);
 
-
+useEffect(() => {
+  if(user) syncCart()
+},[user])
   const handleRemoveProduct = async (productId: string) => {
     try {
       removeProduct(productId);
@@ -184,6 +186,7 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
               title="Finalizar compra"
               disabled={items.length === 0}
               onPress={() => {
+                if(!isAuthenticated) {notify.confirm({ message: "Debes iniciar sesión para comprar", onConfirm: () => handleAuth0Login() }); return;}
                 // Verificar saldo en BeCoins antes de proceder
                 if ((balance || 0) < totalBecoins()) {
                   setInsufficientModalVisible(true);
