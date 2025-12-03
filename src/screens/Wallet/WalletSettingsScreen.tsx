@@ -12,14 +12,14 @@ import {
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuth } from "@/context/AuthContext";
 
-import { useWalletData } from "./hooks/useWalletData";
+import { useWallet } from "./hooks/useWalletData";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 export default function WalletSettingsScreen() {
     const { goBack } = useCustomNavigation();
 
   const { user } = useAuth();
-  const { fullWalletData, refetch } = useWalletData();
+  const { wallet, refreshAll } = useWallet();
 
   const [alias, setAlias] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -28,10 +28,10 @@ export default function WalletSettingsScreen() {
   const [showQR, setShowQR] = useState(false);
 
   useEffect(() => {
-    if (fullWalletData?.alias) {
-      setAlias(fullWalletData.alias);
+    if (wallet?.alias) {
+      setAlias(wallet.alias);
     }
-  }, [fullWalletData]);
+  }, [wallet]);
 
   const handleUpdateAlias = async () => {
     if (!alias.trim()) {
@@ -39,7 +39,7 @@ export default function WalletSettingsScreen() {
       return;
     }
 
-    if (!fullWalletData?.id) {
+    if (!wallet?.id) {
       Alert.alert("Error", "No se encontró la wallet");
       return;
     }
@@ -54,7 +54,7 @@ export default function WalletSettingsScreen() {
       // });
 
       Alert.alert("Éxito", "Alias actualizado correctamente");
-      await refetch();
+      await refreshAll();
     } catch (error: any) {
       console.error("Error actualizando alias:", error);
       Alert.alert("Error", error.message || "No se pudo actualizar el alias");
@@ -129,25 +129,25 @@ export default function WalletSettingsScreen() {
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>ID de Wallet</Text>
           <Text style={styles.infoValue}>
-            {fullWalletData?.id?.slice(0, 8)}...
+            {wallet?.id?.slice(0, 8)}...
           </Text>
         </View>
 
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Creada el</Text>
           <Text style={styles.infoValue}>
-            {fullWalletData?.created_at
-              ? new Date(fullWalletData.created_at).toLocaleDateString()
+            {wallet?.created_at
+              ? new Date(wallet.created_at).toLocaleDateString()
               : "-"}
           </Text>
         </View>
 
-        {fullWalletData?.locked_balance &&
-          fullWalletData.locked_balance > 0 && (
+        {wallet?.locked_balance &&
+          wallet.locked_balance > 0 && (
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Balance Bloqueado</Text>
               <Text style={styles.infoValue}>
-                {Math.floor(fullWalletData.locked_balance)} BeCoins
+                {Math.floor(wallet.locked_balance)} BeCoins
               </Text>
             </View>
           )}

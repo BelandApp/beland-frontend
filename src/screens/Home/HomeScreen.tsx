@@ -12,7 +12,7 @@ import {
   useDashboardData,
   useResponsiveLayout,
 } from "./hooks";
-import { useWalletData, useWalletTransactions } from "../Wallet/hooks";
+import { useWallet } from "../Wallet/hooks";
 import { useBeCoinsStore } from "@/stores";
 import { HomeWave } from "src/components/ui/waves/Home.wave";
 import { ThemedHeader } from "src/components/shared/headers/Header";
@@ -25,9 +25,8 @@ export const HomeScreen = () => {
     navigateDelivery,
   } = useDashboardNavigation();
   const { userStats, activities } = useDashboardData();
-  const { transactions } = useWalletTransactions();
   const { getBeCoinsInUSD } = useBeCoinsStore();
-  const { loading}=useWalletData()
+  const { loadingWallet: loading, transactions }=useWallet()
 
   // Usar la constante centralizada para el cálculo de USD
   const balance = userStats?.coinsAmount ?? 0;

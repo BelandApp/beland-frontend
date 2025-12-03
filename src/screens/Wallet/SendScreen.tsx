@@ -13,7 +13,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuth } from "@/context/AuthContext";
 import { WalletService } from "@services/core";
 import Constants from "expo-constants";
-import { useWalletData } from "../Wallet/hooks/useWalletData";
+import { useWallet } from "../Wallet/hooks/useWalletData";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { useNotify, useBeCoinsPrice, useRecentRecipients } from "src/hooks";
 import { getBackendErrorMessage } from "src/services";
@@ -23,7 +23,7 @@ type Tab = "amount" | "contacts";
 
 const SendScreen = () => {
   const { navigate, goBack } = useCustomNavigation();
-  const { walletData, refetch } = useWalletData();
+  const { walletData, refreshAll} = useWallet();
   const { user, handleAuth0Login } = useAuth();
   const { pricePerBeCoin, usdToBeCoins, beCoinsToUsd } = useBeCoinsPrice();
   const {
@@ -97,7 +97,7 @@ const SendScreen = () => {
             2
           )} BECOINS) a ${address}`,
         });
-        refetch();
+        refreshAll();
       } else {
         if (!user?.email) {
           notify.confirm({
@@ -118,7 +118,7 @@ const SendScreen = () => {
           notify.success({
             message: `Transferencia exitosa de $${amountUsd} USD a ${address}`,
           });
-          refetch();
+          refreshAll();
 
           // Esperar un momento antes de recargar contactos para dar tiempo a que se registre en la BD
           setTimeout(() => {
