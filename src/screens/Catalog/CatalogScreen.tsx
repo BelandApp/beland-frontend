@@ -45,7 +45,7 @@ export const CatalogScreen = () => {
     setShowFilters,
   } = useCatalogFilters();
   const { categories } = useCategories();
-  const { displayGroups, loading, error, refreshProducts } =
+  const { displayGroups, loading, refresh, error } =
     useFilteredProducts({
       filters,
       searchText,
@@ -105,7 +105,7 @@ export const CatalogScreen = () => {
         contentContainerStyle={containerStyles.contentContainer}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={refreshProducts} />
+          <RefreshControl refreshing={loading} onRefresh={refresh} />
         }
       >
         <SearchBarInput

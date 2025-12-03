@@ -12,7 +12,7 @@ export const useFilteredProducts = ({
   filters: any;
   categories: { id: string; name: string }[];
 }) => {
-  const { products, loading, error, updateQuery, refreshProducts } =
+  const { products, loading, updateQuery, refresh, error } =
     useProducts();
   const lastQueryRef = useRef<string>("");
 
@@ -53,5 +53,5 @@ export const useFilteredProducts = ({
     }));
   }, [grouped, products]);
 
-  return { loading, error, products, displayGroups, refreshProducts };
+  return { loading, products, displayGroups, refresh,error };
 };
