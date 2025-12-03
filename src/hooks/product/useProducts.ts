@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { ProductQuery, Product } from "@/types";
 import { ProductService } from "src/services";
-import { getProductCache, setProductCache } from "./productCache";
 import { useCache } from "../cache/useCache";
 
 export function useProducts(
