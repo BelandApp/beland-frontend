@@ -19,6 +19,7 @@ import { useCreateGroupStore } from "src/stores/useCreateGroupStore";
 import { useAuthTokenStore } from "src/stores/useAuthTokenStore";
 import { getBackendErrorMessage } from "src/services";
 import { notify } from "src/hooks/notification/notify.external";
+import { clearStorage, resetStores } from "src/utils/logoutUtils";
 
 export type User = {
   id: string;
@@ -196,73 +197,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const logout = async () => {
-    // Clear auth token and secure/local storage entries
-    await TokenService.clearToken();
+   await clearStorage(Storage);
+   resetStores();
 
-    // Keys we want to ensure are removed on logout (localStorage / SecureStore / AsyncStorage)
-    const keysToClear = [
-      // auth tokens and user
-      "access_token",
-      "auth_token",
-      "auth_user",
+   await TokenService.clearToken();
 
-      // app stores persisted to storage
-      "cart-store",
-      "orders-store-api",
-      "becoins-store",
-      "create-group-store",
-      "groups-storage",
-
-      // payment / wallet / payphone
-      "payphone_token",
-      "wallet_id",
-      "payphone_is_qr_payment",
-      "payphone_to_wallet_id",
-      "wallet_id",
-    ];
-
-    try {
-      await Promise.all(keysToClear.map((k) => Storage.removeItem(k)));
-    } catch (e) {
-      // best-effort: also try to remove from window.localStorage if available
-      if (typeof window !== "undefined" && window.localStorage) {
-        try {
-          keysToClear.forEach((k) => window.localStorage.removeItem(k));
-        } catch (err) {
-          console.warn("Error clearing localStorage keys on logout:", err);
-        }
-      }
-    }
-
-    // Reset in-memory stores to initial state so UI doesn't show stale data
-    try {
-      useCartStore.getState().clearCart && useCartStore.getState().clearCart();
-    } catch (e) {}
-
-    try {
-      useBeCoinsStore.getState().resetBalance &&
-        useBeCoinsStore.getState().resetBalance();
-    } catch (e) {}
-
-    try {
-      useOrdersStoreAPI.getState().clearOrders &&
-        useOrdersStoreAPI.getState().clearOrders();
-    } catch (e) {}
-
-    try {
-      useCreateGroupStore.getState().clearGroup &&
-        useCreateGroupStore.getState().clearGroup();
-    } catch (e) {}
-
-    try {
-      useAuthTokenStore.getState().clearToken &&
-        useAuthTokenStore.getState().clearToken();
-      useAuthTokenStore.getState().clearUser &&
-        useAuthTokenStore.getState().clearUser();
-    } catch (e) {}
-
-    setUser(null);
-    setToken(null);
+   setUser(null);
+   setToken(null);
   };
   const requireAuth = async (action: () => void | Promise<void>) => {
     if (!isAuthenticated) {

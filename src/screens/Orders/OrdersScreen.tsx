@@ -314,6 +314,11 @@ const OrdersScreen: React.FC = () => {
       return null;
     }
 
+    // Formatear order_number como BL-XXXXXX
+    const orderNumber = order.order_number
+      ? `BL-${String(order.order_number).padStart(6, "0")}`
+      : `#${order.id.substring(0, 8).toUpperCase()}`;
+
     return (
       <TouchableOpacity
         key={order.id}
@@ -323,9 +328,7 @@ const OrdersScreen: React.FC = () => {
         <View style={ordersStyles.orderCardHeader}>
           <View style={ordersStyles.orderMainInfo}>
             <View style={ordersStyles.orderIdRow}>
-              <Text style={ordersStyles.orderId}>
-                #{order.id.substring(0, 8).toUpperCase()}
-              </Text>
+              <Text style={ordersStyles.orderId}>{orderNumber}</Text>
               <View
                 style={[
                   ordersStyles.statusIndicator,
@@ -424,11 +427,7 @@ const OrdersScreen: React.FC = () => {
 
   return (
     <>
-      <ThemedHeader
-        title="Mis Ordenes"
-        canGoBack
-        
-      />
+      <ThemedHeader title="Mis Ordenes" canGoBack />
       <ScrollView
         // style={ordersStyles.scrollView}
         contentContainerStyle={ordersStyles.scrollContent}

@@ -38,6 +38,7 @@ export interface DeliveryAddress {
 
 export interface Order {
   id: string;
+  order_number?: number;
   userId: string;
   items: OrderItem[];
 

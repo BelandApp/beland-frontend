@@ -16,13 +16,6 @@ export const useCatalogCart = () => {
   // Manejar agregar producto al carrito
   const handleAddProduct = useCallback(
     async (product: ProductCardType) => {
-      if (!isAuthenticated) {
-        notify.confirm({
-          message: "Debes iniciar sesión para agregar productos al carrito.",
-          onConfirm: () => handleAuth0Login(),
-        });
-        return;
-      }
       setIsSyncing(true);
       // Normalizar campo de imagen
       const imageField =

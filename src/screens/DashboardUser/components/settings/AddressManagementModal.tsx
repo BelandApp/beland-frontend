@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -10,12 +10,15 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { X, MapPin, Plus, Trash2, Check, Home } from "lucide-react-native";
+import { X, MapPin, Plus, Trash2, Check, Home, Map } from "lucide-react-native";
 import { useAddresses } from "src/hooks/useAddresses";
 import type {
   UserAddress,
   CreateAddressRequest,
 } from "src/services/addressService";
+import * as mapboxService from "src/services/mapboxService";
+import type { MapboxSuggestion } from "src/services/mapboxService";
+import { AddressMapPicker } from "src/screens/Catalog/components/AddressMapPicker";
 
 interface AddressManagementModalProps {
   visible: boolean;
@@ -45,10 +48,15 @@ export const AddressManagementModal: React.FC<AddressManagementModalProps> = ({
     city: "",
     state: "",
     postalCode: "",
-    country: "Paraguay",
+    country: "Ecuador",
     isDefault: false,
   });
   const [formErrors, setFormErrors] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<MapboxSuggestion[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const debounceRef = useRef<number | null>(null);
+  const [showMapPicker, setShowMapPicker] = useState(false);
 
   const resetForm = () => {
     setFormData({
@@ -57,12 +65,14 @@ export const AddressManagementModal: React.FC<AddressManagementModalProps> = ({
       city: "",
       state: "",
       postalCode: "",
-      country: "Paraguay",
+      country: "Ecuador",
       isDefault: false,
     });
     setFormErrors([]);
     setShowAddForm(false);
     setEditingAddress(null);
+    setSearchQuery("");
+    setSuggestions([]);
   };
 
   const handleEdit = (address: UserAddress) => {
@@ -148,6 +158,101 @@ export const AddressManagementModal: React.FC<AddressManagementModalProps> = ({
   const handleClose = () => {
     resetForm();
     onClose();
+  };
+
+  // Autocomplete search with Mapbox
+  useEffect(() => {
+    if (!searchQuery || searchQuery.trim().length < 3) {
+      setSuggestions([]);
+      return;
+    }
+
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    debounceRef.current = setTimeout(async () => {
+      try {
+        setLoadingSuggestions(true);
+        const results = await mapboxService.searchAddressSuggestions(
+          searchQuery,
+          {
+            language: "es",
+            limit: 5,
+          }
+        );
+        setSuggestions(results || []);
+      } catch (error) {
+        console.error("Error fetching address suggestions:", error);
+        setSuggestions([]);
+      } finally {
+        setLoadingSuggestions(false);
+      }
+    }, 300) as unknown as number;
+
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, [searchQuery]);
+
+  const handleSelectSuggestion = (suggestion: MapboxSuggestion) => {
+    // Auto-fill form with selected address
+    setFormData({
+      ...formData,
+      addressLine1: suggestion.name || suggestion.full_address,
+      city:
+        suggestion.context?.place?.name ||
+        suggestion.context?.locality?.name ||
+        "",
+      state: suggestion.context?.region?.name || "",
+      country: suggestion.context?.country?.name || "Ecuador",
+      latitude: suggestion.coordinates.latitude,
+      longitude: suggestion.coordinates.longitude,
+    });
+    setSearchQuery("");
+    setSuggestions([]);
+  };
+
+  const handleMapSelection = async (coords: {
+    latitude: number;
+    longitude: number;
+  }) => {
+    // Reverse geocoding to get address from coordinates
+    try {
+      const place = await mapboxService.reverseGeocode(
+        coords.latitude,
+        coords.longitude
+      );
+      if (place) {
+        setFormData({
+          ...formData,
+          addressLine1: place.street || place.name,
+          city: place.city || "",
+          state: place.region || "",
+          country: place.country || "Ecuador",
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+        });
+      } else {
+        // Si no hay resultado, solo guardar coordenadas
+        setFormData({
+          ...formData,
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+        });
+      }
+    } catch (error) {
+      console.error("Error reverse geocoding:", error);
+      // En caso de error, solo guardar coordenadas
+      setFormData({
+        ...formData,
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+      });
+    }
+    setShowMapPicker(false);
   };
 
   return (
@@ -286,6 +391,53 @@ export const AddressManagementModal: React.FC<AddressManagementModalProps> = ({
                     </View>
                   )}
 
+                  {/* Address Search with Mapbox */}
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Buscar dirección</Text>
+                    <View style={styles.searchContainer}>
+                      <TextInput
+                        style={styles.inputWithIcon}
+                        value={searchQuery}
+                        onChangeText={setSearchQuery}
+                        placeholder="Busca tu dirección..."
+                      />
+                      <TouchableOpacity
+                        style={styles.mapIconButton}
+                        onPress={() => setShowMapPicker(true)}
+                      >
+                        <Map size={20} color="#FF6B35" />
+                      </TouchableOpacity>
+                      {loadingSuggestions && (
+                        <ActivityIndicator
+                          size="small"
+                          color="#FF6B35"
+                          style={styles.searchLoader}
+                        />
+                      )}
+                    </View>
+                    {suggestions.length > 0 && (
+                      <View style={styles.suggestionsContainer}>
+                        {suggestions.map((suggestion) => (
+                          <TouchableOpacity
+                            key={suggestion.id}
+                            style={styles.suggestionItem}
+                            onPress={() => handleSelectSuggestion(suggestion)}
+                          >
+                            <MapPin size={16} color="#FF6B35" />
+                            <View style={styles.suggestionContent}>
+                              <Text style={styles.suggestionName}>
+                                {suggestion.name}
+                              </Text>
+                              <Text style={styles.suggestionAddress}>
+                                {suggestion.full_address}
+                              </Text>
+                            </View>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+
                   <View style={styles.inputGroup}>
                     <Text style={styles.label}>
                       Dirección <Text style={styles.required}>*</Text>
@@ -342,33 +494,18 @@ export const AddressManagementModal: React.FC<AddressManagementModalProps> = ({
                     </View>
                   </View>
 
-                  <View style={styles.row}>
-                    <View style={[styles.inputGroup, { flex: 1 }]}>
-                      <Text style={styles.label}>Código Postal (opcional)</Text>
-                      <TextInput
-                        style={styles.input}
-                        value={formData.postalCode}
-                        onChangeText={(text) =>
-                          setFormData({ ...formData, postalCode: text })
-                        }
-                        placeholder="0000"
-                        keyboardType="numeric"
-                      />
-                    </View>
-
-                    <View style={[styles.inputGroup, { flex: 1 }]}>
-                      <Text style={styles.label}>
-                        País <Text style={styles.required}>*</Text>
-                      </Text>
-                      <TextInput
-                        style={styles.input}
-                        value={formData.country}
-                        onChangeText={(text) =>
-                          setFormData({ ...formData, country: text })
-                        }
-                        placeholder="País"
-                      />
-                    </View>
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>
+                      País <Text style={styles.required}>*</Text>
+                    </Text>
+                    <TextInput
+                      style={styles.input}
+                      value={formData.country}
+                      onChangeText={(text) =>
+                        setFormData({ ...formData, country: text })
+                      }
+                      placeholder="País"
+                    />
                   </View>
                 </View>
 
@@ -403,6 +540,18 @@ export const AddressManagementModal: React.FC<AddressManagementModalProps> = ({
           </ScrollView>
         </View>
       </View>
+
+      {/* Map Picker Modal */}
+      <AddressMapPicker
+        visible={showMapPicker}
+        onClose={() => setShowMapPicker(false)}
+        onSelect={handleMapSelection}
+        initial={
+          formData.latitude && formData.longitude
+            ? { latitude: formData.latitude, longitude: formData.longitude }
+            : null
+        }
+      />
     </Modal>
   );
 };
@@ -630,5 +779,64 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600",
     color: "#fff",
+  },
+  searchContainer: {
+    position: "relative",
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  inputWithIcon: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    borderRadius: 8,
+    padding: 12,
+    paddingRight: 45,
+    fontSize: 15,
+    backgroundColor: "#F9F9F9",
+    color: "#333",
+  },
+  mapIconButton: {
+    position: "absolute",
+    right: 0,
+    padding: 12,
+    backgroundColor: "#FFF3ED",
+    borderRadius: 8,
+    marginLeft: 8,
+  },
+  searchLoader: {
+    position: "absolute",
+    right: 50,
+    top: 12,
+  },
+  suggestionsContainer: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    borderRadius: 8,
+    marginTop: 4,
+    maxHeight: 200,
+    overflow: "hidden",
+  },
+  suggestionItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0",
+    gap: 10,
+  },
+  suggestionContent: {
+    flex: 1,
+  },
+  suggestionName: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 2,
+  },
+  suggestionAddress: {
+    fontSize: 12,
+    color: "#666",
   },
 });
