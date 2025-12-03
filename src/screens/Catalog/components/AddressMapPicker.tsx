@@ -105,10 +105,10 @@ export const AddressMapPicker: React.FC<AddressMapPickerProps> = ({
       (function(){
         mapboxgl.accessToken = '${MAPBOX_ACCESS_TOKEN}';
         
-        const initialCenter = [${initial?.longitude ?? -57.5759}, ${
-    initial?.latitude ?? -25.2637
+        const initialCenter = [${initial?.longitude ?? -65}, ${
+    initial?.latitude ?? -15
   }];
-        const initialZoom = ${initial ? 15 : 12};
+        const initialZoom = ${initial ? 15 : 1};
         
         const map = new mapboxgl.Map({
           container: 'map',
