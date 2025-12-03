@@ -13,14 +13,14 @@ import {
 import * as Clipboard from "expo-clipboard";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuth } from "src/context";
-import { useWalletData } from "../Wallet/hooks/useWalletData";
+import { useWallet } from "../Wallet/hooks/useWalletData";
 import { WalletService } from "@services/core";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { useBeCoinsPrice } from "src/hooks";
 
 const ReceiveScreen = () => {
   const { goBack } = useCustomNavigation();
-  const { walletData } = useWalletData();
+  const { walletData } = useWallet();
   const { user } = useAuth();
   const { beCoinsToUsd } = useBeCoinsPrice();
 

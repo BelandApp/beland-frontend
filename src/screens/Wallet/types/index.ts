@@ -1,8 +1,8 @@
 export interface WalletData {
   balance: number;
   locked_balance?: number;
-  estimatedValue: string;
   alias?: string;
+  estimatedValue: string;
 }
 
 export interface WalletAction {

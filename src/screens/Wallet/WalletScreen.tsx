@@ -17,23 +17,25 @@ import {
   PaymentPreferences,
 } from "./components";
 import {
-  useWalletData,
   useWalletActions,
-  useWalletTransactions,
   usePaymentPreferences,
 } from "./hooks";
 import { containerStyles } from "./styles";
+import { useWallet } from "./hooks/useWalletData";
 
 export const WalletScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { user, isAuthenticated, handleAuth0Login, canPerformAction } =
     useAuth();
-  const { walletData, refetch: refetchWallet } = useWalletData();
-  const { mainWalletActions } = useWalletActions();
+  
   const {
+    walletData,
     transactions,
-    isLoading: transactionsLoading,
-    refetch: refetchTransactions,
-  } = useWalletTransactions();
+    loadingWallet,
+    loadingTransactions,
+    refreshAll,
+  } = useWallet();
+
+  const { mainWalletActions } = useWalletActions();
 
   const {
     data: paymentPreferences,
@@ -48,12 +50,11 @@ export const WalletScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     const unsubscribe = nav.addListener("focus", () => {
       // Si venimos de una recarga exitosa, forzar refetch del saldo y transacciones
       if (canPerformAction) {
-        refetchWallet();
-        refetchTransactions();
+        refreshAll()
       }
     });
     return unsubscribe;
-  }, [nav, refetchWallet, refetchTransactions, canPerformAction]);
+  }, [nav, canPerformAction]);
 
   // Si no está autenticado, mostrar pantalla de login amigable
   if (!isAuthenticated) {
@@ -127,7 +128,7 @@ export const WalletScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             {/* Transacciones recientes */}
             <RecentTransactions
               transactions={transactions ?? []}
-              isLoading={transactionsLoading}
+              isLoading={loadingTransactions}
             />
           </View>
           <View style={containerStyles.waveContainer}>
