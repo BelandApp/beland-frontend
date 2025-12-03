@@ -535,7 +535,11 @@ export const OrderDetailScreen: React.FC = () => {
       <ThemedHeader
         canGoBack
         title="Detalle de la orden"
-        subtitle={`Orden #${baseOrder.id.substring(0, 8).toUpperCase()}`}
+        subtitle={
+          baseOrder.order_number
+            ? `BL-${String(baseOrder.order_number).padStart(6, "0")}`
+            : `Orden #${baseOrder.id.substring(0, 8).toUpperCase()}`
+        }
       />
       <ScrollView
         contentContainerStyle={orderDetailStyles.scrollContent}
@@ -546,7 +550,9 @@ export const OrderDetailScreen: React.FC = () => {
           <View style={orderDetailStyles.heroHeader}>
             <View style={orderDetailStyles.heroInfo}>
               <Text style={orderDetailStyles.orderId}>
-                #{baseOrder.id.substring(0, 8).toUpperCase()}
+                {baseOrder.order_number
+                  ? `BL-${String(baseOrder.order_number).padStart(6, "0")}`
+                  : `#${baseOrder.id.substring(0, 8).toUpperCase()}`}
               </Text>
               <Text style={orderDetailStyles.orderDate}>
                 {formatDate(baseOrder.createdAt)}
@@ -717,7 +723,14 @@ export const OrderDetailScreen: React.FC = () => {
                   defaultSource={require("../../../assets/icon.png")}
                 />
                 <View style={orderDetailStyles.itemInfo}>
-                  <Text style={orderDetailStyles.itemName}>{item.name}</Text>
+                  <Text style={orderDetailStyles.itemName}>
+                    {item.name ||
+                      `Producto ${
+                        (item.product_id || item.productId || item.id)?.slice(
+                          -8
+                        ) || "desconocido"
+                      }`}
+                  </Text>
                   <Text style={orderDetailStyles.itemPrice}>
                     {formatCurrency(item.price)} c/u
                   </Text>

@@ -121,84 +121,93 @@ export const DeliveryScreen = () => {
     return `${street}, ${city}${state ? `, ${state}` : ""}`;
   };
 
-  const renderOrderCard = (order: Order) => (
-    <TouchableOpacity
-      key={order.id}
-      style={deliveryStyles.orderCard}
-      onPress={() => handleOrderPress(order)}
-      activeOpacity={0.7}
-    >
-      <View style={deliveryStyles.orderHeader}>
-        <View style={deliveryStyles.orderInfo}>
-          <Text style={deliveryStyles.orderId}>#{order.id.slice(-8)}</Text>
-          <Text style={deliveryStyles.orderDate}>
-            {order.createdAt
-              ? new Date(order.createdAt).toLocaleDateString("es-ES")
-              : "Fecha no disponible"}
-          </Text>
-        </View>
-        <View
-          style={[
-            deliveryStyles.statusBadge,
-            { backgroundColor: getStatusColor(order.status) },
-          ]}
-        >
-          <Text style={deliveryStyles.statusText}>
-            {getStatusText(order.status)}
-          </Text>
-        </View>
-      </View>
+  const renderOrderCard = (order: Order) => {
+    // Formatear order_number como BL-XXXXXX
+    const orderNumber = order.order_number
+      ? `BL-${String(order.order_number).padStart(6, "0")}`
+      : `#${order.id.slice(-8)}`;
 
-      <View style={deliveryStyles.orderDetails}>
-        <View style={deliveryStyles.detailRow}>
+    return (
+      <TouchableOpacity
+        key={order.id}
+        style={deliveryStyles.orderCard}
+        onPress={() => handleOrderPress(order)}
+        activeOpacity={0.7}
+      >
+        <View style={deliveryStyles.orderHeader}>
+          <View style={deliveryStyles.orderInfo}>
+            <Text style={deliveryStyles.orderId}>{orderNumber}</Text>
+            <Text style={deliveryStyles.orderDate}>
+              {order.createdAt
+                ? new Date(order.createdAt).toLocaleDateString("es-ES")
+                : "Fecha no disponible"}
+            </Text>
+          </View>
+          <View
+            style={[
+              deliveryStyles.statusBadge,
+              { backgroundColor: getStatusColor(order.status) },
+            ]}
+          >
+            <Text style={deliveryStyles.statusText}>
+              {getStatusText(order.status)}
+            </Text>
+          </View>
+        </View>
+
+        <View style={deliveryStyles.orderDetails}>
+          <View style={deliveryStyles.detailRow}>
+            <MaterialCommunityIcons
+              name="map-marker"
+              size={16}
+              color={colors.textSecondary}
+            />
+            <Text style={deliveryStyles.detailText} numberOfLines={2}>
+              {formatAddress(order)}
+            </Text>
+          </View>
+
+          <View style={deliveryStyles.detailRow}>
+            <MaterialCommunityIcons
+              name="package-variant"
+              size={16}
+              color={colors.textSecondary}
+            />
+            <Text style={deliveryStyles.detailText}>
+              {order.items.length} producto{order.items.length !== 1 ? "s" : ""}
+            </Text>
+          </View>
+
+          <View style={deliveryStyles.detailRow}>
+            <MaterialCommunityIcons
+              name="cash"
+              size={16}
+              color={colors.textSecondary}
+            />
+            <Text style={deliveryStyles.detailText}>
+              {formatCurrency(order.total)}
+            </Text>
+          </View>
+        </View>
+
+        <View style={deliveryStyles.orderFooter}>
           <MaterialCommunityIcons
-            name="map-marker"
-            size={16}
-            color={colors.textSecondary}
+            name="truck-delivery"
+            size={20}
+            color={colors.belandOrange}
           />
-          <Text style={deliveryStyles.detailText} numberOfLines={2}>
-            {formatAddress(order)}
+          <Text style={deliveryStyles.deliverButtonText}>
+            Confirmar entrega
           </Text>
-        </View>
-
-        <View style={deliveryStyles.detailRow}>
           <MaterialCommunityIcons
-            name="package-variant"
-            size={16}
-            color={colors.textSecondary}
+            name="chevron-right"
+            size={20}
+            color={colors.belandOrange}
           />
-          <Text style={deliveryStyles.detailText}>
-            {order.items.length} producto{order.items.length !== 1 ? "s" : ""}
-          </Text>
         </View>
-
-        <View style={deliveryStyles.detailRow}>
-          <MaterialCommunityIcons
-            name="cash"
-            size={16}
-            color={colors.textSecondary}
-          />
-          <Text style={deliveryStyles.detailText}>
-            {formatCurrency(order.total)}
-          </Text>
-        </View>
-      </View>
-
-      <View style={deliveryStyles.orderFooter}>
-        <MaterialCommunityIcons
-          name="truck-delivery"
-          size={20}
-          color={colors.belandOrange}
-        />
-        <Text style={deliveryStyles.deliverButtonText}>Confirmar entrega</Text>
-        <MaterialCommunityIcons
-          name="chevron-right"
-          size={20}
-          color={colors.belandOrange}
-        />
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   const renderConfirmModal = () => (
     <Modal
