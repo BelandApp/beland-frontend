@@ -12,7 +12,7 @@ import { useEvents } from "src/hooks/event/useEvents";
 import { EventsTabs } from "./components/EventTabs";
 
 const EventsScreen = () => {
-  const { availableEvents, acquiredEvents, refreshing, onRefresh, isLoading } =
+  const { availableEvents, acquiredEvents, refresh, isLoading } =
     useEvents();
   const { balance, refetch: refetchBalance } = useUserBalance();
   
@@ -29,15 +29,15 @@ const EventsScreen = () => {
         style={styles.scroll}
         refreshControl={
           <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
+            refreshing={isLoading}
+            onRefresh={refresh}
             colors={[colors.primary]}
-            style={{padding:0}}
+            style={{ padding: 0 }}
           />
         }
       >
         {isLoading ? (
-          <CustomLoader/>
+          <CustomLoader />
         ) : (
           <EventsTabs
             availableEvents={availableEvents}

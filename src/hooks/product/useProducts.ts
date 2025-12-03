@@ -2,67 +2,37 @@ import { useState, useEffect, useCallback } from "react";
 import { ProductQuery, Product } from "@/types";
 import { ProductService } from "src/services";
 import { getProductCache, setProductCache } from "./productCache";
+import { useCache } from "../cache/useCache";
 
 export function useProducts(
   initialQuery: ProductQuery = { page: 1, sortBy: "name", order: "ASC" }
 ) {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [total, setTotal] = useState(0);
+  const [query, setQuery] = useState<ProductQuery>(initialQuery);
+  const { data, loading, refresh, error } = useCache({
+    key: "products_cache",
+    duration: 3 * 60 * 60 * 1000, // 3 horas
+    fetcher: () => ProductService.getProducts(query),
+  });
   const [page, setPage] = useState(initialQuery.page || 1);
   const [limit, setLimit] = useState(initialQuery.limit || 10);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [query, setQuery] = useState<ProductQuery>(initialQuery);
-  const [forceRefresh, setForceRefresh] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [products, setProducts] = useState<Product[]>([]);
 
   const queryKey = JSON.stringify(query);
-
-  const fetchProducts = useCallback(
-    async (overrideQuery?: ProductQuery) => {
-      setLoading(true);
-      setError(null);
-
-      const finalQuery = { ...query, ...overrideQuery };
-      const queryKey = JSON.stringify(finalQuery);
-
-      try {
-        // 1️⃣ Intentar cache (solo si no es force refresh)
-        if (!forceRefresh) {
-          const cached = await getProductCache(queryKey);
-          if (cached) {
-            setProducts(cached.data);
-            setTotal(cached.total);
-            setPage(cached.page);
-            setLimit(cached.limit);
-            setLoading(false);
-            return;
-          }
-        }
-
-        // 2️⃣ Si no hay cache → fetch real
-        const res = await ProductService.getProducts(finalQuery);
-
-        setProducts(res.data);
-        setTotal(res.total);
-        setPage(res.page);
-        setLimit(res.limit);
-
-        // 3️⃣ Guardar en cache para futuras consultas
-        await setProductCache(queryKey, res);
-      } catch (err: any) {
-        setError(err.message || "Error al cargar productos");
-      } finally {
-        setForceRefresh(false);
-        setLoading(false);
-      }
-    },
-    [query, forceRefresh]
-  );
-
+  const setProductsFromCache = async () => {
+    if (!data) {
+      refresh();
+      return;
+    }
+    setProducts(data?.data)
+    setLimit(data.limit)
+    setPage(data.page)
+    setTotal(data.total)
+  }
+ 
   useEffect(() => {
-    fetchProducts();
-  }, [query, forceRefresh]);
-
+    setProductsFromCache();
+  }, [data,query]);
   const updateQuery = useCallback((newQuery: Partial<ProductQuery>) => {
     setQuery((prev) => {
       const next = { ...prev, ...newQuery, page: 1 };
@@ -72,10 +42,6 @@ export function useProducts(
     });
   }, []);
 
-  /** 🔄 Manual refresh (pull-to-refresh or triggered by checkout/admin action) */
-  const refreshProducts = useCallback(async () => {
-    setForceRefresh(true);
-  }, []);
   const goToNextPage = useCallback(() => {
     if (page * limit < total) {
       setQuery((prev) => ({ ...prev, page: prev.page ? prev.page + 1 : 2 }));
@@ -94,11 +60,11 @@ export function useProducts(
     page,
     limit,
     loading,
-    error,
     query,
     updateQuery,
-    refreshProducts,
+    refresh,
     goToNextPage,
     goToPreviousPage,
+    error
   };
 }

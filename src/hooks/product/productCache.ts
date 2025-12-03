@@ -1,7 +1,7 @@
 import { storage } from "src/stores/storeEngine";
 
 
-const CACHE_KEY = "PRODUCT_CACHE";
+const CACHE_KEY = "products_cache";
 const CACHE_DURATION = 3 * 60 * 60 * 1000; // 3 horas
 
 

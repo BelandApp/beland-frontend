@@ -2,50 +2,38 @@ import { useEffect, useState, useMemo, useCallback } from "react";
 import { eventsService } from "src/services/events";
 import { useAuth } from "src/context";
 import { eventStore, Event } from "@/stores";
+import { useCache } from "../cache/useCache";
 
 export const useEvents = () => {
   const { isAuthenticated, user } = useAuth();
-  const [refreshing, setRefreshing] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const {
     setAvailableEvents,
     setAcquiredEvents,
     availableEvents,
     acquiredEvents,
   } = eventStore();
-  const fetchEvents = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const allEvents = await eventsService.getAllEvents();
-      if (isAuthenticated) {
-        const userEventsResponse = await eventsService.getUserEvents();
-        const userEvents = adaptUserEvents(userEventsResponse);
-        const uniqueAvailable = removeDuplicatesById(allEvents);
-        setAvailableEvents(uniqueAvailable);
-        setAcquiredEvents(userEvents);
-      } else {
-        setAvailableEvents(removeDuplicatesById(allEvents));
-        setAcquiredEvents([]);
-      }
-    } catch (error) {
-      console.log("Error fetching events:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isAuthenticated, user]);
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await fetchEvents();
-    setRefreshing(false);
-  };
+  const { data, refresh, loading: isLoading } = useCache({ key: "events_cache", duration: 6 * 60 * 60 * 1000, fetcher: () => eventsService.getAllEvents() });
+  
+  const setEvents = async () => {
+    if (isAuthenticated) {
+      const userEventsResponse = await eventsService.getUserEvents();
+      const userEvents = adaptUserEvents(userEventsResponse);
+      const uniqueAvailable = removeDuplicatesById(data);
+      setAvailableEvents(uniqueAvailable);
+    setAcquiredEvents(userEvents);
+  } else {
+    setAvailableEvents(removeDuplicatesById(data));
+    setAcquiredEvents([]);
+  }
+}
 
   useEffect(() => {
-    fetchEvents();
-  }, [fetchEvents]);
+    setEvents();
+  }, [isAuthenticated, user,data]);
 
 
-  return { availableEvents, acquiredEvents, refreshing, onRefresh, isLoading };
+
+  return { availableEvents, acquiredEvents, refresh, isLoading };
 };
 
 // --- Helpers ---
