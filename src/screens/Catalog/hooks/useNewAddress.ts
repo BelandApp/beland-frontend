@@ -3,7 +3,7 @@ import { useAuth } from "src/context";
 import { useAddressValidation } from "src/hooks/form/useAddressValidation";
 import { notify } from "src/hooks/notification/notify.external";
 import { getBackendErrorMessage } from "src/services";
-import geocodingService from "src/services/geocodingService";
+import * as mapboxService from "src/services/mapboxService";
 import { DeliveryAddress } from "src/types";
 type UseNewAddressProps = {
   initialAddress?: DeliveryAddress;
@@ -39,7 +39,7 @@ export const useNewAddress = ({
   const handleMapPicker = async (coords: any) => {
     console.log("Coords from map picker:", coords);
     try {
-      const normalized = await geocodingService.reverseGeocode(
+      const normalized = await mapboxService.reverseGeocode(
         coords.latitude,
         coords.longitude
       );
@@ -50,8 +50,8 @@ export const useNewAddress = ({
         longitude: coords.longitude,
         street: normalized?.street || prev.street,
         city: normalized?.city || prev.city,
-        state: normalized?.state || prev.state,
-        zipCode: normalized?.postalCode || prev.zipCode,
+        state: normalized?.region || prev.state,
+        zipCode: normalized?.postcode || prev.zipCode,
         country: normalized?.country || prev.country,
       }));
       notify.success({ message: "Ubicación seleccionada correctamente" });
@@ -71,22 +71,22 @@ export const useNewAddress = ({
       return;
     }
     try {
-      // Validate the address via geocoding service (frontend) if available
-      const res = await geocodingService.validateAddress({
-        street: FormData.street,
-        city: FormData.city,
-        state: FormData.state,
-        country: FormData.country,
-        postalCode: FormData.zipCode,
-      });
+      // Validate the address via Mapbox geocoding if available
+      if (FormData.street && FormData.city && FormData.country) {
+        const fullAddress = `${FormData.street}, ${FormData.city}, ${
+          FormData.state || ""
+        }, ${FormData.country}`.trim();
+        const geocoded = await mapboxService.forwardGeocode(fullAddress);
 
-      if (res.ok) {
-        onCreateAddress(FormData);
-        return;
+        if (geocoded) {
+          // Address validated successfully
+          onCreateAddress(FormData);
+          return;
+        }
       }
 
-      // If validation failed, just proceed without asking for confirmation
-      // This allows the flow to work even when Google Places API is not available
+      // If validation failed or no address data, just proceed
+      // This allows the flow to work even when geocoding is not available
       onCreateAddress(FormData);
     } catch (e) {
       const message = getBackendErrorMessage(e);

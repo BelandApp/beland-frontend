@@ -7,10 +7,13 @@ import {
   Platform,
   StyleSheet,
   TextInput,
+  ActivityIndicator,
 } from "react-native";
 import { WebView } from "react-native-webview";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors } from "../../../styles/colors";
+import * as mapboxService from "../../../services/mapboxService";
+import type { MapboxSuggestion } from "../../../services/mapboxService";
 
 interface AddressMapPickerProps {
   visible: boolean;
@@ -18,6 +21,8 @@ interface AddressMapPickerProps {
   onSelect: (coords: { latitude: number; longitude: number }) => void;
   initial?: { latitude: number; longitude: number } | null;
 }
+
+const MAPBOX_ACCESS_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN || "";
 
 export const AddressMapPicker: React.FC<AddressMapPickerProps> = ({
   visible,
@@ -32,13 +37,9 @@ export const AddressMapPicker: React.FC<AddressMapPickerProps> = ({
     longitude: number;
   } | null>(initial);
   const [query, setQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<
-    Array<{ description: string; place_id: string }>
-  >([]);
+  const [suggestions, setSuggestions] = useState<MapboxSuggestion[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const debounceRef = useRef<number | null>(null);
-
-  const geocoding = require("../../../services/geocodingService").default;
 
   const handleMessage = (event: any) => {
     try {
@@ -85,78 +86,100 @@ export const AddressMapPicker: React.FC<AddressMapPickerProps> = ({
     onClose();
   };
 
-  // Minimal Leaflet HTML that allows clicking to place a marker and posts coords
+  // Minimal Mapbox GL JS HTML that allows clicking to place a marker
   const mapHTML = `
   <!doctype html>
   <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css' rel='stylesheet' />
     <style>
       html,body,#map{height:100%;margin:0;padding:0}
-      .marker{width:26px;height:26px;border-radius:13px;background:#FF6B35;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.25)}
+      .mapboxgl-ctrl-logo,.mapboxgl-ctrl-attrib{display:none!important}
     </style>
   </head>
   <body>
     <div id="map"></div>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js'></script>
     <script>
       (function(){
-        var map = L.map('map').setView([${initial?.latitude ?? 0}, ${
-    initial?.longitude ?? 0
-  }], ${initial ? 15 : 2});
-        // expose helpers to be callable from parent
+        mapboxgl.accessToken = '${MAPBOX_ACCESS_TOKEN}';
+        
+        const initialCenter = [${initial?.longitude ?? -57.5759}, ${
+    initial?.latitude ?? -25.2637
+  }];
+        const initialZoom = ${initial ? 15 : 12};
+        
+        const map = new mapboxgl.Map({
+          container: 'map',
+          style: 'mapbox://styles/mapbox/streets-v12',
+          center: initialCenter,
+          zoom: initialZoom
+        });
+        
         window.map = map;
-        window.selMarker = null;
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:''}).addTo(map);
-        var selMarker = null;
-        function sendSelected(lat,lng){
-          if(window.ReactNativeWebView){
-            // React Native WebView
-            window.ReactNativeWebView.postMessage(JSON.stringify({type:'selected',lat:lat,lng:lng}));
+        let marker = null;
+        
+        function sendSelected(lat, lng) {
+          if (window.ReactNativeWebView) {
+            window.ReactNativeWebView.postMessage(JSON.stringify({type:'selected', lat:lat, lng:lng}));
           } else if (window.parent) {
-            // iframe/web: post to parent window
             try {
-              window.parent.postMessage(JSON.stringify({type:'selected',lat:lat,lng:lng}), '*');
-            } catch (e) {
-              // ignore
-            }
+              window.parent.postMessage(JSON.stringify({type:'selected', lat:lat, lng:lng}), '*');
+            } catch (e) {}
           }
         }
-        map.on('click', function(e){
-          var lat = e.latlng.lat; var lng = e.latlng.lng;
-          if(selMarker) map.removeLayer(selMarker);
-          selMarker = L.marker([lat,lng],{icon:L.divIcon({className:'',html:'<div class="marker"></div>',iconSize:[26,26],iconAnchor:[13,13]})}).addTo(map);
-          sendSelected(lat,lng);
+        
+        map.on('click', function(e) {
+          const lat = e.lngLat.lat;
+          const lng = e.lngLat.lng;
+          
+          if (marker) {
+            marker.remove();
+          }
+          
+          marker = new mapboxgl.Marker({color: '#FF6B35'})
+            .setLngLat([lng, lat])
+            .addTo(map);
+          
+          sendSelected(lat, lng);
         });
-        // If there's an initial marker, show it
+        
+        // Add initial marker if provided
         ${
           initial
-            ? `selMarker = L.marker([${initial.latitude}, ${initial.longitude}],{icon:L.divIcon({className:'',html:'<div class="marker"></div>',iconSize:[26,26],iconAnchor:[13,13]})}).addTo(map);`
+            ? `marker = new mapboxgl.Marker({color: '#FF6B35'})
+            .setLngLat([${initial.longitude}, ${initial.latitude}])
+            .addTo(map);`
             : ""
         }
-        // Listen for parent messages to center the map or set marker
-        window.addEventListener('message', function(e){
+        
+        // Listen for parent messages to center the map
+        window.addEventListener('message', function(e) {
           try {
-            var data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
-            if(!data) return;
-            if(data.type === 'center' && data.lat && data.lng){
-              map.setView([data.lat, data.lng], 15);
-              if(window.selMarker) map.removeLayer(window.selMarker);
-              window.selMarker = L.marker([data.lat,data.lng],{icon:L.divIcon({className:'',html:'<div class="marker"></div>',iconSize:[26,26],iconAnchor:[13,13]})}).addTo(map);
+            const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+            if (!data) return;
+            if (data.type === 'center' && data.lat && data.lng) {
+              map.flyTo({center: [data.lng, data.lat], zoom: 15});
+              if (marker) marker.remove();
+              marker = new mapboxgl.Marker({color: '#FF6B35'})
+                .setLngLat([data.lng, data.lat])
+                .addTo(map);
             }
-          }catch(err){/*ignore*/}
+          } catch(err) {}
         });
-        // Also expose a simple callback name for RN injectJavaScript
-        window.__externalCenter = function(lat, lng){
-          map.setView([lat, lng], 15);
-          if(window.selMarker) map.removeLayer(window.selMarker);
-          window.selMarker = L.marker([lat,lng],{icon:L.divIcon({className:'',html:'<div class="marker"></div>',iconSize:[26,26],iconAnchor:[13,13]})}).addTo(map);
-          // also post message back to parent/native to keep selection in sync
-          try{
-            if(window.ReactNativeWebView) window.ReactNativeWebView.postMessage(JSON.stringify({type:'selected',lat:lat,lng:lng}));
-            else if(window.parent) window.parent.postMessage(JSON.stringify({type:'selected',lat:lat,lng:lng}),'*');
-          }catch(e){}
+        
+        // Expose a callback for RN injectJavaScript
+        window.__externalCenter = function(lat, lng) {
+          map.flyTo({center: [lng, lat], zoom: 15});
+          if (marker) marker.remove();
+          marker = new mapboxgl.Marker({color: '#FF6B35'})
+            .setLngLat([lng, lat])
+            .addTo(map);
+          try {
+            if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(JSON.stringify({type:'selected', lat:lat, lng:lng}));
+            else if (window.parent) window.parent.postMessage(JSON.stringify({type:'selected', lat:lat, lng:lng}),'*');
+          } catch(e) {}
         };
       })();
     </script>
@@ -191,9 +214,13 @@ export const AddressMapPicker: React.FC<AddressMapPickerProps> = ({
     debounceRef.current = window.setTimeout(async () => {
       try {
         setLoadingSuggestions(true);
-        const items = await geocoding.autocomplete(query);
+        const items = await mapboxService.searchAddressSuggestions(query, {
+          language: "es",
+          limit: 5,
+        });
         setSuggestions(items || []);
       } catch (e) {
+        console.error("Error fetching suggestions:", e);
         setSuggestions([]);
       } finally {
         setLoadingSuggestions(false);
@@ -233,29 +260,29 @@ export const AddressMapPicker: React.FC<AddressMapPickerProps> = ({
               <View style={styles.suggestionsBox}>
                 {suggestions.map((s) => (
                   <TouchableOpacity
-                    key={s.place_id}
-                    onPress={async () => {
-                      try {
-                        const details = await geocoding.getPlaceDetails(
-                          s.place_id
-                        );
-                        if (details && details.lat && details.lng) {
-                          centerMap(details.lat, details.lng);
-                          setSelected({
-                            latitude: details.lat,
-                            longitude: details.lng,
-                          });
-                        }
-                      } catch (e) {
-                        // ignore
-                      } finally {
-                        setSuggestions([]);
-                        setQuery("");
-                      }
+                    key={s.id}
+                    onPress={() => {
+                      const lat = s.coordinates.latitude;
+                      const lng = s.coordinates.longitude;
+                      centerMap(lat, lng);
+                      setSelected({ latitude: lat, longitude: lng });
+                      setSuggestions([]);
+                      setQuery("");
                     }}
                     style={styles.suggestionItem}
                   >
-                    <Text>{s.description}</Text>
+                    <MaterialCommunityIcons
+                      name="map-marker"
+                      size={18}
+                      color={colors.belandOrange}
+                      style={{ marginRight: 8 }}
+                    />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.suggestionName}>{s.name}</Text>
+                      <Text style={styles.suggestionAddress}>
+                        {s.full_address}
+                      </Text>
+                    </View>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -314,29 +341,29 @@ export const AddressMapPicker: React.FC<AddressMapPickerProps> = ({
               <View style={styles.suggestionsBoxNative}>
                 {suggestions.map((s) => (
                   <TouchableOpacity
-                    key={s.place_id}
-                    onPress={async () => {
-                      try {
-                        const details = await geocoding.getPlaceDetails(
-                          s.place_id
-                        );
-                        if (details && details.lat && details.lng) {
-                          centerMap(details.lat, details.lng);
-                          setSelected({
-                            latitude: details.lat,
-                            longitude: details.lng,
-                          });
-                        }
-                      } catch (e) {
-                        // ignore
-                      } finally {
-                        setSuggestions([]);
-                        setQuery("");
-                      }
+                    key={s.id}
+                    onPress={() => {
+                      const lat = s.coordinates.latitude;
+                      const lng = s.coordinates.longitude;
+                      centerMap(lat, lng);
+                      setSelected({ latitude: lat, longitude: lng });
+                      setSuggestions([]);
+                      setQuery("");
                     }}
                     style={styles.suggestionItem}
                   >
-                    <Text>{s.description}</Text>
+                    <MaterialCommunityIcons
+                      name="map-marker"
+                      size={18}
+                      color={colors.belandOrange}
+                      style={{ marginRight: 8 }}
+                    />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.suggestionName}>{s.name}</Text>
+                      <Text style={styles.suggestionAddress}>
+                        {s.full_address}
+                      </Text>
+                    </View>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -440,8 +467,20 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
   },
   suggestionItem: {
-    padding: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
     borderBottomWidth: 1,
     borderBottomColor: "#EEE",
+  },
+  suggestionName: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.textPrimary,
+    marginBottom: 2,
+  },
+  suggestionAddress: {
+    fontSize: 12,
+    color: colors.textSecondary,
   },
 });

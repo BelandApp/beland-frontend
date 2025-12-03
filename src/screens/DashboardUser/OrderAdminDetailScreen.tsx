@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
+  Linking,
+  Platform,
 } from "react-native";
 import { useNotify } from "src/hooks";
 import { Order as ApiOrder } from "@services/OrderApiService";
@@ -175,6 +177,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     marginBottom: 12,
+  },
+  navigationButton: {
+    backgroundColor: "#f8f9fa",
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#e9ecef",
   },
   infoIcon: {
     marginRight: 10,
@@ -401,7 +410,9 @@ export const OrderAdminDetailScreen: React.FC = () => {
 
   // Mapeo de datos de la orden usando la estructura real del backend
   // NOTA: code es el código de confirmación de 4 dígitos, NO el ID de la orden
-  const orderNumber = orderId
+  const orderNumber = order?.order_number
+    ? `BL-${String(order.order_number).padStart(6, "0")}`
+    : orderId
     ? `#${String(orderId).substring(0, 8).toUpperCase()}`
     : "---";
   const createdAt = order?.created_at ? new Date(order.created_at) : null;
@@ -442,6 +453,49 @@ export const OrderAdminDetailScreen: React.FC = () => {
   const paymentType = (order as any)?.payment_type;
   const paymentMethod =
     paymentType?.description || paymentType?.code || "No especificado";
+
+  // Función para abrir navegación en Mapbox
+  const openMapboxNavigation = () => {
+    const address = (order as any)?.address;
+    if (!address) {
+      notify.error({ message: "No hay dirección disponible para navegar" });
+      return;
+    }
+
+    // Extraer coordenadas si están disponibles
+    const latitude = address.latitude;
+    const longitude = address.longitude;
+
+    let url = "";
+
+    if (latitude && longitude) {
+      // Si tenemos coordenadas, usarlas directamente
+      url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+    } else {
+      // Si no hay coordenadas, usar la dirección como texto
+      const addressText = `${address.addressLine1 || ""}${
+        address.addressLine2 ? ` ${address.addressLine2}` : ""
+      } ${address.city || ""} ${address.state || ""} ${
+        address.postalCode || ""
+      } ${address.country || ""}`.trim();
+
+      const encodedAddress = encodeURIComponent(addressText);
+      url = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`;
+    }
+
+    Linking.canOpenURL(url)
+      .then((supported) => {
+        if (supported) {
+          return Linking.openURL(url);
+        } else {
+          notify.error({ message: "No se puede abrir la aplicación de mapas" });
+        }
+      })
+      .catch((err) => {
+        console.error("Error al abrir navegación:", err);
+        notify.error({ message: "Error al abrir la navegación" });
+      });
+  };
 
   return (
     <View style={styles.container}>
@@ -557,7 +611,11 @@ export const OrderAdminDetailScreen: React.FC = () => {
             <Text style={styles.sectionTitle}>Dirección de Envío</Text>
           </View>
 
-          <View style={styles.infoRow}>
+          <TouchableOpacity
+            style={[styles.infoRow, styles.navigationButton]}
+            onPress={openMapboxNavigation}
+            activeOpacity={0.7}
+          >
             <MaterialCommunityIcons
               name="map-marker-outline"
               size={20}
@@ -567,7 +625,12 @@ export const OrderAdminDetailScreen: React.FC = () => {
             <View style={styles.infoContent}>
               <Text style={styles.infoText}>{fullAddress}</Text>
             </View>
-          </View>
+            <MaterialCommunityIcons
+              name="navigation"
+              size={24}
+              color={colors.belandOrange}
+            />
+          </TouchableOpacity>
         </View>
 
         {/* Productos */}

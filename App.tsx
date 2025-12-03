@@ -26,7 +26,10 @@ import { usePaymentSocket } from "src/hooks/usePaymentSocket";
 import { useOrderSocket } from "src/hooks/useOrderSocket";
 import { colors } from "src/styles";
 import { useBeCoinsAutoRefresh } from "src/stores/becoin/useBeCoinsAutoRefresh";
-import { GlobalNotification, toastConfig } from "src/components/shared/notification/GlobalNotification";
+import {
+  GlobalNotification,
+  toastConfig,
+} from "src/components/shared/notification/GlobalNotification";
 import Toast from "react-native-toast-message";
 
 const AppContent = () => {
@@ -100,6 +103,9 @@ const AppContent = () => {
     currentRoute !== "user-dashboard" &&
     currentRoute !== "OrdersManagement" &&
     currentRoute !== "OrderAdminDetail" &&
+    currentRoute !== "OrderDetail" &&
+    currentRoute !== "Orders" &&
+    currentRoute !== "DeliveryScreen" &&
     currentRoute !== "EventModal" &&
     currentRoute !== "AcquiredEventModal" &&
     currentRoute !== "NewPaymentScreen" &&
@@ -156,7 +162,7 @@ const AppContent = () => {
         linking={linking}
       >
         <RootStackNavigator />
- 
+
         <Toast config={toastConfig} />
         {shouldShowQRButton && <FloatingQRButton onPress={handleQRPress} />}
       </NavigationContainer>
