@@ -71,28 +71,6 @@ export const OrderDetailScreen: React.FC = () => {
   const [apiOrder, setApiOrder] = useState<Order | undefined>(undefined);
   const [apiLoading, setApiLoading] = useState<boolean>(false);
 
-  // Debug: log completo del order y sus items al montar para inspección
-  useEffect(() => {
-    const base = apiOrder ?? localOrder;
-    try {
-      console.log("[OrderDetail] base order payload:", base);
-      if (base && Array.isArray(base.items)) {
-        base.items.forEach((it, idx) => {
-          console.log(`[OrderDetail] item[${idx}]`, {
-            id: it.id,
-            name: it.name,
-            price: it.price,
-            subtotal: it.subtotal,
-            quantity: it.quantity,
-            image: it.image,
-          });
-        });
-      }
-    } catch (err) {
-      console.warn("[OrderDetail] Error logging order:", err);
-    }
-  }, [apiOrder, localOrder]);
-
   // Enrich items with product info (name, image) when backend returns minimal item data
   const [enrichedOrder, setEnrichedOrder] = useState<Order | null>(null);
   // Track product ids already requested to avoid infinite re-fetching
@@ -107,13 +85,13 @@ export const OrderDetailScreen: React.FC = () => {
       try {
         const items = await Promise.all(
           (base.items || []).map(async (it: any) => {
-            // If item already has name or image, skip enrichment
-            if (
-              (it.name &&
-                it.name.length > 0 &&
-                it.name !== `Producto ${it.product_id?.slice(-8)}`) ||
-              (it.image && it.image.length > 0)
-            ) {
+            // Enrich if item doesn't have a valid name (or has fallback name)
+            const hasValidName =
+              it.name && it.name.length > 0 && !it.name.startsWith("Producto ");
+            const hasImage = it.image && it.image.length > 0;
+
+            // If item has valid name and image, skip enrichment
+            if (hasValidName && hasImage) {
               return it;
             }
 
@@ -131,8 +109,8 @@ export const OrderDetailScreen: React.FC = () => {
                 requestedProductIdsRef.current.add(it.product_id);
                 return {
                   ...it,
-                  name: it.name ?? prod.name,
-                  image: it.image ?? (prod.image_url || ""),
+                  name: prod.name || it.name,
+                  image: prod.image_url || it.image || "",
                 };
               }
             } catch (err) {
