@@ -210,6 +210,10 @@ export default function RechargeScreen() {
                     (e.key === "-" || e.key === "+" || e.key === "e") &&
                     e.preventDefault()
                   }
+                  onInput={(e) => {
+                    // Force color on autofill
+                    (e.target as HTMLInputElement).style.color = "#333";
+                  }}
                 />
                 <span
                   style={{

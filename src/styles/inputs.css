@@ -8,11 +8,11 @@ select:-webkit-autofill:hover,
 select:-webkit-autofill:focus {
   box-shadow: 0 0 0 1000px #00000000 inset !important;
   /* fondo deseado */
-  -webkit-text-fill-color: #fff !important;
-  /* color del texto */
+  -webkit-text-fill-color: #333 !important;
+  /* color del texto negro para que sea visible */
   transition: background-color 99999s ease-out 0s;
-  caret-color: #ffffff;
-  color: "white"
+  caret-color: #333;
+  color: #333 !important;
 }
 
 /* Eliminar borde negro de TextInput y Picker en focus en React Native Web */
