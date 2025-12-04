@@ -51,16 +51,112 @@ export const NotificationBanner: React.FC = () => {
             <div style={{ fontSize: 14, color: "#333" }}>
               {/* Renderizado según tipo de notificación */}
               {notification.meta.type === "order" ? (
-                // Notificación de ORDEN
+                // Notificación de ORDEN con diseño profesional
                 <div>
+                  {/* ID de orden destacado */}
                   <div
                     style={{
                       fontSize: 16,
-                      marginBottom: 4,
-                      whiteSpace: "pre-line",
+                      fontWeight: 700,
+                      color: "#ff6b35",
+                      marginBottom: 12,
+                      padding: "8px 12px",
+                      background:
+                        "linear-gradient(135deg, #fff4e6 0%, #ffe8d6 100%)",
+                      borderRadius: 8,
+                      border: "2px solid #ff6b35",
+                      textAlign: "center",
                     }}
                   >
-                    {notification.message}
+                    #{notification.meta.short_id || notification.meta.order_id}
+                  </div>
+
+                  {/* Detalles de la orden */}
+                  <div style={{ marginBottom: 12 }}>
+                    {/* Cantidad de items */}
+                    {notification.meta.items_count > 0 && (
+                      <div
+                        style={{
+                          background: "#e3f2fd",
+                          color: "#1976d2",
+                          padding: "8px 12px",
+                          borderRadius: 8,
+                          fontSize: 14,
+                          fontWeight: 600,
+                          marginBottom: 8,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                        }}
+                      >
+                        <span style={{ fontSize: 18 }}>📦</span>
+                        <span>
+                          {notification.meta.items_count} producto
+                          {notification.meta.items_count !== 1 ? "s" : ""}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Totales con monedas claramente identificadas */}
+                  <div
+                    style={{
+                      padding: "12px 14px",
+                      background:
+                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                      borderRadius: 10,
+                      color: "#fff",
+                      boxShadow: "0 4px 12px rgba(102, 126, 234, 0.3)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: 8,
+                      }}
+                    >
+                      <span
+                        style={{ fontSize: 13, opacity: 0.95, fontWeight: 500 }}
+                      >
+                        💵 Total USD:
+                      </span>
+                      <span style={{ fontSize: 20, fontWeight: 700 }}>
+                        ${notification.meta.total_usd?.toFixed(2) || "0.00"}
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        height: "1px",
+                        background: "rgba(255,255,255,0.2)",
+                        margin: "8px 0",
+                      }}
+                    />
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <span
+                        style={{ fontSize: 13, opacity: 0.95, fontWeight: 500 }}
+                      >
+                        🪙 Total Becoins:
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 18,
+                          fontWeight: 700,
+                          color: "#ffd54f",
+                        }}
+                      >
+                        {notification.meta.total_becoin?.toLocaleString() ||
+                          "0"}{" "}
+                        BC
+                      </span>
+                    </div>
                   </div>
                 </div>
               ) : (
