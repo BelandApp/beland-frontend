@@ -102,19 +102,16 @@ class CartServiceClass extends CoreApiService {
   }
 
   /**
-   * Add item to cart
+   * Add item to cart or increment quantity if already exists
+   * Backend will automatically add the quantity to existing items
    */
   async addToCart(data: {
     product_id: string;
     quantity: number;
   }): Promise<CartItem> {
-    // 1. Get or create user cart
-
     const cart = await this.getCart();
-    // 2. Get product information to obtain price
     const product = await this.getProduct(data.product_id);
 
-    // 3. Create the cart item with all required fields
     const cartItemData: AddToCartDto = {
       cart_id: cart.id,
       product_id: data.product_id,
@@ -125,17 +122,16 @@ class CartServiceClass extends CoreApiService {
     return this.post<CartItem>(this.ENDPOINTS.CART_ITEMS, cartItemData);
   }
 
-  // ! NOT WORKING ON BACKEND
   /**
-   * Update cart item quantity
+   * Update cart item quantity - Replaces the quantity (does not add)
    */
   async updateCartItem(
     itemId: string,
     data: UpdateCartItemDto
   ): Promise<CartItem> {
     return this.put<CartItem>(
-      `${this.ENDPOINTS.CART_ITEMS_QUANTITY}/${itemId}`,
-      data
+      `${this.ENDPOINTS.CART_ITEMS_QUANTITY}/${itemId}?quantity=${data.quantity}`,
+      {}
     );
   }
 
