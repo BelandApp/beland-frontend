@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
+  Platform,
 } from "react-native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -262,8 +263,13 @@ const OrdersScreen: React.FC = () => {
     <View style={ordersStyles.filterContainer}>
       <ScrollView
         horizontal
-        showsHorizontalScrollIndicator={false}
+        showsHorizontalScrollIndicator={Platform.OS === "web"}
         contentContainerStyle={ordersStyles.filterScrollContent}
+        bounces={false}
+        decelerationRate="fast"
+        style={{ flexGrow: 0 }}
+        nestedScrollEnabled={true}
+        persistentScrollbar={Platform.OS === "web"}
       >
         {filterOptions.map((option) => (
           <TouchableOpacity
@@ -273,6 +279,7 @@ const OrdersScreen: React.FC = () => {
               selectedFilter === option.value && ordersStyles.filterTabActive,
             ]}
             onPress={() => setSelectedFilter(option.value)}
+            activeOpacity={0.7}
           >
             <Text
               style={[

@@ -33,17 +33,19 @@ export const WalletActions: React.FC<WalletActionsProps> = ({ actions }) => {
               key={action.id}
               style={actionsStyles.actionButton}
               onPress={() => handlePress(action)}
+              activeOpacity={0.8}
             >
               <View
                 style={[
                   actionsStyles.actionIcon,
-                  { backgroundColor: action.backgroundColor || "#FFFFFF" },
+                  { backgroundColor: action.bgColor || "#E5E7EB" },
                 ]}
               >
                 {IconComponent ? (
                   <IconComponent
                     width={24}
-                    height={action.id === "exchange" ? 18 : 22}
+                    height={24}
+                    color={action.color || "#374151"}
                   />
                 ) : (
                   <View

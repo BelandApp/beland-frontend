@@ -13,6 +13,7 @@ export const orderDetailStyles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
+    paddingVertical: 20,
     paddingHorizontal: 20,
     paddingBottom: 100,
   },

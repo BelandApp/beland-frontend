@@ -9,9 +9,8 @@ import {
 import { useAuth } from "src/context";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
-export const useWalletActions = (
-) => {
-   const { navigate } = useCustomNavigation();
+export const useWalletActions = () => {
+  const { navigate } = useCustomNavigation();
 
   // Obtener rol del usuario
   const { user } = useAuth();
@@ -22,21 +21,24 @@ export const useWalletActions = (
       id: "recharge",
       label: "Recargar",
       icon: RechargeIcon,
-      backgroundColor: "#FFFFFF",
+      color: "#1E40AF",
+      bgColor: "#DBEAFE",
       onPress: () => navigate("RechargeScreen"),
     },
     {
       id: "send",
       label: "Enviar",
       icon: SendIcon,
-      backgroundColor: "#FFFFFF",
+      color: "#DC2626",
+      bgColor: "#FEE2E2",
       onPress: () => navigate("SendScreen"),
     },
     {
       id: "receive",
       label: "Recibir",
       icon: ReceiveIcon,
-      backgroundColor: "#FFFFFF",
+      color: "#059669",
+      bgColor: "#D1FAE5",
       onPress: () => navigate("ReceiveScreen"),
     },
   ];
@@ -59,7 +61,8 @@ export const useWalletActions = (
       id: "cobrar",
       label: "Cobrar",
       icon: CobrarIcon,
-      backgroundColor: "#FFFFFF",
+      color: "#7C3AED",
+      bgColor: "#EDE9FE",
       onPress: () => navigate("CobrarScreen"),
     });
   }
@@ -69,7 +72,8 @@ export const useWalletActions = (
     id: "exchange",
     label: "Canjear",
     icon: ExchangeIcon,
-    backgroundColor: "#FFFFFF",
+    color: "#EA580C",
+    bgColor: "#FED7AA",
     onPress: () => navigate("CanjearScreen"),
   });
 

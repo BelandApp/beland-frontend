@@ -404,4 +404,13 @@ const styles = StyleSheet.create({
     color: "#666",
     textAlign: "center",
   },
+  processingIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.belandOrange + "15",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
+  },
 });

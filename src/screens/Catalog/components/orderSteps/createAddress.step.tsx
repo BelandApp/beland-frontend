@@ -222,24 +222,6 @@ export const CreateAddress: React.FC<AddressFormProps> = ({
               />
             }
           />
-        </View>
-        <View style={styles.row}>
-          <CustomInput
-            variant="filled"
-            label="Código Postal"
-            onChangeText={(zipCode) => onChangeText("zipCode", zipCode)}
-            value={FormData.zipCode || ""}
-            error={errors.zipCode}
-            placeholder=""
-            icon={
-              <MaterialCommunityIcons
-                name="mailbox-outline"
-                size={20}
-                color="#666"
-                style={styles.icon}
-              />
-            }
-          />
           <CustomInput
             variant="filled"
             label="País"
@@ -292,8 +274,7 @@ export const CreateAddress: React.FC<AddressFormProps> = ({
           <View style={styles.infoContent}>
             <Text style={styles.infoTitle}>Información de entrega</Text>
             <Text style={styles.infoText}>
-              • Tiempo estimado: 2-3 días hábiles{"\n"}• Costo de envío: $5.00
-              {"\n"}• Horario de entrega: 9:00 AM - 6:00 PM
+              • Tiempo estimado: 2-3 días hábiles{"\n"}• Costo de envío: $2.50
             </Text>
           </View>
         </View>

@@ -9,7 +9,9 @@ export interface WalletAction {
   id: string;
   label: string;
   icon: React.ComponentType<any>;
-  backgroundColor?: string;
+  color?: string;
+  bgColor?: string;
+  backgroundColor?: string; // Deprecated, usar bgColor
   onPress?: () => void;
 }
 
