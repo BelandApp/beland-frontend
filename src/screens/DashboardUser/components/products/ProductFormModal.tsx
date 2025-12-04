@@ -300,6 +300,36 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               </View>
             </View>
 
+            {/* Precio Becoins (Calculado automáticamente) */}
+            {formData.price > 0 && (
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>
+                  Precio en Becoins (Calculado automáticamente)
+                </Text>
+                <View style={styles.becoinsPreviewContainer}>
+                  <MaterialCommunityIcons
+                    name="cash-multiple"
+                    size={24}
+                    color="#7DA244"
+                  />
+                  <Text style={styles.becoinsPreviewText}>
+                    {usdToBeCoins(formData.price).toFixed(2)} BC
+                  </Text>
+                </View>
+                <View style={styles.helperTextContainer}>
+                  <MaterialCommunityIcons
+                    name="information-outline"
+                    size={14}
+                    color="#6b7280"
+                  />
+                  <Text style={styles.helperText}>
+                    El precio en Becoins se calcula automáticamente según la
+                    tasa de conversión configurada por el superadmin.
+                  </Text>
+                </View>
+              </View>
+            )}
+
             {/* Categoría */}
             <View style={styles.formGroup}>
               <View style={styles.labelRow}>
@@ -613,6 +643,35 @@ const styles = StyleSheet.create({
     color: "#7DA244",
     fontWeight: "600",
     marginLeft: 4,
+  },
+  helperTextContainer: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginTop: 6,
+    paddingHorizontal: 4,
+  },
+  helperText: {
+    fontSize: 12,
+    color: "#6b7280",
+    marginLeft: 4,
+    flex: 1,
+    lineHeight: 16,
+  },
+  becoinsPreviewContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f0f9ff",
+    borderWidth: 1,
+    borderColor: "#7DA244",
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 4,
+  },
+  becoinsPreviewText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#7DA244",
+    marginLeft: 12,
   },
   labelRow: {
     flexDirection: "row",

@@ -40,6 +40,7 @@ export interface CreateProductDto {
   description?: string;
   cost: number;
   price: number;
+  price_becoin?: number;
   image_url?: string;
   category_id?: string;
 }
@@ -49,6 +50,7 @@ export interface UpdateProductDto {
   description?: string;
   price?: number;
   cost?: number;
+  price_becoin?: number;
   image_url?: string;
   category_id?: string;
   is_active?: boolean;

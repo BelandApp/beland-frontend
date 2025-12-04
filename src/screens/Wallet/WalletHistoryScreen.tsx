@@ -10,14 +10,13 @@ import {
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { TransactionCard } from "./components/TransactionCard";
-import { useWalletTransactions } from "./hooks/useWalletTransactions";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { SearchBarInput, ThemedHeader } from "src/components";
+import { useWallet } from "./hooks";
 
 export default function WalletHistoryScreen() {
   const { goBack } = useCustomNavigation();
-
-  const { transactions, isLoading } = useWalletTransactions();
+  const {transactions, loadingTransactions} = useWallet()
   const [searchText, setSearchText] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
 
@@ -91,7 +90,7 @@ export default function WalletHistoryScreen() {
 
       {/* Transactions List */}
       <ScrollView style={styles.transactionsList}>
-        {isLoading ? (
+        {loadingTransactions ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#F88D2A" />
             <Text style={styles.loadingText}>Cargando transacciones...</Text>
@@ -120,7 +119,7 @@ export default function WalletHistoryScreen() {
       </ScrollView>
 
       {/* Summary */}
-      {!isLoading && filteredTransactions.length > 0 && (
+      {!loadingTransactions && filteredTransactions.length > 0 && (
         <View style={styles.summary}>
           <Text style={styles.summaryText}>
             {filteredTransactions.length} transacción(es) encontrada(s)

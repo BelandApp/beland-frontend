@@ -16,7 +16,7 @@ import {
   WithdrawService,
   WithdrawAccount,
 } from "../../services/withdrawService";
-import { useWalletData } from "./hooks/useWalletData";
+import { useWallet } from "./hooks/useWalletData";
 import { getBackendErrorMessage } from "src/services";
 import { useNotify } from "src/hooks";
 import { useBeCoinsStore } from "src/stores";
@@ -39,7 +39,7 @@ const CanjearScreen: React.FC<{
   const [loadingAccounts, setLoadingAccounts] = useState(true);
   const [showAccountSelector, setShowAccountSelector] = useState(false);
 const {balance,locked_balance, setBalance} = useBeCoinsStore()
-  const { refetch } = useWalletData();
+  const { refreshAll } = useWallet();
 
   // Cargar cuentas de retiro al montar el componente
   useEffect(() => {
@@ -128,8 +128,8 @@ const {balance,locked_balance, setBalance} = useBeCoinsStore()
         // Registrar transacción local (nota: implementar si se requiere registro local)
 
         // Refrescar datos del wallet
-        if (refetch) {
-          refetch();
+        if (refreshAll) {
+          refreshAll();
         }
 
         // Mostrar éxito

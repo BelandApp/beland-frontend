@@ -6,7 +6,7 @@ import { getBackendErrorMessage } from "src/services";
 import { notify } from "src/hooks/notification/notify.external";
 
 // Función para mapear transacciones del backend al formato del frontend
-const mapBackendTransactionToFrontend = (
+export const mapBackendTransactionToFrontend = (
   backendTransaction: any
 ): Transaction => {
   // Mapear tipo de transacción según el backend

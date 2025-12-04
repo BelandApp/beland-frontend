@@ -504,9 +504,10 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
           priceBecoin: parseFloat(item.unit_becoin) || 0,
           totalBecoin: parseFloat(item.total_becoin) || 0,
           name:
+            item.product?.name ||
             item.name ||
             `Producto ${item.product_id?.slice(-8) || "desconocido"}`,
-          image: item.image || undefined,
+          image: item.product?.image_url || item.image || undefined,
         })),
         deliveryType: "home" as const,
         deliveryAddress: apiOrder.address
@@ -581,9 +582,10 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
           priceBecoin: parseFloat(item.unit_becoin) || 0,
           totalBecoin: parseFloat(item.total_becoin) || 0,
           name:
+            item.product?.name ||
             item.name ||
             `Producto ${item.product_id?.slice(-8) || "desconocido"}`,
-          image: item.image || undefined,
+          image: item.product?.image_url || item.image || undefined,
         })),
         deliveryType: "home" as const,
         deliveryAddress: apiOrder.address

@@ -38,7 +38,6 @@ export interface AddToCartDto {
   product_id: string;
   quantity: number;
   unit_price: number;
-  unit_becoin?: number;
 }
 
 export interface UpdateCartItemDto {
@@ -76,6 +75,7 @@ class CartServiceClass extends CoreApiService {
     SYNC_CART: "carts/sync",
     CART_ADDRESS: "carts/address",
     CART_ITEMS: "cart-items",
+    CART_ITEMS_QUANTITY: "cart-items/quantity",
   } as const;
 
   /**
@@ -120,7 +120,6 @@ class CartServiceClass extends CoreApiService {
       product_id: data.product_id,
       quantity: data.quantity,
       unit_price: product.price,
-      unit_becoin: product.price_becoin,
     };
 
     return this.post<CartItem>(this.ENDPOINTS.CART_ITEMS, cartItemData);
@@ -135,7 +134,7 @@ class CartServiceClass extends CoreApiService {
     data: UpdateCartItemDto
   ): Promise<CartItem> {
     return this.put<CartItem>(
-      `${this.ENDPOINTS.CART_ITEMS}/${itemId}`,
+      `${this.ENDPOINTS.CART_ITEMS_QUANTITY}/${itemId}`,
       data
     );
   }

@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { storage } from "@/stores";
+import { getBackendErrorMessage } from "src/services";
 
 // FORMA DE USAR
 // const { data } = useCache({
@@ -17,6 +18,7 @@ interface UseCacheParams<T> {
 export function useCache<T>({ key, duration, fetcher }: UseCacheParams<T>) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const load = useCallback(async () => {
     setLoading(true);
     const cachedRaw = await storage.getItem(key);
@@ -37,12 +39,17 @@ export function useCache<T>({ key, duration, fetcher }: UseCacheParams<T>) {
     }
 
     // Fetch nuevo contenido
-    const freshData = await fetcher();
-    const newData = { value: freshData, expireAt: Date.now() + duration };
-    await storage.setItem(key, JSON.stringify(newData));
-
-    setData(freshData);
-    setLoading(false);
+    try {
+      const freshData = await fetcher();
+      const newData = { value: freshData, expireAt: Date.now() + duration };
+      await storage.setItem(key, JSON.stringify(newData));
+      setData(freshData);
+    } catch (error) {
+      const message = getBackendErrorMessage(error);
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
   }, [key, duration, fetcher]);
 
   useEffect(() => {
@@ -61,5 +68,5 @@ export function useCache<T>({ key, duration, fetcher }: UseCacheParams<T>) {
     setData(null);
   };
 
-  return { data, loading, refresh, clear };
+  return { data, loading, refresh, clear, error };
 }
