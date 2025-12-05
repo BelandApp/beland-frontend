@@ -40,7 +40,7 @@ export const ConfirmOrder: React.FC<ProcessingStepProps> = ({
   );
   const total = (subtotal + SHIPPING_COST).toFixed(2);
   const handleSubmit = () => {
-    setIsSubmitting(true);
+    setIsSubmitting(true);  
     onSubmit(address, addressId);
   };
   if (isSubmitting) {

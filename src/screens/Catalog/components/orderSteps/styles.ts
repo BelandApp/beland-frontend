@@ -13,7 +13,7 @@ export const OrderDeliveryModalStyles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 34, // Para el safe area en iPhone
     minHeight: "80%",
-    maxHeight: "95%",
+    maxHeight: "98%",
     marginTop: "auto",
   },
   header: {

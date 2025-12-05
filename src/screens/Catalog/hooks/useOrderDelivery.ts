@@ -80,6 +80,7 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
       const created = await addressService.createAddress(payload);
       setAddresses((prev) => [...prev, created]);
       notify.success({ message: "Dirección creada" });
+      setStep("select");
       return created.id;
     } catch (e) {
       notify.error({ message: getBackendErrorMessage(e) });
