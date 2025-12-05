@@ -37,10 +37,11 @@ export const NotificationBanner: React.FC = () => {
         <div style={{ flex: 1 }}>
           <div
             style={{
-              fontWeight: 700,
-              fontSize: 18,
-              marginBottom: 6,
-              color: "#2ecc40",
+              fontWeight: 600,
+              fontSize: 16,
+              marginBottom: 8,
+              color: "#1a1a1a",
+              letterSpacing: "-0.01em",
             }}
           >
             {notification.title}
@@ -56,16 +57,16 @@ export const NotificationBanner: React.FC = () => {
                   {/* ID de orden destacado */}
                   <div
                     style={{
-                      fontSize: 16,
-                      fontWeight: 700,
+                      fontSize: 15,
+                      fontWeight: 600,
                       color: "#ff6b35",
                       marginBottom: 12,
-                      padding: "8px 12px",
-                      background:
-                        "linear-gradient(135deg, #fff4e6 0%, #ffe8d6 100%)",
+                      padding: "10px 16px",
+                      background: "#fff5f0",
                       borderRadius: 8,
-                      border: "2px solid #ff6b35",
+                      border: "1.5px solid #ff6b35",
                       textAlign: "center",
+                      letterSpacing: "0.02em",
                     }}
                   >
                     #{notification.meta.short_id || notification.meta.order_id}
@@ -77,23 +78,18 @@ export const NotificationBanner: React.FC = () => {
                     {notification.meta.items_count > 0 && (
                       <div
                         style={{
-                          background: "#e3f2fd",
-                          color: "#1976d2",
+                          background: "#f5f5f5",
+                          color: "#424242",
                           padding: "8px 12px",
-                          borderRadius: 8,
-                          fontSize: 14,
-                          fontWeight: 600,
-                          marginBottom: 8,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
+                          borderRadius: 6,
+                          fontSize: 13,
+                          fontWeight: 500,
+                          marginBottom: 10,
+                          display: "inline-block",
                         }}
                       >
-                        <span style={{ fontSize: 18 }}>📦</span>
-                        <span>
-                          {notification.meta.items_count} producto
-                          {notification.meta.items_count !== 1 ? "s" : ""}
-                        </span>
+                        {notification.meta.items_count} producto
+                        {notification.meta.items_count !== 1 ? "s" : ""}
                       </div>
                     )}
                   </div>
@@ -101,12 +97,11 @@ export const NotificationBanner: React.FC = () => {
                   {/* Totales con monedas claramente identificadas */}
                   <div
                     style={{
-                      padding: "12px 14px",
-                      background:
-                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                      borderRadius: 10,
+                      padding: "14px 16px",
+                      background: "#6366f1",
+                      borderRadius: 8,
                       color: "#fff",
-                      boxShadow: "0 4px 12px rgba(102, 126, 234, 0.3)",
+                      boxShadow: "0 2px 8px rgba(99, 102, 241, 0.2)",
                     }}
                   >
                     <div
@@ -114,23 +109,23 @@ export const NotificationBanner: React.FC = () => {
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "center",
-                        marginBottom: 8,
+                        marginBottom: 10,
                       }}
                     >
                       <span
-                        style={{ fontSize: 13, opacity: 0.95, fontWeight: 500 }}
+                        style={{ fontSize: 13, fontWeight: 500, opacity: 0.9 }}
                       >
-                        💵 Total USD:
+                        Total USD
                       </span>
-                      <span style={{ fontSize: 20, fontWeight: 700 }}>
+                      <span style={{ fontSize: 18, fontWeight: 700 }}>
                         ${notification.meta.total_usd?.toFixed(2) || "0.00"}
                       </span>
                     </div>
                     <div
                       style={{
                         height: "1px",
-                        background: "rgba(255,255,255,0.2)",
-                        margin: "8px 0",
+                        background: "rgba(255,255,255,0.15)",
+                        margin: "10px 0",
                       }}
                     />
                     <div
@@ -141,15 +136,14 @@ export const NotificationBanner: React.FC = () => {
                       }}
                     >
                       <span
-                        style={{ fontSize: 13, opacity: 0.95, fontWeight: 500 }}
+                        style={{ fontSize: 13, fontWeight: 500, opacity: 0.9 }}
                       >
-                        🪙 Total Becoins:
+                        Total Becoins
                       </span>
                       <span
                         style={{
-                          fontSize: 18,
+                          fontSize: 16,
                           fontWeight: 700,
-                          color: "#ffd54f",
                         }}
                       >
                         {notification.meta.total_becoin?.toLocaleString() ||
