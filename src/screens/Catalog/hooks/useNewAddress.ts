@@ -37,13 +37,11 @@ export const useNewAddress = ({
   };
   const { errors, validateForm } = useAddressValidation();
   const handleMapPicker = async (coords: any) => {
-    console.log("Coords from map picker:", coords);
     try {
       const normalized = await mapboxService.reverseGeocode(
         coords.latitude,
         coords.longitude
       );
-      console.log("Normalized address:", normalized);
       setFormData((prev) => ({
         ...prev,
         latitude: coords.latitude,
@@ -63,6 +61,7 @@ export const useNewAddress = ({
     }
   };
   const handleCreateAddress = async () => {
+    console.log(FormData)
     const isFormValid = validateForm(FormData);
     if (!isFormValid) {
       notify.error({
@@ -88,6 +87,7 @@ export const useNewAddress = ({
       // If validation failed or no address data, just proceed
       // This allows the flow to work even when geocoding is not available
       onCreateAddress(FormData);
+
     } catch (e) {
       const message = getBackendErrorMessage(e);
       notify.error({ message });

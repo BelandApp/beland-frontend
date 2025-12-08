@@ -15,8 +15,8 @@ export const useWallet = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [walletId, setWalletId] = useState<string | null>(null);
 
-  const [loadingWallet, setLoadingWallet] = useState(true);
-  const [loadingTransactions, setLoadingTransactions] = useState(true);
+  const [loadingWallet, setLoadingWallet] = useState(false);
+  const [loadingTransactions, setLoadingTransactions] = useState(false);
 
   /** -----------------------------------------
    *  FETCH: WALLET + sync store

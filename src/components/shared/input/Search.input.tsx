@@ -28,7 +28,7 @@ export const SearchBarInput: React.FC<SearchBarProps> = ({
 
 const styles = StyleSheet.create({
   searchContainer: {
-    width: "100%",
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
