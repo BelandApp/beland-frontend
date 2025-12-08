@@ -48,7 +48,7 @@ const mapBackendStatusToFrontend = (backendStatus: string): OrderStatus => {
 };
 
 export const OrderDetailScreen: React.FC = () => {
-  const { goBack } = useCustomNavigation();
+  const { goBack, navigate } = useCustomNavigation();
   const { success, error, confirm } = useNotify();
 
   const route = useRoute<OrderDetailScreenRouteProp>();
@@ -436,6 +436,7 @@ export const OrderDetailScreen: React.FC = () => {
             setTimeout(() => {
               // Forzar refetch de la orden
               setApiOrder(undefined);
+              navigate("Orders", { screen: "OrdersList" });
             }, 500);
           } catch (err) {
             error({
