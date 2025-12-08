@@ -39,6 +39,7 @@ export const AddressMapPicker: React.FC<AddressMapPickerProps> = ({
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<MapboxSuggestion[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [loadingLocation, setLoadingLocation] = useState(false);
   const debounceRef = useRef<number | null>(null);
 
   const handleMessage = (event: any) => {
@@ -84,6 +85,32 @@ export const AddressMapPicker: React.FC<AddressMapPickerProps> = ({
       onSelect(selected);
     }
     onClose();
+  };
+
+  const getCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Tu navegador no soporta geolocalización");
+      return;
+    }
+
+    setLoadingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        centerMap(lat, lng);
+        setSelected({ latitude: lat, longitude: lng });
+        setLoadingLocation(false);
+      },
+      (error) => {
+        console.error("Error obteniendo ubicación:", error);
+        alert(
+          "No se pudo obtener tu ubicación. Por favor, verifica los permisos."
+        );
+        setLoadingLocation(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
   };
 
   // Minimal Mapbox GL JS HTML that allows clicking to place a marker
@@ -232,6 +259,13 @@ export const AddressMapPicker: React.FC<AddressMapPickerProps> = ({
     };
   }, [query]);
 
+  // Obtener ubicación automáticamente al abrir el modal (solo si no hay initial)
+  useEffect(() => {
+    if (visible && !initial && navigator.geolocation) {
+      getCurrentLocation();
+    }
+  }, [visible]);
+
   if (Platform.OS === "web") {
     return (
       <Modal visible={visible} transparent animationType="fade">
@@ -249,12 +283,32 @@ export const AddressMapPicker: React.FC<AddressMapPickerProps> = ({
             </View>
             {/* Search bar */}
             <View style={styles.searchRow}>
-              <TextInput
-                value={query}
-                onChangeText={(t) => setQuery(t)}
-                placeholder="Buscar dirección o punto"
-                style={styles.searchInput}
-              />
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                <TextInput
+                  value={query}
+                  onChangeText={(t) => setQuery(t)}
+                  placeholder="Buscar dirección o punto"
+                  style={[styles.searchInput, { flex: 1 }]}
+                />
+                <TouchableOpacity
+                  onPress={getCurrentLocation}
+                  disabled={loadingLocation}
+                  style={styles.locationButton}
+                >
+                  {loadingLocation ? (
+                    <ActivityIndicator
+                      size="small"
+                      color={colors.belandOrange}
+                    />
+                  ) : (
+                    <MaterialCommunityIcons
+                      name="crosshairs-gps"
+                      size={22}
+                      color={colors.belandOrange}
+                    />
+                  )}
+                </TouchableOpacity>
+              </View>
             </View>
             {suggestions.length > 0 && (
               <View style={styles.suggestionsBox}>
@@ -330,12 +384,32 @@ export const AddressMapPicker: React.FC<AddressMapPickerProps> = ({
           <View style={{ flex: 1, borderRadius: 12, overflow: "hidden" }}>
             {/* Search bar for native */}
             <View style={styles.nativeSearchRow}>
-              <TextInput
-                value={query}
-                onChangeText={(t) => setQuery(t)}
-                placeholder="Buscar dirección o punto"
-                style={styles.searchInput}
-              />
+              <View style={{ flexDirection: "row", gap: 8 }}>
+                <TextInput
+                  value={query}
+                  onChangeText={(t) => setQuery(t)}
+                  placeholder="Buscar dirección o punto"
+                  style={[styles.searchInput, { flex: 1 }]}
+                />
+                <TouchableOpacity
+                  onPress={getCurrentLocation}
+                  disabled={loadingLocation}
+                  style={styles.locationButton}
+                >
+                  {loadingLocation ? (
+                    <ActivityIndicator
+                      size="small"
+                      color={colors.belandOrange}
+                    />
+                  ) : (
+                    <MaterialCommunityIcons
+                      name="crosshairs-gps"
+                      size={22}
+                      color={colors.belandOrange}
+                    />
+                  )}
+                </TouchableOpacity>
+              </View>
             </View>
             {suggestions.length > 0 && (
               <View style={styles.suggestionsBoxNative}>
@@ -482,5 +556,15 @@ const styles = StyleSheet.create({
   suggestionAddress: {
     fontSize: 12,
     color: colors.textSecondary,
+  },
+  locationButton: {
+    backgroundColor: "#FFF",
+    borderRadius: 8,
+    width: 44,
+    height: 44,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: colors.belandOrange,
   },
 });
