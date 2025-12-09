@@ -4,6 +4,7 @@ import { useNotification } from "@/hooks/NotificationContext";
 import { useEffect, useRef } from "react";
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { convertBeCoinsToUSD } from "@/constants/currency";
 
 /**
  * Hook para escuchar eventos de órdenes a través de sockets
@@ -65,27 +66,31 @@ export function useOrderSocket(onOrderCreated?: (data: any) => void) {
 
           console.log("[OrderSocket] Order created event received:", data);
 
-          // Extraer información básica de la orden
-          const orderNumber = data.order_id || "N/A";
-          // Convertir total_becoin a número (puede venir como string)
+          // Extraer información disponible del backend
+          const orderId = data.order_id || "N/A";
           const totalBecoin = parseFloat(String(data.total_becoin || 0));
+          const itemsCount = parseInt(String(data.items || 0));
 
           // Crear ID corto para visualización (primeros 8 caracteres)
           const shortOrderId =
-            orderNumber.length > 8 ? orderNumber.substring(0, 8) : orderNumber;
+            orderId.length > 8 ? orderId.substring(0, 8) : orderId;
 
-          // Mostrar notificación con la información disponible
-          // NOTA: No mostramos cantidad de items porque el backend envía null
-          // (intenta convertir array items a número con +savedOrder.items)
+          // Calcular total en USD usando la función de conversión oficial
+          const totalUsd = convertBeCoinsToUSD(totalBecoin);
+
+          // Mostrar notificación enriquecida con la info disponible
           showNotification({
-            title: "Nueva Orden",
-            message: `Orden #${shortOrderId}\nMonto: $${totalBecoin.toLocaleString()}`,
-            amount: totalBecoin,
+            title: "🛍️ Nueva Orden Recibida",
+            message: `Orden #${shortOrderId}`,
+            amount: totalUsd,
             persistent: true,
             meta: {
               type: "order",
-              order_id: orderNumber,
+              order_id: orderId,
+              short_id: shortOrderId,
               total_becoin: totalBecoin,
+              total_usd: totalUsd,
+              items_count: itemsCount,
             },
           });
 

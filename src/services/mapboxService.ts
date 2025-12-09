@@ -10,7 +10,7 @@ const MAPBOX_ACCESS_TOKEN =
 
 const GEOCODING_API = "https://api.mapbox.com/geocoding/v5/mapbox.places";
 const SEARCH_BOX_API = "https://api.mapbox.com/search/searchbox/v1";
-
+console.log("token", process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
 export type MapboxSuggestion = {
   id: string;
   name: string;
@@ -240,6 +240,7 @@ export async function forwardGeocode(
   }
 ): Promise<MapboxPlace | null> {
   if (!MAPBOX_ACCESS_TOKEN) {
+    
     console.warn("Mapbox access token is missing");
     return null;
   }

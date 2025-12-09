@@ -33,11 +33,14 @@ export const ConfirmOrder: React.FC<ProcessingStepProps> = ({
     );
   }
   const { products, address, addressId } = preOrder;
-  const total = products
-    .reduce((s: any, p: CartItem) => s + p.price * p.quantity, 0)
-    .toFixed(2);
+  const SHIPPING_COST = 2.5; // Costo de envío desde backend superadmin-config
+  const subtotal = products.reduce(
+    (s: any, p: CartItem) => s + p.price * p.quantity,
+    0
+  );
+  const total = (subtotal + SHIPPING_COST).toFixed(2);
   const handleSubmit = () => {
-    setIsSubmitting(true);
+    setIsSubmitting(true);  
     onSubmit(address, addressId);
   };
   if (isSubmitting) {
@@ -168,6 +171,17 @@ export const ConfirmOrder: React.FC<ProcessingStepProps> = ({
               <Text style={styles.totalLabel}>Artículos</Text>
               <Text style={styles.totalValue}>
                 {products.length} {products.length !== 1 ? "items" : "item"}
+              </Text>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>Subtotal</Text>
+              <Text style={styles.totalValue}>Usd$ {subtotal.toFixed(2)}</Text>
+            </View>
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>Envío</Text>
+              <Text style={styles.totalValue}>
+                Usd$ {SHIPPING_COST.toFixed(2)}
               </Text>
             </View>
             <View style={styles.divider} />
@@ -389,5 +403,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#666",
     textAlign: "center",
+  },
+  processingIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.belandOrange + "15",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
   },
 });

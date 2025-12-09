@@ -20,6 +20,7 @@ export type CartStore = {
   cartId?: string; // ID único del carrito para API
   loading: boolean;
   hasInitialized: boolean;
+  totalUSD: () => number;
   totalBecoins: () => number;
   items: CartItem[];
   deliveryType?: "group" | "home";
@@ -45,6 +46,10 @@ export const useCartStore = create<CartStore>((set, get) => ({
   items: [],
   loading: false,
   hasInitialized: false,
+  totalUSD: () => {
+    const { items } = get();
+    return items.reduce((sum, p) => sum + p.price * p.quantity, 0);
+  },
   totalBecoins: () => {
     const { items } = get();
     const total = items.reduce((sum, p) => sum + p.price * p.quantity, 0);
@@ -61,9 +66,10 @@ export const useCartStore = create<CartStore>((set, get) => ({
   addProduct: async (product) => {
     const { items } = get();
     const exists = items.find((i) => i.id === product.id);
+    const newQuantity = exists ? exists.quantity + 1 : 1;
     let updatedItems = exists
       ? items.map((i) =>
-          i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i
+          i.id === product.id ? { ...i, quantity: newQuantity } : i
         )
       : [...items, { ...product, quantity: 1 }];
 
@@ -71,6 +77,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
     storage.setItem(STORAGE_KEY, JSON.stringify(updatedItems));
     const authToken = await TokenService.getToken();
     if (!authToken) return false;
+    // El backend suma cantidades automáticamente, siempre enviar +1
     CartService.addToCart({ product_id: product.id, quantity: 1 });
   },
 
@@ -89,14 +96,23 @@ export const useCartStore = create<CartStore>((set, get) => ({
   // Actualizar cantidad (mínimo 1)
   updateQuantity: async (productId, quantity) => {
     if (quantity < 1) return;
+
+    const item = get().items.find((i) => i.id === productId);
+    if (!item) return;
+
     const updated = get().items.map((i) =>
       i.id === productId ? { ...i, quantity } : i
     );
     set({ items: updated });
     storage.setItem(STORAGE_KEY, JSON.stringify(updated));
+
     const authToken = await TokenService.getToken();
     if (!authToken) return false;
-    CartService.addToCart({ product_id: productId, quantity });
+
+    // Usar updateCartItem para reemplazar la cantidad exacta
+    if (item.item_id_for_delete) {
+      CartService.updateCartItem(item.item_id_for_delete, { quantity });
+    }
   },
 
   // Limpiar carrito
@@ -108,14 +124,14 @@ export const useCartStore = create<CartStore>((set, get) => ({
   logOutCart: () => {
     set({ items: [] });
     storage.removeItem(STORAGE_KEY);
-    set({hasInitialized: false});
+    set({ hasInitialized: false });
   },
   setDeliveryType: (
     type: "group" | "home",
     groupId?: string,
     address?: string
   ) => {},
-  // Sincronizar con el back, agregar y actualizar
+  // Sincronizar con el backend - El backend es la fuente de verdad
   syncCart: async () => {
     const authToken = await TokenService.getToken();
     if (!authToken) return false;
@@ -135,20 +151,24 @@ export const useCartStore = create<CartStore>((set, get) => ({
         item_id_for_delete: item.id,
       }));
 
-      // 1) Si el backend tiene items → ellos mandan
+      // 1) Si el backend tiene items → usar backend como fuente de verdad
       if (serverItems.length > 0) {
-        // fusionar solo items del invitado que no existan en backend
+        // Solo agregar items locales que NO existan en backend
         const serverIds = new Set(serverItems.map((i) => i.id));
         const toSync = localItems.filter((i) => !serverIds.has(i.id));
 
+        // IMPORTANTE: Solo agregar items nuevos con quantity: 1 porque addToCart SUMA
         for (const item of toSync) {
-          await CartService.addToCart({
-            product_id: item.id,
-            quantity: item.quantity,
-          });
+          // Enviar el producto múltiples veces con quantity: 1 para que el backend sume correctamente
+          for (let i = 0; i < item.quantity; i++) {
+            await CartService.addToCart({
+              product_id: item.id,
+              quantity: 1,
+            });
+          }
         }
 
-        // refrescar carrito
+        // Refrescar carrito después de sincronizar
         const updated = await CartService.getCart();
         const finalItems = updated.items.map((item: any) => ({
           id: item.product_id,
@@ -164,12 +184,15 @@ export const useCartStore = create<CartStore>((set, get) => ({
         return true;
       }
 
-      // 2) Si no hay carrito en backend → subir carrito local entero
+      // 2) Si no hay carrito en backend → subir carrito local
+      // Usar quantity: 1 y hacer múltiples llamadas para que el backend sume correctamente
       for (const item of localItems) {
-        await CartService.addToCart({
-          product_id: item.id,
-          quantity: item.quantity,
-        });
+        for (let i = 0; i < item.quantity; i++) {
+          await CartService.addToCart({
+            product_id: item.id,
+            quantity: 1,
+          });
+        }
       }
 
       const final = await CartService.getCart();

@@ -8,10 +8,13 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  Alert,
+  Platform,
 } from "react-native";
+import Toast from "react-native-toast-message";
+import { toastConfig } from "src/components/shared/notification/GlobalNotification";
 import { X, MapPin, Plus, Trash2, Check, Home, Map } from "lucide-react-native";
 import { useAddresses } from "src/hooks/useAddresses";
+import { useNotify } from "src/hooks/notification/useNotify";
 import type {
   UserAddress,
   CreateAddressRequest,
@@ -37,6 +40,7 @@ export const AddressManagementModal: React.FC<AddressManagementModalProps> = ({
     deleteAddress,
     setDefaultAddress,
   } = useAddresses();
+  const notify = useNotify();
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingAddress, setEditingAddress] = useState<UserAddress | null>(
@@ -90,29 +94,25 @@ export const AddressManagementModal: React.FC<AddressManagementModalProps> = ({
   };
 
   const handleDelete = async (addressId: string) => {
-    Alert.alert(
-      "Confirmar eliminación",
-      "¿Estás seguro de que deseas eliminar esta dirección?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: async () => {
-            const success = await deleteAddress(addressId);
-            if (success) {
-              Alert.alert("Éxito", "Dirección eliminada correctamente");
-            }
-          },
-        },
-      ]
-    );
+    notify.confirm({
+      message: "¿Estás seguro de que deseas eliminar esta dirección?",
+      onConfirm: async () => {
+        const success = await deleteAddress(addressId);
+        if (success) {
+          notify.success({
+            message: "Dirección eliminada correctamente",
+          });
+        }
+      },
+    });
   };
 
   const handleSetDefault = async (addressId: string) => {
     const success = await setDefaultAddress(addressId);
     if (success) {
-      Alert.alert("Éxito", "Dirección predeterminada actualizada");
+      notify.success({
+        message: "Dirección predeterminada actualizada",
+      });
     }
   };
 
@@ -142,14 +142,18 @@ export const AddressManagementModal: React.FC<AddressManagementModalProps> = ({
       // Actualizar dirección existente
       const success = await updateAddress(editingAddress.id, formData);
       if (success) {
-        Alert.alert("Éxito", "Dirección actualizada correctamente");
+        notify.success({
+          message: "Dirección actualizada correctamente",
+        });
         resetForm();
       }
     } else {
       // Crear nueva dirección
       const newAddress = await createAddress(formData);
       if (newAddress) {
-        Alert.alert("Éxito", "Dirección agregada correctamente");
+        notify.success({
+          message: "Dirección agregada correctamente",
+        });
         resetForm();
       }
     }
@@ -261,8 +265,9 @@ export const AddressManagementModal: React.FC<AddressManagementModalProps> = ({
       animationType="slide"
       transparent={true}
       onRequestClose={handleClose}
+      supportedOrientations={["portrait", "landscape"]}
     >
-      <View style={styles.overlay}>
+      <View style={[styles.overlay, Platform.OS === "web" && { zIndex: 1 }]}>
         <View style={styles.modal}>
           {/* Header */}
           <View style={styles.header}>
@@ -552,6 +557,21 @@ export const AddressManagementModal: React.FC<AddressManagementModalProps> = ({
             : null
         }
       />
+
+      {/* Toast local para este modal - con z-index alto */}
+      <View
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 99999,
+          elevation: 99999,
+          pointerEvents: "box-none",
+        }}
+      >
+        <Toast config={toastConfig} />
+      </View>
     </Modal>
   );
 };
@@ -563,6 +583,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
+    ...(Platform.OS === "web" && { zIndex: 1 }),
   },
   modal: {
     backgroundColor: "#fff",
@@ -570,6 +591,8 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 600,
     maxHeight: "90%",
+    ...(Platform.OS === "web" && { zIndex: 1 }),
+    zIndex: 1,
   },
   header: {
     flexDirection: "row",

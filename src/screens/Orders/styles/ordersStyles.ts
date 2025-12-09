@@ -170,7 +170,7 @@ export const ordersStyles = StyleSheet.create({
   // Filter Styles
   filterContainer: {
     backgroundColor: "white",
-    paddingVertical: 16,
+    paddingVertical: 12,
     marginBottom: 20,
     borderRadius: 12,
     ...Platform.select({
@@ -183,50 +183,90 @@ export const ordersStyles = StyleSheet.create({
       android: {
         elevation: 2,
       },
+      web: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+        overflow: "visible", // Permitir scroll visible
+      },
     }),
   },
   filterScrollContent: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
+    paddingRight: 24, // Extra padding al final para web
+    flexGrow: 0, // No ocupar todo el ancho
+    ...Platform.select({
+      web: {
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+      },
+    }),
   },
   filterTab: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#F8F9FA",
     borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginRight: 12,
-    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    marginRight: 8,
+    borderWidth: 1.5,
     borderColor: "transparent",
+    minHeight: 38,
+    flexShrink: 0, // No permitir que se compriman
+    ...Platform.select({
+      web: {
+        cursor: "pointer",
+        userSelect: "none",
+        whiteSpace: "nowrap",
+      },
+    }),
   },
   filterTabActive: {
     backgroundColor: colors.belandOrange + "15",
     borderColor: colors.belandOrange,
+    ...Platform.select({
+      web: {
+        transform: [{ scale: 1.02 }],
+      },
+    }),
   },
   filterTabText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "600",
     color: colors.textSecondary,
+    letterSpacing: 0.2,
+    ...Platform.select({
+      web: {
+        whiteSpace: "nowrap",
+      },
+    }),
   },
   filterTabTextActive: {
     color: colors.belandOrange,
+    fontWeight: "700",
   },
   filterBadge: {
-    backgroundColor: colors.textSecondary,
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
+    backgroundColor: colors.textSecondary + "CC",
+    borderRadius: 12,
+    minWidth: 22,
+    height: 22,
+    paddingHorizontal: 6,
     justifyContent: "center",
     alignItems: "center",
-    marginLeft: 8,
+    marginLeft: 6,
+    flexShrink: 0, // Badge no se comprime
   },
   filterBadgeActive: {
     backgroundColor: colors.belandOrange,
   },
   filterBadgeText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "700",
     color: "white",
+    letterSpacing: 0.3,
   },
   filterBadgeTextActive: {
     color: "white",

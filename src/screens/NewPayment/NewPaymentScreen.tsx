@@ -41,11 +41,11 @@ type PaymentScreenRouteProp = RouteProp<PaymentScreenParam, "PaymentScreen">;
 
 export const NewPaymentScreen = () => {
   const { params } = useRoute<PaymentScreenRouteProp>();
-  const { product, company, total_amount, canEditAmount, canBuyForOthers } =
+  const { product, company, total_amount = 0, canEditAmount, canBuyForOthers } =
     params;
   const { user } = useAuth();
   const { balance } = useUserBalance();
-  if (!user || !total_amount || !product.id) return null;
+  if (!user || !product.id) return null;
 
   const { loading, isFree, Form, setForm, handlePayment, canPurchase } =
     usePaymentHandler(user, total_amount, product.id, balance);

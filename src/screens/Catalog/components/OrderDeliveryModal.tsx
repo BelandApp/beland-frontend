@@ -3,7 +3,13 @@ import { ScrollView, View } from "react-native";
 import { OrderDeliveryModalStyles as styles } from "./orderSteps/styles";
 import { useOrderDelivery } from "../hooks";
 import Modal from "react-native-modal";
-import { CreateAddress, SelectAddress, ConfirmOrder,HeaderSteps } from "./orderSteps";
+import {
+  CreateAddress,
+  SelectAddress,
+  ConfirmOrder,
+  HeaderSteps,
+} from "./orderSteps";
+import { LocationNotAvailableModal } from "./LocationNotAvailableModal";
 import Toast from "react-native-toast-message";
 import { toastConfig } from "src/components/shared/notification/GlobalNotification";
 
@@ -32,6 +38,9 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
     createAndContinue,
     cancelAddressCreation,
     submitOrder,
+    showLocationModal,
+    detectedCountry,
+    setShowLocationModal,
   } = useOrderDelivery(onOrderCreated);
 
   useEffect(() => {
@@ -39,16 +48,16 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
     else setStep("select");
   }, [visible]);
 
-  const handleDismiss = () => { 
+  const handleDismiss = () => {
     onCancel();
     onClose();
-  }
-  const handleSubmit =async () => {
-    const ok = await submitOrder()
+  };
+  const handleSubmit = async () => {
+    const ok = await submitOrder();
     if (ok) {
       onClose();
     }
-  }
+  };
   return (
     <Modal
       style={styles.overlay}
@@ -93,6 +102,13 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
         )}
       </View>
       <Toast config={toastConfig} />
+
+      {/* Modal de ubicación no disponible */}
+      <LocationNotAvailableModal
+        visible={showLocationModal}
+        onClose={() => setShowLocationModal(false)}
+        country={detectedCountry}
+      />
     </Modal>
   );
 };

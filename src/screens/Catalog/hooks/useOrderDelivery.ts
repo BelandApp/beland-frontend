@@ -10,7 +10,12 @@ import { useNotify } from "@/hooks";
 import { useAuth } from "@/context";
 import { apiRequest, getBackendErrorMessage } from "@/services/api";
 import { CartService } from "@/services";
-import { CreateOrderRequest, DeliveryAddress, OrderItem, Product } from "src/types";
+import {
+  CreateOrderRequest,
+  DeliveryAddress,
+  OrderItem,
+  Product,
+} from "src/types";
 
 export type DeliveryStep = "select" | "form" | "processing";
 export type preOrderType = {
@@ -26,11 +31,21 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
     null
   );
   const [selectedAddress, setSelectedAddress] = useState<any>(null);
-  const [preOrder, setPreOrder] = useState<preOrderType|null>(null);
+  const [preOrder, setPreOrder] = useState<preOrderType | null>(null);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [detectedCountry, setDetectedCountry] = useState("");
   const notify = useNotify();
   const { items, clearCart } = useCartStore();
   const { createOrder } = useOrdersStoreAPI();
   const { requireAuth } = useAuth();
+
+  /** ---------------- HELPER: Validar ubicación en Ecuador ---------------- */
+  const isEcuador = (country: string): boolean => {
+    const normalized = country.toLowerCase().trim();
+    return (
+      normalized === "ecuador" || normalized === "ec" || normalized === "ecu"
+    );
+  };
 
   /** ---------------- LOAD ADDRESSES ---------------- */
   const loadAddresses = useCallback(async () => {
@@ -46,7 +61,9 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
   }, []);
 
   /** ---------------- CREATE ADDRESS ---------------- */
-  const createAddress = async (address: DeliveryAddress): Promise<string | null> => {
+  const createAddress = async (
+    address: DeliveryAddress
+  ): Promise<string | null> => {
     const payload: CreateAddressRequest = {
       addressLine1: address.street,
       addressLine2: address.additionalInfo || undefined,
@@ -63,6 +80,7 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
       const created = await addressService.createAddress(payload);
       setAddresses((prev) => [...prev, created]);
       notify.success({ message: "Dirección creada" });
+      setStep("select");
       return created.id;
     } catch (e) {
       notify.error({ message: getBackendErrorMessage(e) });
@@ -71,33 +89,56 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
   };
 
   /** ---------------- SELECT ADDRESS (PASO 1 → 3) ---------------- */
-  const selectAddress = (address: any, id: string) => {
+  const selectAddress = async (address: any, id: string) => {
     if (items.length === 0) {
       notify.error({ message: "El carrito está vacío." });
       return;
     }
 
-    setSelectedAddress(address);
-    setSelectedAddressId(id);
-    setPreOrder({
-      products: items,
-      address: address,
-      addressId: id,
-    });
-    setStep("processing");
+    // Validar que la dirección sea de Ecuador
+    if (!isEcuador(address.country)) {
+      setDetectedCountry(address.country);
+      setShowLocationModal(true);
+      return;
+    }
+
+    try {
+      // Obtener datos actualizados del backend antes de confirmar
+      const cart = await CartService.getCart();
+      const backendItems = cart.items.map((item: any) => ({
+        id: item.product_id,
+        name: item.product?.name || "Producto",
+        price: item.unit_price,
+        quantity: item.quantity,
+        image: item.product?.image_url,
+      }));
+
+      setSelectedAddress(address);
+      setSelectedAddressId(id);
+      setPreOrder({
+        products: backendItems, // Usar items del backend
+        address: address,
+        addressId: id,
+      });
+      setStep("processing");
+    } catch (e) {
+      notify.error({ message: getBackendErrorMessage(e) });
+    }
   };
 
   /** ---------------- CREATE AND SELECT (PASO 2 → 3) ---------------- */
   const createAndContinue = async (address: any) => {
+    // Validar que la dirección sea de Ecuador antes de crear
+    if (!isEcuador(address.country)) {
+      setDetectedCountry(address.country);
+      setShowLocationModal(true);
+      return;
+    }
+
     const id = await createAddress(address);
     if (!id) return;
 
-    selectAddress(address, id);
-    setPreOrder({
-      products: items,
-      address: address,
-      addressId: id,
-    });
+    await selectAddress(address, id);
   };
 
   /** ---------------- SUBMIT ORDER (PASO 3) ---------------- */
@@ -109,7 +150,10 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
 
     await requireAuth(async () => {
       try {
+        // Obtener carrito del backend como fuente de verdad
         const cart = await CartService.getCart();
+
+        // Actualizar dirección del carrito
         await apiRequest(
           `/carts/address/${cart.id}?address_id=${selectedAddressId}`,
           {
@@ -117,19 +161,22 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
           }
         );
 
+        // Usar items del backend, no del store local
+        const backendItems = cart.items.map((item: any) => ({
+          id: item.product_id,
+          productId: item.product_id,
+          price: item.unit_price,
+          quantity: item.quantity,
+          subtotal: item.total_price,
+          name: item.product?.name || "Producto",
+          image: item.product?.image_url,
+        }));
+
         const payload: CreateOrderRequest = {
           deliveryAddress: selectedAddress,
           deliveryType: "home",
           paymentMethod: "becoins",
-          items: items.map((p) => ({
-            id: p.id,
-            productId: p.id,
-            price: p.price,
-            quantity: p.quantity,
-            subtotal: p.price * p.quantity,
-            name: p.name,
-            image: p.image,
-          })),
+          items: backendItems,
         };
 
         const order = await createOrder(payload);
@@ -160,6 +207,9 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
     addresses,
     loadingAddresses,
     preOrder,
+    showLocationModal,
+    detectedCountry,
+    setShowLocationModal,
 
     loadAddresses,
 

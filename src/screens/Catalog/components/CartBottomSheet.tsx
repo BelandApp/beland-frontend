@@ -40,22 +40,24 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
   onCheckout,
   onNavigateToRecharge,
 }) => {
-  const { isAuthenticated, handleAuth0Login,user } = useAuth();
+  const { isAuthenticated, handleAuth0Login, user } = useAuth();
   const {
     items,
     removeProduct,
     updateQuantity,
     clearCart,
-    totalBecoins,syncCart
+    totalUSD,
+    totalBecoins,
+    syncCart,
   } = useCartStore();
   const notify = useNotify();
   const { balance } = useUserBalance();
   const [insufficientModalVisible, setInsufficientModalVisible] =
     useState(false);
 
-useEffect(() => {
-  if(user) syncCart()
-},[user])
+  useEffect(() => {
+    if (user) syncCart();
+  }, [user]);
   const handleRemoveProduct = async (productId: string) => {
     try {
       removeProduct(productId);
@@ -176,17 +178,23 @@ useEffect(() => {
             <View>
               <Text style={styles.total}>
                 Total: {CURRENCY_CONFIG.CURRENCY_DISPLAY_SYMBOL}
-                {formatUSDPrice(totalBecoins())}
+                {formatUSDPrice(totalUSD())}
               </Text>
               <Text style={styles.totalBecoins}>
-                {formatBeCoins(convertUSDToBeCoins(totalBecoins()))}
+                {formatBeCoins(totalBecoins())}
               </Text>
             </View>
             <Button
               title="Finalizar compra"
               disabled={items.length === 0}
               onPress={() => {
-                if(!isAuthenticated) {notify.confirm({ message: "Debes iniciar sesión para comprar", onConfirm: () => handleAuth0Login() }); return;}
+                if (!isAuthenticated) {
+                  notify.confirm({
+                    message: "Debes iniciar sesión para comprar",
+                    onConfirm: () => handleAuth0Login(),
+                  });
+                  return;
+                }
                 // Verificar saldo en BeCoins antes de proceder
                 if ((balance || 0) < totalBecoins()) {
                   setInsufficientModalVisible(true);
