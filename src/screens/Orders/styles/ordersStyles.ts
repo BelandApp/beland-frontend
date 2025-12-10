@@ -473,4 +473,39 @@ export const ordersStyles = StyleSheet.create({
     color: colors.textSecondary,
     opacity: 0.6,
   },
+
+  // Estilos de paginación
+  paginationContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    marginTop: 10,
+  },
+  paginationButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    borderRadius: 8,
+    gap: 8,
+  },
+  paginationButtonDisabled: {
+    opacity: 0.4,
+  },
+  paginationButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.belandOrange,
+  },
+  paginationButtonTextDisabled: {
+    color: colors.textSecondary,
+  },
+  paginationText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.textPrimary,
+  },
 });

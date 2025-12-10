@@ -174,8 +174,17 @@ export function usePaymentSocket(onPaymentSuccess: (data: any) => void) {
           redemption_code?: string;
           becoins_used?: number;
           commerce_name?: string;
+          status_old_id?: string;
+          status_new_id?: string;
           [key: string]: any;
         }) => {
+          // Ignorar notificaciones de cambio de estado de órdenes (las maneja useOrderStatusSocket)
+          const isStatusUpdate = data?.status_old_id || data?.status_new_id;
+          if (isStatusUpdate) {
+            console.log("[PaymentSocket] Es cambio de estado, ignorando");
+            return;
+          }
+
           // Ignorar notificaciones de ORDEN (las maneja useOrderSocket)
           const isOrderNotification =
             data?.order_id &&
