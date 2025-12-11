@@ -33,7 +33,7 @@ export const ConfirmOrder: React.FC<ProcessingStepProps> = ({
     );
   }
   const { products, address, addressId } = preOrder;
-  const SHIPPING_COST = 2.5; // Costo de envío desde backend superadmin-config
+  const SHIPPING_COST = preOrder.cost; 
   const subtotal = products.reduce(
     (s: any, p: CartItem) => s + p.price * p.quantity,
     0
