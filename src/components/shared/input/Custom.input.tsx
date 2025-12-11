@@ -30,6 +30,10 @@ interface CustomInputProps extends TextInputProps {
   onBlur?: () => void;
   variant?: "underline" | "filled";
   icon?: React.ReactNode;
+  /** Color del texto del input (override). Si no se provee, se usa el del variant */
+  textColor?: string;
+  /** Color del placeholder del input (override). Si no se provea, se usa el del variant o negro */
+  placeholderTextColor?: string;
 }
 
 export const CustomInput: React.FC<CustomInputProps> = ({
@@ -43,6 +47,8 @@ export const CustomInput: React.FC<CustomInputProps> = ({
   placeholder,
   variant = "underline",
   icon,
+  textColor,
+  placeholderTextColor,
   ...props
 }) => {
   const selectedVariant = variantStyles[variant];
@@ -122,13 +128,23 @@ export const CustomInput: React.FC<CustomInputProps> = ({
           onChangeText={onChangeText}
           secureTextEntry={isSecure}
           keyboardType={keyboardType}
-          style={[InputStyles.baseInput, selectedVariant.input]}
+          style={[
+            InputStyles.baseInput,
+            selectedVariant.input,
+            // override color if provided
+            textColor ? { color: textColor } : {},
+          ]}
           onFocus={() => setIsFocused(true)}
           onBlur={() => {
             setIsFocused(false);
             onBlur && onBlur();
           }}
           placeholder={!isFocused ? "" : placeholder}
+          placeholderTextColor={
+            placeholderTextColor ||
+            (selectedVariant.input as any).color ||
+            "#000"
+          }
           {...props}
         />
         {secureTextEntry &&

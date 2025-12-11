@@ -27,11 +27,17 @@ const RegisterStep: React.FC<RegisterStepProps> = ({
           onChangeText={(full_name) => onChangeText("full_name", full_name)}
           value={formData.full_name}
           error={errors.full_name}
+          textColor="#000"
+          placeholderTextColor="#666"
+          variant="filled"
         />
         <PhoneInput
           value={formData.phone}
           onChange={(phone) => onChangeText("phone", phone)}
           error={errors.phone}
+          textColor="#000"
+          placeholderTextColor="#666"
+          variant="filled"
         />
       </View>
       <CustomInput
@@ -40,6 +46,9 @@ const RegisterStep: React.FC<RegisterStepProps> = ({
         value={formData.email}
         keyboardType="email-address"
         error={errors.email}
+        textColor="#000"
+        placeholderTextColor="#666"
+        variant="filled"
       />
       <CustomInput
         label="Contraseña"
@@ -47,6 +56,9 @@ const RegisterStep: React.FC<RegisterStepProps> = ({
         value={formData.password}
         secureTextEntry
         error={errors.password}
+        textColor="#000"
+        placeholderTextColor="#666"
+        variant="filled"
       />
       <Button
         title="Registrarse"
@@ -54,15 +66,7 @@ const RegisterStep: React.FC<RegisterStepProps> = ({
         variant="secondary"
         isLoading={isLoading}
       />
-      <View style={styles.containerRow}>
-        <Text style={styles.subtitle}>¿Ya tienes cuenta? </Text>
-        <Button
-          title="Ingresar"
-          onPress={() => navigate("Login")}
-          style={styles.buttonLink}
-          isLoading={isLoading}
-        />
-      </View>
+      {/* Footer link removed from here to avoid duplicate; Login link is shown in parent screen */}
     </>
   );
 };

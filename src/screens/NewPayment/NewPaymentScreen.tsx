@@ -21,6 +21,7 @@ import { BankTransfer } from "../Payment/components/BankTransfer";
 import { AdquisitionForm } from "./components/AdquisitionForm";
 import { PaymentMethodSelector } from "../Payment";
 import { useUserBalance } from "src/hooks";
+import { useNavigation } from "@react-navigation/native";
 
 export type PaymentScreenRoute = {
   product: {
@@ -40,9 +41,15 @@ type PaymentScreenParam = { PaymentScreen: PaymentScreenRoute };
 type PaymentScreenRouteProp = RouteProp<PaymentScreenParam, "PaymentScreen">;
 
 export const NewPaymentScreen = () => {
+  const navigation = useNavigation();
   const { params } = useRoute<PaymentScreenRouteProp>();
-  const { product, company, total_amount = 0, canEditAmount, canBuyForOthers } =
-    params;
+  const {
+    product,
+    company,
+    total_amount = 0,
+    canEditAmount,
+    canBuyForOthers,
+  } = params;
   const { user } = useAuth();
   const { balance } = useUserBalance();
   if (!user || !product.id) return null;
@@ -52,7 +59,11 @@ export const NewPaymentScreen = () => {
 
   return (
     <View style={styles.content}>
-      <ThemedHeader title="Compra" canGoBack />
+      <ThemedHeader
+        title="Compra"
+        canGoBack
+        onBackPress={() => navigation.goBack()}
+      />
       <ScrollView
         style={styles.scrollContent}
         showsVerticalScrollIndicator={false}
