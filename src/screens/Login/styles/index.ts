@@ -1,5 +1,5 @@
 import { StyleSheet, Dimensions, Platform } from "react-native";
-import { colors } from "src/styles";
+import { colors } from "src/design-system/tokens";
 
 const { width, height } = Dimensions.get("window");
 
@@ -15,17 +15,21 @@ export const styles = StyleSheet.create({
     flexDirection: "column",
     marginHorizontal: "auto",
     marginBottom: "auto",
-    padding: 20,
-    gap: 5,
-    height: Platform.OS === "web" ? "auto" : height * 0.4,
-    borderRadius: 20,
-    width: width > 600 ? 600 : width,
-    // TODO PROBAR RESPONSIVE BACKGROUND
-    // backgroundColor: colors.belandOrange,
+    padding: 24,
+    gap: 8,
+    height: Platform.OS === "web" ? "auto" : undefined,
+    borderRadius: 16,
+    width: width > 680 ? 680 : Math.min(width - 32, 680),
+    backgroundColor: "rgba(255,255,255,0.95)",
+    // Card-like shadow on native/web
+    shadowColor: "#000",
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  logo: { margin: "auto", marginTop: 20 },
-  title: { fontSize: 24, fontWeight: 600, color: "white" },
-  subtitle: { color: "white" },
+  logo: { alignSelf: "center", marginTop: 8 },
+  title: { fontSize: 24, fontWeight: "600" as any, color: colors.text.primary },
+  subtitle: { color: colors.text.secondary, fontSize: 14 },
   button: {
     backgroundColor: "white",
     borderRadius: 5,
@@ -36,24 +40,31 @@ export const styles = StyleSheet.create({
     position: "absolute",
     top: 40,
     left: 10,
-    backgroundColor: colors.belandOrange,
+    backgroundColor: colors.brand.orange[500],
     borderRadius: 50,
     padding: 10,
   },
   buttonLink: {
-    color: "white",
-    fontWeight: "bold",
+    color: colors.brand.orange[500],
+    fontWeight: "700" as any,
     paddingHorizontal: 0,
   },
-  buttonText: { color: colors.belandOrange, fontWeight: "bold" },
+  buttonText: { color: colors.brand.orange[500], fontWeight: "700" as any },
   forgetText: {
-    color: colors.cardBackground,
+    color: colors.text.secondary,
     textDecorationLine: "underline",
-    fontSize: 12,
+    fontSize: 13,
   },
   containerRow: {
     flexDirection: "row",
     gap: 4,
     alignItems: "center",
+  },
+  mirrorBar: {
+    height: 36,
+    width: "100%",
+    borderRadius: 12,
+    marginTop: 12,
+    backgroundColor: "rgba(248,141,42,0.10)",
   },
 });

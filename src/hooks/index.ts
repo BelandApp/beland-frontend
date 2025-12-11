@@ -1,5 +1,7 @@
 // Hooks principales
 export * from "./useUserResources";
+export * from "./useOrderSocket";
+export * from "./useOrderStatusSocket";
 export * from "./useAddresses";
 export * from "./useOrders";
 export * from "./usePaymentTypes";
@@ -23,4 +25,4 @@ export * from "./navigation/useCustomNavigation";
 export * from "./NotificationContext";
 export * from "./usePaymentSocket";
 export * from "./useOrderSocket";
-export * from "./user"
+export * from "./user";

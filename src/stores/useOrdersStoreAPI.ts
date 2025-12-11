@@ -120,6 +120,12 @@ export interface OrdersState {
   filters: OrderFilters;
   isLoading: boolean;
   error?: string;
+  totalOrders: number;
+  orderCounts: {
+    pending: number;
+    delivered: number;
+    cancelled: number;
+  };
 }
 
 export interface OrdersActions {
@@ -130,7 +136,7 @@ export interface OrdersActions {
   cancelOrder: (orderId: string) => void;
   // API-backed cancel: call backend and update local state
   cancelOrderApi: (orderId: string, reason?: string) => Promise<boolean>;
-  loadUserOrders: () => Promise<void>;
+  loadUserOrders: (page?: number, limit?: number) => Promise<Order[]>;
   loadPendingOrders: () => Promise<void>;
   confirmDelivery: (orderId: string, notes?: string) => Promise<boolean>;
   confirmReception: (orderId: string) => Promise<boolean>;
@@ -163,6 +169,12 @@ const initialOrdersState: OrdersState = {
   filters: {},
   isLoading: false,
   error: undefined,
+  totalOrders: 0,
+  orderCounts: {
+    pending: 0,
+    delivered: 0,
+    cancelled: 0,
+  },
 };
 
 export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
@@ -481,12 +493,17 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
   },
 
   // Load user orders from API
-  loadUserOrders: async (): Promise<void> => {
+  loadUserOrders: async (
+    page: number = 1,
+    limit: number = 10
+  ): Promise<Order[]> => {
     set({ isLoading: true, error: undefined });
 
     try {
-      console.log("🌐 Store API: Loading user orders from API...");
-      const response = await OrderService.getUserOrders();
+      console.log(
+        `🌐 Store API: Loading user orders from API (page ${page}, limit ${limit})...`
+      );
+      const response = await OrderService.getUserOrders({ page, limit });
       // TODO: Map API response to store types - temporary conversion
       const orders = (response.data || []).map((apiOrder: any) => ({
         ...apiOrder,
@@ -537,24 +554,61 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
         becoinsUsed: parseFloat(apiOrder.total_becoin) || 0,
       }));
 
+      // Obtener el total de órdenes desde la respuesta paginada
+      const totalOrders = response.total || orders.length;
+
+      // Calcular conteos por estado desde todas las órdenes (hacer petición adicional para obtener totales)
+      // Por ahora, si estamos en la página 1, calculamos los conteos de la página actual
+      // Idealmente el backend debería retornar estos totales
+      const allOrdersResponse =
+        page === 1
+          ? await OrderService.getUserOrders({ page: 1, limit: 1000 })
+          : null;
+      const allOrders = allOrdersResponse ? allOrdersResponse.data || [] : [];
+
+      const orderCounts = {
+        pending: allOrders.filter(
+          (o: any) =>
+            mapBackendStatusToFrontend(o.status?.code || o.status) === "pending"
+        ).length,
+        delivered: allOrders.filter(
+          (o: any) =>
+            mapBackendStatusToFrontend(o.status?.code || o.status) ===
+            "delivered"
+        ).length,
+        cancelled: allOrders.filter(
+          (o: any) =>
+            mapBackendStatusToFrontend(o.status?.code || o.status) ===
+            "cancelled"
+        ).length,
+      };
+
       set((state) => {
         const newState = {
           ...state,
           orders,
+          totalOrders,
+          orderCounts: page === 1 ? orderCounts : state.orderCounts,
           isLoading: false,
         };
         saveOrdersState(newState);
         return newState;
       });
 
-      console.log("✅ Store API: User orders loaded:", orders.length);
-      // user orders loaded
+      console.log(
+        "✅ Store API: User orders loaded:",
+        orders.length,
+        "Total:",
+        totalOrders
+      );
+      return orders;
     } catch (error) {
       console.error("❌ Store API: Error loading user orders:", error);
       set({
         isLoading: false,
         error: error instanceof Error ? error.message : "Error loading orders",
       });
+      return [];
     }
   },
 
@@ -960,12 +1014,13 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
 
   // Get order summary statistics
   getOrderSummary: (): OrderSummary => {
-    const orders = get().orders;
+    const state = get();
+    const orders = state.orders;
 
     return {
-      totalOrders: orders.length,
-      pendingOrders: orders.filter((o) => o.status === "pending").length,
-      completedOrders: orders.filter((o) => o.status === "delivered").length,
+      totalOrders: state.totalOrders,
+      pendingOrders: state.orderCounts.pending,
+      completedOrders: state.orderCounts.delivered,
       totalSpent: orders
         .filter((o) => o.status === "delivered")
         .reduce(

@@ -49,11 +49,22 @@ export function useOrderSocket(onOrderCreated?: (data: any) => void) {
           order_id?: string;
           total_becoin?: number;
           items?: number;
+          status_old_id?: string;
+          status_new_id?: string;
           [key: string]: any;
         }) => {
           if (!isMounted) return;
 
-          // Verificar si es una notificación de orden (tiene order_id, total_becoin, items)
+          // Si tiene status_old_id o status_new_id, es un cambio de estado, NO una nueva orden
+          const isStatusUpdate = data?.status_old_id || data?.status_new_id;
+          if (isStatusUpdate) {
+            console.log(
+              "[OrderSocket] Es cambio de estado, ignorando para notificaciones"
+            );
+            return;
+          }
+
+          // Verificar si es una notificación de NUEVA orden (tiene order_id, total_becoin, items)
           const isOrderNotification =
             data?.order_id &&
             data?.total_becoin !== undefined &&

@@ -22,6 +22,8 @@ interface PhoneInputProps {
   onBlur?: () => void;
   variant?: "underline" | "filled";
   icon?: boolean;
+  textColor?: string;
+  placeholderTextColor?: string;
 }
 
 const COUNTRY_CODES = [
@@ -55,6 +57,8 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
   onBlur,
   variant = "underline",
   icon = false,
+  textColor,
+  placeholderTextColor,
   ...props
 }) => {
   const selectedVariant = variantStyles[variant];
@@ -158,7 +162,16 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
                 setIsFocused(false);
                 onBlur && onBlur();
               }}
-              style={[InputStyles.baseInput, selectedVariant.input]}
+              style={[
+                InputStyles.baseInput,
+                selectedVariant.input,
+                textColor ? { color: textColor } : {},
+              ]}
+              placeholderTextColor={
+                placeholderTextColor ||
+                (selectedVariant.input as any).color ||
+                "#000"
+              }
               {...props}
             />
             {icon && (
