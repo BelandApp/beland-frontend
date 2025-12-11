@@ -19,4 +19,13 @@ export const userService = {
     );
     return res
   },
+  deleteAddressUser: async (id:string) => {
+    const res = await apiRequest(
+      `${process.env.EXPO_PUBLIC_API_URL}/user-address/${id}`,
+      {
+        method: "DELETE",
+      }
+    );
+    return res
+  },
 };

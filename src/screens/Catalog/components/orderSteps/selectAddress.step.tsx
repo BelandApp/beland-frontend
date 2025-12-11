@@ -1,7 +1,16 @@
-import { View, Text, StyleSheet, ScrollView, Dimensions } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  Dimensions,
+  TouchableOpacity,
+} from "react-native";
 import { Button, CustomLoader } from "src/components";
 import { OrderDeliveryModalStyles as styles } from "./styles";
 import { DeliveryAddress } from "src/types";
+import { userService } from "src/services/user/user.service";
+import { notify } from "src/hooks/notification/notify.external";
+import { useState } from "react";
 type AddressSelectorProps = {
   addresses: any[];
   loadingAddresses: boolean;
@@ -19,8 +28,15 @@ export const SelectAddress: React.FC<AddressSelectorProps> = ({
   if (loadingAddresses) {
     return <CustomLoader />;
   }
+  const [displayAddress, setDisplayAddress] =
+    useState<any[]>(addresses);
   const isMobile = Dimensions.get("window").width <= 600;
   const Wrapper = isMobile ? ScrollView : View;
+  const handleDeleteAddress=(addressId: string) => {
+    const res = userService.deleteAddressUser(addressId);
+    setDisplayAddress(displayAddress.filter((a) => a.id !== addressId));
+    notify.success({ message: "Dirección eliminada" });
+  }
   return (
     <View style={styles.selectContainer}>
       <Wrapper style={isMobile ? null : styles.selectWrapper}>
@@ -31,7 +47,7 @@ export const SelectAddress: React.FC<AddressSelectorProps> = ({
             </Text>
           </View>
         ) : (
-          addresses.map((a, idx) => {
+          displayAddress.map((a, idx) => {
             const primary =
               a.addressLine1 || a.address_line_1 || a.street || a.address || "";
             const secondary =
@@ -61,6 +77,12 @@ export const SelectAddress: React.FC<AddressSelectorProps> = ({
                 key={a.id || `${a.user_id || "addr"}-${idx}`}
                 style={styles.addressCard}
               >
+                <TouchableOpacity
+                  onPress={() => handleDeleteAddress(a.id)}
+                  style={styles.removeContainer}
+                >
+                  <Text style={styles.remove}>✕</Text>
+                </TouchableOpacity>
                 <Text
                   style={{ fontWeight: "700", textTransform: "capitalize" }}
                 >
