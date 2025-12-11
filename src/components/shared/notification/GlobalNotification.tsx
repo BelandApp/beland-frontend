@@ -87,7 +87,7 @@ export const toastConfig = {
     >
       <Text>{text1}</Text>
       <Button
-        title="Ver"
+        title="Ver mis entradas"
         variant="secondary"
         onPress={() => {
           notificationAsync(NotificationFeedbackType.Success);
@@ -158,7 +158,8 @@ export const toastConfig = {
 
 export const GlobalNotification = () => {
   const { current, clear } = useNotificationStore();
-  const isConfirmAndRun = current?.type === "confirm" || current?.type === "cartItem";
+  const isConfirmAndRun =
+    current?.type === "confirm" || current?.type === "cartItem";
   useEffect(() => {
     if (!current) return;
     if (isConfirmAndRun) notificationAsync(NotificationFeedbackType.Warning);
@@ -173,7 +174,7 @@ export const GlobalNotification = () => {
       visibilityTime: current.type !== "confirm" ? 3000 : undefined,
       position: "top",
       onPress() {
-          Toast.hide()
+        Toast.hide();
       },
     });
 

@@ -19,7 +19,7 @@ export const usePaymentHandler = (
   const { navigate } = useCustomNavigation();
   const { handleAuth0Login } = useAuth();
   const isFree = !total_amount || total_amount === 0;
- const canPurchase = balance >= total_amount;
+  const canPurchase = balance >= total_amount;
   const [Form, setForm] = useState({
     holder_name: "",
     holder_email: "",
@@ -36,7 +36,7 @@ export const usePaymentHandler = (
       });
       return;
     }
-    if(!canPurchase && !isFree){
+    if (!canPurchase && !isFree) {
       notify.confirm({
         message: "No tienes suficiente saldo",
         onConfirm: () => navigate("RechargeScreen"),
@@ -45,8 +45,16 @@ export const usePaymentHandler = (
     }
     try {
       setLoading(true);
-      await becoinService.acquireProduct(Form);
-       navigate("MainTabs", { screen: "Community" });
+      const response: any = await becoinService.acquireProduct(Form);
+
+      // Mostrar notificación global con acción para ver entradas
+      notify.cartItem({
+        message: "Entrada adquirida con éxito",
+        onConfirm: () => {
+          // Abrir la pantalla 'Mis Entradas' para que el usuario vea sus entradas adquiridas
+          navigate("MisEntradas");
+        },
+      });
     } catch (error) {
       console.error(error);
       const message = getBackendErrorMessage(error);
@@ -56,8 +64,6 @@ export const usePaymentHandler = (
     }
   };
 
-  
-  
   return {
     Form,
     setForm,

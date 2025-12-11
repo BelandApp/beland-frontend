@@ -239,9 +239,7 @@ export const QRScannerScreen = () => {
       <GoBackButton />
       <View style={styles.header}>
         <Text style={styles.title}>Escanear QR</Text>
-        <Text style={styles.subtitle}>
-          Apunta la cámara hacia el código QR de la máquina de reciclaje
-        </Text>
+        <Text style={styles.subtitle}>Apunta la cámara hacia el código QR</Text>
       </View>
 
       <View style={styles.cameraContainer}>

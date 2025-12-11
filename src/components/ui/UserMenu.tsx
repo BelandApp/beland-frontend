@@ -17,7 +17,8 @@ import {
   User,
   Settings,
   PackageIcon,
-  Percent,
+  Gift,
+  Ticket,
 } from "lucide-react-native";
 import { authService } from "../../services/auth/auth.service";
 import { TokenService } from "../../services/auth/token.service";
@@ -291,12 +292,13 @@ export const UserMenu: React.FC<UserMenuProps> = ({
               style={styles.menuItem}
               onPress={() => {
                 setMenuVisible(false);
-                navigate("UserResources");
+                navigate("MisEntradas");
               }}
             >
-              <Percent size={18} color="#333" />
-              <Text style={styles.menuItemText}>Mis Beneficios</Text>
+              <Ticket size={18} color="#333" />
+              <Text style={styles.menuItemText}>Mis Entradas</Text>
             </TouchableOpacity>
+
             <TouchableOpacity
               style={styles.menuItem}
               onPress={() => {
