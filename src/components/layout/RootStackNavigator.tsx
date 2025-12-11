@@ -104,6 +104,7 @@ export type RootStackParamList = {
   UsersManagement: undefined;
   ProductsManagement: undefined;
 
+  MisEntradas: undefined;
   // Events Screens
   EventModal: { id: string };
   AcquiredEventModal: { id_modal: string };
@@ -187,7 +188,7 @@ export const RootStackNavigator = () => {
       />
 
       <Stack.Screen
-        name="UserResources"
+        name="MisEntradas"
         component={UserResourcesScreen}
         options={{ headerShown: false }}
       />
