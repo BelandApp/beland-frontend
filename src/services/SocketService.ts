@@ -7,7 +7,6 @@ export interface RespSocket {
   success: boolean;
   amount_payment_id_deleted?: string | null;
   noHidden: boolean;
-  // Datos adicionales de la entrada y cantidad
   resource_name?: string;
   resource_quantity?: number;
   applied_redemption?: {
@@ -23,20 +22,61 @@ export interface RespSocket {
 
 export class SocketService {
   private socket: Socket | null = null;
+  private static _instance: SocketService | null = null;
+  private connecting: boolean = false;
+  private lastToken: string | null = null;
+  private lastAttemptToken: string | null = null;
+  private lastAttemptAt: number = 0;
+
+  static getInstance() {
+    if (!this._instance) this._instance = new SocketService();
+    return this._instance;
+  }
 
   connect(token: string) {
-    // Para WebSockets, necesitamos la URL base sin /api
+    // Normalize token to avoid false positives (whitespace, surrounding quotes)
+    const normalized = token
+      ? String(token).trim().replace(/^"|"$/g, "")
+      : null;
+    if (!normalized) {
+      return;
+    }
+
+    // Throttle repeated connect attempts with same token within short window
+    const now = Date.now();
+    const THROTTLE_MS = 10000; // 10s
+    if (
+      this.lastAttemptToken === normalized &&
+      now - this.lastAttemptAt < THROTTLE_MS
+    ) {
+      return;
+    }
+
+    // If already connected (or connecting) with same token, skip
+    if (
+      this.socket &&
+      this.lastToken === normalized &&
+      (this.socket.connected || this.connecting)
+    ) {
+      return;
+    }
+
+    // If token changed, disconnect first
+    if (this.socket && this.lastToken !== normalized) this.disconnect();
+
+    // track attempt time/token without logging sensitive info
+    this.lastAttemptToken = normalized;
+    this.lastAttemptAt = now;
+
+    // Build WS URL (remove /api suffix if present)
     let wsUrl =
       process.env.EXPO_PUBLIC_WS_URL ||
       "https://beland-backend-266662044893.us-east1.run.app";
+    if (wsUrl.endsWith("/api")) wsUrl = wsUrl.slice(0, -4);
 
-    // Si la URL termina en /api, la removemos para WebSockets
-    if (wsUrl.endsWith("/api")) {
-      wsUrl = wsUrl.slice(0, -4);
-    }
-
+    this.connecting = true;
     this.socket = io(wsUrl, {
-      auth: { token },
+      auth: { token: normalized },
       transports: ["websocket"],
       reconnection: true,
       reconnectionAttempts: 5,
@@ -44,15 +84,17 @@ export class SocketService {
     });
 
     this.socket.on("connect", () => {
-      console.log("[SocketService] Conectado exitosamente");
+      this.lastToken = normalized;
+      this.connecting = false;
     });
 
-    this.socket.on("connect_error", (err) => {
-      console.error("[SocketService] Error de conexión:", err.message);
+    this.socket.on("connect_error", (err: any) => {
+      console.error("[SocketService] Error de conexión:", err?.message || err);
+      this.connecting = false;
     });
 
-    this.socket.on("disconnect", (reason) => {
-      console.warn("[SocketService] Desconectado:", reason);
+    this.socket.on("disconnect", () => {
+      this.connecting = false;
     });
   }
 
@@ -70,7 +112,6 @@ export class SocketService {
     this.socket?.on("transactionReceived", callback);
   }
 
-  // Listen for order-related events if backend emits them
   onOrderCreated(callback: (data: any) => void) {
     this.socket?.on("orderCreated", callback);
   }
@@ -79,8 +120,17 @@ export class SocketService {
     this.socket?.on("orderUpdated", callback);
   }
 
+  off(event: string, callback: (...args: any[]) => void) {
+    this.socket?.off(event, callback);
+  }
+
   disconnect() {
-    this.socket?.disconnect();
-    this.socket = null;
+    try {
+      this.socket?.disconnect();
+    } finally {
+      this.socket = null;
+      this.connecting = false;
+      this.lastToken = null;
+    }
   }
 }

@@ -16,12 +16,13 @@ export { organizationService } from "./OrganizationApiService";
 
 // Other services
 export * from "./auth";
-export * from "./api";
+// Do not re-export the legacy API implementation; keep helper exports explicit
+export { getBackendErrorMessage } from "./helpers";
 export * from "./supabaseClient";
 export * from "./SocketService";
 export * from "./geocodingService";
 export * from "./instagramService";
-export * from "./groupApis";
+export * from "./GroupApiService";
 
 // Core services - export specific items to avoid conflicts
 export { CoreApiService } from "./core";

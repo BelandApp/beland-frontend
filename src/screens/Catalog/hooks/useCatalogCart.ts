@@ -31,11 +31,7 @@ export const useCatalogCart = () => {
       });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setAddingProductId(null);
-       notify.cartItem({
-         message: "Producto agregado al carrito",
-         onConfirm: () => setShowCart(true),
-         onCancel: () => {},
-       });
+      notify.success({ message: "Producto agregado al carrito" });
       setIsSyncing(false);
     },
     [canPerformAction]

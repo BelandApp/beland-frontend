@@ -49,6 +49,7 @@ export interface RequestOptions extends RequestInit {
 
 export class CoreApiService {
   protected baseUrl: string;
+  private static _inFlightRequests: Map<string, Promise<any>> = new Map();
 
   constructor(baseUrl?: string) {
     this.baseUrl = baseUrl || API_CONFIG.BASE_URL;
@@ -150,96 +151,126 @@ export class CoreApiService {
 
     console.log(`🌐 API Request: ${options.method || "GET"} ${url}`);
 
-    for (let attempt = 0; attempt <= retries; attempt++) {
-      try {
-        // Create AbortController for timeout
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeout);
+    // Coalesce in-flight GET requests to avoid duplicate concurrent calls
+    const method = (fetchOptions.method || "GET").toString().toUpperCase();
+    const shouldCoalesce = method === "GET";
+    const key = `${method}:${url}`;
 
-        const response = await fetch(url, {
-          ...requestConfig,
-          signal: controller.signal,
-        });
-
-        clearTimeout(timeoutId);
-
-        console.log(
-          `📡 Response Status: ${response.status} ${response.statusText}`
-        );
-
-        let data;
+    const executeRequest = async (): Promise<any> => {
+      for (let attempt = 0; attempt <= retries; attempt++) {
         try {
-          data = await response.json();
-          console.log(`📦 Response Data:`, data);
-        } catch (jsonError) {
-          console.log(`⚠️ No JSON response or empty body`);
-          data = null;
-        }
+          // Create AbortController for timeout
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-        if (!response.ok) {
-          console.error(`❌ API Error: ${response.status}`, data);
+          const response = await fetch(url, {
+            ...requestConfig,
+            signal: controller.signal,
+          });
 
-          // Don't retry client errors (4xx)
-          if (response.status >= 400 && response.status < 500) {
+          clearTimeout(timeoutId);
+
+          console.log(
+            `📡 Response Status: ${response.status} ${response.statusText}`
+          );
+
+          let data;
+          try {
+            data = await response.json();
+            console.log(`📦 Response Data:`, data);
+          } catch (jsonError) {
+            console.log(`⚠️ No JSON response or empty body`);
+            data = null;
+          }
+
+          if (!response.ok) {
+            console.error(`❌ API Error: ${response.status}`, data);
+
+            // Don't retry client errors (4xx)
+            if (response.status >= 400 && response.status < 500) {
+              throw this.createApiError(response, data);
+            }
+
+            // Retry server errors (5xx) if we have attempts left
+            if (attempt < retries) {
+              console.log(
+                `🔄 Retrying request (attempt ${attempt + 1}/${retries})`
+              );
+              await this.delay(API_CONFIG.RETRY_DELAY * (attempt + 1));
+              continue;
+            }
+
             throw this.createApiError(response, data);
           }
 
-          // Retry server errors (5xx) if we have attempts left
+          return data;
+        } catch (error) {
+          if (error instanceof Error && error.name === "AbortError") {
+            console.error(`⏰ Request timeout for ${url}`);
+
+            if (attempt < retries) {
+              console.log(
+                `🔄 Retrying after timeout (attempt ${attempt + 1}/${retries})`
+              );
+              await this.delay(API_CONFIG.RETRY_DELAY * (attempt + 1));
+              continue;
+            }
+
+            const timeoutError = new Error(
+              `Request timeout after ${timeout}ms`
+            ) as ApiError;
+            timeoutError.status = 408;
+            throw timeoutError;
+          }
+
+          // Network errors - retry if we have attempts left
           if (attempt < retries) {
             console.log(
-              `🔄 Retrying request (attempt ${attempt + 1}/${retries})`
+              `🔄 Retrying after network error (attempt ${
+                attempt + 1
+              }/${retries})`
             );
             await this.delay(API_CONFIG.RETRY_DELAY * (attempt + 1));
             continue;
           }
 
-          throw this.createApiError(response, data);
+          console.error(`🚨 API Request failed:`, error);
+          throw error;
         }
+      }
 
-        return data;
-      } catch (error) {
-        if (error instanceof Error && error.name === "AbortError") {
-          console.error(`⏰ Request timeout for ${url}`);
+      throw new Error("Unexpected end of request method");
+    };
 
-          if (attempt < retries) {
-            console.log(
-              `🔄 Retrying after timeout (attempt ${attempt + 1}/${retries})`
-            );
-            await this.delay(API_CONFIG.RETRY_DELAY * (attempt + 1));
-            continue;
-          }
+    if (shouldCoalesce) {
+      const existing = (
+        this.constructor as typeof CoreApiService
+      )._inFlightRequests.get(key);
+      if (existing) return existing;
 
-          const timeoutError = new Error(
-            `Request timeout after ${timeout}ms`
-          ) as ApiError;
-          timeoutError.status = 408;
-          throw timeoutError;
-        }
-
-        // Network errors - retry if we have attempts left
-        if (attempt < retries) {
-          console.log(
-            `🔄 Retrying after network error (attempt ${
-              attempt + 1
-            }/${retries})`
-          );
-          await this.delay(API_CONFIG.RETRY_DELAY * (attempt + 1));
-          continue;
-        }
-
-        console.error(`🚨 API Request failed:`, error);
-        throw error;
+      const promise = executeRequest();
+      (this.constructor as typeof CoreApiService)._inFlightRequests.set(
+        key,
+        promise
+      );
+      try {
+        const res = await promise;
+        return res;
+      } finally {
+        (this.constructor as typeof CoreApiService)._inFlightRequests.delete(
+          key
+        );
       }
     }
 
-    // This should never be reached, but TypeScript requires it
-    throw new Error("Unexpected end of request method");
+    // Non-coalesced path
+    return executeRequest();
   }
 
   /**
    * GET request
    */
-  protected get<T = any>(
+  public get<T = any>(
     endpoint: string,
     options: RequestOptions = {}
   ): Promise<T> {
@@ -249,7 +280,7 @@ export class CoreApiService {
   /**
    * POST request
    */
-  protected post<T = any>(
+  public post<T = any>(
     endpoint: string,
     data?: any,
     options: RequestOptions = {}
@@ -264,7 +295,7 @@ export class CoreApiService {
   /**
    * PUT request
    */
-  protected put<T = any>(
+  public put<T = any>(
     endpoint: string,
     data?: any,
     options: RequestOptions = {}
@@ -279,7 +310,7 @@ export class CoreApiService {
   /**
    * PATCH request
    */
-  protected patch<T = any>(
+  public patch<T = any>(
     endpoint: string,
     data?: any,
     options: RequestOptions = {}
@@ -294,7 +325,7 @@ export class CoreApiService {
   /**
    * DELETE request
    */
-  protected delete<T = any>(
+  public delete<T = any>(
     endpoint: string,
     options: RequestOptions = {}
   ): Promise<T> {
@@ -304,7 +335,7 @@ export class CoreApiService {
   /**
    * POST request with FormData (for file uploads)
    */
-  protected async postFormData<T = any>(
+  public async postFormData<T = any>(
     endpoint: string,
     formData: FormData,
     options: RequestOptions = {}

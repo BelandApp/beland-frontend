@@ -12,26 +12,48 @@ export const useEvents = () => {
     availableEvents,
     acquiredEvents,
   } = eventStore();
-  const { data, refresh, loading: isLoading } = useCache({ key: "events_cache", duration: 6 * 60 * 60 * 1000, fetcher: () => eventsService.getAllEvents() });
-  
+  const {
+    data,
+    refresh,
+    loading: isLoading,
+  } = useCache({
+    key: "events_cache",
+    duration: 6 * 60 * 60 * 1000,
+    fetcher: () => eventsService.getAllEvents(),
+  });
+
+  const normalizeEvents = (raw: any): Event[] => {
+    if (!raw) return [];
+    if (Array.isArray(raw)) return raw as Event[];
+    if (raw.data && Array.isArray(raw.data)) return raw.data as Event[];
+    return [];
+  };
+
   const setEvents = async () => {
-    if (isAuthenticated) {
-      const userEventsResponse = await eventsService.getUserEvents();
-      const userEvents = adaptUserEvents(userEventsResponse);
-      const uniqueAvailable = removeDuplicatesById(data);
-      setAvailableEvents(uniqueAvailable);
-    setAcquiredEvents(userEvents);
-  } else {
-    setAvailableEvents(removeDuplicatesById(data));
-    setAcquiredEvents([]);
-  }
-}
+    try {
+      const availableRaw = normalizeEvents(data);
+      if (isAuthenticated) {
+        const userEventsResponse = await eventsService.getUserEvents();
+        const userEvents = adaptUserEvents(userEventsResponse || []);
+        const uniqueAvailable = removeDuplicatesById(availableRaw);
+        setAvailableEvents(uniqueAvailable);
+        setAcquiredEvents(userEvents);
+      } else {
+        setAvailableEvents(removeDuplicatesById(availableRaw));
+        setAcquiredEvents([]);
+      }
+    } catch (err) {
+      // Avoid uncaught promise rejections; log and keep state safe
+      // eslint-disable-next-line no-console
+      console.error("useEvents setEvents error:", err);
+      setAvailableEvents([]);
+      setAcquiredEvents([]);
+    }
+  };
 
   useEffect(() => {
     setEvents();
-  }, [isAuthenticated, user,data]);
-
-
+  }, [isAuthenticated, user, data]);
 
   return { availableEvents, acquiredEvents, refresh, isLoading };
 };
@@ -57,11 +79,14 @@ const adaptUserEvents = (data: any[]): Event[] => {
   }));
 };
 
-const removeDuplicatesById = (events: Event[]): Event[] => {
+const removeDuplicatesById = (events: any): Event[] => {
+  const arr: Event[] = Array.isArray(events) ? events : [];
   const seen = new Set();
-  return events.filter((e) => {
-    if (seen.has(e.id)) return false;
-    seen.add(e.id);
+  return arr.filter((e) => {
+    const id = e?.id ?? e?.event_pass_id ?? e?.user_pass_id;
+    if (id == null) return false;
+    if (seen.has(id)) return false;
+    seen.add(id);
     return true;
   });
 };

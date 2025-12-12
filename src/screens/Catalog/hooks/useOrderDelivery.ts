@@ -8,7 +8,10 @@ import { useOrdersStoreAPI } from "@/stores/useOrdersStoreAPI";
 import { useCartStore } from "src/stores/cart/useCartStore";
 import { useNotify } from "@/hooks";
 import { useAuth } from "@/context";
-import { apiRequest, getBackendErrorMessage } from "@/services/api";
+import { getBackendErrorMessage } from "src/services";
+import { CoreApiService } from "src/services/core/ApiService";
+
+const core = new CoreApiService();
 import { CartService } from "@/services";
 import {
   CreateOrderRequest,
@@ -154,11 +157,8 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
         const cart = await CartService.getCart();
 
         // Actualizar dirección del carrito
-        await apiRequest(
-          `/carts/address/${cart.id}?address_id=${selectedAddressId}`,
-          {
-            method: "PUT",
-          }
+        await core.put(
+          `/carts/address/${cart.id}?address_id=${selectedAddressId}`
         );
 
         // Usar items del backend, no del store local

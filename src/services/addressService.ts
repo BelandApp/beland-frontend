@@ -1,4 +1,5 @@
-import { apiRequest } from "./api";
+import { CoreApiService } from "@/services/core/ApiService";
+const core = new CoreApiService();
 
 // Types para direcciones de usuario
 export interface UserAddress {
@@ -45,9 +46,7 @@ class AddressService {
   // Obtener todas las direcciones del usuario
   async getUserAddresses(): Promise<UserAddress[]> {
     try {
-      const response = await apiRequest("/user-address", {
-        method: "GET",
-      });
+      const response = await core.get(`/user-address`);
 
       // El backend puede retornar el array directamente o dentro de varias propiedades
       // Soportamos: response (array), response.addresses, response.data, response.items, response.results
@@ -95,11 +94,7 @@ class AddressService {
   // Crear nueva dirección
   async createAddress(data: CreateAddressRequest): Promise<UserAddress> {
     try {
-      const response = await apiRequest("/user-address", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+      const response = await core.post(`/user-address`, data);
 
       // Normalize possible wrapped responses. Backend might return:
       // - the address object directly
@@ -142,11 +137,7 @@ class AddressService {
     data: UpdateAddressRequest
   ): Promise<UserAddress> {
     try {
-      const response = await apiRequest(`/user-address/${addressId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+      const response = await core.put(`/user-address/${addressId}`, data);
       return this.mapAddressResponse(response);
     } catch (error) {
       console.error("Error updating address:", error);
@@ -157,9 +148,7 @@ class AddressService {
   // Eliminar dirección
   async deleteAddress(addressId: string): Promise<void> {
     try {
-      await apiRequest(`/user-address/${addressId}`, {
-        method: "DELETE",
-      });
+      await core.delete(`/user-address/${addressId}`);
     } catch (error) {
       console.error("Error deleting address:", error);
       throw error;
@@ -169,9 +158,7 @@ class AddressService {
   // Obtener dirección por ID
   async getAddressById(addressId: string): Promise<UserAddress> {
     try {
-      const response = await apiRequest(`/user-address/${addressId}`, {
-        method: "GET",
-      });
+      const response = await core.get(`/user-address/${addressId}`);
       return this.mapAddressResponse(response);
     } catch (error) {
       console.error("Error getting address by ID:", error);
@@ -236,9 +223,7 @@ class AddressService {
   // Marcar dirección como predeterminada
   async setDefaultAddress(addressId: string): Promise<UserAddress> {
     try {
-      const response = await apiRequest(`/user-address/${addressId}/default`, {
-        method: "PUT",
-      });
+      const response = await core.put(`/user-address/${addressId}/default`);
       return this.mapAddressResponse(response);
     } catch (error) {
       console.error("Error setting default address:", error);

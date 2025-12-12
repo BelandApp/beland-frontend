@@ -95,6 +95,10 @@ export function usePaymentSocket(onPaymentSuccess: (data: any) => void) {
     if (!user?.id) return;
 
     let isMounted = true;
+    // callbacks declared in outer scope so cleanup can reference them
+    let onTransaction: ((data: any) => void) | null = null;
+    let onBalance: ((data: any) => void) | null = null;
+    let onPayment: ((data: any) => void) | null = null;
 
     const initSocket = async () => {
       let token: string | null = null;
@@ -111,23 +115,44 @@ export function usePaymentSocket(onPaymentSuccess: (data: any) => void) {
 
       if (!token) return;
 
-      socketService.current = new SocketService();
-      socketService.current.connect(token);
+      const svc = SocketService.getInstance();
 
       // Escuchar eventos de transacción recibida (nuevo pago)
-      socketService.current.onTransactionReceived(
-        (data: {
-          amount: number;
-          message?: string;
-          wallet_id?: string;
-          resource_name?: string;
-          resource_quantity?: number;
-          transaction_type?: string;
-          redemption_code?: string;
-          becoins_used?: number;
-          commerce_name?: string;
-          [key: string]: any;
-        }) => {
+      onTransaction = (data: {
+        amount: number;
+        message?: string;
+        wallet_id?: string;
+        resource_name?: string;
+        resource_quantity?: number;
+        transaction_type?: string;
+        redemption_code?: string;
+        becoins_used?: number;
+        commerce_name?: string;
+        [key: string]: any;
+      }) => {
+        const detailedMessage = createDetailedMessage(data);
+        showNotification({
+          title: "¡Pago recibido!",
+          message: detailedMessage,
+          amount: data?.amount,
+          persistent: true,
+        });
+        onPaymentSuccess(data);
+      };
+
+      svc.onTransactionReceived(onTransaction);
+
+      // También escuchar actualizaciones de balance para compatibilidad
+      onBalance = (data: {
+        amount: number;
+        message?: string;
+        success?: boolean;
+        resource_name?: string;
+        resource_quantity?: number;
+        transaction_type?: string;
+        [key: string]: any;
+      }) => {
+        if (data.success && data.amount > 0) {
           const detailedMessage = createDetailedMessage(data);
           showNotification({
             title: "¡Pago recibido!",
@@ -137,129 +162,100 @@ export function usePaymentSocket(onPaymentSuccess: (data: any) => void) {
           });
           onPaymentSuccess(data);
         }
-      );
+      };
 
-      // También escuchar actualizaciones de balance para compatibilidad
-      socketService.current.onBalanceUpdated(
-        (data: {
-          amount: number;
-          message?: string;
-          success?: boolean;
-          resource_name?: string;
-          resource_quantity?: number;
-          transaction_type?: string;
-          [key: string]: any;
-        }) => {
-          if (data.success && data.amount > 0) {
-            const detailedMessage = createDetailedMessage(data);
-            showNotification({
-              title: "¡Pago recibido!",
-              message: detailedMessage,
-              amount: data?.amount,
-              persistent: true, // Notificación persistente con botón OK
-            });
-            onPaymentSuccess(data);
-          }
-        }
-      );
+      svc.onBalanceUpdated(onBalance);
 
       // Mantener compatibilidad con el evento original
-      socketService.current.onPaymentSuccess(
-        (data: {
-          amount: number;
-          message?: string;
-          resource_name?: string;
-          resource_quantity?: number;
-          transaction_type?: string;
-          redemption_code?: string;
-          becoins_used?: number;
-          commerce_name?: string;
-          status_old_id?: string;
-          status_new_id?: string;
-          [key: string]: any;
-        }) => {
-          // Ignorar notificaciones de cambio de estado de órdenes (las maneja useOrderStatusSocket)
-          const isStatusUpdate = data?.status_old_id || data?.status_new_id;
-          if (isStatusUpdate) {
-            console.log("[PaymentSocket] Es cambio de estado, ignorando");
-            return;
+      onPayment = (data: {
+        amount: number;
+        message?: string;
+        resource_name?: string;
+        resource_quantity?: number;
+        transaction_type?: string;
+        redemption_code?: string;
+        becoins_used?: number;
+        commerce_name?: string;
+        status_old_id?: string;
+        status_new_id?: string;
+        [key: string]: any;
+      }) => {
+        const isStatusUpdate = data?.status_old_id || data?.status_new_id;
+        if (isStatusUpdate) return;
+
+        const isOrderNotification =
+          data?.order_id &&
+          data?.total_becoin !== undefined &&
+          data?.items !== undefined;
+
+        if (isOrderNotification) return;
+
+        const isEventPassNotification =
+          data &&
+          (data.attended_count !== undefined || data.user_name || data.code);
+
+        if (isEventPassNotification) {
+          if ((user as any)?.role_name === "SUPERADMIN") {
+            const attended = data.attended_count ?? "?";
+            const sold = data.sold_tickets ?? "?";
+            const entryName = data.name || data.code || "Entrada";
+
+            const lines: string[] = [];
+            if (data.user_name) lines.push(`Usuario: ${data.user_name}`);
+            if (data.user_phone) lines.push(`Tel: ${data.user_phone}`);
+            if (data.user_email) lines.push(`Email: ${data.user_email}`);
+
+            const message = `${entryName} — ${attended}/${sold} asistencias\n${lines.join(
+              " • "
+            )}`;
+
+            showNotification({
+              title: "Entrada consumida",
+              message,
+              persistent: true,
+              meta: {
+                code: data.code,
+                name: data.name,
+                attended_count: data.attended_count,
+                sold_tickets: data.sold_tickets,
+                user_name: data.user_name,
+                user_instagram_tiktok: data.user_instagram_tiktok,
+                user_phone: data.user_phone,
+                user_email: data.user_email,
+                event_id: data.event_pass_id || data.eventPassId || null,
+              },
+            });
           }
 
-          // Ignorar notificaciones de ORDEN (las maneja useOrderSocket)
-          const isOrderNotification =
-            data?.order_id &&
-            data?.total_becoin !== undefined &&
-            data?.items !== undefined;
-
-          if (isOrderNotification) {
-            // Es una orden, ignorar aquí (useOrderSocket la maneja)
-            return;
-          }
-
-          // Detectar notificación de EventPass (consume) por campos específicos
-          const isEventPassNotification =
-            data &&
-            (data.attended_count !== undefined || data.user_name || data.code);
-
-          if (isEventPassNotification) {
-            // Mostrar notificación especial solo para Superadmin (si aplica)
-            // El contexto del usuario está disponible en este hook
-            if ((user as any)?.role_name === "SUPERADMIN") {
-              const attended = data.attended_count ?? "?";
-              const sold = data.sold_tickets ?? "?";
-              const entryName = data.name || data.code || "Entrada";
-
-              const lines: string[] = [];
-              if (data.user_name) lines.push(`Usuario: ${data.user_name}`);
-              if (data.user_phone) lines.push(`Tel: ${data.user_phone}`);
-              if (data.user_email) lines.push(`Email: ${data.user_email}`);
-
-              const message = `${entryName} — ${attended}/${sold} asistencias\n${lines.join(
-                " • "
-              )}`;
-
-              showNotification({
-                title: "Entrada consumida",
-                message,
-                persistent: true,
-                meta: {
-                  code: data.code,
-                  name: data.name,
-                  attended_count: data.attended_count,
-                  sold_tickets: data.sold_tickets,
-                  user_name: data.user_name,
-                  user_instagram_tiktok: data.user_instagram_tiktok,
-                  user_phone: data.user_phone,
-                  user_email: data.user_email,
-                  event_id: data.event_pass_id || data.eventPassId || null,
-                },
-              });
-            }
-
-            // También invocar el callback general
-            onPaymentSuccess(data);
-            return;
-          }
-
-          // Comportamiento original para pagos normales
-          const detailedMessage = createDetailedMessage(data);
-          showNotification({
-            title: "¡Venta recibida!",
-            message: detailedMessage,
-            amount: data?.amount,
-            persistent: true, // Notificación persistente con botón OK
-          });
           onPaymentSuccess(data);
+          return;
         }
-      );
+
+        const detailedMessage = createDetailedMessage(data);
+        showNotification({
+          title: "¡Venta recibida!",
+          message: detailedMessage,
+          amount: data?.amount,
+          persistent: true,
+        });
+        onPaymentSuccess(data);
+      };
+
+      svc.onPaymentSuccess(onPayment);
     };
 
     initSocket();
 
     return () => {
       isMounted = false;
-      socketService.current?.disconnect();
-      socketService.current = null;
+      try {
+        const svc = SocketService.getInstance();
+        if (onTransaction) svc.off("transactionReceived", onTransaction);
+        if (onBalance) svc.off("balanceUpdated", onBalance);
+        if (onPayment) svc.off("payment-success", onPayment);
+      } catch (e) {
+        // ignore
+      }
     };
   }, [user?.id, onPaymentSuccess, showNotification]);
 }
