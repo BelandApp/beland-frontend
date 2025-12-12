@@ -19,9 +19,8 @@ export const styles = StyleSheet.create({
     gap: 8,
     height: Platform.OS === "web" ? "auto" : undefined,
     borderRadius: 16,
-    width: width > 680 ? 680 : Math.min(width - 32, 680),
+    minWidth: width > 600 ? 600 : undefined,
     backgroundColor: "rgba(255,255,255,0.95)",
-    // Card-like shadow on native/web
     shadowColor: "#000",
     shadowOpacity: 0.04,
     shadowRadius: 8,
@@ -51,7 +50,7 @@ export const styles = StyleSheet.create({
   },
   buttonText: { color: colors.brand.orange[500], fontWeight: "700" as any },
   forgetText: {
-    color: colors.text.secondary,
+    color: colors.text.primary,
     fontSize: 13,
   },
   containerRow: {

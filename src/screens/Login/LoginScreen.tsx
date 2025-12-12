@@ -46,18 +46,14 @@ export default function LoginScreen() {
         >
           <CircleArrowLeftIcon size={32} color="#FFF" />
         </TouchableOpacity>
-
         <BelandLogo
           width={width * 0.5}
           height={height * 0.2}
           style={styles.logo}
         />
-
         <LoginWave />
-
         <View style={styles.container}>
           <SocialButton onPress={handleLoginAuth0} disabled={isLoading} />
-
           <View
             style={{
               width: "100%",
@@ -68,7 +64,6 @@ export default function LoginScreen() {
           />
 
           <Text style={styles.subtitle}>Ingresar con tu correo:</Text>
-
           <CustomInput
             label="Correo Electrónico"
             onChangeText={(email) => setFormData({ ...FormData, email })}
@@ -86,24 +81,22 @@ export default function LoginScreen() {
             error={errors.password}
             variant="filled"
           />
-
           <Button
             title="Ingresar"
             onPress={handleLogin}
             variant="secondary"
             isLoading={isLoading}
           />
-
           <View style={styles.containerRow}>
             <Text style={styles.subtitle}>¿Eres nuevo? </Text>
             <Button
               title="Registrate"
               onPress={() => navigate("Register")}
               style={{ paddingLeft: 0 }}
+              textStyle={styles.forgetText}
               variant="inline"
             />
           </View>
-
           <Button
             title="Olvide mi contraseña"
             onPress={() => navigate("NewPassword")}
