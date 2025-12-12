@@ -52,7 +52,6 @@ export const styles = StyleSheet.create({
   buttonText: { color: colors.brand.orange[500], fontWeight: "700" as any },
   forgetText: {
     color: colors.text.secondary,
-    textDecorationLine: "underline",
     fontSize: 13,
   },
   containerRow: {
