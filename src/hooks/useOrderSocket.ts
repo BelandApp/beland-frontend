@@ -23,6 +23,8 @@ export function useOrderSocket(onOrderCreated?: (data: any) => void) {
     if (!user?.id) return;
 
     let isMounted = true;
+    // callback declarado en scope exterior para que el cleanup pueda acceder
+    let onPayment: ((data: any) => void) | null = null;
 
     const initSocket = async () => {
       let token: string | null = null;
@@ -39,86 +41,68 @@ export function useOrderSocket(onOrderCreated?: (data: any) => void) {
 
       if (!token) return;
 
-      socketService.current = new SocketService();
-      socketService.current.connect(token);
+      const svc = SocketService.getInstance();
 
-      // El backend emite órdenes en 'payment-success'
-      // Diferenciamos por la estructura de datos
-      socketService.current.onPaymentSuccess(
-        async (data: {
-          order_id?: string;
-          total_becoin?: number;
-          items?: number;
-          status_old_id?: string;
-          status_new_id?: string;
-          [key: string]: any;
-        }) => {
-          if (!isMounted) return;
+      onPayment = async (data: {
+        order_id?: string;
+        total_becoin?: number;
+        items?: number;
+        status_old_id?: string;
+        status_new_id?: string;
+        [key: string]: any;
+      }) => {
+        if (!isMounted) return;
 
-          // Si tiene status_old_id o status_new_id, es un cambio de estado, NO una nueva orden
-          const isStatusUpdate = data?.status_old_id || data?.status_new_id;
-          if (isStatusUpdate) {
-            console.log(
-              "[OrderSocket] Es cambio de estado, ignorando para notificaciones"
-            );
-            return;
-          }
+        const isStatusUpdate = data?.status_old_id || data?.status_new_id;
+        if (isStatusUpdate) return;
 
-          // Verificar si es una notificación de NUEVA orden (tiene order_id, total_becoin, items)
-          const isOrderNotification =
-            data?.order_id &&
-            data?.total_becoin !== undefined &&
-            data?.items !== undefined;
+        const isOrderNotification =
+          data?.order_id &&
+          data?.total_becoin !== undefined &&
+          data?.items !== undefined;
 
-          if (!isOrderNotification) {
-            // No es una orden, ignorar (puede ser pago o event-pass)
-            return;
-          }
+        if (!isOrderNotification) return;
 
-          console.log("[OrderSocket] Order created event received:", data);
+        console.log("[OrderSocket] Order created event received:", data);
 
-          // Extraer información disponible del backend
-          const orderId = data.order_id || "N/A";
-          const totalBecoin = parseFloat(String(data.total_becoin || 0));
-          const itemsCount = parseInt(String(data.items || 0));
+        const orderId = data.order_id || "N/A";
+        const totalBecoin = parseFloat(String(data.total_becoin || 0));
+        const itemsCount = parseInt(String(data.items || 0));
+        const shortOrderId =
+          orderId.length > 8 ? orderId.substring(0, 8) : orderId;
+        const totalUsd = convertBeCoinsToUSD(totalBecoin);
 
-          // Crear ID corto para visualización (primeros 8 caracteres)
-          const shortOrderId =
-            orderId.length > 8 ? orderId.substring(0, 8) : orderId;
+        showNotification({
+          title: "🛍️ Nueva Orden Recibida",
+          message: `Orden #${shortOrderId}`,
+          amount: totalUsd,
+          persistent: true,
+          meta: {
+            type: "order",
+            order_id: orderId,
+            short_id: shortOrderId,
+            total_becoin: totalBecoin,
+            total_usd: totalUsd,
+            items_count: itemsCount,
+          },
+        });
 
-          // Calcular total en USD usando la función de conversión oficial
-          const totalUsd = convertBeCoinsToUSD(totalBecoin);
+        if (onOrderCreated) onOrderCreated(data);
+      };
 
-          // Mostrar notificación enriquecida con la info disponible
-          showNotification({
-            title: "🛍️ Nueva Orden Recibida",
-            message: `Orden #${shortOrderId}`,
-            amount: totalUsd,
-            persistent: true,
-            meta: {
-              type: "order",
-              order_id: orderId,
-              short_id: shortOrderId,
-              total_becoin: totalBecoin,
-              total_usd: totalUsd,
-              items_count: itemsCount,
-            },
-          });
-
-          // Llamar callback opcional
-          if (onOrderCreated) {
-            onOrderCreated(data);
-          }
-        }
-      );
+      if (onPayment) svc.onPaymentSuccess(onPayment);
     };
 
     initSocket();
 
     return () => {
       isMounted = false;
-      socketService.current?.disconnect();
-      socketService.current = null;
+      try {
+        const svc = SocketService.getInstance();
+        if (onPayment) svc.off("payment-success", onPayment);
+      } catch (e) {
+        // ignore
+      }
     };
   }, [user?.id, onOrderCreated, showNotification]);
 }

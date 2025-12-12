@@ -24,6 +24,7 @@ export type {
 
 // Product service
 export { ProductService } from "../ProductApiService";
+// Re-export product-related types from central types to avoid circular re-exports
 export type {
   Product,
   Category,
@@ -31,7 +32,7 @@ export type {
   CreateProductDto,
   UpdateProductDto,
   ProductInventory,
-} from "../ProductApiService";
+} from "src/types/Products";
 
 // Cart service
 export { CartService } from "../cart/CartApiService";

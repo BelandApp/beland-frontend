@@ -66,7 +66,6 @@ const RegisterStep: React.FC<RegisterStepProps> = ({
         variant="secondary"
         isLoading={isLoading}
       />
-      {/* Footer link removed from here to avoid duplicate; Login link is shown in parent screen */}
     </>
   );
 };

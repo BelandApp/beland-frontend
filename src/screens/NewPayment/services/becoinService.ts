@@ -1,5 +1,7 @@
 import { User } from "src/context";
-import { apiRequest } from "src/services";
+import { CoreApiService } from "src/services/core/ApiService";
+
+const core = new CoreApiService();
 
 export const becoinService = {
   acquireProduct: async (eventDto: {
@@ -16,15 +18,12 @@ export const becoinService = {
       holder_phone,
       event_pass_id,
     } = eventDto;
-    const data = await apiRequest("User-event-passes/purchase", {
-      method: "POST",
-      body: JSON.stringify({
-        holder_email,
-        holder_instagram_tiktok,
-        holder_name,
-        holder_phone,
-        event_pass_id,
-      }),
+    const data = await core.post("User-event-passes/purchase", {
+      holder_email,
+      holder_instagram_tiktok,
+      holder_name,
+      holder_phone,
+      event_pass_id,
     });
     return data;
   },

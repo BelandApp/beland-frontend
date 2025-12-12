@@ -1,15 +1,15 @@
-import Constants from "expo-constants";
-import { apiRequest } from "../api";
-const API_URL = Constants.expoConfig?.extra?.apiUrl as string;
+import { CoreApiService } from "@/services/core/ApiService";
+
+const core = new CoreApiService();
+
 export const discountService = {
   getDiscounts: async () => {
     try {
-     const response = await apiRequest(`${API_URL}/coupons`);
-      const discounts = await response.json();
+      const discounts = await core.get(`/coupons`);
       return discounts;
     } catch (error) {
       console.error("Error fetching discounts:", error);
       return [];
     }
-  }
+  },
 };
