@@ -44,6 +44,8 @@ export interface Event extends BasicEvent {
   purchase_price?: string;
   longitude?: string;
   latitude?: string;
+  is_consumed: boolean;
+  is_refunded: boolean;
 }
 type EventStore = {
   // --- Estados ---
