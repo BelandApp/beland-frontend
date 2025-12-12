@@ -42,13 +42,18 @@ export const QRUseEventScreen = ({ route }: { route: any }) => {
       setLoading(true);
       // fetcheamos al backend
       const res = await eventsService.consumeQr(data, id);
+      console.log("respuesta qr", res);
+      notify.success({ message: res.message });
       if (Platform.OS === "web") {
-        localStorage.setItem("consumedEvent", JSON.stringify(res));
+        localStorage.setItem(
+          "consumedEvent",
+          JSON.stringify(res.userEventPass)
+        );
       }
      navigate("ConsumedEventScreen", {
-        id,
-        holder: res.userEventPass.holder_name,
-      });
+       id,
+       holder: res.userEventPass.holder_name,
+     });
     } catch (err: any) {
       notify.error({ message: getBackendErrorMessage(err) });
     } finally {
