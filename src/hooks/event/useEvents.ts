@@ -29,7 +29,6 @@ export const useEvents = () => {
     if (raw.data && Array.isArray(raw.data)) return raw.data as Event[];
     return [];
   };
-  const now = new Date();
 
   const setEvents = async () => {
     try {
@@ -40,7 +39,12 @@ export const useEvents = () => {
         const uniqueAvailable = removeDuplicatesById(availableRaw);
         setAvailableEvents(uniqueAvailable);
         setAcquiredEvents(userEvents);
-        setPendingEvents(userEvents.filter((e) => !e.user_attended && e.event_date >= now));
+        const pending = userEvents.filter((e) => {
+          const isFuture = new Date(e.event_date) >= new Date();
+          const isUnused = !e.is_consumed;
+          return isFuture && isUnused;
+        });
+        setPendingEvents(pending);
       } else {
         setAvailableEvents(removeDuplicatesById(availableRaw));
         setAcquiredEvents([]);
