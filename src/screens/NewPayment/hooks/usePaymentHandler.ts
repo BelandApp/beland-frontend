@@ -48,13 +48,10 @@ export const usePaymentHandler = (
       const response: any = await becoinService.acquireProduct(Form);
 
       // Mostrar notificación global con acción para ver entradas
-      notify.cartItem({
+      notify.success({
         message: "Entrada adquirida con éxito",
-        onConfirm: () => {
-          // Abrir la pantalla 'Mis Entradas' para que el usuario vea sus entradas adquiridas
-          navigate("MisEntradas");
-        },
       });
+      navigate("MisEntradas");
     } catch (error) {
       console.error(error);
       const message = getBackendErrorMessage(error);
