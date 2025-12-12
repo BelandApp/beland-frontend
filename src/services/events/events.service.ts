@@ -37,7 +37,7 @@ export const eventsService = {
     const response = await core.post(
       `${API_URL}/user-event-passes/consume?user_eventpass_id=${userEvent_id}&eventpass_id=${eventId}`
     );
-    return response.data;
+    return response;
   },
   refundEvent: async (eventId: string) => {
     const response = await core.post(
