@@ -13,14 +13,15 @@ import { Button, GoBackButton } from "@components/shared";
 import { eventsService } from "src/services/events";
 import { getBackendErrorMessage } from "src/services";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
+import { notify } from "src/hooks/notification/notify.external";
 export const QRUseEventScreen = ({ route }: { route: any }) => {
   const { id } = route.params;
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [scanned, setScanned] = useState(false);
   const [isActive, setIsActive] = useState(true);
+  const [cameraDirecction, setCameraDirection] = useState<boolean>(true);
   const [loading, setLoading] = useState(false);
     const { navigate } = useCustomNavigation();
-
   useEffect(() => {
     const getCameraPermissions = async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
@@ -49,7 +50,7 @@ export const QRUseEventScreen = ({ route }: { route: any }) => {
         holder: res.userEventPass.holder_name,
       });
     } catch (err: any) {
-       alert(getBackendErrorMessage(err));
+      notify.error({ message: getBackendErrorMessage(err) });
     } finally {
       setLoading(false);
       setScanned(false);
@@ -95,19 +96,20 @@ export const QRUseEventScreen = ({ route }: { route: any }) => {
 
   return (
     <SafeAreaView style={styles.container} edges={["bottom", "left", "right"]}>
-      <GoBackButton/>
+      <GoBackButton />
       <View style={styles.header}>
         <Text style={styles.title}>Escanear QR</Text>
         <Text style={styles.subtitle}>
-          Apunta la cámara hacia el código QR de la máquina de reciclaje
+          Apunta la cámara hacia el código QR de la entrada
         </Text>
       </View>
 
       <View style={styles.cameraContainer}>
         {isActive && (
           <CameraView
+            key={cameraDirecction ? "back" : "front"}
             style={styles.camera}
-            facing="back"
+            facing={cameraDirecction ? "back" : "front"}
             onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
             barcodeScannerSettings={{
               barcodeTypes: ["qr", "pdf417"],
@@ -136,11 +138,14 @@ export const QRUseEventScreen = ({ route }: { route: any }) => {
           variant="secondary"
           style={styles.controlButton}
         />
-        <Pressable
-          onPress={() => navigate("ConsumedEventScreen", { id })}
-        >
-          <Text>Ir</Text>
-        </Pressable>
+        <Button
+          title="Girar"
+          onPress={() => {
+            setCameraDirection((prev) => !prev);
+          }}
+          variant="ghost"
+          style={styles.controlButton}
+        />
       </View>
 
       {/* Loader visual cuando está cargando datos de pago */}
@@ -269,6 +274,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   footer: {
+    flexDirection: "row",
+    justifyContent:"center", gap: 8,
     padding: 20,
   },
   controlButton: {

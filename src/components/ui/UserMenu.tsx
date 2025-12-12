@@ -50,8 +50,10 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   const [menuVisible, setMenuVisible] = useState(false);
   const [showOrganizationModal, setShowOrganizationModal] = useState(false);
   const [isCreatingOrganization, setIsCreatingOrganization] = useState(false);
-  const acquiredEvents = eventStore.getState().pendingEvents
-  const [hasPendingEvents, setHasPendingEvents] = useState<boolean>(acquiredEvents.length > 0);
+  const pendingEvents = eventStore.getState().pendingEvents
+  const [hasPendingEvents, setHasPendingEvents] = useState<boolean>(
+    pendingEvents.length > 0
+  );
   const handleLogout = async () => {
     setMenuVisible(false);
     await logout();
