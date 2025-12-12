@@ -9,6 +9,7 @@ export const useEvents = () => {
   const {
     setAvailableEvents,
     setAcquiredEvents,
+    setPendingEvents,
     availableEvents,
     acquiredEvents,
   } = eventStore();
@@ -28,6 +29,7 @@ export const useEvents = () => {
     if (raw.data && Array.isArray(raw.data)) return raw.data as Event[];
     return [];
   };
+  const now = new Date();
 
   const setEvents = async () => {
     try {
@@ -38,6 +40,7 @@ export const useEvents = () => {
         const uniqueAvailable = removeDuplicatesById(availableRaw);
         setAvailableEvents(uniqueAvailable);
         setAcquiredEvents(userEvents);
+        setPendingEvents(userEvents.filter((e) => !e.user_attended && e.event_date >= now));
       } else {
         setAvailableEvents(removeDuplicatesById(availableRaw));
         setAcquiredEvents([]);

@@ -49,10 +49,11 @@ type EventStore = {
   // --- Estados ---
   availableEvents: Event[];
   acquiredEvents: Event[];
-
+  pendingEvents: Event[];
   // --- Acciones ---
   setAvailableEvents: (list: Event[]) => void;
   setAcquiredEvents: (list: Event[]) => void;
+  setPendingEvents: (list: Event[]) => void;
   clearEvents: () => void;
 
   // --- Utils ---
@@ -66,10 +67,10 @@ export const eventStore = create<EventStore>()(
     (set: any, get: any) => ({
       availableEvents: [],
       acquiredEvents: [],
-
+      pendingEvents: [],
       setAvailableEvents: (list: Event[]) => set({ availableEvents: list }),
       setAcquiredEvents: (list: Event[]) => set({ acquiredEvents: list }),
-
+      setPendingEvents: (list: Event[]) => set({ pendingEvents: list }),
       clearEvents: () => set({ availableEvents: [], acquiredEvents: [] }),
 
       getEvent: (id: string) => {
