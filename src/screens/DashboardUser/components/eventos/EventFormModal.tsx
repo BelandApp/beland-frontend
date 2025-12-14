@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import IntuitiveDatePicker from "src/components/ui/IntuitiveDatePicker";
+import { AddressMapPicker } from "src/screens/Catalog/components/AddressMapPicker";
 import { compressImages } from "src/utils/imageCompression";
 import {
   CreateEventPassDto,
@@ -18,6 +19,7 @@ import {
   EventPassType,
   adminApiService,
 } from "src/services/AdminApiService";
+import * as mapboxService from "src/services/mapboxService";
 import { useNotify } from "src/hooks";
 import { getBackendErrorMessage } from "src/services";
 
@@ -140,7 +142,40 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showMapPicker, setShowMapPicker] = useState(false);
+  const [suggestions, setSuggestions] = useState<
+    mapboxService.MapboxSuggestion[]
+  >([]);
+  const [query, setQuery] = useState("");
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const debounceRef = useRef<number | null>(null);
   const notify = useNotify();
+  // Helpers to robustly extract city from Mapbox results
+  const deriveCityFromSuggestion = (s: mapboxService.MapboxSuggestion) => {
+    return (
+      s.context?.place?.name ||
+      s.context?.locality?.name ||
+      s.context?.region?.name ||
+      (() => {
+        if (!s.full_address) return "";
+        const parts = s.full_address.split(",").map((p) => p.trim());
+        return parts.length > 1 ? parts[parts.length - 2] : "";
+      })()
+    );
+  };
+
+  const deriveCityFromPlace = (p: mapboxService.MapboxPlace | null) => {
+    if (!p) return "";
+    return (
+      p.city ||
+      p.region ||
+      (() => {
+        if (!p.full_address) return "";
+        const parts = p.full_address.split(",").map((x) => x.trim());
+        return parts.length > 1 ? parts[parts.length - 2] : "";
+      })()
+    );
+  };
   // Generar código automático
   const generateEventCode = () => {
     const now = new Date();
@@ -159,6 +194,9 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
     type_id: "",
     event_place: "",
     event_city: "",
+    address: "",
+    latitude: undefined,
+    longitude: undefined,
     event_date: new Date(),
     limit_tickets: 100,
     price_becoin: 0,
@@ -178,6 +216,9 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
         type_id: (editingEvent as any).type_id || eventTypes[0]?.id || "",
         event_place: editingEvent.event_place || "",
         event_city: editingEvent.event_city || "",
+        address: (editingEvent as any).address || "",
+        latitude: (editingEvent as any).latitude,
+        longitude: (editingEvent as any).longitude,
         event_date: new Date(editingEvent.event_date),
         limit_tickets: editingEvent.limit_tickets,
         // editingEvent.price_becoin puede venir como string desde el backend -> convertir a number
@@ -215,6 +256,9 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
       type_id: eventTypes.length > 0 ? eventTypes[0]?.id || "" : "", // Solo usar tipo si hay disponible
       event_place: "",
       event_city: "",
+      address: "",
+      latitude: undefined,
+      longitude: undefined,
       event_date: new Date(),
       limit_tickets: 100,
       price_becoin: 0,
@@ -599,6 +643,67 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>📍 Ubicación</Text>
 
+            <InputWithError
+              label="Dirección "
+              value={(formData as any).address || ""}
+              onChangeText={(text) => {
+                handleFieldChange("address", text);
+                setQuery(text);
+                // debounce search
+                if (debounceRef.current)
+                  window.clearTimeout(debounceRef.current);
+                debounceRef.current = window.setTimeout(async () => {
+                  if (!text || text.trim().length < 2) {
+                    setSuggestions([]);
+                    return;
+                  }
+                  try {
+                    setLoadingSuggestions(true);
+                    const items = await mapboxService.searchAddressSuggestions(
+                      text,
+                      { language: "es", limit: 5 }
+                    );
+                    setSuggestions(items || []);
+                  } catch (e) {
+                    console.error("Error fetching suggestions:", e);
+                    setSuggestions([]);
+                  } finally {
+                    setLoadingSuggestions(false);
+                  }
+                }, 300) as unknown as number;
+              }}
+              placeholder="Buscar dirección, calle o lugar"
+              loading={loading}
+            />
+
+            {suggestions.length > 0 && (
+              <View style={styles.suggestionsBoxNative}>
+                {suggestions.map((s) => (
+                  <TouchableOpacity
+                    key={s.id}
+                    onPress={() => {
+                      // Populate fields from suggestion
+                      handleFieldChange("address", s.full_address || "");
+                      handleFieldChange("event_place", s.name || "");
+                      const city = deriveCityFromSuggestion(s) || "";
+                      handleFieldChange("event_city", city);
+                      handleFieldChange("latitude", s.coordinates.latitude);
+                      handleFieldChange("longitude", s.coordinates.longitude);
+                      setSuggestions([]);
+                      setQuery("");
+                      setShowMapPicker(false);
+                    }}
+                    style={styles.suggestionItem}
+                  >
+                    <Text style={styles.suggestionName}>{s.name}</Text>
+                    <Text style={styles.suggestionAddress}>
+                      {s.full_address}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
             <View style={styles.formRow}>
               <View style={styles.formColumn}>
                 <InputWithError
@@ -620,6 +725,18 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
                   loading={loading}
                 />
               </View>
+            </View>
+
+            <View style={{ flexDirection: "row", gap: 8, marginBottom: 12 }}>
+              <TouchableOpacity
+                style={styles.imagePickerButton}
+                onPress={() => setShowMapPicker(true)}
+                disabled={loading}
+              >
+                <Text style={styles.imagePickerButtonText}>
+                  Seleccionar en mapa
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -729,6 +846,56 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
               </Text>
             </TouchableOpacity>
           </View>
+          <AddressMapPicker
+            visible={showMapPicker}
+            onClose={() => setShowMapPicker(false)}
+            initial={
+              (formData as any).latitude && (formData as any).longitude
+                ? {
+                    latitude: (formData as any).latitude,
+                    longitude: (formData as any).longitude,
+                  }
+                : null
+            }
+            onSelect={(coords) => {
+              (async () => {
+                try {
+                  // Set coords immediately
+                  handleFieldChange("latitude", coords.latitude);
+                  handleFieldChange("longitude", coords.longitude);
+
+                  // Reverse geocode to populate address, city and place
+                  const place = await mapboxService.reverseGeocode(
+                    coords.latitude,
+                    coords.longitude
+                  );
+
+                  if (place) {
+                    // Prefer street/full_address for address
+                    handleFieldChange(
+                      "address",
+                      place.full_address || place.street || ""
+                    );
+                    // Prefer street name or place name for event_place
+                    handleFieldChange(
+                      "event_place",
+                      place.street || place.name || ""
+                    );
+                    // City may be in place.city or derived from full address
+                    handleFieldChange("event_city", deriveCityFromPlace(place));
+                  } else {
+                    // If reverse geocode fails, leave coords but inform user
+                    // Optional: notify user
+                    // notify.error({ message: 'No se pudo obtener la dirección desde las coordenadas.' });
+                  }
+                } catch (e) {
+                  console.error("Error reverse geocoding:", e);
+                } finally {
+                  setShowMapPicker(false);
+                }
+              })();
+            }}
+          />
         </ScrollView>
       </View>
     </Modal>
@@ -1000,6 +1167,27 @@ const styles = StyleSheet.create({
   },
   placeholderText: {
     color: "#999",
+  },
+  suggestionsBoxNative: {
+    maxHeight: 160,
+    backgroundColor: "white",
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  suggestionItem: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#EEE",
+  },
+  suggestionName: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 2,
+  },
+  suggestionAddress: {
+    fontSize: 12,
+    color: "#666",
   },
   // Estilos para layout en filas
   formRow: {
