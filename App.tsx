@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
+import "./global.css";
 import { Platform } from "react-native";
 
 import { View } from "react-native";

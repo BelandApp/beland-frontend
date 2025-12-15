@@ -526,7 +526,6 @@ export const EventsManagementScreen: React.FC = () => {
         onClose={() => setShowCreateModal(false)}
         onSuccess={handleCreateSuccess}
         eventTypes={eventTypes}
-        eventTypesError={eventTypesError}
       />
 
       {/* Modal para editar evento */}
@@ -539,7 +538,6 @@ export const EventsManagementScreen: React.FC = () => {
         onSuccess={handleEditSuccess}
         editingEvent={editingEvent}
         eventTypes={eventTypes}
-        eventTypesError={eventTypesError}
       />
 
       {/* Modal para QR */}

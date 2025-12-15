@@ -28,22 +28,50 @@ export const OpenInGoogleMaps: React.FC<Props> = ({
     const lat = Number(latitude);
     const lng = Number(longitude);
     const hasCoords = Number.isFinite(lat) && Number.isFinite(lng);
-
     if (hasCoords) {
       const latLngStr = `${lat},${lng}`;
       if (Platform.OS === "web") {
-        const url = `https://www.google.com/maps?q=${latLngStr}`;
+        const url = `https://www.google.com/maps/dir/?api=1&destination=${latLngStr}`;
         window.open(url, "_blank");
         return;
       }
 
-      const url = `geo:${latLngStr}?q=${latLngStr}(${label})`;
-      const supported = await Linking.canOpenURL(url);
-      if (supported) {
-        await Linking.openURL(url);
-      } else {
-        await Linking.openURL(`https://www.google.com/maps?q=${latLngStr}`);
+      // Native platforms: prefer navigation intents / app schemes
+      try {
+        if (Platform.OS === "android") {
+          // Google Maps navigation intent
+          const navUrl = `google.navigation:q=${latLngStr}`;
+          if (await Linking.canOpenURL(navUrl)) {
+            await Linking.openURL(navUrl);
+            return;
+          }
+          // geo fallback
+          const geoUrl = `geo:${latLngStr}?q=${latLngStr}(${label})`;
+          if (await Linking.canOpenURL(geoUrl)) {
+            await Linking.openURL(geoUrl);
+            return;
+          }
+        } else if (Platform.OS === "ios") {
+          // Try Google Maps app deep link
+          const googleApp = `comgooglemaps://?daddr=${latLngStr}&directionsmode=driving`;
+          if (await Linking.canOpenURL(googleApp)) {
+            await Linking.openURL(googleApp);
+            return;
+          }
+          // Apple Maps fallback
+          const appleUrl = `http://maps.apple.com/?daddr=${latLngStr}&dirflg=d`;
+          if (await Linking.canOpenURL(appleUrl)) {
+            await Linking.openURL(appleUrl);
+            return;
+          }
+        }
+      } catch (e) {
+        // ignore and fallback to web
       }
+
+      // Final fallback to web directions
+      const fallback = `https://www.google.com/maps/dir/?api=1&destination=${latLngStr}`;
+      await Linking.openURL(fallback);
       return;
     }
 
