@@ -46,7 +46,8 @@ export const OpenInGoogleMaps: React.FC<Props> = ({
             return;
           }
           // geo fallback
-          const geoUrl = `geo:${latLngStr}?q=${latLngStr}(${label})`;
+          // Do not include the event name in the geo query; only coordinates
+          const geoUrl = `geo:${latLngStr}?q=${latLngStr}`;
           if (await Linking.canOpenURL(geoUrl)) {
             await Linking.openURL(geoUrl);
             return;
@@ -79,9 +80,9 @@ export const OpenInGoogleMaps: React.FC<Props> = ({
     if (opts?.address) queryParts.push(opts.address);
     if (opts?.place) queryParts.push(opts.place);
     if (opts?.city) queryParts.push(opts.city);
-    if (name) queryParts.push(name);
     const query = encodeURIComponent(queryParts.filter(Boolean).join(" "));
-    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${query}`;
+    // Use directions URL so the maps app opens into navigation/search results for the address
+    const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${query}`;
 
     if (Platform.OS === "web") {
       window.open(mapsUrl, "_blank");
