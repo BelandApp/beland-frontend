@@ -11,12 +11,6 @@ import Constants from "expo-constants";
 import { authService } from "src/services/auth/auth.service";
 import { TokenService } from "src/services/auth/token.service";
 import { Storage } from "src/services/auth/storage.service";
-// Stores to reset on logout
-import { useCartStore } from "src/stores/cart/useCartStore";
-import { useBeCoinsStore } from "@/stores";
-import { useOrdersStoreAPI } from "src/stores/useOrdersStoreAPI";
-import { useCreateGroupStore } from "src/stores/useCreateGroupStore";
-import { useAuthTokenStore } from "src/stores/useAuthTokenStore";
 import { getBackendErrorMessage } from "src/services";
 import { notify } from "src/hooks/notification/notify.external";
 import { clearStorage, resetStores } from "src/utils/logoutUtils";
@@ -91,9 +85,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           const me = await authService.getCurrentUser(savedToken);
           setToken(savedToken);
           setUser(me);
-          // Sync with useAuthTokenStore
-          useAuthTokenStore.getState().setToken(savedToken);
-          useAuthTokenStore.getState().setUser(me);
         } catch (e) {
           await TokenService.clearToken();
         }
@@ -144,16 +135,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             );
             if (tokenResponse.accessToken) {
               await TokenService.saveToken(tokenResponse.accessToken);
-              let me = await authService.getCurrentUser(
+              let me = await authService.exchangeAuth0Token(
                 tokenResponse.accessToken
               );
-              setToken(tokenResponse.accessToken);
-              setUser(me);
-              // Sync with useAuthTokenStore
-              useAuthTokenStore.getState().setToken(tokenResponse.accessToken);
-              useAuthTokenStore.getState().setUser(me);
+              await TokenService.saveToken(me.token);
+              setToken(me.token);
+              setUser(me.user);
             } else {
-              throw new Error("accessToken no fue recibido.");
+              throw new Error("accessToken no recibido.");
             }
           }
         }
@@ -178,9 +167,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setToken(newToken);
       const userData = await authService.getCurrentUser(newToken);
       setUser(userData);
-      // Sync with useAuthTokenStore
-      useAuthTokenStore.getState().setToken(newToken);
-      useAuthTokenStore.getState().setUser(userData);
       return { token: newToken };
     } catch (error) {
       const message = getBackendErrorMessage(error);

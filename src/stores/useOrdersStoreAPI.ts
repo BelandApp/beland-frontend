@@ -8,7 +8,8 @@ import {
 } from "../types/Order";
 import { OrderService, CartService, CreateOrderDto } from "@services/core";
 import { useCartStore } from "./cart/useCartStore";
-import { useAuthTokenStore } from "./useAuthTokenStore";
+import { useAuth } from "src/context";
+import { TokenService } from "src/services";
 
 // Helper function to map backend status codes to frontend status
 const mapBackendStatusToFrontend = (backendStatus: string): OrderStatus => {
@@ -271,15 +272,12 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
       );
 
       // Get current user ID from auth store (for validation only, backend gets it from JWT)
-      const { user } = useAuthTokenStore.getState();
-      console.log("[OrdersStoreAPI] Auth store user:", user);
-      console.log("[OrdersStoreAPI] User ID:", user?.id);
+    
+      const token = TokenService.getToken()
 
-      if (!user?.id) {
-        console.error(
-          "[OrdersStoreAPI] User not authenticated - user object:",
-          user
-        );
+
+      if (!token) {
+        console.error("[OrdersStoreAPI] User not authenticated");
         throw new Error("Usuario no autenticado");
       }
 
