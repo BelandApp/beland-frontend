@@ -131,6 +131,7 @@ const AppContent = () => {
     currentRoute !== "NewPaymentScreen" &&
     currentRoute !== "ProductsManagement" &&
     currentRoute !== "UserDashboardScreen" &&
+    currentRoute !== "CreateGroup" &&
     currentRoute &&
     !walletActionScreens.includes(currentRoute) &&
     !!user;
