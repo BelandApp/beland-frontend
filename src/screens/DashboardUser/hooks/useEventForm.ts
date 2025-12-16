@@ -92,9 +92,31 @@ export function useEventForm(initial?: PartialEventForm) {
           else delete newErrors.type_id;
           break;
         case "event_date":
-          if (!value || new Date(value) <= new Date())
-            newErrors.event_date = "La fecha del evento debe ser futura";
-          else delete newErrors.event_date;
+          {
+            const date = value ? new Date(value) : null;
+            const invalid = !date || isNaN(date.getTime());
+            if (invalid) {
+              newErrors.event_date = "Formato de fecha inválido";
+            } else {
+              const now = new Date();
+              const dateYMD = new Date(
+                date.getFullYear(),
+                date.getMonth(),
+                date.getDate()
+              );
+              const nowYMD = new Date(
+                now.getFullYear(),
+                now.getMonth(),
+                now.getDate()
+              );
+              const isFuture =
+                dateYMD.getTime() > nowYMD.getTime() ||
+                date.getTime() > now.getTime();
+              if (!isFuture)
+                newErrors.event_date = "La fecha del evento debe ser futura";
+              else delete newErrors.event_date;
+            }
+          }
           break;
         case "limit_tickets":
           if (!value || value < 1)
@@ -121,8 +143,32 @@ export function useEventForm(initial?: PartialEventForm) {
         newErrors.name = "El nombre debe tener al menos 3 caracteres";
       if (eventTypes.length > 0 && !form.type_id)
         newErrors.type_id = "Debe seleccionar un tipo de evento";
-      if (!form.event_date || new Date(form.event_date) <= new Date())
+      // Validate event_date allowing same-day with later time
+      if (!form.event_date) {
         newErrors.event_date = "La fecha del evento debe ser futura";
+      } else {
+        const date = new Date(form.event_date as any);
+        if (isNaN(date.getTime())) {
+          newErrors.event_date = "Formato de fecha inválido";
+        } else {
+          const now = new Date();
+          const dateYMD = new Date(
+            date.getFullYear(),
+            date.getMonth(),
+            date.getDate()
+          );
+          const nowYMD = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate()
+          );
+          const isFuture =
+            dateYMD.getTime() > nowYMD.getTime() ||
+            date.getTime() > now.getTime();
+          if (!isFuture)
+            newErrors.event_date = "La fecha del evento debe ser futura";
+        }
+      }
       if (!form.limit_tickets || form.limit_tickets < 1)
         newErrors.limit_tickets = "Debe haber al menos 1 entrada disponible";
       if (form.price_becoin !== undefined && form.price_becoin < 0)
@@ -158,6 +204,7 @@ export function useEventForm(initial?: PartialEventForm) {
         const newUris: string[] = imgs.filter((u) => !isRemote(u));
 
         if (newUris.length === 0) {
+          // no newUris: submit JSON payload
           // Omit `images` preview key from payload: backend schema forbids `images` property
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { images: _imgs, ...cleanBase } = baseEventData;
@@ -176,6 +223,7 @@ export function useEventForm(initial?: PartialEventForm) {
           } else {
             result = await adminApiService.createEventPass(eventDataToSubmit);
           }
+          // create/update result handled below
           if (onSuccess) onSuccess(result);
           if (onClose) onClose();
           if (notify?.success)
@@ -301,7 +349,8 @@ export function useEventForm(initial?: PartialEventForm) {
     submit,
     // Convenience setters for event dates exposed to UI components
     setEventDate: (d: Date) => setField("event_date" as any, d as any),
-    setEventEndDate: (d: Date) => setField("event_end_date" as any, d as any),
+    // Use backend key `end_sale_date` so payload aligns with CreateEventPassDto
+    setEventEndDate: (d: Date) => setField("end_sale_date" as any, d as any),
     loading,
     errors,
   } as const;

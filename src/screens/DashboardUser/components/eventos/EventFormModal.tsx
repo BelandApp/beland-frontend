@@ -61,6 +61,7 @@ export default function EventFormModal({
     pickImages,
     removeImage,
     submit,
+    validateForm,
     // setters for dates moved to the hook
     setEventDate,
     setEventEndDate,
@@ -107,6 +108,12 @@ export default function EventFormModal({
       setField("latitude", (editingEvent as any).latitude as any);
       setField("longitude", (editingEvent as any).longitude as any);
       setField("event_date", new Date(editingEvent.event_date) as any);
+      if ((editingEvent as any).end_sale_date) {
+        setField(
+          "end_sale_date",
+          new Date((editingEvent as any).end_sale_date) as any
+        );
+      }
       setField("limit_tickets", editingEvent.limit_tickets as any);
       setField(
         "price_becoin",
@@ -151,9 +158,15 @@ export default function EventFormModal({
 
   const onSubmit = async () => {
     try {
+      if (typeof submit !== "function") {
+        if (notify?.error)
+          notify.error({ message: "Error interno: submit no disponible" });
+        return;
+      }
+
       await submit({ editingEvent, notify, onSuccess, onClose, eventTypes });
     } catch (e) {
-      // handled in hook
+      // errors handled in hook
     }
   };
 
@@ -286,6 +299,11 @@ export default function EventFormModal({
                   placeholder="p.ej. Summer Vibes Festival"
                   className="w-full bg-gray-50 rounded-lg px-4 py-3 text-xl font-bold"
                 />
+                {errors?.name ? (
+                  <Text className="text-sm text-red-600 mt-2">
+                    {errors.name}
+                  </Text>
+                ) : null}
 
                 <Text className="text-sm font-bold  text-text-secondary-light mt-4 mb-2">
                   Categoría
@@ -314,6 +332,12 @@ export default function EventFormModal({
                   ))}
                 </View>
 
+                {errors?.type_id ? (
+                  <Text className="text-sm text-red-600 mt-2">
+                    {errors.type_id}
+                  </Text>
+                ) : null}
+
                 <Text className="text-sm text-text-secondary-light mt-4 mb-1">
                   Descripción
                 </Text>
@@ -341,8 +365,10 @@ export default function EventFormModal({
               <View className="bg-surface-light rounded-2xl p-4 shadow-soft">
                 <View className="flex-row justify-between items-center mb-3">
                   <Text className="text-lg font-bold">Cuándo y dónde</Text>
-                  <View className="px-2 py-0.5 bg-orange-100 rounded text-xs text-accent-orange">
-                    Requerido
+                  <View className="px-2 py-0.5 bg-orange-100 rounded">
+                    <Text className="text-xs text-accent-orange">
+                      Requerido
+                    </Text>
                   </View>
                 </View>
 
@@ -367,20 +393,14 @@ export default function EventFormModal({
                       {showEndTime ? (
                         <EventDateCard
                           label="Fecha fin"
-                          value={
-                            (form as any).event_end_date || form.event_date
-                          }
+                          value={(form as any).end_sale_date || form.event_date}
                           onChange={(d) => {
                             if (
                               typeof (setEventEndDate as any) === "function"
                             ) {
                               (setEventEndDate as any)(d);
                             } else {
-                              if (
-                                typeof (setEventEndDate as any) === "function"
-                              ) {
-                                (setEventEndDate as any)(d);
-                              }
+                              setField("end_sale_date", d as any);
                             }
                           }}
                         />
@@ -397,6 +417,11 @@ export default function EventFormModal({
                     </View>
                   </View>
                 </View>
+                {errors?.event_date ? (
+                  <Text className="text-sm text-red-600 mt-2">
+                    {errors.event_date}
+                  </Text>
+                ) : null}
 
                 <View className="flex-row items-center gap-2">
                   <TextInput
@@ -472,6 +497,11 @@ export default function EventFormModal({
                       className="w-full bg-gray-50 rounded-lg py-2 px-3"
                       keyboardType="numeric"
                     />
+                    {errors?.limit_tickets ? (
+                      <Text className="text-sm text-red-600 mt-1">
+                        {errors.limit_tickets}
+                      </Text>
+                    ) : null}
                   </View>
 
                   <View>
@@ -493,6 +523,11 @@ export default function EventFormModal({
                         keyboardType="numeric"
                         maxLength={10}
                       />
+                      {errors?.price_becoin ? (
+                        <Text className="text-sm text-red-600 mt-1">
+                          {errors.price_becoin}
+                        </Text>
+                      ) : null}
                     </View>
                   </View>
 
