@@ -41,11 +41,13 @@ export const CreateAddress: React.FC<AddressFormProps> = ({
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingVertical: 8 }}
       >
-        <SearchMapInput
-          handleMapPicker={handleMapPicker}
-          onChangeText={onChangeText}
-          setMapPickerVisible={setMapPickerVisible}
-        />
+        <View style={styles.searchWrapper}>
+          <SearchMapInput
+            handleMapPicker={handleMapPicker}
+            onChangeText={onChangeText}
+            setMapPickerVisible={setMapPickerVisible}
+          />
+        </View>
         <View style={styles.row}>
           <CustomInput
             variant="filled"
@@ -199,6 +201,7 @@ const styles = StyleSheet.create({
   container: {
     justifyContent: "space-between",
     flex: 1,
+    overflow: "visible",
   },
   header: {
     flexDirection: "row",
@@ -259,5 +262,10 @@ const styles = StyleSheet.create({
   },
   icon: {
     paddingRight: 12,
+  },
+  searchWrapper: {
+    position: "relative",
+    zIndex: 9999,
+    elevation: 20,
   },
 });

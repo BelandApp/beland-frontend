@@ -244,6 +244,7 @@ export const AddressMapPicker: React.FC<AddressMapPickerProps> = ({
         const items = await mapboxService.searchAddressSuggestions(query, {
           language: "es",
           limit: 5,
+          country: "EC",
         });
         setSuggestions(items || []);
       } catch (e) {
@@ -474,7 +475,7 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: "white",
     borderRadius: 12,
-    overflow: "hidden",
+    overflow: "visible",
     maxHeight: "90%",
     flex: 1,
   },
@@ -537,8 +538,22 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
   },
   suggestionsBoxNative: {
-    maxHeight: 160,
+    position: "absolute",
+    top: 68,
+    left: 12,
+    right: 12,
+    zIndex: 1000,
+    elevation: 12,
+    maxHeight: 200,
     backgroundColor: "white",
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    borderWidth: 1,
+    borderColor: "#EEE",
+    overflow: "hidden",
   },
   suggestionItem: {
     flexDirection: "row",
