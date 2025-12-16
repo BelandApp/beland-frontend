@@ -16,6 +16,7 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
   const [groupType, setGroupType] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [location, setLocation] = React.useState<string | null>(null);
+  const [locationUrl, setLocationUrl] = React.useState<string | null>(null);
   const [deliveryTime, setDeliveryTime] = React.useState("");
   const [participants, setParticipants] = React.useState<Participant[]>([]);
   const [newParticipantName, setNewParticipantName] = React.useState("");
@@ -48,10 +49,6 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
       Alert.alert("Validación", "El nombre del grupo es requerido");
       return false;
     }
-    if (!location) {
-      Alert.alert("Validación", "La ubicación es requerida");
-      return false;
-    }
     return true;
   };
 
@@ -59,18 +56,20 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
     if (!validate()) return null;
     setIsLoading(true);
     try {
+      // Build payload matching backend CreateGroupDto
       const payload: any = {
         name: groupName,
-        type: groupType,
-        description,
-        location,
-        delivery_time: deliveryTime,
       };
-      if (products.length)
-        payload.products = products.map((p) => ({
-          name: p.name,
-          estimatedPrice: p.price,
-        }));
+      if (location) payload.location = location;
+      if (locationUrl) payload.location_url = locationUrl;
+      // map deliveryTime to date_time as ISO string if provided
+      if (deliveryTime) {
+        const parsed = new Date(deliveryTime);
+        if (!isNaN(parsed.getTime())) payload.date_time = parsed.toISOString();
+        else payload.date_time = deliveryTime;
+      }
+      // default status to PENDING for newly created groups
+      payload.status = "PENDING";
       const created = await GroupService.createGroup(payload);
       return created;
     } catch (e) {
@@ -86,6 +85,7 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
     groupType,
     description,
     location,
+    locationUrl,
     deliveryTime,
     participants,
     newParticipantName,
@@ -98,6 +98,7 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
     setGroupType,
     setDescription,
     setLocation,
+    setLocationUrl,
     setDeliveryTime,
     setNewParticipantName,
     setNewParticipantInstagram,
