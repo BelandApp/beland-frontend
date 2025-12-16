@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { io, Socket } from "socket.io-client";
-import { useAuthTokenStore } from "src/stores/useAuthTokenStore";
+import { TokenService } from "src/services";
 import { useOrdersStoreAPI } from "src/stores/useOrdersStoreAPI";
 import { OrderStatus } from "src/types/Order";
 
@@ -33,7 +33,7 @@ const mapBackendStatusIdToFrontend = (statusId?: string): OrderStatus => {
  * NO muestra notificaciones, solo recarga el store para que se refleje en la UI
  */
 export const useOrderStatusSocket = () => {
-  const token = useAuthTokenStore((s) => s.token);
+  const token = TokenService.getToken();
   const loadUserOrders = useOrdersStoreAPI((s) => s.loadUserOrders);
 
   useEffect(() => {
