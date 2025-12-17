@@ -23,6 +23,8 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { ThemedHeader } from "@/components";
 import { useFilteredProducts } from "./mainHooks/useFilteredProducts";
 import { useCategories } from "src/hooks/categories/useCategories";
+import { useCatalogTabs } from "./hooks/useCatalogTabs";
+import { buildCatalogTabs, CatalogTabs } from "./component/catalogTab";
 
 export const CatalogScreen = () => {
   const { navigate } = useCustomNavigation();
@@ -36,21 +38,18 @@ export const CatalogScreen = () => {
     showCart,
     addingProductId,
   } = useCatalogCart();
-  const {
-    searchText,
-    setSearchText,
-    filters,
-    setFilters,
-    showFilters,
-    setShowFilters,
-  } = useCatalogFilters();
+  const { searchText, setSearchText, filters, setFilters } =
+    useCatalogFilters();
   const { categories } = useCategories();
-  const { displayGroups, loading, refresh, error } =
-    useFilteredProducts({
-      filters,
-      searchText,
-      categories,
-    });
+  const { products, loading, refresh, error } = useFilteredProducts({
+    filters,
+    searchText,
+    categories,
+  });
+
+  const tabs = buildCatalogTabs(categories);
+
+  const { activeTab, toggleTab } = useCatalogTabs(setFilters);
   const { showDeliveryModal, openDeliveryModal, closeDeliveryModal } =
     useCatalogModals();
 
@@ -114,72 +113,20 @@ export const CatalogScreen = () => {
           placeholder="Buscar Productos..."
         />
 
-        {showFilters && (
-          <FilterPanel
-            filters={filters}
-            onFiltersChange={setFilters}
-            categories={categories.map((cat) => cat.name)}
-            brands={brands}
-          />
-        )}
-
-        <TouchableOpacity
-          style={{ marginBottom: 16, alignSelf: "flex-end" }}
-          onPress={() => setShowFilters(!showFilters)}
-        >
-          <Text style={{ color: "#FF6B35", fontWeight: "600" }}>
-            {showFilters ? "Ocultar filtros" : "Mostrar filtros"}
-          </Text>
-        </TouchableOpacity>
+        <CatalogTabs tabs={tabs} activeTab={activeTab} onPress={toggleTab} />
 
         {loading ? (
           <CustomLoader />
         ) : error ? (
           <Text style={{ color: "red", textAlign: "center", marginTop: 32 }}>
-            Error al cargar los productos, vuelve a cargar la pantalla.
+            Error al cargar los productos
           </Text>
         ) : (
-          // Revertido a grilla de productos (estilizada)
-          <View style={{ paddingVertical: 0 }}>
-            {displayGroups && displayGroups.length > 0 ? (
-              // Renderizar una sección por categoría
-              displayGroups.map((g) => (
-                <View key={g.categoryId} style={{ marginBottom: 18 }}>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      paddingHorizontal: 8,
-                      marginBottom: 8,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        fontWeight: "700",
-                        color: "#333",
-                      }}
-                    >
-                      {g.category}
-                    </Text>
-                    {/* opcional: botón 'Ver todo' para categoría */}
-                  </View>
-                  <ProductGrid
-                    products={g.products}
-                    onAddToCart={handleAddProduct}
-                    addingProductId={addingProductId}
-                  />
-                </View>
-              ))
-            ) : (
-              <View style={productStyles.emptyState}>
-                <Text style={productStyles.emptyStateText}>
-                  No se encontraron productos
-                </Text>
-              </View>
-            )}
-          </View>
+          <ProductGrid
+            products={products}
+            onAddToCart={handleAddProduct}
+            addingProductId={addingProductId}
+          />
         )}
       </ScrollView>
 

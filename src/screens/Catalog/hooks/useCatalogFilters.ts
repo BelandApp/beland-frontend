@@ -5,7 +5,7 @@ export interface FilterOptions {
   brands: string[];
   minPrice: string;
   maxPrice: string;
-  sortBy: "name" | "price" | "created_at";
+  sortBy: "name" | "price" | "created_at" | "sold_count";
   order: "ASC" | "DESC";
 }
 
@@ -19,7 +19,7 @@ export const useCatalogFilters = () => {
     sortBy: "name",
     order: "ASC",
   });
-  const [showFilters, setShowFilters] = useState(false);
+  
 
   const updateFilter = <K extends keyof FilterOptions>(
     key: K,
@@ -39,7 +39,6 @@ export const useCatalogFilters = () => {
     });
     setSearchText("");
   };
-
   return {
     searchText,
     setSearchText,
@@ -47,7 +46,5 @@ export const useCatalogFilters = () => {
     setFilters,
     updateFilter,
     resetFilters,
-    showFilters,
-    setShowFilters,
   };
 };
