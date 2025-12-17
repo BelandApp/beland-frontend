@@ -18,12 +18,13 @@ import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { useNotify, useBeCoinsPrice, useRecentRecipients } from "src/hooks";
 import { getBackendErrorMessage } from "src/services";
 import RecentRecipients from "./components/RecentRecipients";
+import { ThemedHeader } from "src/components/shared/headers/Header";
 
 type Tab = "amount" | "contacts";
 
 const SendScreen = () => {
   const { navigate, goBack } = useCustomNavigation();
-  const { walletData, refreshAll} = useWallet();
+  const { walletData, refreshAll } = useWallet();
   const { user, handleAuth0Login } = useAuth();
   const { pricePerBeCoin, usdToBeCoins, beCoinsToUsd } = useBeCoinsPrice();
   const {
@@ -310,19 +311,19 @@ const SendScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => goBack()} style={styles.backButton}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Enviar Dinero</Text>
-        <TouchableOpacity
-          onPress={() => navigate("QR")}
-          style={styles.qrButton}
-        >
-          <MaterialCommunityIcons name="qrcode-scan" size={24} color="#fff" />
-        </TouchableOpacity>
-      </View>
+      <ThemedHeader
+        title="Enviar Dinero"
+        onBackPress={() => goBack()}
+        buttons={
+          <TouchableOpacity
+            onPress={() => navigate("QR")}
+            style={styles.qrButton}
+          >
+            <MaterialCommunityIcons name="qrcode-scan" size={24} color="#fff" />
+          </TouchableOpacity>
+        }
+        canGoBack
+      />
 
       {/* Tabs */}
       <View style={styles.tabsContainer}>

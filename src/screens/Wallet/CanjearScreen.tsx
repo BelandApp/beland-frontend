@@ -20,6 +20,7 @@ import { useWallet } from "./hooks/useWalletData";
 import { getBackendErrorMessage } from "src/services";
 import { useNotify } from "src/hooks";
 import { useBeCoinsStore } from "src/stores";
+import { ThemedHeader } from "src/components/shared/headers/Header";
 
 const CanjearScreen: React.FC<{
   navigation: any;
@@ -38,7 +39,7 @@ const CanjearScreen: React.FC<{
   );
   const [loadingAccounts, setLoadingAccounts] = useState(true);
   const [showAccountSelector, setShowAccountSelector] = useState(false);
-const {balance,locked_balance, setBalance} = useBeCoinsStore()
+  const { balance, locked_balance, setBalance } = useBeCoinsStore();
   const { refreshAll } = useWallet();
 
   // Cargar cuentas de retiro al montar el componente
@@ -279,17 +280,10 @@ const {balance,locked_balance, setBalance} = useBeCoinsStore()
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="arrow-back" size={24} color="#1F2937" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Canjear BeCoins</Text>
-          <View style={styles.headerRight} />
-        </View>
+        <ThemedHeader
+          title="Canjear BeCoins"
+          onBackPress={() => navigation.goBack()}
+        />
 
         {/* Balance Card */}
         <View style={styles.balanceSection}>

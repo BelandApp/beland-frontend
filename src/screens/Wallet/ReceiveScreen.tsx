@@ -17,6 +17,7 @@ import { useWallet } from "../Wallet/hooks/useWalletData";
 import { WalletService } from "@services/core";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { useBeCoinsPrice } from "src/hooks";
+import { ThemedHeader } from "src/components/shared/headers/Header";
 
 const ReceiveScreen = () => {
   const { goBack } = useCustomNavigation();
@@ -96,14 +97,11 @@ const ReceiveScreen = () => {
 
   return (
     <ScrollView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => goBack()} style={styles.backButton}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Recibir Dinero</Text>
-        <View style={{ width: 40 }} />
-      </View>
+      <ThemedHeader
+        title="Recibir Dinero"
+        onBackPress={() => goBack()}
+        canGoBack
+      />
 
       {/* Card de Alias Principal */}
       <View style={styles.aliasMainCard}>
