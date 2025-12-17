@@ -1,19 +1,10 @@
 import React, { useMemo, useRef, useState } from "react";
-import {
-  View,
-  Text,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Animated,
-  Alert,
-} from "react-native";
+import { View, Text, Pressable, StyleSheet, Animated } from "react-native";
 import {
   ArrowLeftRight,
   Calendar,
   MapPin,
   RotateCcw,
-  SquareChevronDown,
   CheckCircle2,
 } from "lucide-react-native";
 import { eventStore } from "@/stores";
@@ -21,13 +12,14 @@ import { colors } from "src/styles";
 import { eventsService } from "src/services/events";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { useNotify } from "src/hooks";
-
+import WarpperModal from "src/components/shared/modals/wrapperModal";
+import { canRefundTicket } from "./helpers/canrefund";
 export const AcquiredEventModal = ({ route }: { route: any }) => {
   const { id_modal } = route.params;
   const { getAcquiredEvent } = eventStore();
   const event = getAcquiredEvent(id_modal);
   const { navigate, goBack } = useCustomNavigation();
-  const notify = useNotify()
+  const notify = useNotify();
   const [visibleImage, setVisibleImage] = useState(0);
   if (!event) return null;
 
@@ -38,8 +30,6 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
     event_city,
     event_date,
     end_sale_date,
-    limit_tickets,
-    sold_tickets,
     is_refundable,
     refund_days_limit,
     image_url,
@@ -77,18 +67,25 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
       setVisibleImage((prev) => (prev + 1) % allImages.length);
     });
   };
-  // const canRefund = new Date() -;
-  const handleClose = () => goBack();
+  const canRefund = useMemo(
+    () =>
+      canRefundTicket({
+        is_refundable,
+        refund_days_limit: refund_days_limit === null ? 3 : refund_days_limit,
+        event_date,
+        user_attended,
+        end_sale_date,
+      }),
+    [is_refundable, refund_days_limit, event_date, user_attended, end_sale_date]
+  );
 
   const handleUse = () => navigate("UseEventScreen", { id: id_modal });
   const handleRefund = async () => {
     notify.info({ message: "Procesando reembolso..." });
     if (!purchase_price || !user_pass_id)
-      return Alert.alert("Error", "No se pudo procesar el reembolso");
-    if (purchase_price === "0.00") {
-      const response = await eventsService.refundEvent(user_pass_id);
-      notify.info(response.message);
-    }
+      return notify.error({ message: "No se pudo procesar el reembolso" });
+    const response = await eventsService.refundEvent(user_pass_id);
+    notify.info(response.message);
   };
 
   const eventStatus = (() => {
@@ -99,106 +96,102 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
   })();
 
   return (
-    <View style={styles.modal}>
-      <View style={styles.container}>
-        <Pressable style={styles.closeButton} onPress={handleClose}>
-          <SquareChevronDown color={colors.textSecondary} />
-        </Pressable>
-
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <View style={{ marginHorizontal: "auto", paddingTop: 20 }}>
-            {/* Imagen principal */}
-            <View style={styles.imageContainer}>
-              <Animated.Image
-                source={{ uri: allImages[visibleImage] }}
-                style={[
-                  styles.image,
-                  {
-                    opacity: 1,
-                    transform: [{ translateX: translateAnim }],
-                  },
-                ]}
-              />
-              {allImages.length > 1 && (
-                <Pressable
-                  style={styles.nextImageButton}
-                  onPress={handleNextImage}
-                >
-                  <ArrowLeftRight color="white" size={20} />
-                </Pressable>
-              )}
-              <View
-                style={[
-                  styles.statusBadge,
-                  { backgroundColor: eventStatus.color },
-                ]}
+    <WarpperModal
+      content={
+        <View style={{ marginHorizontal: "auto", paddingTop: 20 }}>
+          {/* Imagen principal */}
+          <View style={styles.imageContainer}>
+            <Animated.Image
+              source={{ uri: allImages[visibleImage] }}
+              style={[
+                styles.image,
+                {
+                  opacity: 1,
+                  transform: [{ translateX: translateAnim }],
+                },
+              ]}
+            />
+            {allImages.length > 1 && (
+              <Pressable
+                style={styles.nextImageButton}
+                onPress={handleNextImage}
               >
-                <Text style={styles.statusText}>{eventStatus.label}</Text>
-              </View>
-            </View>
-
-            <View style={styles.content}>
-              <Text style={styles.name}>{name}</Text>
-              <View style={styles.infoRow}>
-                <Calendar size={18} color={colors.textSecondary} />
-                <Text style={styles.infoText}>
-                  {event_date
-                    ? new Date(event_date).toLocaleDateString()
-                    : "Fecha por confirmar"}
-                </Text>
-              </View>
-              <View style={styles.infoRow}>
-                <MapPin size={18} color={colors.textSecondary} />
-                <Text style={styles.infoText}>
-                  {event_place}, {event_city}
-                </Text>
-              </View>
-
-              <Text style={styles.description}>{description}</Text>
-
-              {is_refundable && !user_attended && (
-                <View style={[styles.refundBox]}>
-                  <RotateCcw color={colors.primary} size={18} />
-                  <Text style={styles.refundText}>
-                    Reembolsable hasta {refund_days_limit} días antes del
-                    evento.
-                  </Text>
-                </View>
-              )}
-
-              <View style={styles.actions}>
-                {!user_attended ? (
-                  <>
-                    <Text style={styles.infoText}>
-                      Entrada a nombre de: {holder_name}
-                    </Text>
-                    <Pressable
-                      style={[styles.button, styles.useButton]}
-                      onPress={handleUse}
-                    >
-                      <CheckCircle2 color="white" size={18} />
-                      <Text style={styles.buttonText}>Usar entrada</Text>
-                    </Pressable>
-
-                    {is_refundable && (
-                      <Pressable
-                        style={[styles.button, styles.refundButton]}
-                        onPress={handleRefund}
-                      >
-                        <RotateCcw color="white" size={18} />
-                        <Text style={styles.buttonText}>Devolver</Text>
-                      </Pressable>
-                    )}
-                  </>
-                ) : (
-                  <Text style={styles.infoStrong}>Ya usaste esta entrada</Text>
-                )}
-              </View>
+                <ArrowLeftRight color="white" size={20} />
+              </Pressable>
+            )}
+            <View
+              style={[
+                styles.statusBadge,
+                { backgroundColor: eventStatus.color },
+              ]}
+            >
+              <Text style={styles.statusText}>{eventStatus.label}</Text>
             </View>
           </View>
-        </ScrollView>
-      </View>
-    </View>
+
+          <View style={styles.content}>
+            <Text style={styles.name}>{name}</Text>
+            <View style={styles.infoRow}>
+              <Calendar size={18} color={colors.textSecondary} />
+              <Text style={styles.infoText}>
+                {event_date
+                  ? new Date(event_date).toLocaleDateString()
+                  : "Fecha por confirmar"}
+              </Text>
+            </View>
+            <View style={styles.infoRow}>
+              <MapPin size={18} color={colors.textSecondary} />
+              <Text style={styles.infoText}>
+                {event_place}, {event_city}
+              </Text>
+            </View>
+
+            <Text style={styles.description}>{description}</Text>
+
+            {is_refundable && !user_attended && (
+              <View style={[styles.refundBox]}>
+                <RotateCcw color={colors.primary} size={18} />
+                <Text style={styles.refundText}>
+                  {canRefund
+                    ? `Reembolsable hasta ${refund_days_limit} días antes del evento.`
+                    : "Este evento ya no admite reembolsos."}
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+      }
+      actions={
+        <View style={styles.actions}>
+          {!user_attended ? (
+            <>
+              <Text style={styles.infoText}>
+                Entrada a nombre de: {holder_name}
+              </Text>
+              <Pressable
+                style={[styles.button, styles.useButton]}
+                onPress={handleUse}
+              >
+                <CheckCircle2 color="white" size={18} />
+                <Text style={styles.buttonText}>Usar entrada</Text>
+              </Pressable>
+
+              {canRefund && (
+                <Pressable
+                  style={[styles.button, styles.refundButton]}
+                  onPress={handleRefund}
+                >
+                  <RotateCcw color="white" size={18} />
+                  <Text style={styles.buttonText}>Devolver</Text>
+                </Pressable>
+              )}
+            </>
+          ) : (
+            <Text style={styles.infoStrong}>Ya usaste esta entrada</Text>
+          )}
+        </View>
+      }
+    />
   );
 };
 
