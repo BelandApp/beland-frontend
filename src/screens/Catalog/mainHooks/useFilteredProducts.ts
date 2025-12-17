@@ -1,6 +1,4 @@
-// hooks/useFilteredProducts.ts
 import { useMemo, useEffect, useRef } from "react";
-import { useGroupedProducts } from "../mainHooks/useGroupedProducts";
 import { useProducts } from "src/hooks";
 
 export const useFilteredProducts = ({
@@ -12,23 +10,22 @@ export const useFilteredProducts = ({
   filters: any;
   categories: { id: string; name: string }[];
 }) => {
-  const { products, loading, updateQuery, refresh, error } =
-    useProducts();
+  const { products, loading, updateQuery, refresh, error } = useProducts();
+
   const lastQueryRef = useRef<string>("");
 
-  const query = useMemo(() => {
-    return {
+  /* ---------------- BACKEND QUERY ---------------- */
+
+  const query = useMemo(
+    () => ({
       page: 1,
-      name: searchText || undefined,
       category_id: filters.categories?.length
         ? categories.find((c) => c.name === filters.categories[0])?.id
         : undefined,
-      sortBy: filters.sortBy || undefined,
-      order: filters.order || undefined,
-    };
-  }, [searchText, filters, categories]);
+    }),
+    [filters.categories, categories]
+  );
 
-  // Evita peticiones a la API repetidas
   useEffect(() => {
     const serialized = JSON.stringify(query);
     if (serialized !== lastQueryRef.current) {
@@ -37,21 +34,59 @@ export const useFilteredProducts = ({
     }
   }, [query]);
 
-  const grouped = useGroupedProducts(products, categories);
+  /* ---------------- FRONTEND FILTERING ---------------- */
 
-  const displayGroups = useMemo(() => {
-    if (!products.length) return [];
+  const filteredProducts = useMemo(() => {
+    let result = [...products];
 
-    if (grouped.length === 0) {
-      return [{ categoryId: "all", category: "Todos", products }];
+    // 🔎 búsqueda por texto
+    if (searchText.trim()) {
+      const q = searchText.toLowerCase();
+      result = result.filter((p) => p.name.toLowerCase().includes(q));
     }
 
-    return grouped.map((g) => ({
-      categoryId: g.category_id,
-      category: g.category_name,
-      products: g.products,
-    }));
-  }, [grouped, products]);
+    // 💲 precio mínimo
+    if (filters.minPrice) {
+      result = result.filter((p) => p.price >= Number(filters.minPrice));
+    }
+    if (filters.categories?.length) {
+      result = result.filter((p) => p.category?.name === filters.categories[0]);
+    }
+    // 💲 precio máximo
+    if (filters.maxPrice) {
+      result = result.filter((p) => p.price <= Number(filters.maxPrice));
+    }
 
-  return { loading, products, displayGroups, refresh,error };
+    // 🔁 ordenamiento
+    if (filters.sortBy) {
+      result.sort((a, b) => {
+        const dir = filters.order === "DESC" ? -1 : 1;
+
+        switch (filters.sortBy) {
+          case "price":
+            return (a.price - b.price) * dir;
+
+          case "created_at":
+            return (
+              (new Date(a.created_at).getTime() -
+                new Date(b.created_at).getTime()) *
+              dir
+            );
+
+          case "name":
+          default:
+            return a.name.localeCompare(b.name) * dir;
+        }
+      });
+    }
+
+    return result;
+  }, [products, searchText, filters]);
+
+  return {
+    loading,
+    products: filteredProducts,
+    refresh,
+    error,
+  };
 };

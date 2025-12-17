@@ -23,19 +23,10 @@ export const productStyles = StyleSheet.create({
     paddingHorizontal: 16,
     width: "100%",
     boxSizing: "border-box",
-  },
-  productRow: {
-    flexDirection: "row" as const,
-    justifyContent: "center" ,
-    marginBottom: 16,
     flexWrap: "wrap",
+    flexDirection: "row" as const,
     gap: 16,
-    ...(Platform.OS === "web"
-      ? {
-          justifyContent: "center",
-          width: "100%",
-        }
-      : {}),
+    justifyContent: "center",
   },
   // Product card
   productCard: {
