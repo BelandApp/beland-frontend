@@ -17,7 +17,7 @@ export const GroupsStackNavigator = () => {
       }}
     >
       <Stack.Screen name="GroupsList" component={GroupsScreen} />
-      <Stack.Screen name="CreateGroup" component={CreateGroupScreen} />
+      {/* CreateGroup is presented at root level to hide the main tab bar */}
       <Stack.Screen name="GroupManagement" component={GroupManagementScreen} />
     </Stack.Navigator>
   );

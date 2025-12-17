@@ -58,14 +58,14 @@ class WalletServiceClass extends CoreApiService {
   /**
    * Override get method to use wallet endpoints
    */
-  protected get<T = any>(endpoint: string, options: any = {}): Promise<T> {
+  public get<T = any>(endpoint: string, options: any = {}): Promise<T> {
     return this.walletRequest<T>(endpoint, { ...options, method: "GET" });
   }
 
   /**
    * Override post method to use wallet endpoints
    */
-  protected post<T = any>(
+  public post<T = any>(
     endpoint: string,
     data?: any,
     options: any = {}
@@ -80,7 +80,7 @@ class WalletServiceClass extends CoreApiService {
   /**
    * Override put method to use wallet endpoints
    */
-  protected put<T = any>(
+  public put<T = any>(
     endpoint: string,
     data?: any,
     options: any = {}

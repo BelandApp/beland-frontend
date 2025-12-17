@@ -1,164 +1,82 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
-  View,
+  Modal,
+  SafeAreaView,
+  ScrollView,
   Text,
-  StyleSheet,
+  View,
   TouchableOpacity,
   TextInput,
-  Modal,
-  ScrollView,
   Image,
+  ActivityIndicator,
 } from "react-native";
-import * as ImagePicker from "expo-image-picker";
-import IntuitiveDatePicker from "src/components/ui/IntuitiveDatePicker";
-import { compressImages } from "src/utils/imageCompression";
-import {
-  CreateEventPassDto,
-  EventPass,
-  EventPassType,
-  adminApiService,
-} from "src/services/AdminApiService";
 import { useNotify } from "src/hooks";
-import { getBackendErrorMessage } from "src/services";
+import * as mapboxService from "src/services/mapboxService";
+import { EventPass, EventPassType } from "src/services/AdminApiService";
+import { useEventForm } from "../../hooks/useEventForm";
+import EventDateCard from "src/screens/DashboardUser/components/eventos/EventDateCard";
+import { AddressMapPicker } from "src/screens/Catalog/components/AddressMapPicker";
 
-interface EventFormModalProps {
+interface Props {
   visible: boolean;
   onClose: () => void;
   onSuccess: (event: EventPass) => void;
   editingEvent?: EventPass | null;
   eventTypes: EventPassType[];
-  eventTypesError?: string | null;
 }
 
-// Componente para mostrar inputs con validación en línea
-const InputWithError = ({
-  label,
-  value,
-  onChangeText,
-  error,
-  placeholder,
-  multiline = false,
-  keyboardType = "default" as any,
-  editable = true,
-  loading = false,
-  ...props
-}: {
-  label: string;
-  value: string;
-  onChangeText: (text: string) => void;
-  error?: string;
-  placeholder?: string;
-  multiline?: boolean;
-  keyboardType?: any;
-  editable?: boolean;
-  loading?: boolean;
-}) => (
-  <View style={styles.inputGroup}>
-    <Text style={styles.inputLabel}>{label}</Text>
-    <TextInput
-      style={[
-        styles.input,
-        multiline && styles.textArea,
-        error && styles.inputError,
-        !editable && styles.inputDisabled,
-      ]}
-      value={value}
-      onChangeText={onChangeText}
-      placeholder={placeholder}
-      multiline={multiline}
-      keyboardType={keyboardType}
-      placeholderTextColor="#999"
-      editable={editable && !loading}
-      {...props}
-    />
-    {error && <Text style={styles.errorText}>{error}</Text>}
-  </View>
-);
-
-// Componente para selector con validación
-const SelectorWithError = ({
-  label,
-  value,
-  options,
-  onSelect,
-  error,
-  placeholder = "Seleccionar...",
-  loading = false,
-}: {
-  label: string;
-  value: string;
-  options: { id: string; name: string }[];
-  onSelect: (value: string) => void;
-  error?: string;
-  placeholder?: string;
-  loading?: boolean;
-}) => (
-  <View style={styles.inputGroup}>
-    <Text style={styles.inputLabel}>{label}</Text>
-    {options.length === 0 ? (
-      <View style={[styles.selector, styles.selectorDisabled]}>
-        <Text style={styles.placeholderText}>
-          🔄 Cargando tipos de evento...
-        </Text>
-      </View>
-    ) : (
-      <View style={styles.pickerContainer}>
-        {options.map((option) => (
-          <TouchableOpacity
-            key={option.id}
-            style={[
-              styles.pickerOption,
-              value === option.id && styles.pickerOptionSelected,
-            ]}
-            onPress={() => onSelect(option.id)}
-            disabled={loading}
-          >
-            <Text
-              style={[
-                styles.pickerOptionText,
-                value === option.id && styles.pickerOptionTextSelected,
-              ]}
-            >
-              {option.name}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    )}
-    {error && <Text style={styles.errorText}>{error}</Text>}
-  </View>
-);
-
-const EventFormModal: React.FC<EventFormModalProps> = ({
+export default function EventFormModal({
   visible,
   onClose,
   onSuccess,
   editingEvent,
   eventTypes,
-  eventTypesError,
-}) => {
-  const [loading, setLoading] = useState(false);
-  const [selectedImages, setSelectedImages] = useState<string[]>([]);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+}: Props) {
   const notify = useNotify();
-  // Generar código automático
-  const generateEventCode = () => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-    const hour = String(now.getHours()).padStart(2, "0");
-    const minute = String(now.getMinutes()).padStart(2, "0");
-    return `EVT-${year}${month}${day}-${hour}${minute}`;
+  const [suggestions, setSuggestions] = useState<
+    mapboxService.MapboxSuggestion[]
+  >([]);
+  const deriveCity = (s: mapboxService.MapboxSuggestion) => {
+    if (!s || !s.context) return "";
+    // prefer place -> locality -> region
+    // @ts-ignore
+    return (
+      (s.context.place && (s.context.place.name as string)) ||
+      // @ts-ignore
+      (s.context.locality && (s.context.locality.name as string)) ||
+      // @ts-ignore
+      (s.context.region && (s.context.region.name as string)) ||
+      ""
+    );
   };
+  const [query, setQuery] = useState("");
+  const [showMapPicker, setShowMapPicker] = useState(false);
+  const [showEndTime, setShowEndTime] = useState(false);
+  const debounceRef = useRef<number | null>(null);
 
-  const [formData, setFormData] = useState<CreateEventPassDto>({
-    code: generateEventCode(),
+  const {
+    form,
+    setField,
+    reset,
+    pickImages,
+    removeImage,
+    submit,
+    validateForm,
+    // setters for dates moved to the hook
+    setEventDate,
+    setEventEndDate,
+    loading,
+    errors,
+  } = useEventForm({
+    code: `EVT-${Date.now()}`,
     name: "",
     description: "",
-    type_id: "",
+    type_id: eventTypes?.[0]?.id || "",
     event_place: "",
     event_city: "",
+    address: "",
+    latitude: undefined,
+    longitude: undefined,
     event_date: new Date(),
     limit_tickets: 100,
     price_becoin: 0,
@@ -168,351 +86,137 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
     is_active: true,
   });
 
+  const prevPriceRef = useRef<number>(0);
+
+  useEffect(() => {
+    const p = Number(form.price_becoin) || 0;
+    if (p > 0) prevPriceRef.current = p;
+  }, [form.price_becoin]);
+
   useEffect(() => {
     if (editingEvent) {
-      setFormData({
-        code: editingEvent.code,
-        name: editingEvent.name,
-        description: editingEvent.description || "",
-        // Usar el type_id que ya tenga el evento si existe, si no caer al primer tipo disponible
-        type_id: (editingEvent as any).type_id || eventTypes[0]?.id || "",
-        event_place: editingEvent.event_place || "",
-        event_city: editingEvent.event_city || "",
-        event_date: new Date(editingEvent.event_date),
-        limit_tickets: editingEvent.limit_tickets,
-        // editingEvent.price_becoin puede venir como string desde el backend -> convertir a number
-        price_becoin:
-          parseFloat((editingEvent as any).price_becoin as any) || 0,
-        discount: 0, // Valor por defecto ya que no está en EventPass
-        is_refundable: true, // Valor por defecto ya que no está en EventPass
-        refund_days_limit: 3, // Valor por defecto ya que no está en EventPass
-        is_active: editingEvent.is_active,
-      });
-      // Cargar imágenes existentes del evento en el preview (image_url primero, luego images_urls)
+      setField("code", editingEvent.code as any);
+      setField("name", editingEvent.name as any);
+      setField("description", (editingEvent as any).description || "");
+      setField(
+        "type_id",
+        (editingEvent as any).type_id || eventTypes?.[0]?.id || ""
+      );
+      setField("event_place", editingEvent.event_place || "");
+      setField("event_city", editingEvent.event_city || "");
+      setField("address", (editingEvent as any).address || "");
+      setField("latitude", (editingEvent as any).latitude as any);
+      setField("longitude", (editingEvent as any).longitude as any);
+      setField("event_date", new Date(editingEvent.event_date) as any);
+      if ((editingEvent as any).end_sale_date) {
+        setField(
+          "end_sale_date",
+          new Date((editingEvent as any).end_sale_date) as any
+        );
+      }
+      setField("limit_tickets", editingEvent.limit_tickets as any);
+      setField(
+        "price_becoin",
+        parseFloat((editingEvent as any).price_becoin as any) || (0 as any)
+      );
+
       const existingImages: string[] = [];
       if ((editingEvent as any).image_url)
         existingImages.push((editingEvent as any).image_url);
-      if (
-        Array.isArray((editingEvent as any).images_urls) &&
-        (editingEvent as any).images_urls.length > 0
-      ) {
-        existingImages.push(
-          ...(editingEvent as any).images_urls.filter(Boolean)
-        );
-      }
-      setSelectedImages(existingImages);
+      if (Array.isArray((editingEvent as any).images_urls))
+        existingImages.push(...((editingEvent as any).images_urls || []));
+      setField("images", existingImages as any);
     } else {
-      resetForm();
+      reset();
+      setField("code", `EVT-${Date.now()}` as any);
     }
-    setErrors({});
-  }, [editingEvent, eventTypes]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editingEvent]);
 
-  const resetForm = () => {
-    setFormData({
-      code: generateEventCode(),
-      name: "",
-      description: "",
-      type_id: eventTypes.length > 0 ? eventTypes[0]?.id || "" : "", // Solo usar tipo si hay disponible
-      event_place: "",
-      event_city: "",
-      event_date: new Date(),
-      limit_tickets: 100,
-      price_becoin: 0,
-      discount: 0,
-      is_refundable: true,
-      refund_days_limit: 3,
-      is_active: true,
-    });
-    setSelectedImages([]);
-    setErrors({});
-  };
-
-  // Validación en línea para campos individuales
-  const validateField = (field: string, value: any) => {
-    const newErrors = { ...errors };
-
-    switch (field) {
-      case "name":
-        if (!value || value.trim().length < 3) {
-          newErrors.name = "El nombre debe tener al menos 3 caracteres";
-        } else {
-          delete newErrors.name;
-        }
-        break;
-      case "type_id":
-        // Solo validar tipo si hay tipos disponibles
-        if (eventTypes.length > 0 && !value) {
-          newErrors.type_id = "Debe seleccionar un tipo de evento";
-        } else {
-          delete newErrors.type_id;
-        }
-        break;
-      case "event_date":
-        if (!value || new Date(value) <= new Date()) {
-          newErrors.event_date = "La fecha del evento debe ser futura";
-        } else {
-          delete newErrors.event_date;
-        }
-        break;
-      case "limit_tickets":
-        if (!value || value < 1) {
-          newErrors.limit_tickets = "Debe haber al menos 1 entrada disponible";
-        } else {
-          delete newErrors.limit_tickets;
-        }
-        break;
-      case "price_becoin":
-        if (value < 0) {
-          newErrors.price_becoin = "El precio no puede ser negativo";
-        } else {
-          delete newErrors.price_becoin;
-        }
-        break;
-    }
-
-    setErrors(newErrors);
-  };
-
-  // Validación completa del formulario
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.name || formData.name.trim().length < 3) {
-      newErrors.name = "El nombre debe tener al menos 3 caracteres";
-    }
-
-    // Solo validar tipo si hay tipos disponibles
-    if (eventTypes.length > 0 && !formData.type_id) {
-      newErrors.type_id = "Debe seleccionar un tipo de evento";
-    }
-
-    if (!formData.event_date || new Date(formData.event_date) <= new Date()) {
-      newErrors.event_date = "La fecha del evento debe ser futura";
-    }
-
-    if (!formData.limit_tickets || formData.limit_tickets < 1) {
-      newErrors.limit_tickets = "Debe haber al menos 1 entrada disponible";
-    }
-
-    if (formData.price_becoin < 0) {
-      newErrors.price_becoin = "El precio no puede ser negativo";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }; // Manejar cambios en los campos
-  const handleFieldChange = (field: string, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    validateField(field, value);
-  };
-
-  const requestImagePickerPermissions = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      notify.error({
-        message: "Necesitamos permisos para acceder a tu galería de fotos",
-      });
-      return false;
-    }
-    return true;
-  };
-
-  const pickImages = async () => {
-    const hasPermission = await requestImagePickerPermissions();
-    if (!hasPermission) return;
-
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsMultipleSelection: true,
-        quality: 0.8,
-        aspect: [16, 9],
-        allowsEditing: false,
-      });
-
-      if (!result.canceled && result.assets) {
-        const imageUris = result.assets.map((asset) => asset.uri);
-        setSelectedImages((prev) => [...prev, ...imageUris]);
-      }
-    } catch (error) {
-      console.error("Error picking images:", error);
-      notify.error({ message: "No se pudieron seleccionar las imágenes" });
-    }
-  };
-
-  const removeImage = (index: number) => {
-    setSelectedImages((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleSubmit = async () => {
-    const isValid = validateForm();
-
-    if (!isValid) {
+  useEffect(() => {
+    if (debounceRef.current) window.clearTimeout(debounceRef.current);
+    if (!query || query.trim().length < 2) {
+      setSuggestions([]);
       return;
     }
-
-    setLoading(true);
-    try {
-      // Preparar datos del evento base (sin archivos)
-      const baseEventData: any = {
-        ...formData,
-        type_id: eventTypes.length > 0 ? formData.type_id : "",
-      };
-
-      // Separar imágenes nuevas (locales) de las existentes (URLs remotas o data:)
-      const isRemote = (uri: string) => {
-        return /^https?:\/\//.test(uri) || uri.startsWith("data:");
-      };
-
-      const existingUrls: string[] = selectedImages.filter((u) => isRemote(u));
-      const newUris: string[] = selectedImages.filter((u) => !isRemote(u));
-
-      // Si no hay imágenes nuevas (archivos), enviar JSON normal: usar URLs existentes como strings
-      if (newUris.length === 0) {
-        const eventDataToSubmit: CreateEventPassDto = {
-          ...baseEventData,
-          // Asignar image_url e images_urls como strings si existen
-          image_url: existingUrls[0] || undefined,
-          images_urls:
-            existingUrls.length > 1 ? existingUrls.slice(1) : undefined,
-        };
-
-        let result: EventPass;
-        if (editingEvent) {
-          result = await adminApiService.updateEventPass(
-            editingEvent.id,
-            eventDataToSubmit
-          );
-        } else {
-          result = await adminApiService.createEventPass(eventDataToSubmit);
-        }
-
-        onSuccess(result);
-        onClose();
-        notify.success({
-          message: editingEvent
-            ? "Evento actualizado correctamente"
-            : "Evento creado correctamente",
+    debounceRef.current = window.setTimeout(async () => {
+      try {
+        const items = await mapboxService.searchAddressSuggestions(query, {
+          language: "es",
+          limit: 6,
         });
+        setSuggestions(items || []);
+      } catch (e) {
+        setSuggestions([]);
+      }
+    }, 300) as unknown as number;
+  }, [query]);
+
+  const onPick = async () => {
+    await pickImages(notify);
+  };
+
+  const onSubmit = async () => {
+    try {
+      if (typeof submit !== "function") {
+        if (notify?.error)
+          notify.error({ message: "Error interno: submit no disponible" });
         return;
       }
 
-      // Si hay imágenes nuevas, procesarlas (convertir a File, comprimir) y enviar FormData con archivos + URLs existentes
-      console.log(`📸 Procesando ${newUris.length} imágenes nuevas...`);
-      const imageFiles: File[] = [];
-
-      for (const imageUri of newUris) {
-        try {
-          const response = await fetch(imageUri);
-          const blob = await response.blob();
-          const fileName = `event_image_${Date.now()}_${Math.random()
-            .toString(36)
-            .substr(2, 9)}.jpg`;
-          const file = new File([blob], fileName, { type: "image/jpeg" });
-          imageFiles.push(file);
-        } catch (error) {
-          const message = getBackendErrorMessage(error);
-          notify.error({ message });
-          console.error("Error converting image to file:", error);
-        }
-      }
-
-      // Comprimir imágenes nuevas
-      let compressedFiles: File[] = [];
-      try {
-        console.log("🔄 Comprimiendo imágenes nuevas...");
-        const compressionResults = await compressImages(imageFiles, {
-          maxWidth: 800,
-          maxHeight: 600,
-          quality: 0.7,
-          maxSizeKB: 300,
-        });
-        compressedFiles = compressionResults.map((r) => r.compressedFile);
-      } catch (compressionError) {
-        console.warn(
-          "⚠️ Error al comprimir imágenes, usando originales:",
-          compressionError
-        );
-        compressedFiles = imageFiles;
-      }
-
-      // Construir FormData: agregar campos de texto y tanto URLs existentes (como strings) como archivos nuevos
-      const fd = new FormData();
-
-      Object.keys(baseEventData).forEach((key) => {
-        const value = (baseEventData as any)[key];
-        if (value !== undefined && value !== null) {
-          if (value instanceof Date) {
-            fd.append(key, value.toISOString());
-          } else if (
-            typeof value === "string" ||
-            typeof value === "number" ||
-            typeof value === "boolean"
-          ) {
-            fd.append(key, value.toString());
-          }
-        }
-      });
-
-      // Agregar URLs existentes como strings: la primera como image_url y el resto como images_urls
-      if (existingUrls.length > 0) {
-        fd.append("image_url", existingUrls[0]);
-        for (let i = 1; i < existingUrls.length; i++) {
-          fd.append("images_urls", existingUrls[i]);
-        }
-      }
-
-      // Agregar archivos nuevos: si hay, ponemos el primero como image_url (principal) y el resto en images_urls
-      if (compressedFiles.length > 0) {
-        // Si no hay existing principal o preferimos que la nueva primera reemplace, usamos compressedFiles[0]
-        fd.append("image_url", compressedFiles[0]);
-        for (let i = 1; i < compressedFiles.length; i++) {
-          fd.append("images_urls", compressedFiles[i]);
-        }
-      }
-
-      // Compatibilidad: si no hay archivos adicionales y no había array original, duplicar la principal
-      // (mirar lógica de createEventPass si es necesario)
-
-      // Enviar:
-      // - Si estamos editando: usar PUT multipart con FormData (fd)
-      // - Si estamos creando: reutilizar createEventPass pasando los Files para que la función arme su propio FormData
-      let result: EventPass;
-      if (editingEvent) {
-        result = await adminApiService.updateEventPassFormData(
-          editingEvent.id,
-          fd
-        );
-      } else {
-        // Construir payload para creación con archivos nuevos
-        const eventDataForCreate: CreateEventPassDto = {
-          ...baseEventData,
-          image_url: compressedFiles[0],
-          images_urls:
-            compressedFiles.length > 1 ? compressedFiles.slice(1) : undefined,
-        };
-
-        result = await adminApiService.createEventPass(eventDataForCreate);
-      }
-
-      onSuccess(result);
-      onClose();
-      notify.success({
-        message: editingEvent
-          ? "Evento actualizado correctamente"
-          : "Evento creado correctamente",
-      });
-    } catch (error: any) {
-      console.error("Error saving event:", error);
-      const message = getBackendErrorMessage(error);
-      notify.error({ message });
-    } finally {
-      setLoading(false);
+      await submit({ editingEvent, notify, onSuccess, onClose, eventTypes });
+    } catch (e) {
+      // errors handled in hook
     }
   };
 
-  const modalTitle = editingEvent ? "Editar Evento" : "Crear Nuevo Evento";
-  const submitButtonText = editingEvent ? "Guardar Cambios" : "Crear Evento";
+  const onMapSelect = async (coords: {
+    latitude: number;
+    longitude: number;
+  }) => {
+    try {
+      setField("latitude", coords.latitude as any);
+      setField("longitude", coords.longitude as any);
+      const place = await mapboxService.reverseGeocode(
+        coords.latitude,
+        coords.longitude
+      );
+      if (place) {
+        setField("address", place.full_address as any);
+        // prefer a street+number when available (reverseGeocode returns `street` with number)
+        setField("event_place", (place.street || place.name) as any);
+        setField("event_city", place.city as any);
+        // ensure we use the coordinates returned by reverseGeocode
+        setField("latitude", place.coordinates.latitude as any);
+        setField("longitude", place.coordinates.longitude as any);
+      }
+      setShowMapPicker(false);
+    } catch (e) {
+      console.error(e);
+      setShowMapPicker(false);
+    }
+  };
+
+  // helpers to sanitize numeric inputs
+  const onlyDigits = (s: string) => s.replace(/\D/g, "");
+
+  const handleTicketsChange = (t: string) => {
+    const digits = onlyDigits(t);
+    setField("limit_tickets", (digits ? parseInt(digits, 10) : 0) as any);
+  };
+
+  const handlePriceChange = (t: string) => {
+    let sanitized = t.replace(/[^0-9.]/g, "");
+    const parts = sanitized.split(".");
+    if (parts.length > 2) sanitized = `${parts[0]}.${parts.slice(1).join("")}`;
+    if (sanitized.includes(".")) {
+      const [i, d] = sanitized.split(".");
+      sanitized = `${i}.${d.slice(0, 2)}`;
+    }
+    const v = parseFloat(sanitized) || 0;
+    if (v > 0) prevPriceRef.current = v;
+    setField("price_becoin", v as any);
+  };
 
   return (
     <Modal
@@ -520,537 +224,395 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
       animationType="slide"
       presentationStyle="pageSheet"
     >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalHeader}>
-          <Text style={styles.modalTitle}>{modalTitle}</Text>
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeButtonText}>✕</Text>
+      <SafeAreaView className="flex-1 bg-background-light">
+        <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-200">
+          <TouchableOpacity onPress={onClose} className="p-2 rounded-full">
+            <Text className="text-lg">✕</Text>
           </TouchableOpacity>
+          <Text className="text-lg font-bold">
+            {editingEvent ? "Editar evento" : "Crear evento"}
+          </Text>
+          <View style={{ width: 40 }} />
         </View>
 
-        <ScrollView style={styles.modalContent}>
-          {/* Sección: Información Básica */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>📋 Información Básica</Text>
-
-            {/* Código del evento - Solo lectura */}
-            <InputWithError
-              label="Código del evento"
-              value={formData.code}
-              onChangeText={() => {}}
-              placeholder="Generado automáticamente"
-              editable={false}
-              loading={loading}
-            />
-
-            {/* Nombre del evento */}
-            <InputWithError
-              label="Nombre del evento *"
-              value={formData.name}
-              onChangeText={(text) => handleFieldChange("name", text)}
-              error={errors.name}
-              placeholder="Ej: Concierto de Rock 2025"
-              loading={loading}
-            />
-
-            {/* Descripción */}
-            <InputWithError
-              label="Descripción"
-              value={formData.description || ""}
-              onChangeText={(text) => handleFieldChange("description", text)}
-              placeholder="Describe tu evento (opcional)"
-              multiline={true}
-              loading={loading}
-            />
-
-            {/* Tipo de evento */}
-            {eventTypes.length > 0 ? (
-              <SelectorWithError
-                label="Tipo de evento *"
-                value={formData.type_id}
-                options={eventTypes}
-                onSelect={(value) => handleFieldChange("type_id", value)}
-                error={errors.type_id}
-                loading={loading}
-              />
-            ) : (
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Tipo de evento</Text>
-                <View style={[styles.selector, styles.selectorDisabled]}>
-                  <Text style={styles.placeholderText}>
-                    ⚠️ No disponible - Error del servidor
+        <ScrollView
+          className="px-4"
+          contentContainerStyle={{ paddingBottom: 160 }}
+        >
+          <View className="mt-4 space-y-6 lg:flex-row lg:space-x-6 lg:items-start">
+            <View className="lg:flex-2">
+              <TouchableOpacity
+                onPress={onPick}
+                className="rounded-2xl border-2 border-dashed border-gray-300 bg-gray-100 h-48 items-center justify-center overflow-hidden"
+              >
+                {form.images && form.images.length > 0 ? (
+                  <Image
+                    source={{ uri: form.images[0] }}
+                    className="absolute inset-0 w-full h-full opacity-30"
+                    style={{ resizeMode: "cover" }}
+                  />
+                ) : null}
+                <View className="z-10 items-center justify-center">
+                  <View className="w-14 h-14 bg-white rounded-full items-center justify-center mb-2">
+                    <Text className="text-2xl text-primary">📷</Text>
+                  </View>
+                  <Text className="text-lg font-semibold">
+                    Agregar foto de portada
+                  </Text>
+                  <Text className="text-sm text-text-secondary-light">
+                    Recomendado 1200x600 px
                   </Text>
                 </View>
-                <Text style={styles.helperText}>
-                  Los tipos de eventos no se pudieron cargar desde el servidor.
-                  El evento se creará sin tipo específico.
-                </Text>
-                {eventTypesError && (
-                  <Text style={styles.errorText}>
-                    Nota: Este campo es opcional por el momento debido a
-                    problemas del servidor
-                  </Text>
-                )}
-              </View>
-            )}
-          </View>
+              </TouchableOpacity>
 
-          {/* Sección: Ubicación */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>📍 Ubicación</Text>
-
-            <View style={styles.formRow}>
-              <View style={styles.formColumn}>
-                <InputWithError
-                  label="Lugar"
-                  value={formData.event_place || ""}
-                  onChangeText={(text) =>
-                    handleFieldChange("event_place", text)
-                  }
-                  placeholder="Ej: Estadio Nacional"
-                  loading={loading}
-                />
-              </View>
-              <View style={styles.formColumn}>
-                <InputWithError
-                  label="Ciudad"
-                  value={formData.event_city || ""}
-                  onChangeText={(text) => handleFieldChange("event_city", text)}
-                  placeholder="Ej: Madrid"
-                  loading={loading}
-                />
-              </View>
-            </View>
-          </View>
-
-          {/* Sección: Fecha y Tiempo */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>📅 Fecha y Tiempo</Text>
-
-            <IntuitiveDatePicker
-              label="Fecha del evento *"
-              value={formData.event_date}
-              onSelect={(date) => handleFieldChange("event_date", date)}
-              error={errors.event_date}
-              loading={loading}
-            />
-          </View>
-
-          {/* Sección: Entradas y Precio */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>🎫 Entradas y Precio</Text>
-
-            <View style={styles.formRow}>
-              <View style={styles.formColumn}>
-                <InputWithError
-                  label="Límite de entradas *"
-                  value={formData.limit_tickets.toString()}
-                  onChangeText={(text) =>
-                    handleFieldChange("limit_tickets", parseInt(text) || 0)
-                  }
-                  error={errors.limit_tickets}
-                  placeholder="500"
-                  keyboardType="numeric"
-                  loading={loading}
-                />
-              </View>
-              <View style={styles.formColumn}>
-                <InputWithError
-                  label="Precio en BECOIN *"
-                  value={formData.price_becoin.toString()}
-                  onChangeText={(text) =>
-                    handleFieldChange("price_becoin", parseFloat(text) || 0)
-                  }
-                  error={errors.price_becoin}
-                  placeholder="0.00"
-                  keyboardType="numeric"
-                  loading={loading}
-                />
-              </View>
-            </View>
-          </View>
-
-          {/* Sección: Imágenes */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>🖼️ Imágenes del evento</Text>
-
-            <TouchableOpacity
-              style={styles.imagePickerButton}
-              onPress={pickImages}
-              disabled={loading}
-            >
-              <Text style={styles.imagePickerButtonText}>
-                📷 Seleccionar Imágenes
-              </Text>
-            </TouchableOpacity>
-
-            {selectedImages.length > 0 && (
-              <View style={styles.imagePreviewContainer}>
-                <Text style={styles.imagePreviewTitle}>
-                  Imágenes seleccionadas ({selectedImages.length}):
-                </Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  {selectedImages.map((imageUri, index) => (
-                    <View key={index} style={styles.imagePreviewItem}>
+              {/* Thumbnails of selected images */}
+              {form.images && form.images.length > 0 ? (
+                <ScrollView horizontal className="mt-3 space-x-3">
+                  {form.images.map((uri: string, idx: number) => (
+                    <View
+                      key={`${uri}-${idx}`}
+                      className="w-20 h-20 rounded overflow-hidden relative"
+                    >
                       <Image
-                        source={{ uri: imageUri }}
-                        style={styles.imagePreview}
+                        source={{ uri }}
+                        className="w-20 h-20"
+                        style={{ resizeMode: "cover" }}
                       />
                       <TouchableOpacity
-                        style={styles.removeImageButton}
-                        onPress={() => removeImage(index)}
+                        onPress={() => removeImage(idx)}
+                        className="absolute top-1 right-1 bg-black bg-opacity-50 rounded-full p-1"
                       >
-                        <Text style={styles.removeImageButtonText}>✕</Text>
+                        <Text className="text-white text-xs">✕</Text>
                       </TouchableOpacity>
                     </View>
                   ))}
                 </ScrollView>
+              ) : null}
+
+              <View className="bg-surface-light rounded-2xl p-6 mt-6 shadow-soft">
+                <Text className="text-sm font-bold text-text-secondary-light mb-1">
+                  Nombre del evento
+                </Text>
+                <TextInput
+                  value={form.name as any}
+                  onChangeText={(t) => setField("name", t as any)}
+                  placeholder="p.ej. Summer Vibes Festival"
+                  className="w-full bg-gray-50 rounded-lg px-4 py-3 text-xl font-bold"
+                />
+                {errors?.name ? (
+                  <Text className="text-sm text-red-600 mt-2">
+                    {errors.name}
+                  </Text>
+                ) : null}
+
+                <Text className="text-sm font-bold  text-text-secondary-light mt-4 mb-2">
+                  Categoría
+                </Text>
+                <View className="flex-row flex-wrap gap-3">
+                  {(eventTypes || []).map((t) => (
+                    <TouchableOpacity
+                      key={t.id}
+                      onPress={() => setField("type_id", t.id as any)}
+                      className={`${
+                        form.type_id === t.id
+                          ? "bg-primary"
+                          : "bg-white border border-gray-200"
+                      } px-4 py-2 rounded-full`}
+                    >
+                      <Text
+                        className={`${
+                          form.type_id === t.id
+                            ? "text-white"
+                            : "text-text-main-light"
+                        }`}
+                      >
+                        {t.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {errors?.type_id ? (
+                  <Text className="text-sm text-red-600 mt-2">
+                    {errors.type_id}
+                  </Text>
+                ) : null}
+
+                <Text className="text-sm text-text-secondary-light mt-4 mb-1">
+                  Descripción
+                </Text>
+                <TextInput
+                  value={form.description as any}
+                  onChangeText={(t) => setField("description", t as any)}
+                  placeholder="Cuenta a la gente qué hace especial a este evento..."
+                  className="w-full bg-gray-50 rounded-lg px-4 py-3 h-24 text-text-main-light"
+                  multiline
+                />
+
+                <Text className="text-sm text-text-secondary-light mt-4 mb-1">
+                  Código único del evento
+                </Text>
+                <View className="relative flex-row items-center bg-gray-50 rounded-lg px-4 py-2">
+                  <Text className="text-gray-500 mr-2">#</Text>
+                  <Text className="flex-1 text-text-main-light font-bold">
+                    {form.code as any}
+                  </Text>
+                </View>
               </View>
-            )}
-          </View>
+            </View>
 
-          {/* Botones de acción */}
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={onClose}
-              disabled={loading}
-            >
-              <Text style={styles.cancelButtonText}>Cancelar</Text>
-            </TouchableOpacity>
+            <View className="lg:flex-1 space-y-6 mt-4 lg:mt-0">
+              <View className="bg-surface-light rounded-2xl p-4 shadow-soft">
+                <View className="flex-row justify-between items-center mb-3">
+                  <Text className="text-lg font-bold">Cuándo y dónde</Text>
+                  <View className="px-2 py-0.5 bg-orange-100 rounded">
+                    <Text className="text-xs text-accent-orange">
+                      Requerido
+                    </Text>
+                  </View>
+                </View>
 
-            <TouchableOpacity
-              style={[styles.saveButton, loading && styles.saveButtonDisabled]}
-              onPress={handleSubmit}
-              disabled={loading}
-            >
-              <Text style={styles.saveButtonText}>
-                {loading ? "Guardando..." : submitButtonText}
-              </Text>
-            </TouchableOpacity>
+                <View className="bg-gray-50 rounded-xl p-3 border border-gray-100 mb-3">
+                  <View className="flex-row gap-2">
+                    <View className="flex-1">
+                      <EventDateCard
+                        label="Fecha inicio"
+                        value={form.event_date}
+                        onChange={(d) => {
+                          // prefer hook setter if available
+                          if (typeof (setEventDate as any) === "function") {
+                            (setEventDate as any)(d);
+                          } else {
+                            setField("event_date", d as any);
+                          }
+                        }}
+                      />
+                    </View>
+                    <View style={{ width: 12 }} />
+                    <View className="flex-1">
+                      {showEndTime ? (
+                        <EventDateCard
+                          label="Fecha fin"
+                          value={(form as any).end_sale_date || form.event_date}
+                          onChange={(d) => {
+                            if (
+                              typeof (setEventEndDate as any) === "function"
+                            ) {
+                              (setEventEndDate as any)(d);
+                            } else {
+                              setField("end_sale_date", d as any);
+                            }
+                          }}
+                        />
+                      ) : (
+                        <TouchableOpacity
+                          onPress={() => setShowEndTime(true)}
+                          className="items-center justify-center h-full"
+                        >
+                          <Text className="text-sm text-text-secondary-light">
+                            + Añadir hora de fin
+                          </Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  </View>
+                </View>
+                {errors?.event_date ? (
+                  <Text className="text-sm text-red-600 mt-2">
+                    {errors.event_date}
+                  </Text>
+                ) : null}
+
+                <View className="flex-row items-center gap-2">
+                  <TextInput
+                    value={form.address as any}
+                    onChangeText={(t) => {
+                      setField("address", t as any);
+                      setQuery(t as any);
+                    }}
+                    placeholder="Agregar ubicación "
+                    className="flex-1 pl-3 bg-gray-50 rounded-lg py-3"
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowMapPicker(true)}
+                    className="px-3 py-2 bg-white rounded-lg border border-gray-200"
+                  >
+                    <Text className="text-primary">Seleccionar en mapa</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {suggestions.length > 0 && (
+                  <View className="bg-white rounded-lg mt-2 p-2 shadow-sm">
+                    {suggestions.map((s) => (
+                      <TouchableOpacity
+                        key={s.id}
+                        onPress={() => {
+                          // Prefer street name + number when available in suggestion context
+                          const streetWithNumber =
+                            s.context && (s.context as any).address
+                              ? `${(s.context as any).address.street_name} ${
+                                  (s.context as any).address.address_number
+                                }`
+                              : undefined;
+                          setField("address", s.full_address as any);
+                          setField(
+                            "event_place",
+                            (streetWithNumber || s.name) as any
+                          );
+                          setField("event_city", deriveCity(s) as any);
+                          // Coordinates from Mapbox feature center (lat, lng)
+                          setField("latitude", s.coordinates.latitude as any);
+                          setField("longitude", s.coordinates.longitude as any);
+                          setSuggestions([]);
+                          setQuery("");
+                        }}
+                        className="py-2 border-b border-gray-100"
+                      >
+                        <Text className="font-semibold">{s.name}</Text>
+                        <Text className="text-sm text-text-secondary-light">
+                          {s.full_address}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+              </View>
+
+              <View className="bg-surface-light rounded-2xl p-4 shadow-soft">
+                <View className="flex-row justify-between items-center mb-3">
+                  <Text className="text-lg font-bold">Entradas</Text>
+                  <TouchableOpacity>
+                    <Text className="text-primary">Ajustes</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View className="space-y-3">
+                  <View>
+                    <Text className="text-sm text-text-secondary-light mb-1">
+                      Número de entradas
+                    </Text>
+                    <TextInput
+                      value={`${(form.limit_tickets as any) || 0}`}
+                      onChangeText={handleTicketsChange}
+                      className="w-full bg-gray-50 rounded-lg py-2 px-3"
+                      keyboardType="numeric"
+                    />
+                    {errors?.limit_tickets ? (
+                      <Text className="text-sm text-red-600 mt-1">
+                        {errors.limit_tickets}
+                      </Text>
+                    ) : null}
+                  </View>
+
+                  <View>
+                    <Text className="text-sm text-text-secondary-light mb-1">
+                      Precio por entrada
+                    </Text>
+                    <View className="relative">
+                      <View className="absolute left-3 top-2">
+                        <Text>$</Text>
+                      </View>
+                      <TextInput
+                        value={
+                          typeof form.price_becoin === "number"
+                            ? `${form.price_becoin}`
+                            : `${(form.price_becoin as any) || 0}`
+                        }
+                        onChangeText={handlePriceChange}
+                        className="w-full pl-10 bg-gray-50 rounded-lg py-2"
+                        keyboardType="numeric"
+                        maxLength={10}
+                      />
+                      {errors?.price_becoin ? (
+                        <Text className="text-sm text-red-600 mt-1">
+                          {errors.price_becoin}
+                        </Text>
+                      ) : null}
+                    </View>
+                  </View>
+
+                  <View className="flex-row items-center justify-between pt-2">
+                    <View>
+                      <Text className="text-sm font-medium">
+                        {Number(form.price_becoin) === 0
+                          ? "Evento gratuito"
+                          : "Evento de pago"}
+                      </Text>
+                      <Text className="text-xs text-text-secondary-light">
+                        {Number(form.price_becoin) === 0
+                          ? "No se requiere pago para la entrada"
+                          : "Pago requerido para la entrada"}
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => {
+                        const current = Number(form.price_becoin) || 0;
+                        if (current === 0) {
+                          setField("price_becoin", prevPriceRef.current || 1);
+                        } else {
+                          prevPriceRef.current = current;
+                          setField("price_becoin", 0 as any);
+                        }
+                      }}
+                      className="items-center"
+                    >
+                      <View
+                        className={`w-14 h-8 rounded-full p-1 ${
+                          Number(form.price_becoin) === 0
+                            ? "bg-gray-200"
+                            : "bg-primary"
+                        }`}
+                      >
+                        <View
+                          style={{
+                            width: 24,
+                            height: 24,
+                            borderRadius: 12,
+                            backgroundColor: "#fff",
+                            transform: [
+                              {
+                                translateX:
+                                  Number(form.price_becoin) === 0 ? 0 : 22,
+                              },
+                            ],
+                          }}
+                        />
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+
+              <View>
+                <TouchableOpacity
+                  onPress={onSubmit}
+                  disabled={loading}
+                  className="w-full bg-primary rounded-xl py-4 items-center"
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text className="text-white font-bold">Crear</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
         </ScrollView>
-      </View>
+        <AddressMapPicker
+          visible={showMapPicker}
+          onClose={() => setShowMapPicker(false)}
+          initial={
+            form.latitude && form.longitude
+              ? {
+                  latitude: form.latitude as any,
+                  longitude: form.longitude as any,
+                }
+              : null
+          }
+          onSelect={(coords) => onMapSelect(coords)}
+        />
+      </SafeAreaView>
     </Modal>
   );
-};
-
-const styles = StyleSheet.create({
-  modalContainer: {
-    flex: 1,
-    backgroundColor: "#f8f9fa",
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 20,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  closeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#f0f0f0",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  closeButtonText: {
-    fontSize: 18,
-    color: "#666",
-  },
-  modalContent: {
-    flex: 1,
-    padding: 20,
-  },
-  formGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: "#333",
-    minHeight: 48,
-  },
-  textArea: {
-    height: 100,
-    textAlignVertical: "top",
-  },
-  imagePickerButton: {
-    backgroundColor: "#007AFF",
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    alignItems: "center",
-    marginBottom: 15,
-  },
-  imagePickerButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  imagePreviewContainer: {
-    marginTop: 15,
-  },
-  imagePreviewTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 10,
-  },
-  imagePreviewItem: {
-    marginRight: 10,
-    position: "relative",
-  },
-  imagePreview: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-  },
-  removeImageButton: {
-    position: "absolute",
-    top: -5,
-    right: -5,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: "#FF3B30",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  removeImageButtonText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "bold",
-  },
-  pickerContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-  },
-  pickerOption: {
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-  },
-  pickerOptionSelected: {
-    backgroundColor: "#007AFF",
-    borderColor: "#007AFF",
-  },
-  pickerOptionText: {
-    fontSize: 14,
-    color: "#333",
-  },
-  pickerOptionTextSelected: {
-    color: "#fff",
-  },
-  switchRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-  },
-  switchLabel: {
-    fontSize: 16,
-    color: "#333",
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 30,
-    marginBottom: 20,
-  },
-  cancelButton: {
-    flex: 1,
-    backgroundColor: "#f0f0f0",
-    borderRadius: 8,
-    paddingVertical: 15,
-    marginRight: 10,
-    alignItems: "center",
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#666",
-  },
-  saveButton: {
-    flex: 1,
-    backgroundColor: "#007AFF",
-    borderRadius: 8,
-    paddingVertical: 15,
-    marginLeft: 10,
-    alignItems: "center",
-  },
-  saveButtonDisabled: {
-    backgroundColor: "#ccc",
-  },
-  saveButtonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#fff",
-  },
-  // Nuevos estilos para validación en línea
-  inputGroup: {
-    marginBottom: 20,
-  },
-  inputLabel: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 8,
-  },
-  inputError: {
-    borderColor: "#FF3B30",
-    borderWidth: 2,
-  },
-  inputDisabled: {
-    backgroundColor: "#f8f8f8",
-    color: "#999",
-  },
-  errorText: {
-    fontSize: 12,
-    color: "#FF3B30",
-    marginTop: 4,
-    marginLeft: 4,
-  },
-  selector: {
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    minHeight: 48,
-    justifyContent: "center",
-  },
-  selectorText: {
-    fontSize: 16,
-    color: "#333",
-  },
-  selectorDisabled: {
-    backgroundColor: "#f8f8f8",
-    opacity: 0.7,
-  },
-  helperText: {
-    fontSize: 12,
-    color: "#666",
-    marginTop: 4,
-    marginLeft: 4,
-    fontStyle: "italic",
-  },
-  // Estilos para el selector de fecha y hora web
-  dateTimeContainer: {
-    flexDirection: "row",
-    gap: 10,
-    marginBottom: 8,
-  },
-  webInputContainer: {
-    flex: 1,
-  },
-  webInputLabel: {
-    fontSize: 12,
-    color: "#666",
-    marginBottom: 4,
-    fontWeight: "500",
-  },
-  webDateInput: {
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-    color: "#333",
-    minHeight: 40,
-  },
-  placeholderText: {
-    color: "#999",
-  },
-  // Estilos para layout en filas
-  formRow: {
-    flexDirection: "row",
-    marginBottom: 20,
-    gap: 15,
-  },
-  formColumn: {
-    flex: 1,
-  },
-  // Estilos para secciones
-  section: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-    paddingBottom: 10,
-  },
-  // Estilos para el selector de fecha y hora
-  dateTimeButton: {
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    minHeight: 48,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  dateTimeButtonText: {
-    fontSize: 16,
-    color: "#333",
-    fontWeight: "500",
-  },
-});
-
-export default EventFormModal;
+}

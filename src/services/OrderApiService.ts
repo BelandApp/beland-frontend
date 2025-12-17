@@ -5,6 +5,7 @@
 
 import { CoreApiService, PaginatedResponse } from "./core/ApiService";
 import { Product } from "./ProductApiService";
+import { CartService } from "./cart/CartApiService";
 
 // Order Types
 export interface OrderItem {
@@ -238,14 +239,21 @@ class OrderServiceClass extends CoreApiService {
   /**
    * Create a new order from current cart
    */
-  async createOrder(data: CreateOrderDto): Promise<{
+  async createOrder(data: any): Promise<{
     order: Order;
     payment_intent?: any; // Payment processor specific data
   }> {
-    return this.post(
-      `${this.ENDPOINTS.CREATE_ORDER}?cart_id=${data.cart_id}`,
-      {}
-    );
+    let cartId = (data as any).cart_id;
+    if (!cartId) {
+      try {
+        const cart = await CartService.getCart();
+        cartId = cart.id;
+      } catch (err) {
+        throw new Error("No se pudo obtener el carrito para crear la orden");
+      }
+    }
+
+    return this.post(`${this.ENDPOINTS.CREATE_ORDER}?cart_id=${cartId}`, {});
   }
 
   /**

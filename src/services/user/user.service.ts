@@ -1,4 +1,6 @@
-import { apiRequest } from "../api";
+import { CoreApiService } from "@/services/core/ApiService";
+
+const core = new CoreApiService();
 
 export type UpdateUserPayload = {
   full_name: string;
@@ -9,15 +11,8 @@ export type UpdateUserPayload = {
 
 export const userService = {
   updateUser: async (payload: UpdateUserPayload) => {
-    const res = await apiRequest(
-      `${process.env.EXPO_PUBLIC_API_URL}/users/me`,
-      {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }
-    );
-    return res
+    const res = await core.patch(`/users/me`, payload);
+    return res;
   },
   deleteAddressUser: async (id:string) => {
     const res = await apiRequest(

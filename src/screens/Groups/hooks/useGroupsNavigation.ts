@@ -14,7 +14,8 @@ export const useGroupsNavigation = () => {
       });
       return;
     }
-    navigate("Groups", { screen: "CreateGroup" });
+    // Abrir CreateGroup a nivel root (fuera de los tabs) para ocultar la tab bar
+    navigate("CreateGroup");
   };
 
   // chequear que funcione

@@ -23,6 +23,7 @@ import {
   WalletSettingsScreen,
   PayphoneSuccessScreen,
 } from "@screens/Wallet";
+import { CreateGroupScreen } from "@screens/CreateGroup";
 import { QRScannerScreen } from "@screens/QRScannerScreen";
 import PaymentScreen from "@screens/Payment/PaymentScreen";
 import UserDashboardScreen from "@screens/UserDashboardScreen";
@@ -57,6 +58,7 @@ export type RootStackParamList = {
   MainTabs: NavigatorScreenParams<MainTabParamList>;
   Orders: NavigatorScreenParams<OrdersStackParamList>;
   Groups: NavigatorScreenParams<GroupsStackParamList>;
+  CreateGroup: undefined;
   // Payments
   CobrarScreen: undefined;
   SendScreen: undefined;
@@ -104,6 +106,7 @@ export type RootStackParamList = {
   UsersManagement: undefined;
   ProductsManagement: undefined;
 
+  MisEntradas: undefined;
   // Events Screens
   EventModal: { id: string };
   AcquiredEventModal: { id_modal: string };
@@ -141,6 +144,7 @@ export const RootStackNavigator = () => {
         component={WalletHistoryScreen}
       />
       <Stack.Screen name="RechargeScreen" component={RechargeScreen} />
+      <Stack.Screen name="CreateGroup" component={CreateGroupScreen} />
       <Stack.Screen
         name="WalletSettingsScreen"
         component={WalletSettingsScreen}
@@ -187,7 +191,7 @@ export const RootStackNavigator = () => {
       />
 
       <Stack.Screen
-        name="UserResources"
+        name="MisEntradas"
         component={UserResourcesScreen}
         options={{ headerShown: false }}
       />
@@ -247,7 +251,7 @@ export const RootStackNavigator = () => {
         component={ConsumedEventScreen}
         options={{ headerShown: false }}
       />
-      {/* TODO REVISAR SI ES NECESARIO */}
+
       <Stack.Screen
         name="Rewards"
         component={RewardsScreen}

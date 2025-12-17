@@ -5,6 +5,8 @@ import {
   ScrollView,
   Dimensions,
   TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { CustomInput, SocialButton, Button } from "@components/shared";
 import { LoginWave } from "@components/ui";
@@ -12,9 +14,9 @@ import { BelandLogo } from "@/components";
 import { styles } from "./styles";
 import { CircleArrowLeftIcon } from "lucide-react-native";
 import { useLogin } from "./hook/useLogin";
-
 export default function LoginScreen() {
   const { width, height } = Dimensions.get("window");
+
   const {
     handleLogin,
     handleLoginAuth0,
@@ -23,64 +25,87 @@ export default function LoginScreen() {
     FormData,
     isLoading,
     isAuthenticated,
-    errors
+    errors,
   } = useLogin();
-  if (isAuthenticated) navigate("MainTabs", { screen: "Home" });
-  return (
-    <ScrollView
-      contentContainerStyle={styles.scroll}
-      showsVerticalScrollIndicator={false}
-    >
-      <TouchableOpacity
-        onPress={() => navigate("MainTabs", { screen: "Home" })}
-        style={styles.backButton}
-      >
-        <CircleArrowLeftIcon size={32} color="#FFF" />
-      </TouchableOpacity>
-      <BelandLogo
-        width={width * 0.5}
-        height={height * 0.2}
-        style={styles.logo}
-      />
-      <LoginWave />
-      <View style={styles.container}>
-        <SocialButton onPress={handleLoginAuth0} disabled={isLoading} />
-        <CustomInput
-          label="Correo Electrónico"
-          onChangeText={(email) => setFormData({ ...FormData, email })}
-          value={FormData.email}
-          keyboardType="email-address"
-          error={errors.email}
-        />
-        <CustomInput
-          label="Contraseña"
-          onChangeText={(password) => setFormData({ ...FormData, password })}
-          value={FormData.password}
-          secureTextEntry
-          error={errors.password}
-        />
-        <Button
-          title="Ingresar"
-          onPress={handleLogin}
-          variant="secondary"
-          isLoading={isLoading}
-        />
 
-        <View style={styles.containerRow}>
-          <Text style={styles.subtitle}>¿Eres nuevo? </Text>
+  if (isAuthenticated) navigate("MainTabs", { screen: "Home" });
+
+  return (
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <TouchableOpacity
+          onPress={() => navigate("MainTabs", { screen: "Home" })}
+          style={styles.backButton}
+        >
+          <CircleArrowLeftIcon size={32} color="#FFF" />
+        </TouchableOpacity>
+        <BelandLogo
+          width={width * 0.5}
+          height={height * 0.2}
+          style={styles.logo}
+        />
+        <LoginWave />
+        <View style={styles.container}>
+          <SocialButton onPress={handleLoginAuth0} disabled={isLoading} />
+          <View
+            style={{
+              width: "100%",
+              height: 1,
+              backgroundColor: "rgba(64, 45, 45, 0.2)",
+              marginVertical: "4%",
+            }}
+          />
+
+          <Text style={styles.subtitle}>Ingresar con tu correo:</Text>
+          <CustomInput
+            label="Correo Electrónico"
+            onChangeText={(email) => setFormData({ ...FormData, email })}
+            value={FormData.email}
+            keyboardType="email-address"
+            error={errors.email}
+            variant="filled"
+          />
+
+          <CustomInput
+            label="Contraseña"
+            onChangeText={(password) => setFormData({ ...FormData, password })}
+            value={FormData.password}
+            secureTextEntry
+            error={errors.password}
+            variant="filled"
+          />
           <Button
-            title="Registrate"
-            onPress={() => navigate("Register")}
-            style={{ paddingLeft: 0 }}
+            title="Ingresar"
+            onPress={handleLogin}
+            variant="secondary"
+            isLoading={isLoading}
+          />
+          <View style={styles.containerRow}>
+            <Text style={styles.subtitle}>¿Eres nuevo? </Text>
+            <Button
+              title="Registrate"
+              onPress={() => navigate("Register")}
+              style={{ paddingLeft: 0 }}
+              textStyle={styles.forgetText}
+              variant="inline"
+            />
+          </View>
+          <Button
+            title="Olvide mi contraseña"
+            onPress={() => navigate("NewPassword")}
+            textStyle={styles.forgetText}
+            style={{ marginRight: "auto" }}
+            variant="inline"
           />
         </View>
-        <Button
-          title="Olvide mi contraseña"
-          onPress={() => navigate("NewPassword")}
-          textStyle={styles.forgetText}
-          style={{ paddingLeft: 0, marginRight: "auto" }}
-        />
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

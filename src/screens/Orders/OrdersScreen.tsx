@@ -7,58 +7,58 @@ import {
   RefreshControl,
   Platform,
 } from "react-native";
-import { StackNavigationProp } from "@react-navigation/stack";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useOrdersStoreAPI } from "../../stores/useOrdersStoreAPI";
 import { Order, OrderStatus } from "../../types/Order";
-import { OrdersStackParamList } from "../../types/navigation";
 import { colors } from "../../styles/colors";
 import { ordersStyles } from "./styles";
 import { useAuth } from "src/context";
 import { ThemedHeader } from "src/components/shared/headers/Header";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
-
-type OrdersScreenNavigationProp = StackNavigationProp<
-  OrdersStackParamList,
-  "OrdersList"
->;
-
-// Helper function to map backend status codes to frontend status
-const mapBackendStatusToFrontend = (backendStatus: string): OrderStatus => {
-  const statusMap: Record<string, OrderStatus> = {
-    PENDING: "pending",
-    PREPARING: "preparing",
-    ON_ROUTE: "shipped",
-    DELIVERED: "delivered",
-    COLLECTED: "collected",
-    RECYCLED: "recycled",
-    CANCELLED: "cancelled",
-  };
-
-  const upperStatus = backendStatus?.toUpperCase();
-  return (
-    statusMap[upperStatus] ||
-    (backendStatus?.toLowerCase() as OrderStatus) ||
-    "pending"
-  );
-};
+import { useOrderStatusSocket } from "src/hooks/useOrderStatusSocket";
 
 const OrdersScreen: React.FC = () => {
   const { navigate, goBack } = useCustomNavigation();
 
-  const { orders, isLoading, getOrderSummary, loadUserOrders } =
-    useOrdersStoreAPI();
+  const {
+    orders,
+    isLoading,
+    getOrderSummary,
+    loadUserOrders,
+    totalOrders,
+    orderCounts,
+  } = useOrdersStoreAPI();
   const [selectedFilter, setSelectedFilter] = useState<OrderStatus | "all">(
     "all"
   );
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const ordersPerPage = 5;
   const { canPerformAction, requireAuth } = useAuth();
 
-  // Load orders when component mounts
+  // Escuchar actualizaciones de estado en tiempo real
+  useOrderStatusSocket();
+
+  // Resetear a la página 1 cuando cambia el filtro
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    }
+  }, [selectedFilter]);
+
+  // Load orders when component mounts, page changes, or filter changes
   useEffect(() => {
     const loadOrders = async () => {
       try {
         await requireAuth(async () => {
-          await loadUserOrders();
+          // Si hay un filtro activo (no "all"), cargar todas las órdenes para filtrar correctamente
+          // Si no hay filtro, usar paginación normal
+          const limit = selectedFilter === "all" ? ordersPerPage : 1000;
+          const page = selectedFilter === "all" ? currentPage : 1;
+
+          const result = await loadUserOrders(page, limit);
+          // Si recibimos menos órdenes de las solicitadas, no hay más páginas
+          setHasMore(result && result.length === limit);
         });
       } catch (error) {
         // Error ya manejado por requireAuth
@@ -67,16 +67,18 @@ const OrdersScreen: React.FC = () => {
     };
 
     loadOrders();
-  }, [loadUserOrders, requireAuth]);
+  }, [currentPage, selectedFilter, loadUserOrders, requireAuth]);
 
   const orderSummary = getOrderSummary();
 
   const handleRefresh = async () => {
     // Usar requireAuth para proteger la carga de órdenes
     try {
+      setCurrentPage(1);
       await requireAuth(async () => {
         // Use real API to refresh orders
-        await loadUserOrders();
+        const result = await loadUserOrders(1, ordersPerPage);
+        setHasMore(result && result.length === ordersPerPage);
       });
     } catch (error) {
       // Error ya manejado por requireAuth
@@ -84,32 +86,56 @@ const OrdersScreen: React.FC = () => {
     }
   };
 
-  const filteredOrders = useMemo(() => {
+  // Mostrar las órdenes de la página actual filtradas y ordenadas por fecha
+  const displayedOrders = useMemo(() => {
     const sorted = [...orders].sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
 
-    if (selectedFilter === "all") return sorted;
-    return sorted.filter((order) => order.status === selectedFilter);
-  }, [orders, selectedFilter]);
+    // Aplicar filtro local
+    let filtered =
+      selectedFilter === "all"
+        ? sorted
+        : sorted.filter((order) => order.status === selectedFilter);
+
+    // Si hay filtro activo, aplicar paginación local
+    if (selectedFilter !== "all") {
+      const startIndex = (currentPage - 1) * ordersPerPage;
+      const endIndex = startIndex + ordersPerPage;
+      return filtered.slice(startIndex, endIndex);
+    }
+
+    return filtered;
+  }, [orders, selectedFilter, currentPage]);
+
+  // Calcular si hay más páginas para filtros activos
+  const totalFilteredOrders = useMemo(() => {
+    if (selectedFilter === "all") return totalOrders;
+    return orders.filter((order) => order.status === selectedFilter).length;
+  }, [selectedFilter, orders, totalOrders]);
+
+  const actualHasMore = useMemo(() => {
+    if (selectedFilter === "all") return hasMore;
+    return currentPage * ordersPerPage < totalFilteredOrders;
+  }, [selectedFilter, hasMore, currentPage, totalFilteredOrders]);
 
   const filterOptions = [
-    { label: "Todas", value: "all" as const, count: orders.length },
+    { label: "Todas", value: "all" as const, count: totalOrders },
     {
       label: "Pendientes",
       value: "pending" as const,
-      count: orders.filter((o) => o.status === "pending").length,
+      count: orderCounts.pending,
     },
     {
       label: "Entregadas",
       value: "delivered" as const,
-      count: orders.filter((o) => o.status === "delivered").length,
+      count: orderCounts.delivered,
     },
     {
       label: "Canceladas",
       value: "cancelled" as const,
-      count: orders.filter((o) => o.status === "cancelled").length,
+      count: orderCounts.cancelled,
     },
   ];
 
@@ -452,7 +478,7 @@ const OrdersScreen: React.FC = () => {
 
         {orders.length > 0 && renderFilterTabs()}
 
-        {filteredOrders.length === 0 ? (
+        {displayedOrders.length === 0 ? (
           <View style={ordersStyles.emptyState}>
             <MaterialCommunityIcons
               name="package-variant-closed"
@@ -481,9 +507,79 @@ const OrdersScreen: React.FC = () => {
             )}
           </View>
         ) : (
-          <View style={ordersStyles.ordersList}>
-            {filteredOrders.map(renderOrderCard).filter(Boolean)}
-          </View>
+          <>
+            <View style={ordersStyles.ordersList}>
+              {displayedOrders.map(renderOrderCard).filter(Boolean)}
+            </View>
+
+            {/* Paginación */}
+            <View style={ordersStyles.paginationContainer}>
+              <TouchableOpacity
+                style={[
+                  ordersStyles.paginationButton,
+                  currentPage === 1 && ordersStyles.paginationButtonDisabled,
+                ]}
+                onPress={() => {
+                  if (currentPage > 1) {
+                    setCurrentPage(currentPage - 1);
+                  }
+                }}
+                disabled={currentPage === 1}
+              >
+                <MaterialCommunityIcons
+                  name="chevron-left"
+                  size={24}
+                  color={
+                    currentPage === 1
+                      ? colors.textSecondary
+                      : colors.belandOrange
+                  }
+                />
+                <Text
+                  style={[
+                    ordersStyles.paginationButtonText,
+                    currentPage === 1 &&
+                      ordersStyles.paginationButtonTextDisabled,
+                  ]}
+                >
+                  Anterior
+                </Text>
+              </TouchableOpacity>
+
+              <Text style={ordersStyles.paginationText}>
+                Página {currentPage}
+              </Text>
+
+              <TouchableOpacity
+                style={[
+                  ordersStyles.paginationButton,
+                  !actualHasMore && ordersStyles.paginationButtonDisabled,
+                ]}
+                onPress={() => {
+                  if (actualHasMore) {
+                    setCurrentPage(currentPage + 1);
+                  }
+                }}
+                disabled={!actualHasMore}
+              >
+                <Text
+                  style={[
+                    ordersStyles.paginationButtonText,
+                    !actualHasMore && ordersStyles.paginationButtonTextDisabled,
+                  ]}
+                >
+                  Siguiente
+                </Text>
+                <MaterialCommunityIcons
+                  name="chevron-right"
+                  size={24}
+                  color={
+                    !actualHasMore ? colors.textSecondary : colors.belandOrange
+                  }
+                />
+              </TouchableOpacity>
+            </View>
+          </>
         )}
       </ScrollView>
     </>

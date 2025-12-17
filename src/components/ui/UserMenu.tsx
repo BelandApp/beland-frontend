@@ -17,10 +17,10 @@ import {
   User,
   Settings,
   PackageIcon,
-  Percent,
+  Gift,
+  Ticket,
 } from "lucide-react-native";
 import { authService } from "../../services/auth/auth.service";
-import { TokenService } from "../../services/auth/token.service";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { useNotify } from "src/hooks";
 import { getBackendErrorMessage } from "src/services";
@@ -29,6 +29,8 @@ import {
   organizationService,
   CreateOrganizationDto,
 } from "src/services/OrganizationApiService";
+import { eventStore } from "src/stores";
+import { colors } from "src/styles";
 
 interface UserMenuProps {
   style?: any;
@@ -48,7 +50,10 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   const [menuVisible, setMenuVisible] = useState(false);
   const [showOrganizationModal, setShowOrganizationModal] = useState(false);
   const [isCreatingOrganization, setIsCreatingOrganization] = useState(false);
-
+  const pendingEvents = eventStore.getState().pendingEvents
+  const [hasPendingEvents, setHasPendingEvents] = useState<boolean>(
+    pendingEvents.length > 0
+  );
   const handleLogout = async () => {
     setMenuVisible(false);
     await logout();
@@ -291,12 +296,14 @@ export const UserMenu: React.FC<UserMenuProps> = ({
               style={styles.menuItem}
               onPress={() => {
                 setMenuVisible(false);
-                navigate("UserResources");
+                navigate("MisEntradas");
               }}
             >
-              <Percent size={18} color="#333" />
-              <Text style={styles.menuItemText}>Mis Beneficios</Text>
+              <Ticket size={18} color="#333" />
+              <Text style={styles.menuItemText}>Mis Entradas</Text>
+              {hasPendingEvents && <View style={styles.badgeContainer} />}
             </TouchableOpacity>
+
             <TouchableOpacity
               style={styles.menuItem}
               onPress={() => {
@@ -480,7 +487,12 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "#333",
   },
-
+  badgeContainer: {
+    width: 5,
+    height: 5,
+    borderRadius: 50,
+    backgroundColor: colors.belandOrange,
+  },
   overlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.7)",

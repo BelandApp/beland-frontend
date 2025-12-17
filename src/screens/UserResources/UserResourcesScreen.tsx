@@ -1,145 +1,89 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   View,
   Text,
-  FlatList,
   StyleSheet,
+  FlatList,
+  Dimensions,
+  RefreshControl,
 } from "react-native";
-import { ResourceService } from "@services/core";
-import UserResourceCard from "./components/UserResourceCard";
 import { ThemedHeader } from "src/components/shared/headers/Header";
-import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
-import { CustomLoader, useThemedTabs } from "src/components";
 import ThemedTabs from "src/components/shared/Tabs/ThemedTabs";
-import { useNotify } from "src/hooks";
-import { getBackendErrorMessage } from "src/services";
+import { useThemedTabs } from "src/components/shared/Tabs/hook/useTabs";
+import { useEvents } from "src/hooks/event/useEvents";
+import { AcquiredEventCard } from "src/screens/Events/components/AcquiredEventCard";
+import { CustomLoader } from "src/components";
 
-const UserResourcesScreen: React.FC = () => {
-  const { tabs, onTabChange, filterWithTab, getFilteredByActiveTab } =
-    useThemedTabs(["Todos", "Activos", "Expirados"]);
-  // TODO MOVER A UN HOOK
-  const [items, setItems] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const load = async () => {
-    setLoading(true);
-    try {
-      const resp = await ResourceService.getUserResources({
-        limit: 50,
-        page: 1,
-      });
+const MisEntradasScreen: React.FC = () => {
+  const { tabs, onTabChange, activeTab } = useThemedTabs([
+    "Próximos",
+    "Anteriores",
+  ]);
+  const { acquiredEvents, isLoading, refresh } = useEvents();
 
-      console.log("UserResourcesScreen response:", resp);
+  const windowWidth = Dimensions.get("window").width;
+  const numColumns = windowWidth >= 760 ? 2 : 1;
 
-      // Handle response structure [items[], count] or direct items
-      let resourceData: any[] = [];
-      if (Array.isArray(resp)) {
-        if (resp.length === 2 && Array.isArray(resp[0])) {
-          // Paginated response: [items[], total]
-          resourceData = resp[0];
-        } else {
-          // Direct array
-          resourceData = resp;
-        }
-      } else if (resp && resp.data) {
-        // Standard paginated response with data property
-        resourceData = resp.data;
-      }
+  if (isLoading) return <CustomLoader />;
 
-      setItems(resourceData || []);
-    } catch (err) {
-      const message = getBackendErrorMessage(err)
-      notify.error({ message })
-    } finally {
-      setLoading(false);
-    }
-  };
+  const now = Date.now();
+  const proximos = acquiredEvents.filter((e: any) =>
+    e?.event_date ? new Date(e.event_date).getTime() >= now : true
+  );
+  const anteriores = acquiredEvents.filter((e: any) =>
+    e?.event_date ? new Date(e.event_date).getTime() < now : false
+  );
 
-  useEffect(() => {
-    load();
-  }, []);
+  const listToShow = activeTab === "Próximos" ? proximos : anteriores;
 
-  const filters = {
-    Activos: (item: any) => {
-      return item.expires_at > Date.now();
-    },
-    Expirados: (item: any) => item.expires_at < Date.now(),
-  };
-  // TODO FIN 
-  
-  const filtered = getFilteredByActiveTab(items, filters);
-  const notify = useNotify()
-  const { navigate } = useCustomNavigation();
-
-  if (loading) {
-    return (
-      <CustomLoader/>
-    );
-  }
+  const renderItem = ({ item }: { item: any }) => (
+    <View style={[styles.itemContainer, numColumns > 1 && styles.itemTablet]}>
+      <AcquiredEventCard {...item} />
+    </View>
+  );
 
   return (
     <View style={styles.container}>
-      <ThemedHeader title="Mis Beneficios" canGoBack />
+      <ThemedHeader title="Mis Entradas" canGoBack />
       <ThemedTabs tabs={tabs} onTabChange={onTabChange} />
+
       <FlatList
-        data={filtered}
-        keyExtractor={(i) => String(i.id)}
-        renderItem={({ item }) => (
-          <UserResourceCard
-            item={item}
-            onUse={(it) => {
-              // Redirigir al scanner QR pasando el recurso seleccionado
-              navigate("QR", { pendingRedemption: it });
-            }}
-            onDetails={(it) => {
-              notify.info({ message: `Detalle: ${JSON.stringify(it)}` });
-            }}
-          />
-        )}
-        contentContainerStyle={{ padding: 16 }}
+        data={listToShow}
+        keyExtractor={(ev: any) =>
+          String(ev.user_pass_id || ev.id || ev.event_pass_id)
+        }
+        renderItem={renderItem}
+        contentContainerStyle={styles.listContent}
+        numColumns={numColumns}
+        columnWrapperStyle={numColumns > 1 ? styles.columnWrapper : undefined}
         ListEmptyComponent={() => (
-          <View style={{ padding: 16 }}>
-            <Text>No tienes beneficios activos.</Text>
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>
+              {activeTab === "Próximos"
+                ? "No tienes entradas próximas."
+                : "No hay entradas anteriores."}
+            </Text>
           </View>
         )}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={() => refresh().catch(() => {})}
+          />
+        }
       />
     </View>
   );
 };
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F7F7F8" },
-  containerCentered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 8,
-  },
-  headerLeft: { flexDirection: "row", alignItems: "center" },
-  header: { fontSize: 20, fontWeight: "700", marginLeft: 8 },
-  filterRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
-    paddingTop: 16,
-  },
-  filterOptions: { flexDirection: "row", marginLeft: 8 },
-  filterBtn: {
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 20,
-    backgroundColor: "transparent",
-    marginLeft: 6,
-  },
-  filterBtnActive: { backgroundColor: "#FFEDD8" },
-  filterText: { color: "#6B7280", fontSize: 13 },
-  filterTextActive: { color: "#FF6B35", fontWeight: "700" },
+  listContent: { padding: 12, paddingBottom: 24 },
+  itemContainer: { marginBottom: 12, width: "100%" },
+  itemTablet: { flex: 1, paddingHorizontal: 8 },
+  columnWrapper: { justifyContent: "space-between" },
+  emptyContainer: { padding: 20 },
+  emptyText: { textAlign: "center", color: "#666" },
 });
 
-export default UserResourcesScreen;
+export default MisEntradasScreen;

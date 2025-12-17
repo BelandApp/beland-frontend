@@ -30,6 +30,9 @@ export const useWallet = () => {
       const w = await PaymentService.getWallet();
       setWallet(w);
 
+      // Evitar llamada duplicada: usar el id retornado por PaymentService.getWallet
+      if (w && w.id) setWalletId(w.id);
+
       const parsedBalance = w.becoin_balance || 0;
       const parsedLocked = w.locked_balance || 0;
 
@@ -47,17 +50,6 @@ export const useWallet = () => {
   /** -----------------------------------------
    *  FETCH: WALLET ID
    ------------------------------------------*/
-  const fetchWalletId = useCallback(async () => {
-    if (!user) return;
-
-    try {
-      const w = await WalletService.getCurrentUserWallet();
-      setWalletId(w.id);
-    } catch (err) {
-      setWalletId(null);
-    }
-  }, [user]);
-
   /** -----------------------------------------
    *  FETCH: TRANSACTIONS
    ------------------------------------------*/
@@ -82,7 +74,6 @@ export const useWallet = () => {
   useEffect(() => {
     if (!user) return;
 
-    fetchWalletId();
     fetchWallet();
   }, [user]);
 

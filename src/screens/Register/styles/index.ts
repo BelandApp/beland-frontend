@@ -11,8 +11,6 @@ export const styles = StyleSheet.create({
   container: {
     flexDirection: "column",
     justifyContent: "center",
-    marginHorizontal: width > 600 ? "auto" : 0,
-    marginBottom: "auto",
     padding: 20,
     borderRadius: 20,
     borderTopLeftRadius: 120,
@@ -20,7 +18,8 @@ export const styles = StyleSheet.create({
     width: width > 600 ? 600 : width,
     gap: 5,
     backgroundColor: colors.belandOrange,
-    height: Platform.OS === "web" ? "auto" : height * 0.5,
+    margin: "auto",
+    marginBottom: 0,
   },
   inputsContainer: {
     width: "100%",
@@ -54,11 +53,15 @@ export const styles = StyleSheet.create({
   },
   buttonLink: {
     paddingHorizontal: 0,
+    color: "white",
+    textDecorationLine: "underline",
   },
   buttonText: { color: colors.belandOrange, fontWeight: "bold" },
   containerRow: {
     flexDirection: "row",
     gap: 4,
     alignItems: "center",
+    marginHorizontal: "auto",
+    marginBottom: 20,
   },
 });

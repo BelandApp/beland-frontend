@@ -13,6 +13,7 @@ import { CircleArrowLeftIcon } from "lucide-react-native";
 import RegisterStep from "./components/RegisterStep";
 import { useRegister } from "./hook/useRegister";
 import CodeStep from "../NewPassword/components/Code.step";
+import { Button } from "src/components";
 
 export type RegisterFormData = {
   email: string;
@@ -58,6 +59,7 @@ export default function RegisterScreen() {
         <CircleArrowLeftIcon size={32} color="#FFF" />
       </TouchableOpacity>
       <LoginWave />
+
       <View style={styles.container}>
         <Text style={styles.title}>
           {step === "register" ? "Nueva cuenta" : "Confirma tu correo"}
@@ -80,6 +82,16 @@ export default function RegisterScreen() {
             isLoading={isLoading}
           />
         )}
+      </View>
+      <View style={styles.containerRow}>
+        <Text style={styles.subtitle}>¿Ya tienes cuenta? </Text>
+        <Button
+          title="Inicia Sesión"
+          onPress={() => navigate("Login")}
+          style={{ paddingLeft: 0 }}
+          textStyle={styles.buttonLink}
+          variant="inline"
+        />
       </View>
     </ScrollView>
   );

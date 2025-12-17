@@ -3,7 +3,23 @@
  * Handles product browsing, categories, and inventory management
  */
 
-import { CreateProductDto, Product, ProductInventory, ProductQuery, UpdateProductDto, Category } from "src/types";
+import {
+  CreateProductDto,
+  Product,
+  ProductInventory,
+  ProductQuery,
+  UpdateProductDto,
+  Category,
+} from "src/types";
+// Re-export types for downstream consumers
+export type {
+  CreateProductDto,
+  Product,
+  ProductInventory,
+  ProductQuery,
+  UpdateProductDto,
+  Category,
+} from "src/types";
 import { CoreApiService, PaginatedResponse } from "./core/ApiService";
 
 // Product Types

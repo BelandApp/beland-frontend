@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { ScrollView, View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
+import {
+  ScrollView,
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import mapboxService, { MapboxSuggestion } from "src/services/mapboxService";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors } from "src/styles";
@@ -43,7 +50,8 @@ const SearchMapInput: React.FC<SearchMapInputProps> = ({
           searchQuery,
           {
             language: "es",
-            limit: 5,
+            limit: 6,
+            country: "EC",
           }
         );
         setSuggestions(results || []);
@@ -91,7 +99,10 @@ const SearchMapInput: React.FC<SearchMapInputProps> = ({
   return (
     <View>
       <View style={styles.searchContainer}>
-        <View style={styles.searchBarContainer} onBlur={()=>setSuggestions([])}>
+        <View
+          style={styles.searchBarContainer}
+          onBlur={() => setSuggestions([])}
+        >
           <SearchBarInput
             onSearchChange={setSearchQuery}
             searchQuery={searchQuery}
@@ -200,8 +211,12 @@ const styles = StyleSheet.create({
     top: 55,
     left: 0,
     right: 0,
-    zIndex: 99,
-    elevation:3
+    zIndex: 9999,
+    elevation: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
   },
   suggestionItem: {
     flexDirection: "row",

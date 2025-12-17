@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
+import "./global.css";
 import { Platform } from "react-native";
 
 import { View } from "react-native";
@@ -18,6 +19,8 @@ import {
 } from "./src/components/layout/RootStackNavigator";
 import { FloatingQRButton } from "./src/components/ui/FloatingQRButton";
 import { useAuth, AuthProvider } from "src/context";
+import { TokenService } from "src/services/auth/token.service";
+import { SocketService } from "src/services/SocketService";
 import { NotificationProvider } from "./src/hooks/NotificationContext";
 import { NotificationBanner } from "./src/components/ui/NotificationBanner";
 import PayphoneSuccessScreen from "./src/screens/Wallet/PayphoneSuccessScreen";
@@ -42,9 +45,26 @@ const AppContent = () => {
   );
   // Conexión global a sockets para notificaciones de pagos
   usePaymentSocket(() => {});
-
-  // Conexión global a sockets para notificaciones de órdenes (para admins)
   useOrderSocket(() => {});
+
+  // Conectar socket globalmente una sola vez usando el token almacenado
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const token = await TokenService.getToken();
+        if (mounted && token) {
+          SocketService.getInstance().connect(token);
+        }
+      } catch (e) {
+        // ignore
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // Padding dinámico para web móvil
   useEffect(() => {
@@ -111,6 +131,7 @@ const AppContent = () => {
     currentRoute !== "NewPaymentScreen" &&
     currentRoute !== "ProductsManagement" &&
     currentRoute !== "UserDashboardScreen" &&
+    currentRoute !== "CreateGroup" &&
     currentRoute &&
     !walletActionScreens.includes(currentRoute) &&
     !!user;

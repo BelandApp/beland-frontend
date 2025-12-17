@@ -3,3 +3,5 @@ export { SimpleGroupCard } from "./SimpleGroupCard";
 export { GroupsList } from "./GroupsList";
 export { EmptyState } from "./EmptyState";
 export { GroupTypeFilter } from "./GroupTypeFilter";
+export { GroupCard } from "./GroupCard";
+export { GroupDetail } from "./GroupDetail";

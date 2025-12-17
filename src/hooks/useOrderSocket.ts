@@ -23,6 +23,8 @@ export function useOrderSocket(onOrderCreated?: (data: any) => void) {
     if (!user?.id) return;
 
     let isMounted = true;
+    // callback declarado en scope exterior para que el cleanup pueda acceder
+    let onPayment: ((data: any) => void) | null = null;
 
     const initSocket = async () => {
       let token: string | null = null;
@@ -39,75 +41,68 @@ export function useOrderSocket(onOrderCreated?: (data: any) => void) {
 
       if (!token) return;
 
-      socketService.current = new SocketService();
-      socketService.current.connect(token);
+      const svc = SocketService.getInstance();
 
-      // El backend emite órdenes en 'payment-success'
-      // Diferenciamos por la estructura de datos
-      socketService.current.onPaymentSuccess(
-        async (data: {
-          order_id?: string;
-          total_becoin?: number;
-          items?: number;
-          [key: string]: any;
-        }) => {
-          if (!isMounted) return;
+      onPayment = async (data: {
+        order_id?: string;
+        total_becoin?: number;
+        items?: number;
+        status_old_id?: string;
+        status_new_id?: string;
+        [key: string]: any;
+      }) => {
+        if (!isMounted) return;
 
-          // Verificar si es una notificación de orden (tiene order_id, total_becoin, items)
-          const isOrderNotification =
-            data?.order_id &&
-            data?.total_becoin !== undefined &&
-            data?.items !== undefined;
+        const isStatusUpdate = data?.status_old_id || data?.status_new_id;
+        if (isStatusUpdate) return;
 
-          if (!isOrderNotification) {
-            // No es una orden, ignorar (puede ser pago o event-pass)
-            return;
-          }
+        const isOrderNotification =
+          data?.order_id &&
+          data?.total_becoin !== undefined &&
+          data?.items !== undefined;
 
-          console.log("[OrderSocket] Order created event received:", data);
+        if (!isOrderNotification) return;
 
-          // Extraer información disponible del backend
-          const orderId = data.order_id || "N/A";
-          const totalBecoin = parseFloat(String(data.total_becoin || 0));
-          const itemsCount = parseInt(String(data.items || 0));
+        console.log("[OrderSocket] Order created event received:", data);
 
-          // Crear ID corto para visualización (primeros 8 caracteres)
-          const shortOrderId =
-            orderId.length > 8 ? orderId.substring(0, 8) : orderId;
+        const orderId = data.order_id || "N/A";
+        const totalBecoin = parseFloat(String(data.total_becoin || 0));
+        const itemsCount = parseInt(String(data.items || 0));
+        const shortOrderId =
+          orderId.length > 8 ? orderId.substring(0, 8) : orderId;
+        const totalUsd = convertBeCoinsToUSD(totalBecoin);
 
-          // Calcular total en USD usando la función de conversión oficial
-          const totalUsd = convertBeCoinsToUSD(totalBecoin);
+        showNotification({
+          title: "🛍️ Nueva Orden Recibida",
+          message: `Orden #${shortOrderId}`,
+          amount: totalUsd,
+          persistent: true,
+          meta: {
+            type: "order",
+            order_id: orderId,
+            short_id: shortOrderId,
+            total_becoin: totalBecoin,
+            total_usd: totalUsd,
+            items_count: itemsCount,
+          },
+        });
 
-          // Mostrar notificación enriquecida con la info disponible
-          showNotification({
-            title: "🛍️ Nueva Orden Recibida",
-            message: `Orden #${shortOrderId}`,
-            amount: totalUsd,
-            persistent: true,
-            meta: {
-              type: "order",
-              order_id: orderId,
-              short_id: shortOrderId,
-              total_becoin: totalBecoin,
-              total_usd: totalUsd,
-              items_count: itemsCount,
-            },
-          });
+        if (onOrderCreated) onOrderCreated(data);
+      };
 
-          // Llamar callback opcional
-          if (onOrderCreated) {
-            onOrderCreated(data);
-          }
-        }
-      );
+      if (onPayment) svc.onPaymentSuccess(onPayment);
     };
 
     initSocket();
 
     return () => {
       isMounted = false;
-      socketService.current?.disconnect();
-      socketService.current = null;
+      try {
+        const svc = SocketService.getInstance();
+        if (onPayment) svc.off("payment-success", onPayment);
+      } catch (e) {
+        // ignore
+      }
     };
   }, [user?.id, onOrderCreated, showNotification]);
 }

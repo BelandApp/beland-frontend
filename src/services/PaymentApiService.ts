@@ -120,6 +120,7 @@ export interface TransactionQuery {
 }
 
 class PaymentServiceClass extends CoreApiService {
+  private _walletPromise: Promise<Wallet> | null = null;
   private readonly ENDPOINTS = {
     PAYMENT_TYPES: "payment-types",
     PAYMENT_METHODS: "payment-methods",
@@ -246,7 +247,14 @@ class PaymentServiceClass extends CoreApiService {
    * Get user's wallet information
    */
   async getWallet(): Promise<Wallet> {
-    return this.get<Wallet>(this.ENDPOINTS.WALLET);
+    // Coalesce concurrent wallet requests to avoid duplicate GETs
+    if (this._walletPromise) return this._walletPromise;
+    this._walletPromise = this.get<Wallet>(this.ENDPOINTS.WALLET).finally(
+      () => {
+        this._walletPromise = null;
+      }
+    );
+    return this._walletPromise;
   }
 
   /**
