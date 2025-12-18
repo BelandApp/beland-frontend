@@ -2,6 +2,7 @@
 import { create } from "zustand";
 interface NotificationBase {
   message: string;
+  message2?: string;
   meta?: Record<string, any> | null;
 }
 

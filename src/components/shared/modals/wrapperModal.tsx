@@ -5,32 +5,44 @@ import {
   ScrollView,
   StyleSheet,
   View,
+  Platform,
 } from "react-native";
 import Modal from "react-native-modal";
 import Toast from "react-native-toast-message";
 import { useCustomNavigation } from "src/hooks";
 import { colors } from "src/styles";
 import { toastConfig } from "../notification/GlobalNotification";
+import { useState } from "react";
 type WarpperModalProps = {
+  visible: boolean;
+  onClose: () => void;
+  header?: React.ReactNode;
   content: React.ReactNode;
   actions: React.ReactNode;
 };
-const WarpperModal: React.FC<WarpperModalProps> = ({ content, actions }) => {
-   const { goBack } = useCustomNavigation();
+const WarpperModal: React.FC<WarpperModalProps> = ({ content, actions,header,visible, onClose }) => {
+  const { goBack } = useCustomNavigation();
   return (
     <Modal
+      isVisible={visible}
       backdropOpacity={0.3}
-      isVisible={true}
-      onBackdropPress={goBack}
-      onSwipeComplete={goBack}
+      onBackdropPress={onClose}
+      onSwipeComplete={onClose}
+      swipeDirection="down"
       propagateSwipe
       style={styles.modal}
-      swipeDirection="down"
     >
       <View style={styles.header}>
-        <Pressable onPress={goBack}>
-          <SquareChevronDown color={colors.textSecondary} size={26} />
-        </Pressable>
+        {header ? (
+          header
+        ) : (
+          <Pressable
+            onPress={() => goBack()}
+            style={{ alignSelf: "flex-end", marginVertical: 10 }}
+          >
+            <SquareChevronDown color={colors.textSecondary} size={26} />
+          </Pressable>
+        )}
       </View>
       <ScrollView
         style={styles.scroll}
@@ -55,12 +67,11 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     overflow: "hidden",
-    marginTop: 15
+    marginTop: Platform.OS !== "web" ? Dimensions.get("window").height * 0.05 : 15
   },
   header: {
-    height: 38,
-    alignItems: "flex-end",
-    justifyContent: "center",
+    minHeight: 38,
+    width: "100%",
     paddingHorizontal: 16,
   },
   footer: {

@@ -21,7 +21,7 @@ import type {
 } from "src/services/addressService";
 import * as mapboxService from "src/services/mapboxService";
 import type { MapboxSuggestion } from "src/services/mapboxService";
-import { AddressMapPicker } from "src/screens/Catalog/components/AddressMapPicker";
+import { AddressMapPicker } from "@/components";
 
 interface AddressManagementModalProps {
   visible: boolean;

@@ -1,3 +1,5 @@
+//! VER SI SE USA
+
 import React from "react";
 import {
   Modal,
@@ -9,7 +11,7 @@ import {
 } from "react-native";
 import { Group } from "../../../types/Group";
 import { isUserAdminOfGroup } from "../../../utils/groupHelpers";
-import { useAuth } from "../../../hooks/AuthContext";
+import { useAuth } from "@/context";
 
 interface GroupSelectModalProps {
   visible: boolean;

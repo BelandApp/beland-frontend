@@ -7,24 +7,30 @@ import {
   StyleSheet,
   RefreshControl,
 } from "react-native";
-import { BeCoinsBalance, CustomLoader } from "@components/shared";
 
 // Hooks
-import { useCatalogCart, useCatalogFilters, useCatalogModals } from "./hooks";
-import { useCustomNavigation, useNotify } from "@/hooks";
+import {
+  useCatalogCart,
+  useCatalogFilters,
+  useCatalogModals,
+  useFilteredProducts,
+  useCatalogTabs,
+} from "./hooks";
+import { useCustomNavigation, useNotify, useCategories } from "@/hooks";
 // Components
-import { FilterPanel, ProductGrid } from "./components";
-import { OrderDeliveryModal } from "./components/OrderDeliveryModal";
-import { SearchBarInput } from "@components/shared";
-import { CartBottomSheet } from "./components/CartBottomSheet";
-// Styles
-import { containerStyles, productStyles } from "./styles";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import {
+  BeCoinsBalance,
+  CustomLoader,
+  SearchBarInput,
+} from "@components/shared";
 import { ThemedHeader } from "@/components";
-import { useFilteredProducts } from "./mainHooks/useFilteredProducts";
-import { useCategories } from "src/hooks/categories/useCategories";
-import { useCatalogTabs } from "./hooks/useCatalogTabs";
-import { buildCatalogTabs, CatalogTabs } from "./component/catalogTab";
+import { ProductGrid } from "./components";
+import { OrderDeliveryModal } from "./components/OrderDeliveryModal";
+import { CartBottomSheet } from "./components/CartBottomSheet";
+import { buildCatalogTabs, CatalogTabs } from "./components/catalogTab";
+// Styles
+import { containerStyles } from "./styles";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 export const CatalogScreen = () => {
   const { navigate } = useCustomNavigation();

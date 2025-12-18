@@ -4,7 +4,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors } from "src/styles";
 import { Button, CustomInput, PhoneInput } from "src/components";
 import { useNewAddress } from "../../hooks/useNewAddress";
-import { AddressMapPicker } from "../AddressMapPicker";
+import { AddressMapPicker } from "@/components";
 import SearchMapInput from "src/components/shared/input/SearchMap.input";
 interface AddressFormProps {
   initialAddress?: DeliveryAddress;
