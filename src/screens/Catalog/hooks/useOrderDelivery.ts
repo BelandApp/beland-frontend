@@ -16,8 +16,6 @@ import { CartService } from "@/services";
 import {
   CreateOrderRequest,
   DeliveryAddress,
-  OrderItem,
-  Product,
 } from "src/types";
 
 export type DeliveryStep = "select" | "form" | "processing";
@@ -25,6 +23,7 @@ export type preOrderType = {
   products: any[];
   address: UserAddress;
   addressId: string;
+  cost: number;
 };
 export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
   const [step, setStep] = useState<DeliveryStep>("select");
@@ -115,13 +114,19 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
         quantity: item.quantity,
         image: item.product?.image_url,
       }));
-
+      const deliveryCost = await CartService.estimateShipping({
+        customerLat: address.latitude,
+        customerLon: address.longitude,
+        driverLat: address.latitude,
+        driverLon: address.longitude,
+      });
       setSelectedAddress(address);
       setSelectedAddressId(id);
       setPreOrder({
         products: backendItems, // Usar items del backend
         address: address,
         addressId: id,
+        cost: deliveryCost.cost || 2.5
       });
       setStep("processing");
     } catch (e) {

@@ -181,7 +181,7 @@ export const ConfirmOrder: React.FC<ProcessingStepProps> = ({
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Envío</Text>
               <Text style={styles.totalValue}>
-                Usd$ {SHIPPING_COST.toFixed(2)}
+                Usd$ {SHIPPING_COST}
               </Text>
             </View>
             <View style={styles.divider} />

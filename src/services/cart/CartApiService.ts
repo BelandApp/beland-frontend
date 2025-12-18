@@ -76,6 +76,7 @@ class CartServiceClass extends CoreApiService {
     CART_ADDRESS: "carts/address",
     CART_ITEMS: "cart-items",
     CART_ITEMS_QUANTITY: "cart-items/quantity",
+    DELIVERY_COST: "delivery/cost",
   } as const;
 
   /**
@@ -165,19 +166,20 @@ class CartServiceClass extends CoreApiService {
    * Estimate shipping cost for current cart
    */
   async estimateShipping(data: {
-    address_id?: string;
-    postal_code?: string;
-    city?: string;
-    country?: string;
+    driverLat: number;
+    driverLon: number;
+    customerLat: number;
+    customerLon: number;
   }): Promise<{
-    shipping_options: {
-      id: string;
-      name: string;
-      price: number;
-      estimated_days: number;
-    }[];
+    ok: boolean;
+    distanceKm: number;
+    durationMin: number;
+    cost: number;
   }> {
-    return this.post("cart/shipping-estimate", data);
+    return this.post(
+      this.ENDPOINTS.DELIVERY_COST,
+      data
+    );
   }
 }
 
