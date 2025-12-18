@@ -42,7 +42,13 @@ export const useFilteredProducts = ({
     // 🔎 búsqueda por texto
     if (searchText.trim()) {
       const q = searchText.toLowerCase();
-      result = result.filter((p) => p.name.toLowerCase().includes(q));
+
+      result = result.filter((p) => {
+        const nameMatch = p.name.toLowerCase().includes(q);
+        const categoryMatch = p.category?.name?.toLowerCase().includes(q);
+
+        return nameMatch || categoryMatch;
+      });
     }
 
     // 💲 precio mínimo
