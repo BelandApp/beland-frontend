@@ -1,434 +1,368 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Modal, FlatList } from "react-native";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import React from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
   TextInput,
-  StyleSheet,
+  TouchableOpacity,
   ScrollView,
+  SafeAreaView,
+  StatusBar,
   ActivityIndicator,
+  Modal,
+  FlatList,
 } from "react-native";
-import { useAuth } from "src/context";
-import { convertBeCoinsToUSD, formatUSDPrice } from "../../constants/currency";
-import {
-  WithdrawService,
-  WithdrawAccount,
-} from "../../services/withdrawService";
-import { useWallet } from "./hooks/useWalletData";
-import { getBackendErrorMessage } from "src/services";
-import { useNotify } from "src/hooks";
-import { useBeCoinsStore } from "src/stores";
-import { ThemedHeader } from "src/components/shared/headers/Header";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useCanjear } from "./hooks/useCanjear";
 
-const CanjearScreen: React.FC<{
+interface CanjearScreenProps {
   navigation: any;
   route?: any;
   balance?: number;
-}> = ({ navigation, route, balance: propBalance }) => {
-  const { user, handleAuth0Login } = useAuth();
-  const notify = useNotify();
-  // TODO MOVER A UN HOOK
-  const [amount, setAmount] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedWithdrawAccount, setSelectedWithdrawAccount] =
-    useState<WithdrawAccount | null>(null);
-  const [withdrawAccounts, setWithdrawAccounts] = useState<WithdrawAccount[]>(
-    []
-  );
-  const [loadingAccounts, setLoadingAccounts] = useState(true);
-  const [showAccountSelector, setShowAccountSelector] = useState(false);
-  const { balance, locked_balance, setBalance } = useBeCoinsStore();
-  const { refreshAll } = useWallet();
+}
 
-  // Cargar cuentas de retiro al montar el componente
-  useEffect(() => {
-    loadWithdrawAccounts();
-  }, []);
+const CanjearScreen: React.FC<CanjearScreenProps> = ({ navigation }) => {
+  const {
+    // Estados
+    amount,
+    isLoading,
+    selectedWithdrawAccount,
+    withdrawAccounts,
+    loadingAccounts,
+    showAccountSelector,
+    balance,
+    locked_balance,
 
-  const loadWithdrawAccounts = async () => {
-    try {
-      setLoadingAccounts(true);
-      const response = await WithdrawService.getWithdrawAccounts();
-      const activeAccounts = response.data.filter(
-        (account: WithdrawAccount) => account.is_active
-      );
-      setWithdrawAccounts(activeAccounts);
+    // Valores calculados
+    parsedAmount,
+    isAmountValid,
+    canContinue,
+    amounts,
 
-      // Si solo hay una cuenta activa, seleccionarla automáticamente
-      if (activeAccounts.length === 1) {
-        setSelectedWithdrawAccount(activeAccounts[0]);
-      }
-    } catch (error) {
-      console.error("Error cargando cuentas de retiro:", error);
-      const message = getBackendErrorMessage(error);
-      notify.error({ message: message || "Error cargando cuentas de retiro" });
-    } finally {
-      setLoadingAccounts(false);
-    }
-  };
+    // Funciones de formato
+    getAccountDisplayName,
+    getAccountTitle,
 
-  const parsedAmount = parseFloat(amount) || 0;
-  const isAmountValid = parsedAmount > 0 && parsedAmount <= balance;
-  const canContinue =
-    isAmountValid && selectedWithdrawAccount && !loadingAccounts;
+    // Handlers
+    handleAmountChange,
+    handleBuy,
+    handleAddAccount,
+    handleSelectAccount,
+    setShowAccountSelector,
+    setPresetAmount,
 
-  const handleBuy = async () => {
-    if (!isAmountValid) {
-      notify.error({
-        message:
-          "Por favor ingresa un monto valido dentro de tu saldo disponible.",
-      });
+    // Utilidades
+    formatUSDPrice,
+    convertBeCoinsToUSD,
+  } = useCanjear(navigation);
 
-      return;
-    }
-
-    if (!selectedWithdrawAccount) {
-      notify.error({
-        message: "Por favor selecciona una cuenta donde recibir tu dinero.",
-      });
-      return;
-    }
-
-    if (!user?.id) {
-      notify.confirm({
-        message: "Debes iniciar sesión para adquirir",
-        onConfirm: () => handleAuth0Login(),
-      });
-      return;
-    }
-    notify.confirm({
-      message: selectedWithdrawAccount
-        ? `¿Estás seguro de que quieres retirar ${formatUSDPrice(
-            convertBeCoinsToUSD(parsedAmount)
-          )} USD (${parsedAmount} BeCoins) a tu cuenta ${getAccountNameForConfirmation(
-            selectedWithdrawAccount
-          )}?`
-        : "¿Confirmas esta operación?",
-      onConfirm: () => confirmWithdraw(),
-    });
-  };
-
-  const confirmWithdraw = async () => {
-    try {
-      setIsLoading(true);
-      // Solicitar el retiro
-      const withdrawRequest = {
-        amountBecoin: parsedAmount,
-        withdraw_account_id: selectedWithdrawAccount!.id,
-      };
-
-      console.log("💰 Solicitando retiro:", withdrawRequest);
-      const response = await WithdrawService.requestWithdraw(withdrawRequest);
-
-      if (response) {
-        // Actualizar balance local
-        setBalance(parsedAmount);
-
-        // Registrar transacción local (nota: implementar si se requiere registro local)
-
-        // Refrescar datos del wallet
-        if (refreshAll) {
-          refreshAll();
-        }
-
-        // Mostrar éxito
-        notify.success({
-          message: `¡Retiro exitoso! Se han transferido ${formatUSDPrice(
-            convertBeCoinsToUSD(parsedAmount)
-          )} USD a tu cuenta ${getAccountNameForConfirmation(
-            selectedWithdrawAccount!
-          )}.`,
-        });
-        // Limpiar formulario
-        setAmount("");
-        setSelectedWithdrawAccount(null);
-      }
-    } catch (error: any) {
-      console.error("Error en el retiro:", error);
-      let errorMessage = "Ocurrió un error inesperado. Intenta nuevamente.";
-
-      if (error?.message) {
-        errorMessage = error.message;
-      } else if (error?.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      }
-      notify.error({ message: errorMessage });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const getAccountDisplayName = (account: WithdrawAccount) => {
-    if (account.withdraw_account_type?.code === "WALLET") {
-      const provider = account.provider || "Billetera virtual";
-      const phone = account.phone || "N/A";
-      return `${provider} - Tel: ${phone}`;
-    } else if (account.withdraw_account_type?.code === "BANK") {
-      if (account.cbu) {
-        return `Cuenta bancaria - CBU: ***${account.cbu.slice(-4)}`;
-      } else if (account.alias) {
-        return `Cuenta bancaria - Alias: ${account.alias}`;
-      } else {
-        return "Cuenta bancaria";
-      }
-    }
-    return account.alias || account.owner_name || "Cuenta";
-  };
-
-  const getAccountTitle = (account: WithdrawAccount) => {
-    if (account.alias) {
-      return account.alias;
-    }
-    if (account.withdraw_account_type?.code === "WALLET" && account.provider) {
-      return `${account.provider} - ${account.owner_name}`;
-    }
-    return account.owner_name || "Cuenta";
-  };
-
-  const getAccountNameForConfirmation = (account: WithdrawAccount) => {
-    if (account.alias) {
-      return account.alias;
-    }
-    if (account.cbu) {
-      return `CBU ***${account.cbu.slice(-4)}`;
-    }
-    if (account.provider && account.phone) {
-      return `${account.provider} (${account.phone})`;
-    }
-    if (account.provider) {
-      return account.provider;
-    }
-    return account.owner_name || "tu cuenta";
-  };
-
-  // Función para validar que solo se ingresen números
-  const handleAmountChange = (text: string) => {
-    // Permitir solo números, un punto decimal y texto vacío
-    const numericRegex = /^[0-9]*\.?[0-9]*$/;
-
-    // Si el texto está vacío, permitirlo
-    if (text === "") {
-      setAmount(text);
-      return;
-    }
-
-    // Si el texto cumple con el patrón numérico
-    if (numericRegex.test(text)) {
-      // Evitar múltiples puntos decimales
-      const dotCount = (text.match(/\./g) || []).length;
-      if (dotCount <= 1) {
-        // No permitir que empiece con punto
-        if (!text.startsWith(".")) {
-          // Limitar a 2 decimales después del punto
-          const parts = text.split(".");
-          if (parts.length === 1 || parts[1].length <= 2) {
-            // No permitir números que empiecen con múltiples ceros (excepto 0.xx)
-            if (!text.match(/^0[0-9]/)) {
-              setAmount(text);
-            }
-          }
-        }
-      }
-    }
-  };
-
-  // UI del componente
+  // Estados de carga
   if (loadingAccounts) {
     return (
-      <View style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FF6B35" />
-          <Text style={styles.loadingText}>Cargando cuentas...</Text>
+      <SafeAreaView className="flex-1 bg-gray-100 dark:bg-[#0B1120]">
+        <View className="flex-1 justify-center items-center">
+          <ActivityIndicator size="large" color="#F58220" />
+          <Text className="mt-3 text-base text-gray-600 dark:text-gray-400">
+            Cargando cuentas...
+          </Text>
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
+  // Estado vacío - sin cuentas
   if (withdrawAccounts.length === 0) {
     return (
-      <View style={styles.container}>
-        <View style={styles.emptyStateContainer}>
+      <SafeAreaView className="flex-1 bg-gray-100 dark:bg-[#0B1120]">
+        <View className="flex-1 justify-center items-center px-8">
           <MaterialCommunityIcons
             name="bank-off"
             size={64}
             color="#9CA3AF"
-            style={styles.emptyIcon}
+            style={{ marginBottom: 16 }}
           />
-          <Text style={styles.emptyTitle}>No tienes cuentas de retiro</Text>
-          <Text style={styles.emptySubtitle}>
+          <Text className="text-xl font-bold text-gray-900 dark:text-white mb-2 text-center">
+            No tienes cuentas de retiro
+          </Text>
+          <Text className="text-sm text-gray-600 dark:text-gray-400 text-center leading-5 mb-6">
             Para canjear tus BeCoins por dinero real, primero necesitas agregar
             una cuenta bancaria o método de pago.
           </Text>
           <TouchableOpacity
-            style={styles.addAccountButton}
-            onPress={() =>
-              navigation.navigate("MainTabs", { screen: "Wallet" })
-            }
+            className="bg-[#F58220] px-6 py-3 rounded-xl"
+            onPress={handleAddAccount}
           >
-            <Text style={styles.addAccountButtonText}>Agregar cuenta</Text>
+            <Text className="text-white text-base font-semibold">
+              Agregar cuenta
+            </Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
+  // Vista principal
   return (
-    <View style={styles.container}>
-      <ScrollView
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-      >
-        <ThemedHeader
-          title="Canjear BeCoins"
-          onBackPress={() => navigation.goBack()}
-        />
+    <SafeAreaView className="flex-1 bg-white dark:bg-[#0B1120]">
+      <StatusBar barStyle="light-content" />
 
-        {/* Balance Card */}
-        <View style={styles.balanceSection}>
-          <Text style={styles.balanceLabel}>Saldo disponible</Text>
-          <Text style={styles.balanceAmount}>
-            {balance.toLocaleString()} BeCoins
-          </Text>
-          {locked_balance > 0 && (
-            <View style={styles.lockedBalanceContainer}>
-              <Text style={styles.lockedBalanceLabel}>Balance bloqueado</Text>
-              <Text style={styles.lockedBalanceAmount}>
-                {locked_balance.toLocaleString()} BeCoins
+      {/* Header */}
+      <View className="bg-[#F58220] px-4 py-4 flex-row items-center justify-between">
+        <View className="flex-row items-center gap-4">
+          <TouchableOpacity
+            className="p-2 rounded-full active:bg-white/20"
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back" size={24} color="#FFF" />
+          </TouchableOpacity>
+          <Text className="text-white text-xl font-bold">Canjear</Text>
+        </View>
+
+        <View className="flex-row items-center gap-3">
+          <View className="h-10 w-10 rounded-full bg-green-700 items-center justify-center border-2 border-white">
+            <Text className="text-white font-bold">G</Text>
+          </View>
+        </View>
+      </View>
+
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        <View className="px-4 py-6 pb-24">
+          {/* Balance Card */}
+          <View className="bg-gray-50 dark:bg-[#1F2937] rounded-2xl border border-gray-200 dark:border-gray-700 p-6 mb-6 items-center">
+            <Text className="text-sm text-gray-500 dark:text-gray-400 uppercase mb-2">
+              Disponible
+            </Text>
+            <View className="flex-row items-baseline mb-2">
+              <View className="w-8 h-8 rounded-full bg-yellow-400 items-center justify-center mr-2">
+                <Text className="text-yellow-900 font-bold text-xs">BC</Text>
+              </View>
+              <Text className="text-4xl font-bold text-gray-900 dark:text-white">
+                {balance.toLocaleString()}
               </Text>
             </View>
-          )}
-          <Text style={styles.balanceUSD}>
-            ≈ ${formatUSDPrice(convertBeCoinsToUSD(balance))} USD
-          </Text>
-        </View>
-
-        {/* Amount Input */}
-        <View style={styles.inputSection}>
-          <Text style={styles.inputLabel}>Cantidad a canjear</Text>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={[
-                styles.amountInput,
-                !isAmountValid && amount !== "" && styles.inputError,
-              ]}
-              placeholder="0"
-              value={amount}
-              onChangeText={handleAmountChange}
-              keyboardType="numeric"
-              maxLength={10}
-              autoCorrect={false}
-              autoCapitalize="none"
-            />
-            <Text style={styles.currencyLabel}>BeCoins</Text>
-          </View>
-
-          {!isAmountValid && amount !== "" && (
-            <Text style={styles.errorText}>
-              {parsedAmount > balance
-                ? "No tienes suficientes BeCoins"
-                : "Ingresa un monto válido"}
+            <Text className="text-base text-gray-600 dark:text-gray-400 mb-4">
+              ≈ ${formatUSDPrice(convertBeCoinsToUSD(balance))} USD Total
+              estimado
             </Text>
-          )}
 
-          {amount && isAmountValid && (
-            <Text style={styles.conversionText}>
-              ≈ ${formatUSDPrice(convertBeCoinsToUSD(parsedAmount))} USD
-            </Text>
-          )}
-        </View>
-
-        {/* Preset Amounts */}
-        <View style={styles.presetsSection}>
-          <Text style={styles.presetsLabel}>Montos rápidos</Text>
-          <View style={styles.presetsContainer}>
-            {[100, 200, 500, 1000, balance].map(
-              (preset, index) =>
-                preset > 0 && (
-                  <TouchableOpacity
-                    key={index}
-                    style={[
-                      styles.presetButton,
-                      parsedAmount === preset && styles.presetButtonSelected,
-                    ]}
-                    onPress={() => setAmount(preset.toString())}
-                  >
-                    <Text
-                      style={[
-                        styles.presetButtonText,
-                        parsedAmount === preset &&
-                          styles.presetButtonTextSelected,
-                      ]}
-                    >
-                      {preset === balance ? "Todo" : preset.toLocaleString()}
-                    </Text>
-                  </TouchableOpacity>
-                )
-            )}
-          </View>
-        </View>
-
-        {/* Account Selection */}
-        <View style={styles.accountSection}>
-          <Text style={styles.accountLabel}>Cuenta de destino</Text>
-
-          {selectedWithdrawAccount ? (
-            <TouchableOpacity
-              style={styles.selectedAccountContainer}
-              onPress={() => setShowAccountSelector(true)}
-            >
-              <View style={styles.accountInfo}>
-                <View style={styles.accountTypeContainer}>
-                  <Text style={styles.accountType}>
-                    {selectedWithdrawAccount.withdraw_account_type?.name || ""}
-                  </Text>
-                </View>
-                <Text style={styles.accountName}>
-                  {getAccountTitle(selectedWithdrawAccount)}
+            {locked_balance > 0 && (
+              <View className="pt-4 border-t border-gray-200 dark:border-gray-700 w-full items-center">
+                <Text className="text-xs text-gray-400 dark:text-gray-500 mb-1">
+                  Balance bloqueado
                 </Text>
-                <Text style={styles.accountDetails}>
-                  {getAccountDisplayName(selectedWithdrawAccount)}
+                <Text className="text-base font-semibold text-gray-400 dark:text-gray-500 italic">
+                  {locked_balance.toLocaleString()} BC
                 </Text>
               </View>
-              <Ionicons name="chevron-down" size={24} color="#6B7280" />
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              style={styles.selectAccountContainer}
-              onPress={() => setShowAccountSelector(true)}
-            >
-              <MaterialCommunityIcons
-                name="bank-plus"
-                size={32}
-                color="#9CA3AF"
-              />
-              <Text style={styles.selectAccountText}>Seleccionar cuenta</Text>
-              <Text style={styles.selectAccountSubtext}>
-                Elige dónde recibir tu dinero
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
+            )}
+          </View>
 
-        {/* Continue Button */}
-        <View style={styles.actionSection}>
-          <TouchableOpacity
-            style={[
-              styles.continueButton,
-              !canContinue && styles.continueButtonDisabled,
-            ]}
-            onPress={handleBuy}
-            disabled={!canContinue || isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
-              <Text style={styles.continueButtonText}>
-                Canjear {amount ? `${amount} BeCoins` : ""}
+          {/* Amount Input */}
+          <View className="mb-6">
+            <Text className="text-base font-semibold text-gray-900 dark:text-white mb-2">
+              Cantidad a canjear
+            </Text>
+            <View
+              className={`bg-white dark:bg-gray-800 rounded-xl border-2 ${
+                !isAmountValid && amount !== ""
+                  ? "border-red-500"
+                  : "border-gray-200 dark:border-gray-700"
+              } flex-row items-center px-4 py-4`}
+            >
+              <Text className="text-yellow-500 font-bold mr-3">BC</Text>
+              <TextInput
+                className="flex-1 text-lg font-semibold text-gray-900 dark:text-white"
+                placeholder="0.00"
+                value={amount}
+                onChangeText={handleAmountChange}
+                keyboardType="numeric"
+                maxLength={10}
+                placeholderTextColor="#9CA3AF"
+              />
+              <Text className="text-gray-400 text-sm">MAX</Text>
+            </View>
+
+            {!isAmountValid && amount !== "" && (
+              <Text className="text-sm text-red-500 mt-2">
+                {parsedAmount > balance
+                  ? "No tienes suficientes BeCoins"
+                  : "Ingresa un monto válido"}
               </Text>
             )}
-          </TouchableOpacity>
+
+            {amount && isAmountValid && (
+              <Text className="text-sm text-green-600 font-medium mt-2">
+                ≈ ${formatUSDPrice(convertBeCoinsToUSD(parsedAmount))} USD
+              </Text>
+            )}
+          </View>
+
+          {/* Preset Amounts */}
+          <View className="mb-6">
+            <Text className="text-base font-semibold text-gray-900 dark:text-white mb-3">
+              Montos rápidos
+            </Text>
+            <View className="flex-row flex-wrap gap-2">
+              {[100, 200, 500, 1000, balance].map(
+                (preset, index) =>
+                  preset > 0 && (
+                    <TouchableOpacity
+                      key={index}
+                      className={`px-4 py-2 rounded-full border ${
+                        parsedAmount === preset
+                          ? "bg-[#F58220] border-[#F58220]"
+                          : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
+                      }`}
+                      onPress={() => setPresetAmount(preset)}
+                    >
+                      <Text
+                        className={`text-sm font-medium ${
+                          parsedAmount === preset
+                            ? "text-white"
+                            : "text-gray-700 dark:text-gray-300"
+                        }`}
+                      >
+                        {preset === balance ? "Todo" : preset.toLocaleString()}
+                      </Text>
+                    </TouchableOpacity>
+                  )
+              )}
+            </View>
+          </View>
+
+          {/* Account Selection */}
+          <View className="mb-6">
+            <Text className="text-base font-semibold text-gray-900 dark:text-white mb-3">
+              Cuenta de destino
+            </Text>
+
+            {selectedWithdrawAccount ? (
+              <TouchableOpacity
+                className="flex-row items-center justify-between p-4 rounded-xl border-2 border-green-500 bg-green-50 dark:bg-green-900/20"
+                onPress={() => setShowAccountSelector(true)}
+              >
+                <View className="flex-1">
+                  <View className="mb-1">
+                    <Text className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase">
+                      {selectedWithdrawAccount.withdraw_account_type?.name ||
+                        ""}
+                    </Text>
+                  </View>
+                  <Text className="text-base font-semibold text-gray-900 dark:text-white mb-1">
+                    {getAccountTitle(selectedWithdrawAccount)}
+                  </Text>
+                  <Text className="text-sm text-gray-600 dark:text-gray-400">
+                    {getAccountDisplayName(selectedWithdrawAccount)}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-down" size={24} color="#6B7280" />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                className="items-center p-5 bg-gray-50 dark:bg-gray-800 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600"
+                onPress={() => setShowAccountSelector(true)}
+              >
+                <MaterialCommunityIcons
+                  name="bank-plus"
+                  size={32}
+                  color="#9CA3AF"
+                />
+                <Text className="text-base font-semibold text-gray-700 dark:text-gray-300 mt-2 text-center">
+                  Seleccionar cuenta
+                </Text>
+                <Text className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                  Elige dónde recibir tu dinero
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Info Banner */}
+          <View className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-400 p-4 rounded-r-lg mb-6">
+            <View className="flex-row">
+              <Text className="text-blue-400 text-xl mr-3">ℹ️</Text>
+              <Text className="text-sm text-blue-700 dark:text-blue-300 flex-1">
+                Los retiros suelen procesarse en un plazo de 24 a 48 horas
+                hábiles. Asegúrate de que los datos de tu cuenta bancaria sean
+                correctos para evitar rechazos.
+              </Text>
+            </View>
+          </View>
+
+          {/* Summary Card */}
+          <View className="bg-white dark:bg-[#1F2937] rounded-2xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
+            <View className="pt-4 border-t border-gray-100 dark:border-gray-700 gap-3">
+              <View className="flex-row justify-between">
+                <Text className="text-gray-600 dark:text-gray-400">
+                  Monto a canjear
+                </Text>
+                <Text className="font-medium text-gray-900 dark:text-white">
+                  {parsedAmount.toLocaleString()} BC
+                </Text>
+              </View>
+              <View className="flex-row justify-between">
+                <Text className="text-gray-600 dark:text-gray-400">
+                  Tasa de cambio
+                </Text>
+                <Text className="font-medium text-gray-900 dark:text-white">
+                  $0.05 / BC
+                </Text>
+              </View>
+              <View className="flex-row justify-between">
+                <Text className="text-gray-600 dark:text-gray-400">
+                  Comisión de servicio (1%)
+                </Text>
+                <Text className="font-medium text-red-500">
+                  -${amounts.fee}
+                </Text>
+              </View>
+              <View className="flex-row justify-between pt-3 border-t border-gray-100 dark:border-gray-700">
+                <Text className="font-bold text-gray-900 dark:text-white">
+                  Total a recibir
+                </Text>
+                <Text className="font-bold text-green-600">
+                  ${amounts.net} USD
+                </Text>
+              </View>
+            </View>
+
+            {/* Action Buttons */}
+            <TouchableOpacity
+              className={`mt-6 rounded-xl py-3 flex-row items-center justify-center ${
+                canContinue ? "bg-[#F58220]" : "bg-gray-300 dark:bg-gray-700"
+              }`}
+              onPress={handleBuy}
+              disabled={!canContinue || isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <>
+                  <Text className="text-xl mr-2">💱</Text>
+                  <Text className="text-white font-bold">
+                    Confirmar Canje
+                    {amount && ` ${amount} BeCoins`}
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              className="mt-3 bg-white dark:bg-gray-800 rounded-xl py-3 border border-gray-200 dark:border-gray-600"
+              onPress={() => navigation.goBack()}
+            >
+              <Text className="text-gray-700 dark:text-gray-300 font-medium text-center">
+                Cancelar
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Security Badge */}
+          <View className="flex-row items-center justify-center">
+            <Text className="text-gray-400 text-base mr-2">🔒</Text>
+            <Text className="text-xs text-gray-400 dark:text-gray-500">
+              Transacción encriptada y segura de extremo a extremo.
+            </Text>
+          </View>
         </View>
       </ScrollView>
 
@@ -439,10 +373,12 @@ const CanjearScreen: React.FC<{
         animationType="slide"
         onRequestClose={() => setShowAccountSelector(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Seleccionar cuenta</Text>
+        <View className="flex-1 bg-black/50 justify-end">
+          <View className="bg-white dark:bg-[#1F2937] rounded-t-3xl max-h-[80%]">
+            <View className="flex-row justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
+              <Text className="text-lg font-bold text-gray-900 dark:text-white">
+                Seleccionar cuenta
+              </Text>
               <TouchableOpacity onPress={() => setShowAccountSelector(false)}>
                 <Ionicons name="close" size={24} color="#6B7280" />
               </TouchableOpacity>
@@ -453,24 +389,21 @@ const CanjearScreen: React.FC<{
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
                 <TouchableOpacity
-                  style={[
-                    styles.accountOption,
-                    selectedWithdrawAccount?.id === item.id &&
-                      styles.accountOptionSelected,
-                  ]}
-                  onPress={() => {
-                    setSelectedWithdrawAccount(item);
-                    setShowAccountSelector(false);
-                  }}
+                  className={`flex-row items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800 ${
+                    selectedWithdrawAccount?.id === item.id
+                      ? "bg-green-50 dark:bg-green-900/20"
+                      : ""
+                  }`}
+                  onPress={() => handleSelectAccount(item)}
                 >
-                  <View style={styles.accountOptionInfo}>
-                    <Text style={styles.accountOptionName}>
+                  <View className="flex-1">
+                    <Text className="text-base font-semibold text-gray-900 dark:text-white mb-1">
                       {getAccountTitle(item)}
                     </Text>
-                    <Text style={styles.accountOptionDetails}>
+                    <Text className="text-sm text-gray-600 dark:text-gray-400 mb-0.5">
                       {getAccountDisplayName(item)}
                     </Text>
-                    <Text style={styles.accountOptionType}>
+                    <Text className="text-xs text-gray-400 dark:text-gray-500 uppercase">
                       {item.withdraw_account_type?.name || ""}
                     </Text>
                   </View>
@@ -488,346 +421,42 @@ const CanjearScreen: React.FC<{
           </View>
         </View>
       </Modal>
-    </View>
+
+      {/* Bottom Navigation */}
+      <View className="bg-white dark:bg-[#1F2937] border-t border-gray-200 dark:border-gray-800">
+        <View className="flex-row justify-between items-center h-16 px-4">
+          {[
+            { icon: "home", label: "Home" },
+            { icon: "wallet", label: "Wallet", active: true },
+            { icon: "document-text", label: "Catálogo" },
+            { icon: "people", label: "Eventos" },
+            { icon: "storefront", label: "Grupos" },
+          ].map((item, idx) => (
+            <TouchableOpacity
+              key={idx}
+              className="flex-1 items-center active:opacity-70"
+            >
+              {item.active && (
+                <View className="absolute -top-1 w-12 h-1 bg-[#F58220] rounded-b-full" />
+              )}
+              <Ionicons
+                name={item.icon as any}
+                size={24}
+                color={item.active ? "#F58220" : "#9CA3AF"}
+              />
+              <Text
+                className={`text-[10px] mt-1 ${
+                  item.active ? "text-[#F58220] font-medium" : "text-gray-500"
+                }`}
+              >
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+    </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-  },
-  scrollView: {
-    flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: "#6B7280",
-  },
-  emptyStateContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 32,
-  },
-  emptyIcon: {
-    marginBottom: 16,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#1F2937",
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  emptySubtitle: {
-    fontSize: 14,
-    color: "#6B7280",
-    textAlign: "center",
-    lineHeight: 20,
-    marginBottom: 24,
-  },
-  addAccountButton: {
-    backgroundColor: "#FF6B35",
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  addAccountButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#F9FAFB",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#1F2937",
-  },
-  headerRight: {
-    width: 40,
-  },
-  balanceSection: {
-    margin: 16,
-    padding: 20,
-    backgroundColor: "#F8FAFC",
-    borderRadius: 12,
-    alignItems: "center",
-  },
-  balanceLabel: {
-    fontSize: 14,
-    color: "#6B7280",
-    marginBottom: 4,
-  },
-  balanceAmount: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#1F2937",
-    marginBottom: 4,
-  },
-  balanceUSD: {
-    fontSize: 16,
-    color: "#6B7280",
-  },
-  lockedBalanceContainer: {
-    marginTop: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
-    alignItems: "center",
-    width: "100%",
-  },
-  lockedBalanceLabel: {
-    fontSize: 12,
-    color: "#9CA3AF",
-    marginBottom: 2,
-  },
-  lockedBalanceAmount: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#9CA3AF",
-    fontStyle: "italic",
-  },
-  inputSection: {
-    margin: 16,
-  },
-  inputLabel: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1F2937",
-    marginBottom: 8,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 2,
-    borderColor: "#E5E7EB",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    backgroundColor: "#FFFFFF",
-  },
-  amountInput: {
-    flex: 1,
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#1F2937",
-    paddingVertical: 16,
-  },
-  inputError: {
-    borderColor: "#EF4444",
-  },
-  currencyLabel: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#6B7280",
-  },
-  errorText: {
-    fontSize: 14,
-    color: "#EF4444",
-    marginTop: 8,
-  },
-  conversionText: {
-    fontSize: 14,
-    color: "#10B981",
-    marginTop: 8,
-    fontWeight: "500",
-  },
-  presetsSection: {
-    margin: 16,
-  },
-  presetsLabel: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1F2937",
-    marginBottom: 12,
-  },
-  presetsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  presetButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    backgroundColor: "#FFFFFF",
-  },
-  presetButtonSelected: {
-    backgroundColor: "#FF6B35",
-    borderColor: "#FF6B35",
-  },
-  presetButtonText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#6B7280",
-  },
-  presetButtonTextSelected: {
-    color: "#FFFFFF",
-  },
-  accountSection: {
-    margin: 16,
-  },
-  accountLabel: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1F2937",
-    marginBottom: 12,
-  },
-  selectedAccountContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 16,
-    borderWidth: 2,
-    borderColor: "#10B981",
-    borderRadius: 12,
-    backgroundColor: "#F0FDF4",
-  },
-  selectAccountContainer: {
-    alignItems: "center",
-    padding: 20,
-    backgroundColor: "#F8FAFC",
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "#E5E7EB",
-    borderStyle: "dashed",
-  },
-  accountInfo: {
-    flex: 1,
-  },
-  accountTypeContainer: {
-    marginBottom: 4,
-  },
-  accountType: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: "#6B7280",
-    textTransform: "uppercase",
-  },
-  accountName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1F2937",
-    marginBottom: 2,
-  },
-  accountDetails: {
-    fontSize: 14,
-    color: "#6B7280",
-  },
-  selectAccountText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#374151",
-    marginTop: 8,
-    marginBottom: 4,
-    textAlign: "center",
-  },
-  selectAccountSubtext: {
-    fontSize: 14,
-    color: "#64748B",
-    textAlign: "center",
-  },
-  actionSection: {
-    padding: 16,
-    paddingBottom: 32,
-  },
-  continueButton: {
-    backgroundColor: "#FF6B35",
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  continueButtonDisabled: {
-    backgroundColor: "#D1D5DB",
-  },
-  continueButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "flex-end",
-  },
-  modalContainer: {
-    backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: "80%",
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#1F2937",
-  },
-  accountOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F3F4F6",
-  },
-  accountOptionSelected: {
-    backgroundColor: "#F0FDF4",
-  },
-  accountOptionInfo: {
-    flex: 1,
-  },
-  accountOptionName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1F2937",
-    marginBottom: 4,
-  },
-  accountOptionDetails: {
-    fontSize: 14,
-    color: "#6B7280",
-    marginBottom: 2,
-  },
-  accountOptionType: {
-    fontSize: 12,
-    color: "#9CA3AF",
-    textTransform: "uppercase",
-  },
-});
 
 export default CanjearScreen;
