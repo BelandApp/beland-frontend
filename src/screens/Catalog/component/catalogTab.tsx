@@ -7,18 +7,17 @@ export const buildCatalogTabs = (
 ): { tab: CatalogTab; label: string }[] => {
   return [
     { tab: { type: "ALL" }, label: "Todos" },
+    {
+      tab: { type: "SORT", sortBy: "sold_count", order: "DESC" },
+      label: "Más vendidos",
+    },
     ...categories.map((c) => ({
       tab: { type: "CATEGORY" as const, categoryName: c.name },
       label: c.name,
     })),
-
     {
       tab: { type: "SORT", sortBy: "price", order: "ASC" },
       label: "Más baratos",
-    },
-    {
-      tab: { type: "SORT", sortBy: "sold_count", order: "DESC" },
-      label: "Más vendidos",
     },
   ];
 };
