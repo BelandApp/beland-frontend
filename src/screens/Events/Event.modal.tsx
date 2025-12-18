@@ -8,8 +8,6 @@ import {
   Animated,
   Dimensions,
 } from "react-native";
-
-import Modal from "react-native-modal";
 import {
   ArrowLeftRight,
   Calendar,
@@ -37,7 +35,6 @@ export const EventModal = ({ route }: { route: any }) => {
   const { navigate, goBack } = useCustomNavigation();
   const { canPerformAction, handleAuth0Login } = useAuth();
   const [visibleImage, setVisibleImage] = useState(0);
-  const [isVisible, setIsVisible] = useState(true);
 
   if (!event) return null;
 
@@ -112,9 +109,18 @@ export const EventModal = ({ route }: { route: any }) => {
   const ticketsLeft = limit_tickets - sold_tickets;
 
   return (
-    <WarpperModal
-      content={
-        <>
+    <View style={styles.overlay}>
+      {/* Backdrop */}
+      <Pressable style={styles.backdrop} onPress={goBack} />
+
+      {/* Sheet */}
+      <View style={styles.sheet}>
+        {/* Header */}
+        <Pressable onPress={goBack} style={styles.close}>
+          <SquareChevronDown size={26} color={colors.textSecondary} />
+        </Pressable>
+
+        <ScrollView showsVerticalScrollIndicator={false}>
           <View style={styles.imageContainer}>
             <Animated.Image
               source={{ uri: allImages[visibleImage] }}
@@ -195,24 +201,51 @@ export const EventModal = ({ route }: { route: any }) => {
               </View>
             )}
           </View>
-        </>
-      }
-      actions={
-        <Pressable
-          style={[styles.button, styles.buyButton]}
-          onPress={handleBuy}
-          disabled={eventStatus.label !== "Disponible"}
-        >
-          <Text style={styles.buttonText}>
-            {eventStatus.label === "Disponible" ? "Adquirir" : "No disponible"}
-          </Text>
-        </Pressable>
-      }
-    />
+        </ScrollView>
+
+        {/* Acciones */}
+        <View style={styles.footer}>
+          <Pressable
+            style={[styles.button, styles.buyButton]}
+            onPress={handleBuy}
+            disabled={eventStatus.label !== "Disponible"}
+          >
+            <Text style={styles.buttonText}>
+              {eventStatus.label === "Disponible"
+                ? "Adquirir"
+                : "No disponible"}
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  sheet: {
+    backgroundColor: colors.background,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    height: Dimensions.get("window").height * 0.9,
+    paddingTop: 8,
+  },
+  close: {
+    alignSelf: "flex-end",
+    padding: 12,
+  },
+  footer: {
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(0,0,0,0.05)",
+  },
   imageContainer: {
     alignItems: "center",
   },
