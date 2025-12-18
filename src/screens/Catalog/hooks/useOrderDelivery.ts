@@ -13,12 +13,10 @@ import { CoreApiService } from "src/services/core/ApiService";
 
 const core = new CoreApiService();
 import { CartService } from "@/services";
-import {
-  CreateOrderRequest,
-  DeliveryAddress,
-} from "src/types";
+import { CreateOrderRequest, DeliveryAddress } from "src/types";
 
 export type DeliveryStep = "select" | "form" | "processing";
+type OrderSubmitStatus = "idle" | "loading" | "success" | "error";
 export type preOrderType = {
   products: any[];
   address: UserAddress;
@@ -27,6 +25,7 @@ export type preOrderType = {
 };
 export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
   const [step, setStep] = useState<DeliveryStep>("select");
+  const [submitStatus, setSubmitStatus] = useState<OrderSubmitStatus>("idle");
   const [addresses, setAddresses] = useState<UserAddress[]>([]);
   const [loadingAddresses, setLoadingAddresses] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
@@ -37,7 +36,7 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [detectedCountry, setDetectedCountry] = useState("");
   const notify = useNotify();
-  const { items, clearCart } = useCartStore();
+  const { items } = useCartStore();
   const { createOrder } = useOrdersStoreAPI();
   const { requireAuth } = useAuth();
 
@@ -126,7 +125,7 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
         products: backendItems, // Usar items del backend
         address: address,
         addressId: id,
-        cost: deliveryCost.cost || 2.5
+        cost: deliveryCost.cost || 2.5,
       });
       setStep("processing");
     } catch (e) {
@@ -155,7 +154,7 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
       return notify.error({ message: "Selecciona una dirección" });
     }
     let result = false;
-
+    setSubmitStatus("loading");
     await requireAuth(async () => {
       try {
         // Obtener carrito del backend como fuente de verdad
@@ -185,18 +184,18 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
         };
 
         const order = await createOrder(payload);
-
+        setSubmitStatus("success");
         notify.success({ message: "Orden creada!" });
-        clearCart();
-        onOrderCreated?.(order.id);
-        result = true;
+        setTimeout(() => {
+          onOrderCreated?.(order.id);
+        },2500)
       } catch (e) {
+        setSubmitStatus("error");
         notify.error({ message: getBackendErrorMessage(e) });
-        setStep("select");
       }
     });
     return result;
-  }, [items, selectedAddress, selectedAddressId]);
+  }, [ selectedAddress, selectedAddressId]);
 
   /** ---------------- CANCEL BEHAVIOR ---------------- */
   const cancelAddressCreation = () => {
@@ -222,7 +221,7 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
     createAndContinue,
     selectAddress,
     submitOrder,
-
+submitStatus,
     cancelAddressCreation,
   };
 }

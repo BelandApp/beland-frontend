@@ -41,6 +41,7 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
     showLocationModal,
     detectedCountry,
     setShowLocationModal,
+    submitStatus,
   } = useOrderDelivery(onOrderCreated);
 
   useEffect(() => {
@@ -53,10 +54,10 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
     onClose();
   };
   const handleSubmit = async () => {
-    const ok = await submitOrder();
-    if (ok) {
+    await submitOrder();
+    setTimeout(() => {
       onClose();
-    }
+    }, 2000);
   };
   return (
     <Modal
@@ -96,6 +97,7 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
         {step === "processing" && (
           <ConfirmOrder
             onSubmit={handleSubmit}
+            submitStatus={submitStatus}
             preOrder={preOrder}
             onCancel={() => setStep("select")}
           />
