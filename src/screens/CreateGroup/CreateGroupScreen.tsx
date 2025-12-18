@@ -8,7 +8,7 @@ import {
   TextInput,
   TouchableOpacity,
 } from "react-native";
-import { AddressMapPicker } from "../Catalog/components/AddressMapPicker";
+import { AddressMapPicker } from "@/components";
 import useCreateGroupLogic from "./hooks/useCreateGroupLogic";
 import NewHeader from "./components/Header";
 

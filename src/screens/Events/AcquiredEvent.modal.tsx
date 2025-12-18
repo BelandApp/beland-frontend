@@ -1,11 +1,12 @@
 import React, { useMemo, useRef, useState } from "react";
-import { View, Text, Pressable, StyleSheet, Animated } from "react-native";
+import { View, Text, Pressable, StyleSheet, Animated, ScrollView, Dimensions } from "react-native";
 import {
   ArrowLeftRight,
   Calendar,
   MapPin,
   RotateCcw,
   CheckCircle2,
+  SquareChevronDown,
 } from "lucide-react-native";
 import { eventStore } from "@/stores";
 import { colors } from "src/styles";
@@ -96,86 +97,89 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
   })();
 
   return (
-    <WarpperModal
-      content={
-        <View style={{ marginHorizontal: "auto", paddingTop: 20 }}>
-          {/* Imagen principal */}
-          <View style={styles.imageContainer}>
-            <Animated.Image
-              source={{ uri: allImages[visibleImage] }}
-              style={[
-                styles.image,
-                {
-                  opacity: 1,
-                  transform: [{ translateX: translateAnim }],
-                },
-              ]}
-            />
-            {allImages.length > 1 && (
-              <Pressable
-                style={styles.nextImageButton}
-                onPress={handleNextImage}
-              >
-                <ArrowLeftRight color="white" size={20} />
-              </Pressable>
-            )}
-            <View
-              style={[
-                styles.statusBadge,
-                { backgroundColor: eventStatus.color },
-              ]}
-            >
-              <Text style={styles.statusText}>{eventStatus.label}</Text>
-            </View>
-          </View>
+    <View style={styles.overlay}>
+      {/* Backdrop */}
+      <Pressable style={styles.backdrop} onPress={goBack} />
 
+      {/* Sheet */}
+      <View style={styles.sheet}>
+        {/* Header */}
+        <Pressable onPress={goBack} style={styles.close}>
+          <SquareChevronDown size={26} color={colors.textSecondary} />
+        </Pressable>
+
+        <ScrollView showsVerticalScrollIndicator={false}>
           <View style={styles.content}>
-            <Text style={styles.name}>{name}</Text>
-            <View style={styles.infoRow}>
-              <Calendar size={18} color={colors.textSecondary} />
-              <Text style={styles.infoText}>
-                {event_date
-                  ? new Date(event_date).toLocaleDateString()
-                  : "Fecha por confirmar"}
-              </Text>
-            </View>
-            <View style={styles.infoRow}>
-              <MapPin size={18} color={colors.textSecondary} />
-              <Text style={styles.infoText}>
-                {event_place}, {event_city}
-              </Text>
+            {/* Imagen principal */}
+            <View style={styles.imageContainer}>
+              <Animated.Image
+                source={{ uri: allImages[visibleImage] }}
+                style={[
+                  styles.image,
+                  {
+                    opacity: 1,
+                    transform: [{ translateX: translateAnim }],
+                  },
+                ]}
+              />
+              {allImages.length > 1 && (
+                <Pressable
+                  style={styles.nextImageButton}
+                  onPress={handleNextImage}
+                >
+                  <ArrowLeftRight color="white" size={20} />
+                </Pressable>
+              )}
+              <View
+                style={[
+                  styles.statusBadge,
+                  { backgroundColor: eventStatus.color },
+                ]}
+              >
+                <Text style={styles.statusText}>{eventStatus.label}</Text>
+              </View>
             </View>
 
-            <Text style={styles.description}>{description}</Text>
-
-            {is_refundable && !user_attended && (
-              <View style={[styles.refundBox]}>
-                <RotateCcw color={colors.primary} size={18} />
-                <Text style={styles.refundText}>
-                  {canRefund
-                    ? `Reembolsable hasta ${refund_days_limit} días antes del evento.`
-                    : "Este evento ya no admite reembolsos."}
+            <View style={styles.content}>
+              <Text style={styles.name}>{name}</Text>
+              <View style={styles.infoRow}>
+                <Calendar size={18} color={colors.textSecondary} />
+                <Text style={styles.infoText}>
+                  {event_date
+                    ? new Date(event_date).toLocaleDateString()
+                    : "Fecha por confirmar"}
                 </Text>
               </View>
-            )}
+              <View style={styles.infoRow}>
+                <MapPin size={18} color={colors.textSecondary} />
+                <Text style={styles.infoText}>
+                  {event_place}, {event_city}
+                </Text>
+              </View>
+
+              <Text style={styles.description}>{description}</Text>
+
+              {is_refundable && !user_attended && (
+                <View style={[styles.refundBox]}>
+                  <RotateCcw color={colors.primary} size={18} />
+                  <Text style={styles.refundText}>
+                    {canRefund
+                      ? `Reembolsable hasta ${refund_days_limit} días antes del evento.`
+                      : "Este evento ya no admite reembolsos."}
+                  </Text>
+                </View>
+              )}
+            </View>
           </View>
-        </View>
-      }
-      actions={
-        <View style={styles.actions}>
+        </ScrollView>
+
+        {/* Acciones */}
+        <View style={styles.footer}>
           {!user_attended ? (
             <>
               <Text style={styles.infoText}>
                 Entrada a nombre de: {holder_name}
               </Text>
-              <Pressable
-                style={[styles.button, styles.useButton]}
-                onPress={handleUse}
-              >
-                <CheckCircle2 color="white" size={18} />
-                <Text style={styles.buttonText}>Usar entrada</Text>
-              </Pressable>
-
               {canRefund && (
                 <Pressable
                   style={[styles.button, styles.refundButton]}
@@ -185,32 +189,42 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
                   <Text style={styles.buttonText}>Devolver</Text>
                 </Pressable>
               )}
+              <Pressable
+                style={[styles.button, styles.useButton]}
+                onPress={handleUse}
+              >
+                <CheckCircle2 color="white" size={18} />
+                <Text style={styles.buttonText}>Usar entrada</Text>
+              </Pressable>
+
             </>
           ) : (
             <Text style={styles.infoStrong}>Ya usaste esta entrada</Text>
           )}
         </View>
-      }
-    />
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  modal: {
+  overlay: {
     flex: 1,
     justifyContent: "flex-end",
-    backgroundColor: "transparent",
   },
-  container: {
-    width: "100%",
-    height: "98%",
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  sheet: {
     backgroundColor: colors.background,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    height: Dimensions.get("window").height * 0.9,
+    paddingTop: 8,
   },
-  closeButton: {
-    position: "absolute",
-    top: 20,
-    right: 20,
-    zIndex: 3,
+  close: {
+    alignSelf: "flex-end",
+    padding: 12,
   },
   imageContainer: {
     position: "relative",
@@ -243,8 +257,8 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   content: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    marginHorizontal: "auto",
+    paddingTop: 20,
   },
   name: {
     fontSize: 22,
@@ -261,6 +275,7 @@ const styles = StyleSheet.create({
   infoText: {
     color: colors.textSecondary,
     fontSize: 15,
+    textAlign: "center",
   },
   infoStrong: {
     color: colors.textPrimary,
@@ -271,6 +286,7 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     borderColor: colors.primary,
     paddingVertical: 8,
+    paddingHorizontal: 8,
   },
   description: {
     marginVertical: 16,
@@ -295,8 +311,14 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: 14,
   },
-  actions: {
-    gap: 10,
+  footer: {
+    alignItems: "center",
+    gap: 5,
+    flexDirection: Dimensions.get("window").width > 600 ? "row" : "column",
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(0,0,0,0.05)",
+    marginHorizontal: "auto",
   },
   button: {
     flexDirection: "row",
@@ -308,9 +330,11 @@ const styles = StyleSheet.create({
   },
   useButton: {
     backgroundColor: colors.success,
+    paddingHorizontal: 8,
   },
   refundButton: {
     backgroundColor: colors.belandOrange,
+    paddingHorizontal: 8,
   },
   buttonText: {
     color: "white",

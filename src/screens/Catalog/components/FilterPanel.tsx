@@ -1,3 +1,4 @@
+//! @deprecated VER SI BORRAR
 import React from "react";
 import { View, Text, TouchableOpacity, TextInput } from "react-native";
 import { searchFilterStyles } from "../styles";

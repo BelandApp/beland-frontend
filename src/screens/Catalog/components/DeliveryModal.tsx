@@ -1,3 +1,5 @@
+// ! VER SI SE USA
+
 import React from "react";
 import { View, Text, TouchableOpacity, Modal } from "react-native";
 import { modalStyles } from "../styles";

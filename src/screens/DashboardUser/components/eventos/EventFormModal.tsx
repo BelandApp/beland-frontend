@@ -15,7 +15,7 @@ import * as mapboxService from "src/services/mapboxService";
 import { EventPass, EventPassType } from "src/services/AdminApiService";
 import { useEventForm } from "../../hooks/useEventForm";
 import EventDateCard from "src/screens/DashboardUser/components/eventos/EventDateCard";
-import { AddressMapPicker } from "src/screens/Catalog/components/AddressMapPicker";
+import { AddressMapPicker } from "@/components";
 
 interface Props {
   visible: boolean;
