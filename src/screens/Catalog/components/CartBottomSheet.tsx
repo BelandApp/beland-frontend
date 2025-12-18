@@ -15,16 +15,15 @@ import {
   formatBeCoins,
   formatUSDPrice,
   CURRENCY_CONFIG,
-} from "../../../constants/currency";
+} from "@/constants";
 import { InsufficientBalanceModal } from "../../Community/components";
-import { useNotify } from "src/hooks";
+import { useNotify } from "@/hooks";
 import { getBackendErrorMessage } from "src/services";
-import { Button } from "src/components";
+import { Button, toastConfig } from "src/components";
 import { ArrowDown } from "lucide-react-native";
 import { colors } from "src/styles";
-import { useCartStore } from "src/stores/cart/useCartStore";
+import { useCartStore } from "@/stores";
 import Toast from "react-native-toast-message";
-import { toastConfig } from "src/components/shared/notification/GlobalNotification";
 import { useAuth } from "src/context";
 
 interface CartBottomSheetProps {

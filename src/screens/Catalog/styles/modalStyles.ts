@@ -86,26 +86,6 @@ export const modalStyles = StyleSheet.create({
     fontWeight: "600" as const,
     color: colors.textSecondary,
   },
-  // Product added modal
-  productAddedModalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center" as const,
-    alignItems: "center" as const,
-  },
-  productAddedModalContent: {
-    backgroundColor: "white",
-    borderRadius: 20,
-    padding: 24,
-    marginHorizontal: 20,
-    alignItems: "center" as const,
-    elevation: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    transform: [{ scale: 1 }],
-  },
   productAddedIcon: {
     width: 60,
     height: 60,
