@@ -17,14 +17,16 @@ import { CartItem } from "src/stores";
 type ProcessingStepProps = {
   preOrder: preOrderType | null;
   onSubmit: (address: UserAddress, addressId: string) => void;
+  submitStatus: "idle" | "loading" | "success" | "error";
   onCancel: () => void;
 };
 export const ConfirmOrder: React.FC<ProcessingStepProps> = ({
   preOrder,
   onSubmit,
   onCancel,
+  submitStatus
 }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   if (!preOrder) {
     return (
       <View>
@@ -40,25 +42,38 @@ export const ConfirmOrder: React.FC<ProcessingStepProps> = ({
   );
   const total = (subtotal + SHIPPING_COST).toFixed(2);
   const handleSubmit = () => {
-    setIsSubmitting(true);  
     onSubmit(address, addressId);
   };
-  if (isSubmitting) {
+  if (submitStatus === "loading") {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <View style={styles.processingIcon}>
-          <MaterialCommunityIcons
-            name="truck-check"
-            size={36}
-            color={colors.belandOrange}
-          />
-        </View>
-        <ActivityIndicator
-          size="large"
-          color={colors.belandOrange}
-          style={{ marginVertical: 12 }}
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.belandOrange} />
+        <Text style={styles.loadingText}>Creando tu orden...</Text>
+      </View>
+    );
+  }
+
+  if (submitStatus === "success") {
+    return (
+      <View style={styles.loadingContainer}>
+        <MaterialCommunityIcons
+          name="check-circle"
+          size={64}
+          color={colors.belandGreen}
         />
-        <Text>Creando tu orden...</Text>
+        <Text style={styles.loadingText}>¡Orden creada con éxito!</Text>
+      </View>
+    );
+  }
+
+  if (submitStatus === "error") {
+    return (
+      <View style={styles.loadingContainer}>
+        <MaterialCommunityIcons name="alert-circle" size={64} color="red" />
+        <Text style={styles.loadingText}>
+          Ocurrió un error al crear la orden
+        </Text>
+        <Button title="Volver" onPress={onCancel} />
       </View>
     );
   }
@@ -181,7 +196,7 @@ export const ConfirmOrder: React.FC<ProcessingStepProps> = ({
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Envío</Text>
               <Text style={styles.totalValue}>
-                Usd$ {SHIPPING_COST.toFixed(2)}
+                Usd$ {SHIPPING_COST}
               </Text>
             </View>
             <View style={styles.divider} />
