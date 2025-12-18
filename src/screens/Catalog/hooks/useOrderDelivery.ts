@@ -116,8 +116,8 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
       const deliveryCost = await CartService.estimateShipping({
         customerLat: address.latitude,
         customerLon: address.longitude,
-        driverLat: address.latitude,
-        driverLon: address.longitude,
+        driverLat: -0.171539,
+        driverLon: -78.480174,
       });
       setSelectedAddress(address);
       setSelectedAddressId(id);
@@ -188,14 +188,14 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
         notify.success({ message: "Orden creada!" });
         setTimeout(() => {
           onOrderCreated?.(order.id);
-        },2500)
+        }, 2500);
       } catch (e) {
         setSubmitStatus("error");
         notify.error({ message: getBackendErrorMessage(e) });
       }
     });
     return result;
-  }, [ selectedAddress, selectedAddressId]);
+  }, [selectedAddress, selectedAddressId]);
 
   /** ---------------- CANCEL BEHAVIOR ---------------- */
   const cancelAddressCreation = () => {
@@ -221,7 +221,7 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
     createAndContinue,
     selectAddress,
     submitOrder,
-submitStatus,
+    submitStatus,
     cancelAddressCreation,
   };
 }
