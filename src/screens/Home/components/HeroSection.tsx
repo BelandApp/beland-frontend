@@ -6,6 +6,7 @@ import {
   Platform,
   TouchableOpacity,
   ActivityIndicator,
+  Dimensions,
 } from "react-native";
 import { BeCoinIcon } from "../../../components/icons/BeCoinIcon";
 import { TreesIcon, CommunityIcon } from "../../../components/icons";
@@ -36,28 +37,28 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         <View style={styles.balanceCard}>
           <View style={styles.balanceRow}>
             <BeCoinIcon width={32} height={32} />
-            <View style={styles.balanceInfo}>
-              <Text style={styles.balanceAmount}>
-                {isLoading ? <ActivityIndicator /> : balance.toLocaleString()}
-              </Text>
-              <Text style={styles.balanceLabel}>BeCoins</Text>
-              {locked_balance && locked_balance > 0 && (
-                <Text style={styles.lockedBalanceLabel}>
-                  {isLoading ? (
-                    <ActivityIndicator />
-                  ) : (
-                    locked_balance.toLocaleString()
-                  )}{" "}
-                  bloqueados
-                </Text>
-              )}
-            </View>
-            <View style={styles.usdValue}>
-              <Text style={styles.usdAmount}>
-                ${isLoading ? <ActivityIndicator /> : estimatedValue}
-              </Text>
-              <Text style={styles.usdLabel}>USD aprox.</Text>
-            </View>
+            <Text style={styles.balanceAmount}>
+              {isLoading ? <ActivityIndicator /> : balance.toLocaleString()}
+            </Text>
+            <Text style={styles.balanceLabel}>BeCoins</Text>
+          </View>
+          <View style={styles.balanceRow}>
+            <Text style={styles.lockedBalanceLabel}>
+              {isLoading ? (
+                <ActivityIndicator />
+              ) : locked_balance ? (
+                locked_balance.toLocaleString()
+              ) : (
+                0
+              )}{" "}
+              bloqueados
+            </Text>
+          </View>
+          <View style={styles.balanceRow}>
+            <Text style={styles.usdAmount}>
+              ${isLoading ? <ActivityIndicator /> : estimatedValue}
+            </Text>
+            <Text style={styles.usdLabel}>USD aprox.</Text>
           </View>
         </View>
 
@@ -137,15 +138,16 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.1)",
+    flexDirection: Dimensions.get("window").width>600? "row": "column",
+    alignItems: Dimensions.get("window").width>600?"baseline":"center",
+    gap:8,
+    justifyContent: "space-between",
+    width: "100%"
   },
   balanceRow: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  balanceInfo: {
-    flex: 1,
-    marginLeft: 16,
+    alignItems: "baseline",
+    gap: 8
   },
   balanceAmount: {
     fontSize: Platform.OS === "web" ? 32 : 28,
