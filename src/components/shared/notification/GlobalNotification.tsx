@@ -81,8 +81,6 @@ export const toastConfig = {
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 5,
-        position: "absolute",
-        top: 5,
       }}
     >
       <Text>{text1}</Text>
@@ -100,8 +98,6 @@ export const toastConfig = {
   confirm: ({ text1, props }: ToastConfigParams<ConfirmProps>) => (
     <View
       style={{
-        position: "absolute",
-        top: 5,
         width: Dimensions.get("window").width > 600 ? 400 : "90%",
         backgroundColor: "white",
         borderRadius: 10,
