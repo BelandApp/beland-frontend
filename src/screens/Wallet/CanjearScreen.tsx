@@ -11,8 +11,11 @@ import {
   Modal,
   FlatList,
 } from "react-native";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useCustomNavigation } from "src/hooks";
 import { useCanjear } from "./hooks/useCanjear";
+import { ThemedHeader } from "src/components";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { BeCoinIcon } from "src/components/icons/BeCoinIcon";
 
 interface CanjearScreenProps {
   navigation: any;
@@ -55,6 +58,7 @@ const CanjearScreen: React.FC<CanjearScreenProps> = ({ navigation }) => {
     convertBeCoinsToUSD,
   } = useCanjear(navigation);
 
+  const { goBack } = useCustomNavigation();
   // Estados de carga
   if (loadingAccounts) {
     return (
@@ -105,255 +109,286 @@ const CanjearScreen: React.FC<CanjearScreenProps> = ({ navigation }) => {
     <SafeAreaView className="flex-1 bg-white dark:bg-[#0B1120]">
       <StatusBar barStyle="light-content" />
 
-      {/* Header */}
-      <View className="bg-[#F58220] px-4 py-4 flex-row items-center justify-between">
-        <View className="flex-row items-center gap-4">
-          <TouchableOpacity
-            className="p-2 rounded-full active:bg-white/20"
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="arrow-back" size={24} color="#FFF" />
-          </TouchableOpacity>
-          <Text className="text-white text-xl font-bold">Canjear</Text>
-        </View>
-
-        <View className="flex-row items-center gap-3">
-          <View className="h-10 w-10 rounded-full bg-green-700 items-center justify-center border-2 border-white">
-            <Text className="text-white font-bold">G</Text>
-          </View>
-        </View>
-      </View>
+      <ThemedHeader title="Canjear" onBackPress={() => goBack()} canGoBack />
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="px-4 py-6 pb-24">
-          {/* Balance Card */}
-          <View className="bg-gray-50 dark:bg-[#1F2937] rounded-2xl border border-gray-200 dark:border-gray-700 p-6 mb-6 items-center">
-            <Text className="text-sm text-gray-500 dark:text-gray-400 uppercase mb-2">
-              Disponible
-            </Text>
-            <View className="flex-row items-baseline mb-2">
-              <View className="w-8 h-8 rounded-full bg-yellow-400 items-center justify-center mr-2">
-                <Text className="text-yellow-900 font-bold text-xs">BC</Text>
-              </View>
-              <Text className="text-4xl font-bold text-gray-900 dark:text-white">
-                {balance.toLocaleString()}
-              </Text>
-            </View>
-            <Text className="text-base text-gray-600 dark:text-gray-400 mb-4">
-              ≈ ${formatUSDPrice(convertBeCoinsToUSD(balance))} USD Total
-              estimado
-            </Text>
-
-            {locked_balance > 0 && (
-              <View className="pt-4 border-t border-gray-200 dark:border-gray-700 w-full items-center">
-                <Text className="text-xs text-gray-400 dark:text-gray-500 mb-1">
-                  Balance bloqueado
+          <View className="flex-row gap-6 flex-wrap">
+            {/* Left column: form */}
+            <View className="flex-1 min-w-[260px]">
+              {/* Amount Input */}
+              <View className="mb-6">
+                <Text className="text-base font-semibold text-gray-900 dark:text-white mb-2">
+                  Cantidad a canjear
                 </Text>
-                <Text className="text-base font-semibold text-gray-400 dark:text-gray-500 italic">
-                  {locked_balance.toLocaleString()} BC
-                </Text>
+                <View
+                  className={`bg-white dark:bg-gray-800 rounded-xl border-2 ${
+                    !isAmountValid && amount !== ""
+                      ? "border-red-500"
+                      : "border-gray-200 dark:border-gray-700"
+                  } flex-row items-center px-4 py-3`}
+                >
+                  <View className="mr-3">
+                    <BeCoinIcon width={20} height={20} />
+                  </View>
+
+                  <TextInput
+                    className="flex-1 text-lg font-semibold text-gray-900 dark:text-white"
+                    placeholder="0.00"
+                    value={amount}
+                    onChangeText={handleAmountChange}
+                    keyboardType="numeric"
+                    maxLength={10}
+                    placeholderTextColor="#9CA3AF"
+                  />
+
+                  <TouchableOpacity
+                    onPress={() => setPresetAmount(balance)}
+                    className="ml-3"
+                  >
+                    <Text className="text-yellow-500 font-bold">MAX</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {!isAmountValid && amount !== "" && (
+                  <Text className="text-sm text-red-500 mt-2">
+                    {parsedAmount > balance
+                      ? "No tienes suficientes BeCoins"
+                      : "Ingresa un monto válido"}
+                  </Text>
+                )}
+
+                {amount && isAmountValid && (
+                  <Text className="text-sm text-green-600 font-medium mt-2">
+                    {`≈ $${formatUSDPrice(
+                      convertBeCoinsToUSD(parsedAmount)
+                    )} USD`}
+                  </Text>
+                )}
               </View>
-            )}
-          </View>
 
-          {/* Amount Input */}
-          <View className="mb-6">
-            <Text className="text-base font-semibold text-gray-900 dark:text-white mb-2">
-              Cantidad a canjear
-            </Text>
-            <View
-              className={`bg-white dark:bg-gray-800 rounded-xl border-2 ${
-                !isAmountValid && amount !== ""
-                  ? "border-red-500"
-                  : "border-gray-200 dark:border-gray-700"
-              } flex-row items-center px-4 py-4`}
-            >
-              <Text className="text-yellow-500 font-bold mr-3">BC</Text>
-              <TextInput
-                className="flex-1 text-lg font-semibold text-gray-900 dark:text-white"
-                placeholder="0.00"
-                value={amount}
-                onChangeText={handleAmountChange}
-                keyboardType="numeric"
-                maxLength={10}
-                placeholderTextColor="#9CA3AF"
-              />
-              <Text className="text-gray-400 text-sm">MAX</Text>
-            </View>
+              {/* Preset Amounts */}
+              <View className="mb-6">
+                <Text className="text-base font-semibold text-gray-900 dark:text-white mb-3">
+                  Montos rápidos
+                </Text>
+                <View className="flex-row flex-wrap gap-2">
+                  {[100, 200, 500, 1000, balance].map(
+                    (preset, index) =>
+                      preset > 0 && (
+                        <TouchableOpacity
+                          key={index}
+                          className={`px-4 py-2 rounded-full border ${
+                            parsedAmount === preset
+                              ? "bg-[#F58220] border-[#F58220]"
+                              : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
+                          }`}
+                          onPress={() => setPresetAmount(preset)}
+                        >
+                          <Text
+                            className={`text-sm font-medium ${
+                              parsedAmount === preset
+                                ? "text-white"
+                                : "text-gray-700 dark:text-gray-300"
+                            }`}
+                          >
+                            {preset === balance
+                              ? "Todo"
+                              : preset.toLocaleString()}
+                          </Text>
+                        </TouchableOpacity>
+                      )
+                  )}
+                </View>
+              </View>
 
-            {!isAmountValid && amount !== "" && (
-              <Text className="text-sm text-red-500 mt-2">
-                {parsedAmount > balance
-                  ? "No tienes suficientes BeCoins"
-                  : "Ingresa un monto válido"}
-              </Text>
-            )}
+              {/* Account Selection */}
+              <View className="mb-6">
+                <Text className="text-base font-semibold text-gray-900 dark:text-white mb-3">
+                  Cuentas de Retiro
+                </Text>
 
-            {amount && isAmountValid && (
-              <Text className="text-sm text-green-600 font-medium mt-2">
-                ≈ ${formatUSDPrice(convertBeCoinsToUSD(parsedAmount))} USD
-              </Text>
-            )}
-          </View>
-
-          {/* Preset Amounts */}
-          <View className="mb-6">
-            <Text className="text-base font-semibold text-gray-900 dark:text-white mb-3">
-              Montos rápidos
-            </Text>
-            <View className="flex-row flex-wrap gap-2">
-              {[100, 200, 500, 1000, balance].map(
-                (preset, index) =>
-                  preset > 0 && (
-                    <TouchableOpacity
-                      key={index}
-                      className={`px-4 py-2 rounded-full border ${
-                        parsedAmount === preset
-                          ? "bg-[#F58220] border-[#F58220]"
-                          : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
-                      }`}
-                      onPress={() => setPresetAmount(preset)}
-                    >
-                      <Text
-                        className={`text-sm font-medium ${
-                          parsedAmount === preset
-                            ? "text-white"
-                            : "text-gray-700 dark:text-gray-300"
+                <View className="space-y-3">
+                  {withdrawAccounts.map((acct) => {
+                    const selected = selectedWithdrawAccount?.id === acct.id;
+                    return (
+                      <TouchableOpacity
+                        key={acct.id}
+                        onPress={() => handleSelectAccount(acct)}
+                        className={`flex-row items-center justify-between p-4 rounded-xl border ${
+                          selected
+                            ? "border-green-500 bg-green-50 dark:bg-green-900/20"
+                            : "border-gray-200 bg-white dark:bg-gray-800"
                         }`}
                       >
-                        {preset === balance ? "Todo" : preset.toLocaleString()}
-                      </Text>
-                    </TouchableOpacity>
-                  )
-              )}
-            </View>
-          </View>
+                        <View className="flex-row items-center flex-1">
+                          <View className="w-10 h-10 bg-gray-50 dark:bg-gray-700 rounded-lg items-center justify-center mr-3">
+                            {acct.withdraw_account_type?.code === "WALLET" ? (
+                              <BeCoinIcon width={18} height={18} />
+                            ) : (
+                              <MaterialCommunityIcons
+                                name="bank"
+                                size={18}
+                                color="#9CA3AF"
+                              />
+                            )}
+                          </View>
 
-          {/* Account Selection */}
-          <View className="mb-6">
-            <Text className="text-base font-semibold text-gray-900 dark:text-white mb-3">
-              Cuenta de destino
-            </Text>
+                          <View className="flex-1">
+                            {(() => {
+                              const bankLabel =
+                                (acct as any).bank_name ||
+                                acct.provider ||
+                                acct.alias ||
+                                acct.owner_name ||
+                                "";
+                              const cbuSuffix = acct.cbu
+                                ? ` **** ${acct.cbu.slice(-4)}`
+                                : "";
+                              const title = bankLabel
+                                ? `${bankLabel}${cbuSuffix}`
+                                : getAccountTitle(acct);
+                              const subtitle = acct.withdraw_account_type?.name
+                                ? `${acct.withdraw_account_type.name} · ${acct.currency}`
+                                : `${
+                                    acct.provider ||
+                                    acct.withdraw_account_type?.name ||
+                                    "Cuenta"
+                                  } · USD`;
 
-            {selectedWithdrawAccount ? (
-              <TouchableOpacity
-                className="flex-row items-center justify-between p-4 rounded-xl border-2 border-green-500 bg-green-50 dark:bg-green-900/20"
-                onPress={() => setShowAccountSelector(true)}
-              >
-                <View className="flex-1">
-                  <View className="mb-1">
-                    <Text className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase">
-                      {selectedWithdrawAccount.withdraw_account_type?.name ||
-                        ""}
-                    </Text>
-                  </View>
-                  <Text className="text-base font-semibold text-gray-900 dark:text-white mb-1">
-                    {getAccountTitle(selectedWithdrawAccount)}
-                  </Text>
-                  <Text className="text-sm text-gray-600 dark:text-gray-400">
-                    {getAccountDisplayName(selectedWithdrawAccount)}
+                              return (
+                                <>
+                                  <Text className="text-base font-semibold text-gray-900 dark:text-white">
+                                    {title}
+                                  </Text>
+                                  <Text className="text-sm text-gray-600 dark:text-gray-400">
+                                    {subtitle}
+                                  </Text>
+                                </>
+                              );
+                            })()}
+                          </View>
+                        </View>
+
+                        <View className="items-end">
+                          {acct.is_active && (
+                            <View className="bg-green-50 border border-green-200 px-2 py-1 rounded-full mb-1">
+                              <Text className="text-xs text-green-700 font-semibold">
+                                Verificada
+                              </Text>
+                            </View>
+                          )}
+                          {selected ? (
+                            <Ionicons
+                              name="checkmark-circle"
+                              size={22}
+                              color="#10B981"
+                            />
+                          ) : (
+                            <Ionicons
+                              name="ellipse"
+                              size={14}
+                              color="#E5E7EB"
+                            />
+                          )}
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              {/* Info Banner */}
+              <View className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-400 p-4 rounded-r-lg mb-6">
+                <View className="flex-row">
+                  <Text className="text-blue-400 text-xl mr-3">ℹ️</Text>
+                  <Text className="text-sm text-blue-700 dark:text-blue-300 flex-1">
+                    Los retiros suelen procesarse en un plazo de 24 a 48 horas
+                    hábiles. Asegúrate de que los datos de tu cuenta bancaria
+                    sean correctos para evitar rechazos.
                   </Text>
                 </View>
-                <Ionicons name="chevron-down" size={24} color="#6B7280" />
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                className="items-center p-5 bg-gray-50 dark:bg-gray-800 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600"
-                onPress={() => setShowAccountSelector(true)}
-              >
-                <MaterialCommunityIcons
-                  name="bank-plus"
-                  size={32}
-                  color="#9CA3AF"
-                />
-                <Text className="text-base font-semibold text-gray-700 dark:text-gray-300 mt-2 text-center">
-                  Seleccionar cuenta
-                </Text>
-                <Text className="text-sm text-gray-500 dark:text-gray-400 text-center">
-                  Elige dónde recibir tu dinero
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {/* Info Banner */}
-          <View className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-400 p-4 rounded-r-lg mb-6">
-            <View className="flex-row">
-              <Text className="text-blue-400 text-xl mr-3">ℹ️</Text>
-              <Text className="text-sm text-blue-700 dark:text-blue-300 flex-1">
-                Los retiros suelen procesarse en un plazo de 24 a 48 horas
-                hábiles. Asegúrate de que los datos de tu cuenta bancaria sean
-                correctos para evitar rechazos.
-              </Text>
-            </View>
-          </View>
-
-          {/* Summary Card */}
-          <View className="bg-white dark:bg-[#1F2937] rounded-2xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
-            <View className="pt-4 border-t border-gray-100 dark:border-gray-700 gap-3">
-              <View className="flex-row justify-between">
-                <Text className="text-gray-600 dark:text-gray-400">
-                  Monto a canjear
-                </Text>
-                <Text className="font-medium text-gray-900 dark:text-white">
-                  {parsedAmount.toLocaleString()} BC
-                </Text>
-              </View>
-              <View className="flex-row justify-between">
-                <Text className="text-gray-600 dark:text-gray-400">
-                  Tasa de cambio
-                </Text>
-                <Text className="font-medium text-gray-900 dark:text-white">
-                  $0.05 / BC
-                </Text>
-              </View>
-              <View className="flex-row justify-between">
-                <Text className="text-gray-600 dark:text-gray-400">
-                  Comisión de servicio (1%)
-                </Text>
-                <Text className="font-medium text-red-500">
-                  -${amounts.fee}
-                </Text>
-              </View>
-              <View className="flex-row justify-between pt-3 border-t border-gray-100 dark:border-gray-700">
-                <Text className="font-bold text-gray-900 dark:text-white">
-                  Total a recibir
-                </Text>
-                <Text className="font-bold text-green-600">
-                  ${amounts.net} USD
-                </Text>
               </View>
             </View>
 
-            {/* Action Buttons */}
-            <TouchableOpacity
-              className={`mt-6 rounded-xl py-3 flex-row items-center justify-center ${
-                canContinue ? "bg-[#F58220]" : "bg-gray-300 dark:bg-gray-700"
-              }`}
-              onPress={handleBuy}
-              disabled={!canContinue || isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <>
-                  <Text className="text-xl mr-2">💱</Text>
-                  <Text className="text-white font-bold">
-                    Confirmar Canje
-                    {amount && ` ${amount} BeCoins`}
+            {/* Right column: summary */}
+            <View style={{ width: 360 }} className="flex-col">
+              {/* Balance Card */}
+              <View className="bg-gray-50 dark:bg-[#1F2937] rounded-2xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
+                <Text className="text-sm text-gray-500 dark:text-gray-400 uppercase mb-2">
+                  Disponible
+                </Text>
+                <View className="flex-row items-baseline mb-2">
+                  <View className="w-8 h-8 rounded-full bg-yellow-400 items-center justify-center mr-2">
+                    <BeCoinIcon width={18} height={18} />
+                  </View>
+                  <Text className="text-3xl font-bold text-gray-900 dark:text-white">
+                    {balance.toLocaleString()}
                   </Text>
-                </>
-              )}
-            </TouchableOpacity>
+                </View>
+                <Text className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                  {`≈ $${formatUSDPrice(
+                    convertBeCoinsToUSD(balance)
+                  )} USD Total`}
+                </Text>
+                {locked_balance > 0 && (
+                  <Text className="text-xs text-gray-400 dark:text-gray-500 italic">
+                    {locked_balance.toLocaleString()} BC bloqueados
+                  </Text>
+                )}
+              </View>
 
-            <TouchableOpacity
-              className="mt-3 bg-white dark:bg-gray-800 rounded-xl py-3 border border-gray-200 dark:border-gray-600"
-              onPress={() => navigation.goBack()}
-            >
-              <Text className="text-gray-700 dark:text-gray-300 font-medium text-center">
-                Cancelar
-              </Text>
-            </TouchableOpacity>
+              {/* Summary Card */}
+              <View className="bg-white dark:bg-[#1F2937] rounded-2xl border border-gray-200 dark:border-gray-700 p-6 mb-6 shadow-md">
+                <View className="gap-3">
+                  <View className="flex-row justify-between">
+                    <Text className="text-gray-600 dark:text-gray-400">
+                      Monto a canjear
+                    </Text>
+                    <Text className="font-medium text-gray-900 dark:text-white">
+                      {parsedAmount.toLocaleString()} BC
+                    </Text>
+                  </View>
+                  {/* tasa y comisión removidas según diseño */}
+                  <View className="flex-row justify-between pt-3 border-t border-gray-100 dark:border-gray-700">
+                    <Text className="font-bold text-gray-900 dark:text-white">
+                      Total a recibir
+                    </Text>
+                    <Text className="font-bold text-green-600">
+                      ${amounts.net} USD
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Action Buttons (full width) */}
+                <TouchableOpacity
+                  className={`mt-6 rounded-xl py-4 flex-row items-center justify-center ${
+                    canContinue
+                      ? "bg-[#F58220]"
+                      : "bg-gray-300 dark:bg-gray-700"
+                  }`}
+                  onPress={handleBuy}
+                  disabled={!canContinue || isLoading}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <Text className="text-white font-bold text-base">
+                      Confirmar Canje{amount && ` ${amount} BeCoins`}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  className="mt-3 bg-white dark:bg-gray-800 rounded-xl py-3 border border-gray-200 dark:border-gray-600"
+                  onPress={() => navigation.goBack()}
+                >
+                  <Text className="text-gray-700 dark:text-gray-300 font-medium text-center">
+                    Cancelar
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
 
           {/* Security Badge */}
@@ -387,74 +422,57 @@ const CanjearScreen: React.FC<CanjearScreenProps> = ({ navigation }) => {
             <FlatList
               data={withdrawAccounts}
               keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  className={`flex-row items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800 ${
-                    selectedWithdrawAccount?.id === item.id
-                      ? "bg-green-50 dark:bg-green-900/20"
-                      : ""
-                  }`}
-                  onPress={() => handleSelectAccount(item)}
-                >
-                  <View className="flex-1">
-                    <Text className="text-base font-semibold text-gray-900 dark:text-white mb-1">
-                      {getAccountTitle(item)}
-                    </Text>
-                    <Text className="text-sm text-gray-600 dark:text-gray-400 mb-0.5">
-                      {getAccountDisplayName(item)}
-                    </Text>
-                    <Text className="text-xs text-gray-400 dark:text-gray-500 uppercase">
-                      {item.withdraw_account_type?.name || ""}
-                    </Text>
-                  </View>
-                  {selectedWithdrawAccount?.id === item.id && (
-                    <Ionicons
-                      name="checkmark-circle"
-                      size={24}
-                      color="#10B981"
-                    />
-                  )}
-                </TouchableOpacity>
-              )}
+              renderItem={({ item }) => {
+                const selected = selectedWithdrawAccount?.id === item.id;
+                return (
+                  <TouchableOpacity
+                    className={`p-4 border-b border-gray-100 dark:border-gray-800 ${
+                      selected ? "bg-green-50 dark:bg-green-900/20" : ""
+                    }`}
+                    onPress={() => handleSelectAccount(item)}
+                  >
+                    <View className="flex-row items-center">
+                      <Ionicons
+                        name={selected ? "radio-button-on" : "radio-button-off"}
+                        size={22}
+                        color={selected ? "#F58220" : "#9CA3AF"}
+                      />
+
+                      <View className="flex-1 ml-3">
+                        <Text className="text-base font-semibold text-gray-900 dark:text-white mb-1">
+                          {getAccountTitle(item)}
+                        </Text>
+                        <Text className="text-sm text-gray-600 dark:text-gray-400 mb-0.5">
+                          {getAccountDisplayName(item)}
+                        </Text>
+                        <Text className="text-xs text-gray-400 dark:text-gray-500 uppercase">
+                          {item.withdraw_account_type?.name || ""}
+                        </Text>
+                      </View>
+
+                      <View className="items-end ml-3">
+                        {item.is_active && (
+                          <View className="bg-green-50 border border-green-200 px-2 py-1 rounded-full mb-1">
+                            <Text className="text-xs text-green-700 font-semibold">
+                              Verificada
+                            </Text>
+                          </View>
+                        )}
+                        <MaterialCommunityIcons
+                          name="bank"
+                          size={18}
+                          color="#9CA3AF"
+                        />
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                );
+              }}
               showsVerticalScrollIndicator={false}
             />
           </View>
         </View>
       </Modal>
-
-      {/* Bottom Navigation */}
-      <View className="bg-white dark:bg-[#1F2937] border-t border-gray-200 dark:border-gray-800">
-        <View className="flex-row justify-between items-center h-16 px-4">
-          {[
-            { icon: "home", label: "Home" },
-            { icon: "wallet", label: "Wallet", active: true },
-            { icon: "document-text", label: "Catálogo" },
-            { icon: "people", label: "Eventos" },
-            { icon: "storefront", label: "Grupos" },
-          ].map((item, idx) => (
-            <TouchableOpacity
-              key={idx}
-              className="flex-1 items-center active:opacity-70"
-            >
-              {item.active && (
-                <View className="absolute -top-1 w-12 h-1 bg-[#F58220] rounded-b-full" />
-              )}
-              <Ionicons
-                name={item.icon as any}
-                size={24}
-                color={item.active ? "#F58220" : "#9CA3AF"}
-              />
-              <Text
-                className={`text-[10px] mt-1 ${
-                  item.active ? "text-[#F58220] font-medium" : "text-gray-500"
-                }`}
-              >
-                {item.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
     </SafeAreaView>
   );
 };

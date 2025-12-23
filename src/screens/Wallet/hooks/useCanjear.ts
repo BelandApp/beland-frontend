@@ -3,6 +3,7 @@ import { useAuth } from "src/context";
 import {
   convertBeCoinsToUSD,
   formatUSDPrice,
+  BECOIN_CONFIG,
 } from "../../../constants/currency";
 import {
   WithdrawService,
@@ -29,7 +30,8 @@ export const useCanjear = (navigation: any) => {
   const { refreshAll } = useWallet();
 
   // Constantes de configuración
-  const exchangeRate = 20; // 20 BC = 1 USD
+  // BECOIN_CONFIG.VALUE_USD indica cuánto vale 1 BeCoin en USD (ej: 0.05)
+  const exchangeRate = 1 / BECOIN_CONFIG.VALUE_USD; // BC por 1 USD (ej: 20)
   const commission = 0.01; // 1%
 
   // Cargar cuentas de retiro al montar el componente
@@ -40,13 +42,19 @@ export const useCanjear = (navigation: any) => {
   const loadWithdrawAccounts = async () => {
     try {
       setLoadingAccounts(true);
-      const response = await WithdrawService.getWithdrawAccounts();
-      const activeAccounts = response.data.filter(
-        (account: WithdrawAccount) => account.is_active
+      const resp = await WithdrawService.getWithdrawAccounts();
+      const items = Array.isArray((resp as any)?.data)
+        ? (resp as any).data
+        : Array.isArray(resp) && Array.isArray(resp[0])
+        ? resp[0]
+        : Array.isArray(resp)
+        ? resp
+        : [];
+      const activeAccounts = (items || []).filter(
+        (account: WithdrawAccount) => account?.is_active
       );
       setWithdrawAccounts(activeAccounts);
 
-      // Si solo hay una cuenta activa, seleccionarla automáticamente
       if (activeAccounts.length === 1) {
         setSelectedWithdrawAccount(activeAccounts[0]);
       }
@@ -66,12 +74,10 @@ export const useCanjear = (navigation: any) => {
     isAmountValid && selectedWithdrawAccount && !loadingAccounts;
 
   const calculateUSD = (bc: number) => {
-    const usd = bc / exchangeRate;
-    const fee = usd * commission;
+    const grossNumber = convertBeCoinsToUSD(bc);
+
     return {
-      gross: usd.toFixed(2),
-      fee: fee.toFixed(2),
-      net: (usd - fee).toFixed(2),
+      net: Number(grossNumber).toFixed(2),
     };
   };
 
@@ -79,46 +85,32 @@ export const useCanjear = (navigation: any) => {
 
   // Funciones de formato de cuenta
   const getAccountDisplayName = (account: WithdrawAccount) => {
-    if (account.withdraw_account_type?.code === "WALLET") {
-      const provider = account.provider || "Billetera virtual";
-      const phone = account.phone || "N/A";
-      return `${provider} - Tel: ${phone}`;
-    } else if (account.withdraw_account_type?.code === "BANK") {
-      if (account.cbu) {
-        return `Cuenta bancaria - CBU: ***${account.cbu.slice(-4)}`;
-      } else if (account.alias) {
-        return `Cuenta bancaria - Alias: ${account.alias}`;
-      } else {
-        return "Cuenta bancaria";
-      }
-    }
-    return account.alias || account.owner_name || "Cuenta";
+    // Mostrar información legible: tipo de cuenta + moneda
+    const typeName = account.withdraw_account_type?.name || "Cuenta";
+    const currency = (account as any).currency || "USD";
+    return `${typeName} · ${currency}`;
   };
 
   const getAccountTitle = (account: WithdrawAccount) => {
-    if (account.alias) {
-      return account.alias;
+    // Preferir mostrar el banco/proveedor y un sufijo enmascarado del número (CBU o accountNumber)
+    const bank =
+      (account as any).bankName || account.provider || account.alias || "";
+    const cbu = account.cbu || (account as any).accountNumber || "";
+    const last4 = cbu ? cbu.slice(-4) : "";
+    if (bank) {
+      return last4 ? `${bank} **** ${last4}` : bank;
     }
-    if (account.withdraw_account_type?.code === "WALLET" && account.provider) {
-      return `${account.provider} - ${account.owner_name}`;
-    }
-    return account.owner_name || "Cuenta";
+    return account.holderName || account.owner_name || "Cuenta";
   };
 
   const getAccountNameForConfirmation = (account: WithdrawAccount) => {
-    if (account.alias) {
-      return account.alias;
-    }
-    if (account.cbu) {
-      return `CBU ***${account.cbu.slice(-4)}`;
-    }
-    if (account.provider && account.phone) {
-      return `${account.provider} (${account.phone})`;
-    }
-    if (account.provider) {
-      return account.provider;
-    }
-    return account.owner_name || "tu cuenta";
+    // Usado en mensajes de confirmación: preferir alias, CBU enmascarado o banco + titular
+    if (account.alias) return account.alias;
+    if (account.cbu) return `CBU **** ${account.cbu.slice(-4)}`;
+    const bank = (account as any).bankName || account.provider;
+    if (bank && account.holderName) return `${bank} - ${account.holderName}`;
+    if (bank) return bank;
+    return account.holderName || account.owner_name || "tu cuenta";
   };
 
   // Validación de input

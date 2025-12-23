@@ -8,7 +8,13 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { Plus, CreditCard, Building2, MoreVertical } from "lucide-react-native";
+import {
+  Plus,
+  CreditCard,
+  Building2,
+  MoreVertical,
+  Trash,
+} from "lucide-react-native";
 import PayphoneIcon from "src/components/icons/PayphoneIcon";
 import {
   WithdrawService,
@@ -218,7 +224,7 @@ export const PaymentPreferences: React.FC<{ onRefresh?: () => void }> = ({
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ gap: 12 }}
-          className="pt-1"
+          className="p-1"
         >
           {accounts.slice(0, 2).map((account) => (
             <TouchableOpacity
@@ -228,10 +234,19 @@ export const PaymentPreferences: React.FC<{ onRefresh?: () => void }> = ({
                 setShowAccountDetails(true);
               }}
               className="bg-white rounded-2xl p-4 mr-3 border border-gray-100 shadow-md"
-              style={{ minWidth: 220, overflow: "hidden" }}
+              style={{ minWidth: 240, overflow: "hidden" }}
             >
+              <View className="absolute top-3 right-3 z-50">
+                <TouchableOpacity
+                  onPress={() => handleDeleteAccount(account.id)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  className="p-2 bg-white rounded-full shadow"
+                >
+                  <Trash size={16} color="#e02424" strokeWidth={2} />
+                </TouchableOpacity>
+              </View>
               <View className="flex-row items-start">
-                <View className="w-12 h-12 bg-gray-50 rounded-lg items-center justify-center mr-3">
+                <View className="w-12 h-12 bg-gray-50 rounded-lg items-center justify-center ">
                   {getMethodIcon(account)}
                 </View>
                 <View className="flex-1">
@@ -256,14 +271,19 @@ export const PaymentPreferences: React.FC<{ onRefresh?: () => void }> = ({
                     {getMethodSubtitle(account)}
                   </Text>
                 </View>
-                {account.is_active && (
-                  <View className="ml-2 mt-1 bg-green-100 border border-green-200 px-2 py-1 rounded-full">
-                    <Text className="text-xs text-green-700 font-semibold">
-                      VERIFICADA
-                    </Text>
-                  </View>
-                )}
               </View>
+              {account.is_active && (
+                <View
+                  className="bg-green-50 border border-green-200 px-2 py-1 mt-2 rounded-full"
+                  style={{
+                    alignSelf: "flex-start",
+                  }}
+                >
+                  <Text className=" text-xs text-green-700 font-semibold">
+                    VERIFICADA
+                  </Text>
+                </View>
+              )}
             </TouchableOpacity>
           ))}
 
@@ -279,103 +299,6 @@ export const PaymentPreferences: React.FC<{ onRefresh?: () => void }> = ({
           </TouchableOpacity>
         </ScrollView>
       </View>
-
-      {/* Full list modal */}
-      <Modal
-        visible={showFullView}
-        animationType="slide"
-        onRequestClose={() => setShowFullView(false)}
-      >
-        <View className="flex-1 bg-white">
-          <View className="p-4 border-b border-gray-100 flex-row justify-between items-center">
-            <Text className="text-lg font-semibold">Cuentas de retiro</Text>
-            <TouchableOpacity onPress={() => setShowFullView(false)}>
-              <Text className="text-orange-500 font-semibold">Cerrar</Text>
-            </TouchableOpacity>
-          </View>
-          <ScrollView className="p-4 space-y-3">
-            {accounts.length === 0 ? (
-              <View className="flex-row items-center justify-center py-8">
-                <CreditCard size={24} color="#999" strokeWidth={1.5} />
-                <Text className="ml-2 text-sm text-gray-500">
-                  No hay cuentas agregadas
-                </Text>
-              </View>
-            ) : (
-              accounts.map((account) => (
-                <View
-                  key={account.id}
-                  className="bg-gray-50 rounded-lg p-3 border border-gray-100"
-                >
-                  <View className="flex-row items-center">
-                    <View className="w-10 h-10 items-center justify-center mr-3">
-                      {getMethodIcon(account)}
-                    </View>
-                    <View className="flex-1">
-                      <Text className="text-sm font-medium text-gray-900">
-                        {getMethodTitle(account)}
-                      </Text>
-                      <Text className="text-xs text-gray-500">
-                        {getMethodSubtitle(account)}
-                      </Text>
-                    </View>
-                    <TouchableOpacity
-                      className="p-1"
-                      onPress={() => handleMethodOptions(account)}
-                    >
-                      <MoreVertical size={20} color="#999" strokeWidth={2} />
-                    </TouchableOpacity>
-                  </View>
-
-                  {!account.is_active && (
-                    <View className="mt-2 pt-2 border-t border-gray-100">
-                      <Text className="text-xs text-red-500 font-semibold">
-                        Inactiva
-                      </Text>
-                    </View>
-                  )}
-
-                  {activeMethodMenu === account.id && (
-                    <Modal
-                      transparent
-                      visible={true}
-                      onRequestClose={closeMethodMenu}
-                      animationType="fade"
-                    >
-                      <TouchableOpacity
-                        className="flex-1 bg-black/30 justify-center items-center"
-                        activeOpacity={1}
-                        onPress={closeMethodMenu}
-                      >
-                        <View className="bg-white rounded-lg p-2 min-w-[200px] shadow-lg">
-                          <TouchableOpacity
-                            className="py-3 px-4 border-b border-gray-100"
-                            onPress={() => handleDeleteAccount(account.id)}
-                          >
-                            <Text className="text-center text-base text-red-600">
-                              Eliminar cuenta
-                            </Text>
-                          </TouchableOpacity>
-                          {!account.is_active && (
-                            <TouchableOpacity
-                              className="py-3 px-4"
-                              onPress={() => handleActivate(account.id)}
-                            >
-                              <Text className="text-center text-base text-green-600">
-                                Activar cuenta
-                              </Text>
-                            </TouchableOpacity>
-                          )}
-                        </View>
-                      </TouchableOpacity>
-                    </Modal>
-                  )}
-                </View>
-              ))
-            )}
-          </ScrollView>
-        </View>
-      </Modal>
 
       {/* Detalle rápido de cuenta al tocar tarjeta */}
       {selectedAccount && (
@@ -418,8 +341,6 @@ export const PaymentPreferences: React.FC<{ onRefresh?: () => void }> = ({
                   {selectedAccount.phone || "-"}
                 </Text>
               </View>
-
-              {/* Removed duplicated footer close button (header already has close) */}
             </View>
           </View>
         </Modal>
@@ -428,9 +349,9 @@ export const PaymentPreferences: React.FC<{ onRefresh?: () => void }> = ({
       {/* Delete confirm modal */}
       <Modal visible={showDeleteModal} transparent animationType="fade">
         <View className="flex-1 bg-black/60 justify-center items-center p-4">
-          <View className="bg-white rounded-xl p-6 w-full max-w-md">
+          <View className=" flex justify-center items-center bg-white rounded-xl p-6 w-full max-w-md">
             <View className="w-14 h-14 rounded-full bg-amber-100 border border-amber-200 justify-center items-center mb-4">
-              <Text className="text-2xl">⚠️</Text>
+              <Text className="text-xl">⚠️</Text>
             </View>
             <Text className="text-lg font-bold text-gray-900 mb-2">
               Eliminar cuenta
@@ -442,13 +363,13 @@ export const PaymentPreferences: React.FC<{ onRefresh?: () => void }> = ({
             </Text>
             <View className="flex-row space-x-3">
               <TouchableOpacity
-                className="flex-1 py-3 rounded-lg bg-gray-100 items-center"
+                className="flex-1 py-3 px-3 rounded-lg bg-gray-100 items-center"
                 onPress={cancelDelete}
               >
                 <Text className="text-base text-gray-700">Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                className="flex-1 py-3 rounded-lg bg-red-600 items-center"
+                className="flex-1 py-3 px-3 rounded-lg bg-red-600 items-center"
                 onPress={confirmDeleteAccount}
               >
                 <Text className="text-base text-white">Eliminar</Text>
