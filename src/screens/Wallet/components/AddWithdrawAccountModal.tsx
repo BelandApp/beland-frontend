@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -18,7 +18,12 @@ import {
   CreditCard,
   Landmark,
   Check,
+  DollarSign,
+  CircleAlert,
 } from "lucide-react-native";
+import { useNotify } from "src/hooks";
+import Toast, { BaseToast } from "react-native-toast-message";
+import { toastConfig } from "src/components/shared/notification/GlobalNotification";
 
 interface AddWithdrawAccountModalProps {
   visible: boolean;
@@ -50,6 +55,46 @@ export const AddWithdrawAccountModal: React.FC<
     submitting,
     loading,
   } = form;
+  const notify = useNotify();
+
+  useEffect(() => {
+    if (!errors) return;
+
+    const msgs: string[] = [];
+    const pushMessage = (m: any) => {
+      if (!m && m !== 0) return;
+      const txt = String(m);
+      if (txt.includes("accountNumber must be longer")) {
+        msgs.push("El número de cuenta debe tener al menos 4 caracteres");
+      } else {
+        msgs.push(txt);
+      }
+    };
+
+    if (Array.isArray(errors.message) && errors.message.length) {
+      errors.message.forEach(pushMessage);
+    } else {
+      Object.keys(errors).forEach((k) => {
+        const v = (errors as any)[k];
+        if (Array.isArray(v)) {
+          v.forEach(pushMessage);
+        } else if (typeof v === "string") {
+          pushMessage(v);
+        }
+      });
+    }
+
+    const unique = Array.from(new Set(msgs.filter(Boolean)));
+    unique.forEach((m) =>
+      Toast.show({
+        type: "error",
+        text1: m,
+        position: "top",
+        topOffset: 8,
+        visibilityTime: 4000,
+      })
+    );
+  }, [errors]);
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [country, setCountry] = useState("");
   const [currency, setCurrency] = useState("");
@@ -60,19 +105,19 @@ export const AddWithdrawAccountModal: React.FC<
   const docTypes = ["DNI", "CUIT", "CUIL", "CÉDULA", "RUC", "NIT"];
   const countries = [
     { label: "Argentina", value: "ARGENTINA" },
-    { label: "Colombia", value: "COLOMBIA" },
+    // { label: "Colombia", value: "COLOMBIA" },
     { label: "Ecuador", value: "ECUADOR" },
-    { label: "Uruguay", value: "URUGUAY" },
-    { label: "Chile", value: "CHILE" },
-    { label: "Perú", value: "PERU" },
+    // { label: "Uruguay", value: "URUGUAY" },
+    // { label: "Chile", value: "CHILE" },
+    // { label: "Perú", value: "PERU" },
   ];
   const currencies = [
     { label: "ARS - Peso Argentino", value: "ARS" },
     { label: "USD - Dólar Estadounidense", value: "USD" },
-    { label: "COP - Peso Colombiano", value: "COP" },
-    { label: "UYU - Peso Uruguayo", value: "UYU" },
-    { label: "CLP - Peso Chileno", value: "CLP" },
-    { label: "PEN - Sol Peruano", value: "PEN" },
+    // { label: "COP - Peso Colombiano", value: "COP" },
+    // { label: "UYU - Peso Uruguayo", value: "UYU" },
+    // { label: "CLP - Peso Chileno", value: "CLP" },
+    // { label: "PEN - Sol Peruano", value: "PEN" },
   ];
 
   return (
@@ -86,6 +131,7 @@ export const AddWithdrawAccountModal: React.FC<
         className="flex-1 justify-center items-center"
         style={{ backgroundColor: "rgba(0,0,0,0.85)" }}
       >
+        <Toast config={toastConfig} />
         <View
           style={{
             shadowColor: "#000",
@@ -93,181 +139,183 @@ export const AddWithdrawAccountModal: React.FC<
             shadowRadius: 24,
             elevation: 16,
           }}
-          className="w-full max-w-xl bg-[#181411] rounded-2xl border border-[#28221c] overflow-hidden"
+          className=" w-full max-w-xl bg-[#181411] rounded-2xl border border-[#28221c] overflow-hidden"
         >
           <ScrollView contentContainerStyle={{ padding: 24 }}>
-            {/* País */}
-            <View className="mb-4">
-              <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
-                País
+            {/* Header */}
+            <View className="flex-row items-center justify-between mb-4 border-b border-[#28221c]">
+              <Text className="text-white text-lg font-bold">
+                Crear Cuenta Bancaria
               </Text>
-              <TouchableOpacity
-                className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 flex-row items-center"
-                onPress={() => setShowCountryPicker(true)}
-              >
-                <Text
-                  className={`flex-1 ${
-                    country ? "text-white" : "text-[#57534e]"
-                  }`}
-                >
-                  {countries.find((c: any) => c.value === country)?.label ||
-                    "Seleccionar país"}
-                </Text>
-                <Text className="text-[#57534e]">▼</Text>
+              <TouchableOpacity onPress={onClose} className="p-2">
+                <X size={20} color="#b9aa9d" />
               </TouchableOpacity>
-              {showCountryPicker && (
-                <Modal
-                  visible={showCountryPicker}
-                  transparent
-                  animationType="fade"
-                  onRequestClose={() => setShowCountryPicker(false)}
-                >
-                  <TouchableOpacity
-                    style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}
-                    activeOpacity={1}
-                    onPressOut={() => setShowCountryPicker(false)}
-                  >
-                    <View
-                      style={{
-                        position: "absolute",
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                      }}
-                    >
-                      <View className="bg-[#181411] p-4 rounded-t-2xl border-t border-[#28221c]">
-                        {countries.map((c: any) => (
-                          <TouchableOpacity
-                            key={c.value}
-                            className="py-3 px-2"
-                            onPress={() => {
-                              setCountry(c.value);
-                              if (form.setCountry) form.setCountry(c.value);
-                              setShowCountryPicker(false);
-                            }}
-                          >
-                            <Text className="text-white text-base">
-                              {c.label}
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                </Modal>
-              )}
-              {errors?.country && (
-                <Text className="text-xs text-red-500 mt-1">
-                  {errors.country}
-                </Text>
-              )}
             </View>
 
-            {/* Moneda */}
-            <View className="mb-4">
-              <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
-                Moneda
-              </Text>
-              <TouchableOpacity
-                className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 flex-row items-center"
-                onPress={() => setShowCurrencyPicker(true)}
+            {/* Row: País / Moneda */}
+            <View className="flex-row gap-3 mb-4">
+              <View className="flex-1">
+                <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
+                  País
+                </Text>
+                <TouchableOpacity
+                  className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 flex-row items-center"
+                  onPress={() => setShowCountryPicker(true)}
+                >
+                  <Text
+                    className={`flex-1 ${
+                      country ? "text-white" : "text-[#57534e]"
+                    }`}
+                  >
+                    {countries.find((c: any) => c.value === country)?.label ||
+                      "Seleccionar país"}
+                  </Text>
+                  <Globe size={16} color="#b9aa9d" />
+                </TouchableOpacity>
+              </View>
+
+              <View className="flex-1">
+                <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
+                  Moneda
+                </Text>
+                <TouchableOpacity
+                  className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 flex-row items-center"
+                  onPress={() => setShowCurrencyPicker(true)}
+                >
+                  <Text
+                    className={`flex-1 ${
+                      currency ? "text-white" : "text-[#57534e]"
+                    }`}
+                  >
+                    {currencies.find((c: any) => c.value === currency)?.label ||
+                      "Seleccionar moneda"}
+                  </Text>
+                  <DollarSign size={16} color="#b9aa9d" />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Country picker modal */}
+            {showCountryPicker && (
+              <Modal
+                visible={showCountryPicker}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setShowCountryPicker(false)}
               >
-                <Text
-                  className={`flex-1 ${
-                    currency ? "text-white" : "text-[#57534e]"
-                  }`}
+                <TouchableOpacity
+                  style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}
+                  activeOpacity={1}
+                  onPressOut={() => setShowCountryPicker(false)}
                 >
-                  {currencies.find((c: any) => c.value === currency)?.label ||
-                    "Seleccionar moneda"}
-                </Text>
-                <Text className="text-[#57534e]">▼</Text>
-              </TouchableOpacity>
-              {showCurrencyPicker && (
-                <Modal
-                  visible={showCurrencyPicker}
-                  transparent
-                  animationType="fade"
-                  onRequestClose={() => setShowCurrencyPicker(false)}
-                >
-                  <TouchableOpacity
-                    style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}
-                    activeOpacity={1}
-                    onPressOut={() => setShowCurrencyPicker(false)}
+                  <View
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                    }}
                   >
-                    <View
-                      style={{
-                        position: "absolute",
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                      }}
-                    >
-                      <View className="bg-[#181411] p-4 rounded-t-2xl border-t border-[#28221c]">
-                        {currencies.map((c: any) => (
-                          <TouchableOpacity
-                            key={c.value}
-                            className="py-3 px-2"
-                            onPress={() => {
-                              setCurrency(c.value);
-                              if (form.setCurrency) form.setCurrency(c.value);
-                              setShowCurrencyPicker(false);
-                            }}
-                          >
-                            <Text className="text-white text-base">
-                              {c.label}
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
+                    <View className="bg-[#181411] p-4 rounded-t-2xl border-t border-[#28221c]">
+                      {countries.map((c: any) => (
+                        <TouchableOpacity
+                          key={c.value}
+                          className="py-3 px-2"
+                          onPress={() => {
+                            setCountry(c.value);
+                            if (form.setCountry) form.setCountry(c.value);
+                            setShowCountryPicker(false);
+                          }}
+                        >
+                          <Text className="text-white text-base">
+                            {c.label}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
                     </View>
-                  </TouchableOpacity>
-                </Modal>
-              )}
-              {errors?.currency && (
-                <Text className="text-xs text-red-500 mt-1">
-                  {errors.currency}
+                  </View>
+                </TouchableOpacity>
+              </Modal>
+            )}
+
+            {/* Currency picker modal */}
+            {showCurrencyPicker && (
+              <Modal
+                visible={showCurrencyPicker}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setShowCurrencyPicker(false)}
+              >
+                <TouchableOpacity
+                  style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}
+                  activeOpacity={1}
+                  onPressOut={() => setShowCurrencyPicker(false)}
+                >
+                  <View
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                    }}
+                  >
+                    <View className="bg-[#181411] p-4 rounded-t-2xl border-t border-[#28221c]">
+                      {currencies.map((c: any) => (
+                        <TouchableOpacity
+                          key={c.value}
+                          className="py-3 px-2"
+                          onPress={() => {
+                            setCurrency(c.value);
+                            if (form.setCurrency) form.setCurrency(c.value);
+                            setShowCurrencyPicker(false);
+                          }}
+                        >
+                          <Text className="text-white text-base">
+                            {c.label}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              </Modal>
+            )}
+
+            {/* Row: Código banco / Nombre banco */}
+            <View className="flex-row gap-3 mb-4">
+              <View className="flex-1">
+                <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
+                  Código del banco
                 </Text>
-              )}
+                <TextInput
+                  placeholder="Ej. 00123"
+                  placeholderTextColor="#57534e"
+                  className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 text-white"
+                  value={form.bankCode}
+                  onChangeText={(text) =>
+                    form.setBankCode(text.replace(/\n/g, "").trim())
+                  }
+                  multiline={false}
+                />
+              </View>
+              <View className="flex-1">
+                <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
+                  Nombre del banco
+                </Text>
+                <TextInput
+                  placeholder="Ej. Banco Nación"
+                  placeholderTextColor="#57534e"
+                  className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 text-white"
+                  value={form.bankName}
+                  onChangeText={(text) =>
+                    form.setBankName(text.replace(/\n/g, "").trim())
+                  }
+                  multiline={false}
+                />
+              </View>
             </View>
 
-            {/* Banco */}
-            <View className="mb-4">
-              <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
-                Banco
-              </Text>
-              <TextInput
-                placeholder="Código de banco"
-                placeholderTextColor="#57534e"
-                className="mb-2 flex-1 text-white"
-                value={form.bankCode}
-                onChangeText={(text) =>
-                  form.setBankCode(text.replace(/\n/g, "").trim())
-                }
-                multiline={false}
-              />
-              <TextInput
-                placeholder="Nombre del banco"
-                placeholderTextColor="#57534e"
-                className="flex-1 text-white"
-                value={form.bankName}
-                onChangeText={(text) =>
-                  form.setBankName(text.replace(/\n/g, "").trim())
-                }
-                multiline={false}
-              />
-              {errors?.bankCode && (
-                <Text className="text-xs text-red-500 mt-1">
-                  {errors.bankCode}
-                </Text>
-              )}
-              {errors?.bankName && (
-                <Text className="text-xs text-red-500 mt-1">
-                  {errors.bankName}
-                </Text>
-              )}
-            </View>
-
-            {/* Tipo de Cuenta (Selector) */}
+            {/* Tipo de Cuenta */}
             <View className="mb-4">
               <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
                 Tipo de Cuenta
@@ -286,62 +334,67 @@ export const AddWithdrawAccountModal: React.FC<
                     .find((t: any) => t.id === form.selectedType)?.name ||
                     "Seleccionar tipo de cuenta"}
                 </Text>
-                <Text className="text-[#57534e]">▼</Text>
+                <CreditCard size={16} color="#b9aa9d" />
+                <Text className="text-[#57534e] ml-2">▼</Text>
               </TouchableOpacity>
-              {showAccountTypePicker && (
-                <Modal
-                  visible={showAccountTypePicker}
-                  transparent
-                  animationType="fade"
-                  onRequestClose={() => setShowAccountTypePicker(false)}
-                >
-                  <TouchableOpacity
-                    style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}
-                    activeOpacity={1}
-                    onPressOut={() => setShowAccountTypePicker(false)}
-                  >
-                    <View
-                      style={{
-                        position: "absolute",
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                      }}
-                    >
-                      <View className="bg-[#181411] p-4 rounded-t-2xl border-t border-[#28221c]">
-                        {(form.accountTypes?.flat?.() || []).map(
-                          (type: any) => (
-                            <TouchableOpacity
-                              key={type.id}
-                              className="py-3 px-2"
-                              onPress={() => {
-                                if (
-                                  typeof form.setSelectedType === "function"
-                                ) {
-                                  form.setSelectedType(type.id);
-                                }
-                                setShowAccountTypePicker(false);
-                              }}
-                            >
-                              <Text className="text-white text-base">
-                                {type.name}
-                              </Text>
-                            </TouchableOpacity>
-                          )
-                        )}
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                </Modal>
-              )}
-              {errors?.selectedType && (
-                <Text className="text-xs text-red-500 mt-1">
-                  {errors.selectedType}
-                </Text>
-              )}
             </View>
 
-            {/* Identificadores bancarios condicionales eliminados por país, solo por tipo de cuenta */}
+            {/* Account type picker modal */}
+            {showAccountTypePicker && (
+              <Modal
+                visible={showAccountTypePicker}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setShowAccountTypePicker(false)}
+              >
+                <TouchableOpacity
+                  style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}
+                  activeOpacity={1}
+                  onPressOut={() => setShowAccountTypePicker(false)}
+                >
+                  <View
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                    }}
+                  >
+                    <View className="bg-[#181411] p-4 rounded-t-2xl border-t border-[#28221c]">
+                      {(
+                        form.accountTypes
+                          ?.flat?.()
+                          .filter(
+                            (t: any) => t?.name && String(t.name).trim()
+                          ) || []
+                      ).map((type: any) => (
+                        <TouchableOpacity
+                          key={type.id}
+                          className="py-3 px-2 flex-row items-center"
+                          onPress={() => {
+                            if (typeof form.setSelectedType === "function") {
+                              form.setSelectedType(type.id);
+                            }
+                            setShowAccountTypePicker(false);
+                          }}
+                        >
+                          <CreditCard
+                            size={16}
+                            color="#b9aa9d"
+                            className="mr-2"
+                          />
+                          <Text className="text-white text-base">
+                            {type.name}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              </Modal>
+            )}
+
+            {/* Campos condicionales según tipo de cuenta (mantener como antes) */}
             {(form.country === "ECUADOR" || form.country === "COLOMBIA") && (
               <View className="mb-4">
                 <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
@@ -350,18 +403,13 @@ export const AddWithdrawAccountModal: React.FC<
                 <TextInput
                   placeholder="Número de cuenta"
                   placeholderTextColor="#57534e"
-                  className="flex-1 text-white"
+                  className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 text-white"
                   value={form.accountNumber}
                   onChangeText={(text) =>
                     form.setAccountNumber(text.replace(/\n/g, "").trim())
                   }
                   multiline={false}
                 />
-                {errors?.accountNumber && (
-                  <Text className="text-xs text-red-500 mt-1">
-                    {errors.accountNumber}
-                  </Text>
-                )}
               </View>
             )}
 
@@ -371,113 +419,106 @@ export const AddWithdrawAccountModal: React.FC<
                 Nombre del titular
               </Text>
               <TextInput
-                placeholder="Nombre completo"
+                placeholder="Nombre completo como figura en el banco"
                 placeholderTextColor="#57534e"
-                className="flex-1 text-white"
+                className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 text-white"
                 value={form.holderName}
                 onChangeText={(text) =>
                   form.setHolderName(text.replace(/\n/g, "").trim())
                 }
                 multiline={false}
               />
-              {errors?.holderName && (
-                <Text className="text-xs text-red-500 mt-1">
-                  {errors.holderName}
-                </Text>
-              )}
-            </View>
-            <View className="mb-4">
-              <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
-                Documento del titular
-              </Text>
-              <TextInput
-                placeholder="Documento"
-                placeholderTextColor="#57534e"
-                className="flex-1 text-white"
-                value={form.holderDocument}
-                onChangeText={(text) =>
-                  form.setHolderDocument(
-                    text
-                      .replace(/[^0-9]/g, "")
-                      .replace(/\n/g, "")
-                      .trim()
-                  )
-                }
-                keyboardType="numeric"
-                maxLength={15}
-                multiline={false}
-              />
-              {errors?.holderDocument && (
-                <Text className="text-xs text-red-500 mt-1">
-                  {errors.holderDocument}
-                </Text>
-              )}
-            </View>
-            <View className="mb-4">
-              <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
-                Tipo de documento
-              </Text>
-              <TouchableOpacity
-                className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 flex-row items-center"
-                onPress={() => setShowDocTypePicker(true)}
-              >
-                <Text
-                  className={`flex-1 ${
-                    holderDocumentType ? "text-white" : "text-[#57534e]"
-                  }`}
-                >
-                  {holderDocumentType || "Seleccionar tipo de documento"}
-                </Text>
-                <Text className="text-[#57534e]">▼</Text>
-              </TouchableOpacity>
-              {showDocTypePicker && (
-                <Modal
-                  visible={showDocTypePicker}
-                  transparent
-                  animationType="fade"
-                  onRequestClose={() => setShowDocTypePicker(false)}
-                >
-                  <TouchableOpacity
-                    style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}
-                    activeOpacity={1}
-                    onPressOut={() => setShowDocTypePicker(false)}
-                  >
-                    <View
-                      style={{
-                        position: "absolute",
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                      }}
-                    >
-                      <View className="bg-[#181411] p-4 rounded-t-2xl border-t border-[#28221c]">
-                        {docTypes.map((type) => (
-                          <TouchableOpacity
-                            key={type}
-                            className="py-3 px-2"
-                            onPress={() => {
-                              setHolderDocumentType(type);
-                              if (form.setHolderDocumentType)
-                                form.setHolderDocumentType(type);
-                              setShowDocTypePicker(false);
-                            }}
-                          >
-                            <Text className="text-white text-base">{type}</Text>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                </Modal>
-              )}
-              {errors?.holderDocumentType && (
-                <Text className="text-xs text-red-500 mt-1">
-                  {errors.holderDocumentType}
-                </Text>
-              )}
             </View>
 
-            {/* Campos condicionales según tipo de cuenta */}
+            {/* Documento: tipo + número en una fila */}
+            <View className="flex-row gap-3 mb-4">
+              <View className="flex-1">
+                <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
+                  Tipo de documento
+                </Text>
+                <TouchableOpacity
+                  className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 flex-row items-center"
+                  onPress={() => setShowDocTypePicker(true)}
+                >
+                  <Text
+                    className={`flex-1 ${
+                      holderDocumentType ? "text-white" : "text-[#57534e]"
+                    }`}
+                  >
+                    {holderDocumentType || "DNI"}
+                  </Text>
+                  <User size={16} color="#b9aa9d" />
+                  <Text className="text-[#57534e] ml-2">▼</Text>
+                </TouchableOpacity>
+              </View>
+              <View className="flex-1">
+                <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
+                  Documento del titular
+                </Text>
+                <TextInput
+                  placeholder="Número de documento"
+                  placeholderTextColor="#57534e"
+                  className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 text-white"
+                  value={form.holderDocument}
+                  onChangeText={(text) =>
+                    form.setHolderDocument(
+                      text
+                        .replace(/[^0-9]/g, "")
+                        .replace(/\n/g, "")
+                        .trim()
+                    )
+                  }
+                  keyboardType="numeric"
+                  maxLength={15}
+                  multiline={false}
+                />
+              </View>
+            </View>
+
+            {/* Doc type picker modal */}
+            {showDocTypePicker && (
+              <Modal
+                visible={showDocTypePicker}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setShowDocTypePicker(false)}
+              >
+                <TouchableOpacity
+                  style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}
+                  activeOpacity={1}
+                  onPressOut={() => setShowDocTypePicker(false)}
+                >
+                  <View
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                    }}
+                  >
+                    <View className="bg-[#181411] p-4 rounded-t-2xl border-t border-[#28221c]">
+                      {docTypes.map((type) => (
+                        <TouchableOpacity
+                          key={type}
+                          className="py-3 px-2 flex-row items-center"
+                          onPress={() => {
+                            setHolderDocumentType(type);
+                            if (form.setHolderDocumentType)
+                              form.setHolderDocumentType(type);
+                            setShowDocTypePicker(false);
+                          }}
+                        >
+                          <User size={16} color="#b9aa9d" className="mr-2" />
+                          <Text className="text-white text-base">{type}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              </Modal>
+            )}
+
+            {/* Campos condicionales según tipo de cuenta (CBU/Alias o WALLET) */}
             {form.selectedType &&
               ["BANK", "CORRIENTE", "AHORRO"].includes(
                 form.accountTypes
@@ -492,7 +533,7 @@ export const AddWithdrawAccountModal: React.FC<
                     <TextInput
                       placeholder="CBU (22 dígitos)"
                       placeholderTextColor="#57534e"
-                      className="flex-1 text-white"
+                      className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 text-white"
                       value={form.cbu}
                       onChangeText={(text) =>
                         form.setCbu(text.replace(/[^0-9]/g, "").slice(0, 22))
@@ -501,11 +542,6 @@ export const AddWithdrawAccountModal: React.FC<
                       maxLength={22}
                       multiline={false}
                     />
-                    {errors?.cbu && (
-                      <Text className="text-xs text-red-500 mt-1">
-                        {errors.cbu}
-                      </Text>
-                    )}
                   </View>
                   <View className="mb-4">
                     <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
@@ -514,18 +550,13 @@ export const AddWithdrawAccountModal: React.FC<
                     <TextInput
                       placeholder="Alias bancario"
                       placeholderTextColor="#57534e"
-                      className="flex-1 text-white"
+                      className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 text-white"
                       value={form.alias}
                       onChangeText={(text) =>
                         form.setAlias(text.replace(/\n/g, "").trim())
                       }
                       multiline={false}
                     />
-                    {errors?.alias && (
-                      <Text className="text-xs text-red-500 mt-1">
-                        {errors.alias}
-                      </Text>
-                    )}
                   </View>
                 </>
               )}
@@ -540,27 +571,22 @@ export const AddWithdrawAccountModal: React.FC<
                     <TextInput
                       placeholder="Proveedor (ej: MercadoPago, Payphone)"
                       placeholderTextColor="#57534e"
-                      className="flex-1 text-white"
+                      className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 text-white"
                       value={form.provider}
                       onChangeText={(text) =>
                         form.setProvider(text.replace(/\n/g, "").trim())
                       }
                       multiline={false}
                     />
-                    {errors?.provider && (
-                      <Text className="text-xs text-red-500 mt-1">
-                        {errors.provider}
-                      </Text>
-                    )}
                   </View>
                   <View className="mb-4">
                     <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
                       Teléfono
                     </Text>
                     <TextInput
-                      placeholder="Teléfono (solo números)"
+                      placeholder="Número de teléfono"
                       placeholderTextColor="#57534e"
-                      className="flex-1 text-white"
+                      className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 text-white"
                       value={form.phone}
                       onChangeText={(text) =>
                         form.setPhone(text.replace(/\n/g, "").trim())
@@ -569,11 +595,6 @@ export const AddWithdrawAccountModal: React.FC<
                       maxLength={15}
                       multiline={false}
                     />
-                    {errors?.phone && (
-                      <Text className="text-xs text-red-500 mt-1">
-                        {errors.phone}
-                      </Text>
-                    )}
                   </View>
                 </>
               )}
@@ -589,12 +610,10 @@ export const AddWithdrawAccountModal: React.FC<
               <TouchableOpacity
                 className="px-6 py-2.5 rounded-lg bg-[#f97316] flex-row items-center"
                 onPress={() => {
-                  // Mantener el estado del hook sincronizado (opcional)
                   if (form.setCountry) form.setCountry(country);
                   if (form.setCurrency) form.setCurrency(currency);
                   if (form.setHolderDocumentType)
                     form.setHolderDocumentType(holderDocumentType);
-                  // Llamar a handleSubmit pasando los valores locales para evitar condiciones de carrera
                   if (typeof handleSubmit === "function") {
                     handleSubmit({
                       country: country,

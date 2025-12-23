@@ -313,7 +313,9 @@ export const PaymentPreferences: React.FC<{ onRefresh?: () => void }> = ({
               <View className="flex-row justify-between items-start">
                 <Text className="text-lg font-bold">Detalle de cuenta</Text>
                 <TouchableOpacity onPress={() => setShowAccountDetails(false)}>
-                  <Text className="text-sm text-gray-500">Cerrar</Text>
+                  <Text className="text-sm font-bold rounded-full p-2  bg-orange-500 text-black">
+                    Cerrar
+                  </Text>
                 </TouchableOpacity>
               </View>
 
