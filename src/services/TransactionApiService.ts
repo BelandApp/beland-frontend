@@ -39,7 +39,9 @@ export interface RecentRecipient {
 
 class TransactionServiceClass extends CoreApiService {
   constructor() {
-    super("transactions");
+    // Initialize base API URL from CoreApiService, then append the resource path
+    super();
+    this.baseUrl = this.baseUrl.replace(/\/+$/g, "") + "/transactions";
   }
 
   /**
@@ -93,17 +95,9 @@ class TransactionServiceClass extends CoreApiService {
         queryString ? `?${queryString}` : ""
       }`;
 
-      console.log(
-        `[TransactionService] Fetching recent recipients: ${endpoint}`
-      );
       const data = await this.get<RecentRecipient[]>(endpoint);
-      console.log(`[TransactionService] Recent recipients response:`, data);
 
       const validData = Array.isArray(data) ? data : [];
-      console.log(
-        `[TransactionService] Returning ${validData.length} recipients`
-      );
-
       return validData;
     } catch (error: any) {
       console.error(
