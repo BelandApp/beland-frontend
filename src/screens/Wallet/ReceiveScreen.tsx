@@ -9,19 +9,22 @@ import {
   ActivityIndicator,
   Image,
   Platform,
+  TextInput,
 } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuth } from "src/context";
 import { useWallet } from "../Wallet/hooks/useWalletData";
 import { WalletService } from "@services/core";
+import { useNotify } from "src/hooks";
+import { getBackendErrorMessage } from "src/services";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { useBeCoinsPrice } from "src/hooks";
 import { ThemedHeader } from "src/components/shared/headers/Header";
 
 const ReceiveScreen = () => {
   const { goBack } = useCustomNavigation();
-  const { walletData } = useWallet();
+  const { walletData, wallet, refreshAll } = useWallet();
   const { user } = useAuth();
   const { beCoinsToUsd } = useBeCoinsPrice();
 
@@ -30,6 +33,10 @@ const ReceiveScreen = () => {
   const [qrLoading, setQrLoading] = useState(false);
   const [qrError, setQrError] = useState<string | null>(null);
   const [aliasLoadingDots, setAliasLoadingDots] = useState(0);
+  const [editingAlias, setEditingAlias] = useState(false);
+  const [aliasInput, setAliasInput] = useState("");
+  const [savingAlias, setSavingAlias] = useState(false);
+  const notify = useNotify();
 
   // Usar alias del backend (siempre en mayúsculas)
   const alias = walletData?.alias?.toUpperCase();
@@ -50,6 +57,11 @@ const ReceiveScreen = () => {
       setAliasLoadingDots(0);
     }
   }, [alias]);
+
+  useEffect(() => {
+    if (!editingAlias) return;
+    setAliasInput(wallet?.alias ?? "");
+  }, [editingAlias, wallet?.alias]);
 
   // Obtener QR del backend
   useEffect(() => {
@@ -95,6 +107,34 @@ const ReceiveScreen = () => {
     }
   };
 
+  const openEditAlias = () => {
+    setAliasInput(wallet?.alias ?? "");
+    setEditingAlias(true);
+  };
+
+  const handleSaveAlias = async () => {
+    if (!wallet || !wallet.id) return;
+    const newAlias = (aliasInput || "").toUpperCase().trim();
+    if (!newAlias || newAlias.length < 2) {
+      notify.error({ message: "El alias debe tener al menos 2 caracteres." });
+      return;
+    }
+
+    try {
+      setSavingAlias(true);
+      await WalletService.updateWallet(wallet.id, { alias: newAlias });
+      notify.success({ message: "Alias actualizado correctamente." });
+      setEditingAlias(false);
+      refreshAll();
+    } catch (err: any) {
+      const message =
+        getBackendErrorMessage(err) || "No se pudo actualizar el alias.";
+      notify.error({ message });
+    } finally {
+      setSavingAlias(false);
+    }
+  };
+
   return (
     <ScrollView style={styles.container}>
       <ThemedHeader
@@ -111,48 +151,91 @@ const ReceiveScreen = () => {
         </View>
 
         <View style={styles.aliasDisplay}>
-          <Text style={styles.aliasValue}>
-            {alias || `Cargando${".".repeat(aliasLoadingDots)}`}
-          </Text>
+          {/* Caja editable: al hacer click entra en modo edición */}
+          {!editingAlias ? (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={openEditAlias}
+              style={styles.aliasBoxTouchable}
+            >
+              <Text style={styles.aliasValue}>
+                {alias || `Cargando${".".repeat(aliasLoadingDots)}`}
+              </Text>
+              <View style={styles.pencilCircle}>
+                <MaterialCommunityIcons
+                  name="pencil"
+                  size={16}
+                  color="#7DA244"
+                />
+              </View>
+            </TouchableOpacity>
+          ) : (
+            <View>
+              <TextInput
+                value={aliasInput}
+                onChangeText={(t) => setAliasInput((t || "").toUpperCase())}
+                style={styles.aliasEditInput}
+                placeholder="Tu alias"
+                autoCapitalize="characters"
+                maxLength={32}
+              />
+
+              <View style={styles.inlineEditActions}>
+                <TouchableOpacity
+                  style={[styles.inlineBtn, { backgroundColor: "#e5e7eb" }]}
+                  onPress={() => setEditingAlias(false)}
+                  disabled={savingAlias}
+                >
+                  <Text style={[styles.inlineBtnText, { color: "#111827" }]}>
+                    Cancelar
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.inlineBtn, { backgroundColor: "#7DA244" }]}
+                  onPress={handleSaveAlias}
+                  disabled={savingAlias}
+                >
+                  {savingAlias ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={styles.inlineBtnText}>Guardar</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
         </View>
 
         <Text style={styles.aliasDescription}>
-          Comparte este alias para recibir transferencias
+          Haz click para editar tu alias
         </Text>
 
-        <View style={styles.aliasActions}>
+        <View style={styles.bigActionsRow}>
           <TouchableOpacity
-            style={styles.actionButton}
+            style={[styles.bigActionButton, !alias && { opacity: 0.6 }]}
             onPress={handleCopy}
             disabled={!alias}
           >
             <MaterialCommunityIcons
               name="content-copy"
-              size={20}
-              color={alias ? "#7DA244" : "#9ca3af"}
+              size={18}
+              color="#7DA244"
             />
-            <Text
-              style={[styles.actionButtonText, !alias && { color: "#9ca3af" }]}
-            >
-              Copiar
-            </Text>
+            <Text style={styles.bigActionButtonText}>Copiar</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.actionButton}
+            style={[styles.bigActionButton, !alias && { opacity: 0.6 }]}
             onPress={handleShare}
             disabled={!alias}
           >
             <MaterialCommunityIcons
               name="share-variant"
-              size={20}
-              color={alias ? "#7DA244" : "#9ca3af"}
+              size={18}
+              color="#7DA244"
             />
-            <Text
-              style={[styles.actionButtonText, !alias && { color: "#9ca3af" }]}
-            >
-              Compartir
-            </Text>
+            <Text style={styles.bigActionButtonText}>Compartir</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -292,6 +375,8 @@ const ReceiveScreen = () => {
           </Text>
         </View>
       </View>
+
+      {/* Inline edit area: cuando editingAlias es true mostramos input dentro de la tarjeta */}
 
       {/* Toast de copiado */}
       {showToast && (
@@ -559,6 +644,71 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 14,
     fontWeight: "600",
+  },
+  aliasBoxTouchable: {
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 6,
+  },
+  pencilCircle: {
+    position: "absolute",
+    right: 12,
+    top: 12,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "rgba(255,255,255,0.9)",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#e6f4e6",
+  },
+  aliasEditInput: {
+    borderWidth: 0,
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#7DA244",
+    textAlign: "center",
+    paddingVertical: 8,
+  },
+  inlineEditActions: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 12,
+  },
+  inlineBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 10,
+    marginHorizontal: 8,
+  },
+  inlineBtnText: {
+    fontWeight: "700",
+    color: "#fff",
+  },
+  bigActionsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+    marginTop: 12,
+  },
+  bigActionButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#7DA244",
+    borderRadius: 10,
+    paddingVertical: 14,
+    backgroundColor: "#fff",
+  },
+  bigActionButtonText: {
+    marginLeft: 8,
+    color: "#7DA244",
+    fontWeight: "700",
   },
 });
 
