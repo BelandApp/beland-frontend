@@ -150,7 +150,7 @@ const SendScreen = () => {
   };
 
   // Montos predefinidos en USD
-  const presetAmounts = [5, 10, 20, 50];
+  const presetAmounts = [1, 2, 5, 10, 20];
 
   const renderAmountTab = () => (
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
