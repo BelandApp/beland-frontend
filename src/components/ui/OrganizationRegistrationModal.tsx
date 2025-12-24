@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Modal,
   View,
@@ -12,34 +12,94 @@ import {
   Platform,
 } from "react-native";
 import { X, Building2, Mail, Phone, MapPin, Globe } from "lucide-react-native";
-import { CreateOrganizationDto } from "src/services/OrganizationApiService";
+import { toastConfig } from "src/components/shared/notification/GlobalNotification";
+
+export interface MerchantFormData {
+  name: string;
+  legal_name?: string;
+  ruc?: string;
+  description?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  address?: string;
+  city?: string;
+  province?: string;
+  country?: string;
+  latitude?: number;
+  longitude?: number;
+  logo_url?: string;
+}
+import * as mapboxService from "src/services/mapboxService";
+import type { MapboxSuggestion } from "src/services/mapboxService";
+import Toast from "react-native-toast-message";
 
 interface OrganizationRegistrationModalProps {
   visible: boolean;
   onClose: () => void;
-  onSubmit: (data: Omit<CreateOrganizationDto, "user_id">) => Promise<void>;
+  onSubmit: (data: MerchantFormData) => Promise<void>;
   isLoading?: boolean;
 }
 
 export const OrganizationRegistrationModal: React.FC<
   OrganizationRegistrationModalProps
 > = ({ visible, onClose, onSubmit, isLoading = false }) => {
-  const [formData, setFormData] = useState<
-    Omit<CreateOrganizationDto, "user_id">
-  >({
+  const [formData, setFormData] = useState<MerchantFormData>({
     name: "",
     legal_name: "",
     ruc: "",
-    category: "",
     description: "",
     phone: "",
     email: "",
     address: "",
     city: "",
     province: "",
-    country: "Paraguay",
+    country: "",
     website: "",
   });
+
+  // Mapbox autocomplete states
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [suggestions, setSuggestions] = useState<MapboxSuggestion[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState<boolean>(false);
+  const debounceRef = useRef<number | null>(null);
+
+  // Debounced suggestions effect
+  useEffect(() => {
+    if (!searchQuery || searchQuery.trim().length < 3) {
+      setSuggestions([]);
+      return;
+    }
+
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    debounceRef.current = setTimeout(async () => {
+      try {
+        setLoadingSuggestions(true);
+        const results = await mapboxService.searchAddressSuggestions(
+          searchQuery,
+          {
+            language: "es",
+            limit: 5,
+          }
+        );
+        setSuggestions(results || []);
+      } catch (error) {
+        console.error("Error fetching address suggestions:", error);
+        setSuggestions([]);
+      } finally {
+        setLoadingSuggestions(false);
+      }
+    }, 300) as unknown as number;
+
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, [searchQuery]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -66,22 +126,21 @@ export const OrganizationRegistrationModal: React.FC<
       }
     }
 
-    if (formData.address && formData.address.trim()) {
-      if (formData.address.trim().length < 5) {
-        newErrors.address = "La dirección debe tener al menos 5 caracteres";
-      }
+    // Address fields are required for merchant creation (address_id)
+    if (!formData.address || !formData.address.trim()) {
+      newErrors.address = "La dirección es requerida";
+    } else if (formData.address.trim().length < 5) {
+      newErrors.address = "La dirección debe tener al menos 5 caracteres";
     }
 
-    if (formData.city && formData.city.trim()) {
-      if (formData.city.trim().length < 2) {
-        newErrors.city = "La ciudad debe tener al menos 2 caracteres";
-      }
+    if (!formData.city || !formData.city.trim()) {
+      newErrors.city = "La ciudad es requerida";
+    } else if (formData.city.trim().length < 2) {
+      newErrors.city = "La ciudad debe tener al menos 2 caracteres";
     }
 
-    if (formData.province && formData.province.trim()) {
-      if (formData.province.trim().length < 2) {
-        newErrors.province = "El departamento debe tener al menos 2 caracteres";
-      }
+    if (!formData.country || !formData.country.trim()) {
+      newErrors.country = "El país es requerido";
     }
 
     if (formData.website && formData.website.trim()) {
@@ -109,19 +168,32 @@ export const OrganizationRegistrationModal: React.FC<
         name: "",
         legal_name: "",
         ruc: "",
-        category: "",
+
         description: "",
         phone: "",
         email: "",
         address: "",
         city: "",
         province: "",
-        country: "Paraguay",
+        country: "",
         website: "",
       });
       setErrors({});
-    } catch (error) {
-      // Error handling is done by the parent component
+    } catch (error: any) {
+      // Show toast with backend error message and keep form values
+      const msg =
+        error?.message ||
+        error?.details?.message ||
+        (Array.isArray(error?.details?.message)
+          ? error.details.message.join(", ")
+          : undefined) ||
+        "Error al crear el comercio";
+      Toast.show({
+        type: "error",
+        text1: String(msg),
+        position: "top",
+        topOffset: 60,
+      });
     }
   };
 
@@ -143,6 +215,10 @@ export const OrganizationRegistrationModal: React.FC<
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.overlay}
       >
+        <View className=" absolute right-60 top-0">
+          <Toast config={toastConfig} />
+        </View>
+
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             {/* Header */}
@@ -178,7 +254,9 @@ export const OrganizationRegistrationModal: React.FC<
                     Información Básica <Text style={styles.required}>*</Text>
                   </Text>
 
-                  <View style={styles.inputContainer}>
+                  <View
+                    style={[styles.inputContainer, styles.suggestionsWrapper]}
+                  >
                     <Text style={styles.label}>
                       Nombre del Negocio <Text style={styles.required}>*</Text>
                     </Text>
@@ -203,7 +281,9 @@ export const OrganizationRegistrationModal: React.FC<
                     Información Legal (Opcional)
                   </Text>
 
-                  <View style={styles.inputContainer}>
+                  <View
+                    style={[styles.inputContainer, styles.suggestionsWrapper]}
+                  >
                     <Text style={styles.label}>Razón Social</Text>
                     <TextInput
                       style={styles.input}
@@ -231,19 +311,6 @@ export const OrganizationRegistrationModal: React.FC<
                   </View>
 
                   <View style={styles.inputContainer}>
-                    <Text style={styles.label}>Categoría</Text>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Ej: Restaurante, Tienda, Servicios"
-                      value={formData.category}
-                      onChangeText={(text) =>
-                        setFormData({ ...formData, category: text })
-                      }
-                      editable={!isLoading}
-                    />
-                  </View>
-
-                  <View style={styles.inputContainer}>
                     <Text style={styles.label}>Descripción</Text>
                     <TextInput
                       style={[styles.input, styles.textArea]}
@@ -264,7 +331,9 @@ export const OrganizationRegistrationModal: React.FC<
                 <View style={styles.section}>
                   <Text style={styles.sectionTitle}>Contacto (Opcional)</Text>
 
-                  <View style={styles.inputContainer}>
+                  <View
+                    style={[styles.inputContainer, styles.suggestionsWrapper]}
+                  >
                     <View style={styles.labelWithIcon}>
                       <Phone size={16} color="#666" />
                       <Text style={styles.label}>
@@ -336,7 +405,7 @@ export const OrganizationRegistrationModal: React.FC<
 
                 {/* Location Information */}
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Ubicación (Opcional)</Text>
+                  <Text style={styles.sectionTitle}>Ubicación </Text>
 
                   <View style={styles.inputContainer}>
                     <View style={styles.labelWithIcon}>
@@ -352,11 +421,50 @@ export const OrganizationRegistrationModal: React.FC<
                       ]}
                       placeholder="Calle, número, barrio"
                       value={formData.address}
-                      onChangeText={(text) =>
-                        setFormData({ ...formData, address: text })
-                      }
+                      onChangeText={(text) => {
+                        setFormData({ ...formData, address: text });
+                        setSearchQuery(text);
+                      }}
                       editable={!isLoading}
                     />
+
+                    {suggestions.length > 0 && (
+                      <View style={styles.suggestionsContainer}>
+                        {suggestions.map((s) => (
+                          <TouchableOpacity
+                            key={s.id}
+                            style={styles.suggestionItem}
+                            onPress={() => {
+                              setFormData((prev) => ({
+                                ...prev,
+                                address: s.name || s.full_address,
+                                city:
+                                  s.context?.place?.name ||
+                                  s.context?.locality?.name ||
+                                  s.context?.region?.name ||
+                                  "",
+                                province: s.context?.region?.name || "",
+                                country: s.context?.country?.name || "",
+                              }));
+                              setSuggestions([]);
+                              setSearchQuery("");
+                            }}
+                          >
+                            <Text style={styles.suggestionText}>
+                              {s.full_address}
+                            </Text>
+                            <Text
+                              style={styles.suggestionSubText}
+                              numberOfLines={1}
+                            >
+                              {s.context?.region?.name ||
+                                s.context?.country?.name}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    )}
+
                     {errors.address && (
                       <Text style={styles.errorText}>{errors.address}</Text>
                     )}
@@ -369,7 +477,7 @@ export const OrganizationRegistrationModal: React.FC<
                       </Text>
                       <TextInput
                         style={[styles.input, errors.city && styles.inputError]}
-                        placeholder="Ej: Asunción"
+                        placeholder="Ej: Pichincha"
                         value={formData.city}
                         onChangeText={(text) =>
                           setFormData({ ...formData, city: text })
@@ -390,7 +498,7 @@ export const OrganizationRegistrationModal: React.FC<
                           styles.input,
                           errors.province && styles.inputError,
                         ]}
-                        placeholder="Ej: Central"
+                        placeholder="Ej: Ecuador"
                         value={formData.province}
                         onChangeText={(text) =>
                           setFormData({ ...formData, province: text })
@@ -407,7 +515,7 @@ export const OrganizationRegistrationModal: React.FC<
                     <Text style={styles.label}>País</Text>
                     <TextInput
                       style={styles.input}
-                      placeholder="Paraguay"
+                      placeholder="Ecuador"
                       value={formData.country}
                       onChangeText={(text) =>
                         setFormData({ ...formData, country: text })
@@ -602,5 +710,40 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: "#fff",
+    textAlign: "center",
+  },
+
+  suggestionsWrapper: {
+    position: "relative",
+  },
+  suggestionsContainer: {
+    position: "relative",
+    zIndex: 2000,
+    maxHeight: 275,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#EEE",
+    borderRadius: 8,
+    paddingVertical: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 6,
+  },
+  suggestionItem: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F4F4F4",
+  },
+  suggestionText: {
+    fontSize: 14,
+    color: "#333",
+  },
+  suggestionSubText: {
+    fontSize: 12,
+    color: "#666",
+    marginTop: 2,
   },
 });

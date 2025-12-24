@@ -661,9 +661,7 @@ export class AdminApiService extends CoreApiService {
     page: number = 1,
     limit: number = 10
   ): Promise<Organization[]> {
-    return this.get<Organization[]>(
-      `organizations?page=${page}&limit=${limit}`
-    );
+    return this.get<Organization[]>(`merchants?page=${page}&limit=${limit}`);
   }
 
   async toggleOrganizationStatus(
@@ -672,12 +670,10 @@ export class AdminApiService extends CoreApiService {
   ): Promise<Organization> {
     if (!isActive) {
       // Disactivate organization
-      return this.put<Organization>(`organizations/disactive/${orgId}`, {});
+      return this.put<Organization>(`merchants/disactive/${orgId}`, {});
     } else {
       // Reactivate organization
-      return this.put<Organization>(`organizations/${orgId}`, {
-        is_active: true,
-      });
+      return this.put<Organization>(`merchants/activate/${orgId}`, {});
     }
   }
 

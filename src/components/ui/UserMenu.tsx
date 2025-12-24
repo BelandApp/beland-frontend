@@ -24,7 +24,10 @@ import { authService } from "../../services/auth/auth.service";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { useNotify } from "src/hooks";
 import { getBackendErrorMessage } from "src/services";
-import { OrganizationRegistrationModal } from "./OrganizationRegistrationModal";
+import {
+  OrganizationRegistrationModal,
+  MerchantFormData,
+} from "./OrganizationRegistrationModal";
 import {
   organizationService,
   CreateOrganizationDto,
@@ -50,7 +53,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   const [menuVisible, setMenuVisible] = useState(false);
   const [showOrganizationModal, setShowOrganizationModal] = useState(false);
   const [isCreatingOrganization, setIsCreatingOrganization] = useState(false);
-  const pendingEvents = eventStore.getState().pendingEvents
+  const pendingEvents = eventStore.getState().pendingEvents;
   const [hasPendingEvents, setHasPendingEvents] = useState<boolean>(
     pendingEvents.length > 0
   );
@@ -97,9 +100,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
     }
   };
 
-  const handleCreateOrganization = async (
-    data: Omit<CreateOrganizationDto, "user_id">
-  ) => {
+  const handleCreateOrganization = async (data: MerchantFormData) => {
     if (!user?.id) {
       notify.error({ message: "Usuario no encontrado" });
       return;
@@ -107,41 +108,77 @@ export const UserMenu: React.FC<UserMenuProps> = ({
 
     setIsCreatingOrganization(true);
     try {
-      // Filter out empty optional fields to avoid backend validation errors
+      // Filter out empty optional fields to match the backend CreateMerchantDto
       const cleanedData: Partial<CreateOrganizationDto> = {
         name: data.name,
-        user_id: user.id,
       };
 
       // Only include optional fields if they have valid values
       if (data.legal_name?.trim())
         cleanedData.legal_name = data.legal_name.trim();
       if (data.ruc?.trim()) cleanedData.ruc = data.ruc.trim();
-      if (data.category?.trim()) cleanedData.category = data.category.trim();
-      if (data.description?.trim())
-        cleanedData.description = data.description.trim();
-      if (data.phone?.trim() && data.phone.length >= 5)
-        cleanedData.phone = data.phone.trim();
-      if (data.email?.trim() && data.email.includes("@"))
-        cleanedData.email = data.email.trim();
-      if (data.address?.trim() && data.address.length >= 5)
-        cleanedData.address = data.address.trim();
-      if (data.city?.trim() && data.city.length >= 2)
-        cleanedData.city = data.city.trim();
-      if (data.province?.trim() && data.province.length >= 2)
-        cleanedData.province = data.province.trim();
-      if (data.country?.trim()) cleanedData.country = data.country.trim();
-      if (
-        data.website?.trim() &&
-        (data.website.startsWith("http://") ||
-          data.website.startsWith("https://"))
-      ) {
-        cleanedData.website = data.website.trim();
-      }
-      if (data.logo_url?.trim()) cleanedData.logo_url = data.logo_url.trim();
-
-      // Step 1: Create organization
+      // Backend no longer accepts `category` or raw address fields — omit them.
+      // Step 1: Address is required by backend via `address_id`. Create it first.
       try {
+        if (!data.address || !data.city || !data.country) {
+          notify.error({
+            message: "La dirección, ciudad y país son requeridos",
+          });
+          setIsCreatingOrganization(false);
+          return;
+        }
+
+        // Validate RUC length if provided
+        if (
+          data.ruc &&
+          data.ruc.trim().length > 0 &&
+          data.ruc.trim().length < 5
+        ) {
+          notify.error({ message: "El RUC debe tener al menos 5 caracteres" });
+          setIsCreatingOrganization(false);
+          return;
+        }
+
+        // Map to CreateAddressRequest using the raw form `data`
+        const addressPayload: any = {
+          addressLine1: data.address,
+          city: data.city,
+          state: data.province || undefined,
+          country: data.country,
+          latitude: (data as any).latitude,
+          longitude: (data as any).longitude,
+          isDefault: false,
+        };
+
+        // Create address and obtain id
+        const createdAddress = await (
+          await import("src/services/addressService")
+        ).addressService.createAddress(addressPayload);
+        // Attach address_id for merchant creation
+        (cleanedData as any).address_id = createdAddress.id;
+
+        // Only include RUC if it meets length requirements
+        if (data.ruc?.trim() && data.ruc.trim().length >= 5) {
+          cleanedData.ruc = data.ruc.trim();
+        }
+
+        if (data.legal_name?.trim())
+          cleanedData.legal_name = data.legal_name.trim();
+        if (data.description?.trim())
+          cleanedData.description = data.description.trim();
+        if (data.phone?.trim() && data.phone.length >= 5)
+          cleanedData.phone = data.phone.trim();
+        if (data.email?.trim() && data.email.includes("@"))
+          cleanedData.email = data.email.trim();
+        if (data.logo_url?.trim()) cleanedData.logo_url = data.logo_url.trim();
+        if (
+          data.website?.trim() &&
+          (data.website.startsWith("http://") ||
+            data.website.startsWith("https://"))
+        ) {
+          cleanedData.website = data.website.trim();
+        }
+
         await organizationService.createOrganization(
           cleanedData as CreateOrganizationDto
         );
