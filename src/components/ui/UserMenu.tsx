@@ -35,6 +35,8 @@ import {
 import { eventStore } from "src/stores";
 import { colors } from "src/styles";
 
+import SuccessModal from "src/components/ui/SuccessModal";
+
 interface UserMenuProps {
   style?: any;
   variant?: "compact" | "full";
@@ -67,6 +69,10 @@ export const UserMenu: React.FC<UserMenuProps> = ({
     setMenuVisible(!menuVisible);
   };
 
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | undefined>(
+    undefined
+  );
   const handleNavigateToDashboard = () => {
     setMenuVisible(false);
     navigate("UserDashboardScreen");
@@ -209,13 +215,10 @@ export const UserMenu: React.FC<UserMenuProps> = ({
         }
       }
 
-      // Close the modal
+      // Close the modal and show success modal
       setShowOrganizationModal(false);
-
-      // Show success message
-      notify.success({
-        message: "¡Tu organización ha sido registrada exitosamente!",
-      });
+      setSuccessMessage("¡Tu organización ha sido registrada exitosamente!");
+      setShowSuccessModal(true);
     } catch (err) {
       // Only reach here if organization creation failed
       console.error("Error in organization creation:", err);
@@ -393,6 +396,11 @@ export const UserMenu: React.FC<UserMenuProps> = ({
         onClose={() => setShowOrganizationModal(false)}
         onSubmit={handleCreateOrganization}
         isLoading={isCreatingOrganization}
+      />
+      <SuccessModal
+        visible={showSuccessModal}
+        message={successMessage}
+        onClose={() => setShowSuccessModal(false)}
       />
     </View>
   );
