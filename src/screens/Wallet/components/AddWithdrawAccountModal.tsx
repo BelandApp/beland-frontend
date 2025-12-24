@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Modal,
   Platform,
+  Dimensions,
 } from "react-native";
 import {
   X,
@@ -138,10 +139,24 @@ export const AddWithdrawAccountModal: React.FC<
             shadowOpacity: 0.4,
             shadowRadius: 24,
             elevation: 16,
+            maxHeight:
+              Platform.OS === "web"
+                ? Dimensions.get("window").height * 0.9
+                : undefined,
+            width: "100%",
           }}
           className=" w-full max-w-xl bg-[#181411] rounded-2xl border border-[#28221c] overflow-hidden"
         >
-          <ScrollView contentContainerStyle={{ padding: 24 }}>
+          <ScrollView
+            contentContainerStyle={{ padding: 24, paddingBottom: 140 }}
+            keyboardShouldPersistTaps="handled"
+            style={{
+              maxHeight:
+                Platform.OS === "web"
+                  ? Dimensions.get("window").height * 0.7
+                  : undefined,
+            }}
+          >
             {/* Header */}
             <View className="flex-row items-center justify-between mb-4 border-b border-[#28221c]">
               <Text className="text-white text-lg font-bold">
@@ -598,9 +613,18 @@ export const AddWithdrawAccountModal: React.FC<
                   </View>
                 </>
               )}
+          </ScrollView>
 
-            {/* Botones de Acción */}
-            <View className="flex-row justify-end gap-3 mt-2">
+          {/* Footer fijo con acciones */}
+          <View
+            style={{
+              borderTopWidth: 1,
+              borderTopColor: "#28221c",
+              padding: 16,
+              backgroundColor: "#181411",
+            }}
+          >
+            <View className="flex-row justify-center gap-3">
               <TouchableOpacity
                 className="px-6 py-2.5 rounded-lg border border-[#3f3a36] bg-[#181411]"
                 onPress={onClose}
@@ -637,7 +661,7 @@ export const AddWithdrawAccountModal: React.FC<
                 )}
               </TouchableOpacity>
             </View>
-          </ScrollView>
+          </View>
         </View>
       </SafeAreaView>
     </Modal>
