@@ -216,18 +216,6 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
 };
 
 const styles = StyleSheet.create({
-  modal: { justifyContent: "flex-end", margin: 0 },
-  sheet: {
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
-    padding: 16,
-    minHeight: "80%",
-    maxHeight: "95%",
-    flexDirection: "column",
-    justifyContent: "space-between",
-    marginTop: "auto",
-  },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",

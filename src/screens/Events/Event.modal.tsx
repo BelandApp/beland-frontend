@@ -23,9 +23,6 @@ import { useAuth } from "src/context";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { useNotify } from "src/hooks";
 import { convertBeCoinsToUSD, formatUSDPrice } from "src/constants/currency";
-import Toast from "react-native-toast-message";
-import { toastConfig } from "src/components/shared/notification/GlobalNotification";
-import WarpperModal from "src/components/shared/modals/wrapperModal";
 
 export const EventModal = ({ route }: { route: any }) => {
   const { id } = route.params;
