@@ -8,12 +8,12 @@ import { convertUSDToBeCoins } from "src/constants";
 const STORAGE_KEY = "@cart_intent";
 
 export type CartItem = {
-  id: string;
+  id: string; // <-- ID del producto base
   name: string;
   price: number;
   quantity: number;
   image?: string;
-  item_id_for_delete?: string;
+  cartItemId?: string; // <-- ID del item en el carrito
 };
 
 export type CartStore = {
@@ -62,58 +62,62 @@ export const useCartStore = create<CartStore>((set, get) => ({
     set(() => ({ cartId: cart.id }));
     return cart.id;
   },
-  //  Agregar producto o sumar cantidad
-  addProduct: async (product) => {
-    const { items } = get();
-    const exists = items.find((i) => i.id === product.id);
-    const newQuantity = exists ? exists.quantity + 1 : 1;
-    let updatedItems = exists
-      ? items.map((i) =>
-          i.id === product.id ? { ...i, quantity: newQuantity } : i
-        )
-      : [...items, { ...product, quantity: 1 }];
+    //  Agregar producto o sumar cantidad`
+    addProduct: async (product) => {
+      const { items } = get();
+      const exists = items.find((i) => i.id === product.id);
+      const newQuantity = exists ? exists.quantity + 1 : 1;
+      let updatedItems = exists
+        ? items.map((i) =>
+            i.id === product.id ? { ...i, quantity: newQuantity } : i
+          )
+        : [...items, { ...product, quantity: 1 }];
 
-    set({ items: updatedItems });
-    storage.setItem(STORAGE_KEY, JSON.stringify(updatedItems));
-    const authToken = await TokenService.getToken();
-    if (!authToken) return false;
-    // El backend suma cantidades automáticamente, siempre enviar +1
-    CartService.addToCart({ product_id: product.id, quantity: 1 });
-  },
+      set({ items: updatedItems });
+      storage.setItem(STORAGE_KEY, JSON.stringify(updatedItems));
+      const authToken = await TokenService.getToken();
+      if (!authToken) return false;
+      // El backend suma cantidades automáticamente, siempre enviar +1
+      await CartService.addToCart({ product_id: product.id, quantity: 1 });
+      
+    },
 
-  // Remover producto
-  removeProduct: async (productId) => {
-    const itemToDelete = get().items.find((i) => i.id === productId);
-    if (!itemToDelete || !itemToDelete.item_id_for_delete) return;
-    const updated = get().items.filter((i) => i.id !== productId);
-    set({ items: updated });
-    storage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    const authToken = await TokenService.getToken();
-    if (!authToken) return false;
-    CartService.removeFromCart(itemToDelete?.item_id_for_delete);
-  },
+    // Remover producto
+    removeProduct: async (productId) => {
+      const item = get().items.find((i) => i.id === productId);
+      if (!item) return;
+      set({ items: get().items.filter((i) => i.id !== productId) });
+      storage.setItem(STORAGE_KEY, JSON.stringify(get().items));
 
-  // Actualizar cantidad (mínimo 1)
-  updateQuantity: async (productId, quantity) => {
-    if (quantity < 1) return;
+      const authToken = await TokenService.getToken();
+      if (!authToken) return;
+      console.log(item)
+      if (item.cartItemId) {
+        await CartService.removeFromCart(item.cartItemId);
+      }
+    },
 
-    const item = get().items.find((i) => i.id === productId);
-    if (!item) return;
+    // Actualizar cantidad (mínimo 1)
+    updateQuantity: async (productId, quantity) => {
+      if (quantity < 1) return;
 
-    const updated = get().items.map((i) =>
-      i.id === productId ? { ...i, quantity } : i
-    );
-    set({ items: updated });
-    storage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      const item = get().items.find((i) => i.id === productId);
+      if (!item) return;
 
-    const authToken = await TokenService.getToken();
-    if (!authToken) return false;
+      const updated = get().items.map((i) =>
+        i.id === productId ? { ...i, quantity } : i
+      );
+      set({ items: updated });
+      storage.setItem(STORAGE_KEY, JSON.stringify(updated));
 
-    // Usar updateCartItem para reemplazar la cantidad exacta
-    if (item.item_id_for_delete) {
-      CartService.updateCartItem(item.item_id_for_delete, { quantity });
-    }
-  },
+      const authToken = await TokenService.getToken();
+      if (!authToken) return false;
+
+      // Usar updateCartItem para reemplazar la cantidad exacta
+      if (item.cartItemId) {
+        CartService.updateCartItem(item.cartItemId, { quantity });
+      }
+    },
 
   // Limpiar carrito
   clearCart: () => {
@@ -142,13 +146,14 @@ export const useCartStore = create<CartStore>((set, get) => ({
       set({ loading: true });
 
       const serverCart = await CartService.getCart();
+      console.log("serverCart", serverCart)
       let serverItems = serverCart.items.map((item: any) => ({
         id: item.product_id,
         name: item.product.name,
         price: item.product.price,
         quantity: item.quantity,
         image: item.product.image_url,
-        item_id_for_delete: item.id,
+        cartItemId: item.id,
       }));
 
       // 1) Si el backend tiene items → usar backend como fuente de verdad
@@ -176,7 +181,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
           price: item.product.price,
           quantity: item.quantity,
           image: item.product.image_url,
-          item_id_for_delete: item.id,
+          cartItemId: item.id,
         }));
 
         set({ items: finalItems, hasInitialized: true });
@@ -203,7 +208,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
           price: item.product.price,
           quantity: item.quantity,
           image: item.product.image_url,
-          item_id_for_delete: item.id,
+          cartItemId: item.id,
         })),
         hasInitialized: true,
       });

@@ -14,9 +14,10 @@ import { useAuth } from "@/context/AuthContext";
 
 import { useWallet } from "./hooks/useWalletData";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
+import { Button, ThemedHeader } from "src/components";
 
 export default function WalletSettingsScreen() {
-    const { goBack } = useCustomNavigation();
+  const { goBack } = useCustomNavigation();
 
   const { user } = useAuth();
   const { wallet, refreshAll } = useWallet();
@@ -111,39 +112,28 @@ export default function WalletSettingsScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => goBack()}
-          style={styles.backButton}
-        >
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#333" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Configuración de Wallet</Text>
-      </View>
+    <>
+      <ThemedHeader canGoBack title="Configuración Wallet" />
+      <ScrollView style={styles.container}>
+        {/* Información de la wallet */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Información de la Wallet</Text>
 
-      {/* Información de la wallet */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Información de la Wallet</Text>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>ID de Wallet</Text>
+            <Text style={styles.infoValue}>{wallet?.id?.slice(0, 8)}...</Text>
+          </View>
 
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>ID de Wallet</Text>
-          <Text style={styles.infoValue}>
-            {wallet?.id?.slice(0, 8)}...
-          </Text>
-        </View>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Creada el</Text>
+            <Text style={styles.infoValue}>
+              {wallet?.created_at
+                ? new Date(wallet.created_at).toLocaleDateString()
+                : "-"}
+            </Text>
+          </View>
 
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Creada el</Text>
-          <Text style={styles.infoValue}>
-            {wallet?.created_at
-              ? new Date(wallet.created_at).toLocaleDateString()
-              : "-"}
-          </Text>
-        </View>
-
-        {wallet?.locked_balance &&
-          wallet.locked_balance > 0 && (
+          {wallet?.locked_balance && wallet.locked_balance > 0 && (
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Balance Bloqueado</Text>
               <Text style={styles.infoValue}>
@@ -151,128 +141,138 @@ export default function WalletSettingsScreen() {
               </Text>
             </View>
           )}
-      </View>
+        </View>
 
-      {/* Configuración del alias */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Alias de la Wallet</Text>
-        <Text style={styles.sectionSubtitle}>
-          Tu alias es como otras personas pueden encontrarte para enviarte
-          BeCoins
-        </Text>
+        {/* Configuración del alias */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Alias de la Wallet</Text>
+          <Text style={styles.sectionSubtitle}>
+            Tu alias es como otras personas pueden encontrarte para enviarte
+            BeCoins
+          </Text>
 
-        <View style={styles.aliasContainer}>
-          <TextInput
-            style={styles.aliasInput}
-            placeholder="Mi alias"
-            value={alias}
-            onChangeText={setAlias}
-            maxLength={20}
-          />
+          <View style={styles.aliasContainer}>
+            <TextInput
+              style={styles.aliasInput}
+              placeholder="Mi alias"
+              value={alias}
+              onChangeText={setAlias}
+              maxLength={20}
+            />
+            <Button
+              title={isLoading ? "Actualizando" : "Actualizar"}
+              onPress={handleUpdateAlias}
+              disabled={isLoading}
+              variant="ghost"
+            />
+          </View>
+        </View>
+
+        {/* Configuraciones de notificaciones */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Notificaciones</Text>
+
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingTitle}>Notificaciones Push</Text>
+              <Text style={styles.settingSubtitle}>
+                Recibir notificaciones de transacciones
+              </Text>
+            </View>
+            <Switch
+              value={notifications}
+              onValueChange={setNotifications}
+              trackColor={{ false: "#ccc", true: "#4ecdc4" }}
+              thumbColor="#fff"
+            />
+          </View>
+
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingTitle}>Bloqueo Automático</Text>
+              <Text style={styles.settingSubtitle}>
+                Bloquear wallet después de inactividad
+              </Text>
+            </View>
+            <Switch
+              value={autoLock}
+              onValueChange={setAutoLock}
+              trackColor={{ false: "#ccc", true: "#4ecdc4" }}
+              thumbColor="#fff"
+            />
+          </View>
+        </View>
+
+        {/* Herramientas */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Herramientas</Text>
+
           <TouchableOpacity
-            style={[
-              styles.updateButton,
-              isLoading && styles.updateButtonDisabled,
-            ]}
-            onPress={handleUpdateAlias}
-            disabled={isLoading}
+            style={styles.toolButton}
+            onPress={handleGenerateQR}
           >
-            <Text style={styles.updateButtonText}>
-              {isLoading ? "..." : "Actualizar"}
-            </Text>
+            <MaterialCommunityIcons name="qrcode" size={24} color="#4ecdc4" />
+            <View style={styles.toolInfo}>
+              <Text style={styles.toolTitle}>Código QR</Text>
+              <Text style={styles.toolSubtitle}>
+                Generar QR para recibir pagos
+              </Text>
+            </View>
+            <MaterialCommunityIcons
+              name="chevron-right"
+              size={20}
+              color="#ccc"
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.toolButton} onPress={handleBackup}>
+            <MaterialCommunityIcons
+              name="backup-restore"
+              size={24}
+              color="#4ecdc4"
+            />
+            <View style={styles.toolInfo}>
+              <Text style={styles.toolTitle}>Respaldo de Wallet</Text>
+              <Text style={styles.toolSubtitle}>Crear copia de seguridad</Text>
+            </View>
+            <MaterialCommunityIcons
+              name="chevron-right"
+              size={20}
+              color="#ccc"
+            />
           </TouchableOpacity>
         </View>
-      </View>
 
-      {/* Configuraciones de notificaciones */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Notificaciones</Text>
+        {/* Zona de peligro */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: "#e74c3c" }]}>
+            Zona de Peligro
+          </Text>
 
-        <View style={styles.settingRow}>
-          <View style={styles.settingInfo}>
-            <Text style={styles.settingTitle}>Notificaciones Push</Text>
-            <Text style={styles.settingSubtitle}>
-              Recibir notificaciones de transacciones
-            </Text>
-          </View>
-          <Switch
-            value={notifications}
-            onValueChange={setNotifications}
-            trackColor={{ false: "#ccc", true: "#4ecdc4" }}
-            thumbColor="#fff"
-          />
+          <TouchableOpacity
+            style={styles.dangerButton}
+            onPress={handleDeleteWallet}
+          >
+            <MaterialCommunityIcons name="delete" size={24} color="#e74c3c" />
+            <View style={styles.toolInfo}>
+              <Text style={[styles.toolTitle, { color: "#e74c3c" }]}>
+                Eliminar Wallet
+              </Text>
+              <Text style={styles.toolSubtitle}>
+                Esta acción no se puede deshacer
+              </Text>
+            </View>
+            <MaterialCommunityIcons
+              name="chevron-right"
+              size={20}
+              color="#ccc"
+            />
+          </TouchableOpacity>
         </View>
 
-        <View style={styles.settingRow}>
-          <View style={styles.settingInfo}>
-            <Text style={styles.settingTitle}>Bloqueo Automático</Text>
-            <Text style={styles.settingSubtitle}>
-              Bloquear wallet después de inactividad
-            </Text>
-          </View>
-          <Switch
-            value={autoLock}
-            onValueChange={setAutoLock}
-            trackColor={{ false: "#ccc", true: "#4ecdc4" }}
-            thumbColor="#fff"
-          />
-        </View>
-      </View>
-
-      {/* Herramientas */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Herramientas</Text>
-
-        <TouchableOpacity style={styles.toolButton} onPress={handleGenerateQR}>
-          <MaterialCommunityIcons name="qrcode" size={24} color="#4ecdc4" />
-          <View style={styles.toolInfo}>
-            <Text style={styles.toolTitle}>Código QR</Text>
-            <Text style={styles.toolSubtitle}>
-              Generar QR para recibir pagos
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#ccc" />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.toolButton} onPress={handleBackup}>
-          <MaterialCommunityIcons
-            name="backup-restore"
-            size={24}
-            color="#4ecdc4"
-          />
-          <View style={styles.toolInfo}>
-            <Text style={styles.toolTitle}>Respaldo de Wallet</Text>
-            <Text style={styles.toolSubtitle}>Crear copia de seguridad</Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#ccc" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Zona de peligro */}
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: "#e74c3c" }]}>
-          Zona de Peligro
-        </Text>
-
-        <TouchableOpacity
-          style={styles.dangerButton}
-          onPress={handleDeleteWallet}
-        >
-          <MaterialCommunityIcons name="delete" size={24} color="#e74c3c" />
-          <View style={styles.toolInfo}>
-            <Text style={[styles.toolTitle, { color: "#e74c3c" }]}>
-              Eliminar Wallet
-            </Text>
-            <Text style={styles.toolSubtitle}>
-              Esta acción no se puede deshacer
-            </Text>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={20} color="#ccc" />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.bottomSpace} />
-    </ScrollView>
+        <View style={styles.bottomSpace} />
+      </ScrollView>
+    </>
   );
 }
 
