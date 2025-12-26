@@ -10,42 +10,31 @@ export interface Group {
   id: string;
   name: string;
   description?: string;
-  type: "purchase" | "recycling" | "community";
-  status: "active" | "completed" | "cancelled";
-  creator_id: string;
-  creator: {
-    id: string;
-    name: string;
-    avatar_url?: string;
-  };
-  location?: string;
-  delivery_time?: string;
+  // Backend DTO fields (casing and enums match backend)
+  location?: string | null;
+  location_url?: string | null;
+  date_time?: string | Date | null;
+  status: "ACTIVE" | "PENDING" | "INACTIVE" | "DELETE";
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
   expires_at?: string;
-  member_count: number;
-  max_members?: number;
-  is_public: boolean;
-  join_code?: string;
-  total_amount?: number;
-  payment_status?: "pending" | "partial" | "completed";
+  leader?: { id: string; name?: string; avatar_url?: string };
+  members?: GroupMember[];
 }
 
 export interface GroupMember {
   id: string;
   group_id: string;
-  user_id: string;
-  user: {
+  user_id?: string;
+  user?: {
     id: string;
-    name: string;
-    email: string;
+    name?: string;
+    email?: string;
     avatar_url?: string;
   };
-  role: "admin" | "member";
-  status: "pending" | "accepted" | "declined";
-  joined_at: string;
-  contribution_amount?: number;
-  payment_status?: "pending" | "paid";
+  role: "LEADER" | "MEMBER";
+  joined_at?: string;
+  // backend does not include contribution/payment in DTO by default
 }
 
 export interface GroupOrder {
@@ -76,41 +65,34 @@ export interface GroupOrderItem {
 
 export interface CreateGroupDto {
   name: string;
-  description?: string;
-  type: Group["type"];
   location?: string;
-  delivery_time?: string;
-  max_members?: number;
-  is_public?: boolean;
-  expires_at?: string;
+  location_url?: string;
+  date_time?: string | Date;
+  status?: "ACTIVE" | "PENDING" | "INACTIVE" | "DELETE";
 }
 
 export interface UpdateGroupDto {
   name?: string;
-  description?: string;
   location?: string;
-  delivery_time?: string;
-  max_members?: number;
-  is_public?: boolean;
-  expires_at?: string;
+  location_url?: string;
+  date_time?: string | Date;
+  status?: "ACTIVE" | "PENDING" | "INACTIVE" | "DELETE";
 }
 
 export interface InviteToGroupDto {
   email?: string;
-  user_id?: string;
-  phone?: string;
-  message?: string;
+  username?: string;
+  phone?: string | number;
+  role?: "LEADER" | "MEMBER";
 }
 
 export interface GroupQuery {
   page?: number;
   limit?: number;
-  type?: Group["type"];
-  status?: Group["status"];
-  creator_id?: string;
-  is_member?: boolean;
-  location?: string;
-  search?: string;
+  sortBy?: string;
+  order?: "ASC" | "DESC";
+  name?: string;
+  status?: "ACTIVE" | "PENDING" | "INACTIVE" | "DELETE";
 }
 
 class GroupServiceClass extends CoreApiService {
@@ -120,8 +102,7 @@ class GroupServiceClass extends CoreApiService {
     GROUP_INVITATIONS: "groups/invitations",
     GROUP_ORDERS: "groups/orders",
     MY_GROUPS: "groups/my-groups",
-    JOIN_GROUP: "groups/join",
-    LEAVE_GROUP: "groups/leave",
+    // join/leave not implemented in backend; membership managed via group-members or group-invitations
   } as const;
 
   /**
@@ -195,54 +176,15 @@ class GroupServiceClass extends CoreApiService {
   /**
    * Invite users to group
    */
-  async inviteToGroup(
-    groupId: string,
-    invitations: InviteToGroupDto[]
-  ): Promise<{
-    success: boolean;
-    sent_invitations: number;
-    failed_invitations: { email?: string; reason: string }[];
-  }> {
-    return this.post(`${this.ENDPOINTS.GROUPS}/${groupId}/invite`, {
-      invitations,
-    });
+  async inviteToGroup(groupId: string, invite: InviteToGroupDto): Promise<any> {
+    // Backend exposes POST /groups/:groupId/members to invite/add member
+    return this.post(`${this.ENDPOINTS.GROUPS}/${groupId}/members`, invite);
   }
 
   /**
    * Join a group
    */
-  async joinGroup(
-    groupId: string,
-    joinCode?: string
-  ): Promise<{
-    success: boolean;
-    group: Group;
-    membership: GroupMember;
-  }> {
-    return this.post(`${this.ENDPOINTS.JOIN_GROUP}/${groupId}`, {
-      join_code: joinCode,
-    });
-  }
-
-  /**
-   * Join group by code
-   */
-  async joinGroupByCode(joinCode: string): Promise<{
-    success: boolean;
-    group: Group;
-    membership: GroupMember;
-  }> {
-    return this.post(`${this.ENDPOINTS.JOIN_GROUP}/code`, {
-      join_code: joinCode,
-    });
-  }
-
-  /**
-   * Leave a group
-   */
-  async leaveGroup(groupId: string): Promise<{ success: boolean }> {
-    return this.post(`${this.ENDPOINTS.LEAVE_GROUP}/${groupId}`);
-  }
+  // join/leave flows are handled by group-members and group-invitations on the backend
 
   /**
    * Remove member from group (admin only)
@@ -262,7 +204,7 @@ class GroupServiceClass extends CoreApiService {
   async updateMemberRole(
     groupId: string,
     memberId: string,
-    role: "admin" | "member"
+    role: "LEADER" | "MEMBER"
   ): Promise<GroupMember> {
     return this.patch<GroupMember>(
       `${this.ENDPOINTS.GROUPS}/${groupId}/members/${memberId}`,
@@ -273,103 +215,61 @@ class GroupServiceClass extends CoreApiService {
   /**
    * Get group orders
    */
-  async getGroupOrders(groupId: string): Promise<GroupOrder[]> {
-    return this.get<GroupOrder[]>(`${this.ENDPOINTS.GROUPS}/${groupId}/orders`);
+  // Order/message/stats endpoints not present in backend; removed from service
+
+  // --- Group Invitations endpoints (backend: /group-invitations) ---
+  async createInvitation(data: {
+    group_id: string;
+    email?: string;
+    username?: string;
+    phone?: string;
+    role?: string;
+  }): Promise<any> {
+    return this.post(`${this.ENDPOINTS.GROUP_INVITATIONS}`, data);
   }
 
-  /**
-   * Add items to group order
-   */
-  async addToGroupOrder(
-    groupId: string,
-    items: {
-      product_id: string;
-      quantity: number;
-    }[]
-  ): Promise<{
-    success: boolean;
-    order: GroupOrder;
-  }> {
-    return this.post(`${this.ENDPOINTS.GROUPS}/${groupId}/order/items`, {
-      items,
-    });
+  async getMyPendingInvitations(): Promise<any[]> {
+    return this.get(`${this.ENDPOINTS.GROUP_INVITATIONS}/my-pending`);
   }
 
-  /**
-   * Complete group purchase
-   */
-  async completeGroupPurchase(
-    groupId: string,
-    data: {
-      payment_method: string;
-      shipping_address_id: string;
-      split_method: "equal" | "proportional" | "custom";
-      custom_splits?: { member_id: string; amount: number }[];
-    }
-  ): Promise<{
-    success: boolean;
-    orders: string[]; // Order IDs created for each member
-    total_amount: number;
-  }> {
-    return this.post(
-      `${this.ENDPOINTS.GROUPS}/${groupId}/complete-purchase`,
-      data
+  async getMyAcceptedInvitations(): Promise<any[]> {
+    return this.get(`${this.ENDPOINTS.GROUP_INVITATIONS}/my-accepted`);
+  }
+
+  async getMyRejectedInvitations(): Promise<any[]> {
+    return this.get(`${this.ENDPOINTS.GROUP_INVITATIONS}/my-rejected`);
+  }
+
+  async getMyCanceledInvitations(): Promise<any[]> {
+    return this.get(`${this.ENDPOINTS.GROUP_INVITATIONS}/my-canceled`);
+  }
+
+  async acceptInvitation(invitationId: string): Promise<any> {
+    return this.patch(
+      `${this.ENDPOINTS.GROUP_INVITATIONS}/${invitationId}/accept`
     );
   }
 
-  /**
-   * Get group chat messages (if chat feature exists)
-   */
-  async getGroupMessages(
-    groupId: string,
-    params: {
-      page?: number;
-      limit?: number;
-      since?: string;
-    } = {}
-  ): Promise<
-    PaginatedResponse<{
-      id: string;
-      user_id: string;
-      user_name: string;
-      message: string;
-      created_at: string;
-    }>
-  > {
-    const queryString = this.buildQueryString(params);
-    const endpoint = queryString
-      ? `${this.ENDPOINTS.GROUPS}/${groupId}/messages?${queryString}`
-      : `${this.ENDPOINTS.GROUPS}/${groupId}/messages`;
-
-    return this.get<PaginatedResponse<any>>(endpoint);
+  async rejectInvitation(invitationId: string): Promise<any> {
+    return this.patch(
+      `${this.ENDPOINTS.GROUP_INVITATIONS}/${invitationId}/reject`
+    );
   }
 
-  /**
-   * Send message to group
-   */
-  async sendGroupMessage(
-    groupId: string,
-    message: string
-  ): Promise<{
-    success: boolean;
-    message_id: string;
-  }> {
-    return this.post(`${this.ENDPOINTS.GROUPS}/${groupId}/messages`, {
-      message,
-    });
+  async cancelInvitation(invitationId: string): Promise<any> {
+    return this.patch(
+      `${this.ENDPOINTS.GROUP_INVITATIONS}/${invitationId}/cancel`
+    );
   }
 
-  /**
-   * Get group statistics
-   */
-  async getGroupStats(groupId: string): Promise<{
-    total_members: number;
-    total_orders: number;
-    total_amount: number;
-    completion_rate: number;
-    average_order_value: number;
-  }> {
-    return this.get(`${this.ENDPOINTS.GROUPS}/${groupId}/stats`);
+  async softDeleteInvitation(invitationId: string): Promise<void> {
+    return this.delete(`${this.ENDPOINTS.GROUP_INVITATIONS}/${invitationId}`);
+  }
+
+  async hardDeleteInvitation(invitationId: string): Promise<void> {
+    return this.delete(
+      `${this.ENDPOINTS.GROUP_INVITATIONS}/${invitationId}/hard`
+    );
   }
 }
 

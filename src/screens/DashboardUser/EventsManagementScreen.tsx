@@ -21,11 +21,13 @@ import {
   EventPass,
   EventPassType,
 } from "src/services/AdminApiService";
+import { eventStore } from "@/stores";
 import { useNotify } from "src/hooks";
 import { getBackendErrorMessage } from "src/services";
 // TODO CHEQUEAR SI SE USA
 export const EventsManagementScreen: React.FC = () => {
-  const [events, setEvents] = useState<EventPass[]>([]);
+  const availableEvents = eventStore((s) => s.availableEvents);
+  const setAvailableEvents = eventStore((s) => s.setAvailableEvents);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchText, setSearchText] = useState("");
@@ -101,9 +103,12 @@ export const EventsManagementScreen: React.FC = () => {
       const response = await adminApiService.getEventPasses(page, 20);
 
       if (page === 1) {
-        setEvents(response.data || []);
+        setAvailableEvents((response.data || []) as unknown as any);
       } else {
-        setEvents((prev) => [...prev, ...(response.data || [])]);
+        setAvailableEvents([
+          ...(availableEvents || []),
+          ...((response.data || []) as unknown as any),
+        ]);
       }
 
       setCurrentPage(page);
@@ -117,7 +122,7 @@ export const EventsManagementScreen: React.FC = () => {
         notify.error({
           message: "No se pudieron cargar los eventos desde el servidor. ",
         });
-        setEvents([]);
+        setAvailableEvents([]);
       }
     }
   };
@@ -134,11 +139,13 @@ export const EventsManagementScreen: React.FC = () => {
         newStatus
       );
 
-      setEvents((prev) =>
-        prev.map((event) =>
-          event.id === eventId ? { ...event, is_active: newStatus } : event
-        )
-      );
+      try {
+        setAvailableEvents(
+          (availableEvents || []).map((event) =>
+            event.id === eventId ? { ...event, is_active: newStatus } : event
+          )
+        );
+      } catch (e) {}
     } catch (error: any) {
       const message = getBackendErrorMessage(error);
       notify.error({
@@ -160,19 +167,21 @@ export const EventsManagementScreen: React.FC = () => {
   };
 
   const handleCreateSuccess = (newEvent: EventPass) => {
-    setEvents((prev) => [newEvent, ...prev]);
+    setAvailableEvents([newEvent as any, ...(availableEvents || [])]);
     setTotalEvents((prev) => prev + 1);
   };
 
   const handleEditSuccess = (updatedEvent: EventPass) => {
-    setEvents((prev) =>
-      prev.map((event) => (event.id === updatedEvent.id ? updatedEvent : event))
+    setAvailableEvents(
+      (availableEvents || []).map((event) =>
+        event.id === updatedEvent.id ? (updatedEvent as any) : event
+      )
     );
     setEditingEvent(null);
   };
 
   const handleDeleteEvent = (event: EventPass) => {
-    setConfirmDelete(event);
+    setConfirmDelete(event as any);
     notify.confirm({
       message: "Estas seguro de eliminar el evento?",
       onConfirm: () => confirmDeleteEvent(),
@@ -185,20 +194,57 @@ export const EventsManagementScreen: React.FC = () => {
     try {
       setLoading(true);
       await adminApiService.deleteEventPass(confirmDelete.id);
-      setEvents((prev) => prev.filter((e) => e.id !== confirmDelete.id));
+      setAvailableEvents(
+        (availableEvents || []).filter((e) => e.id !== confirmDelete.id)
+      );
       setTotalEvents((prev) => prev - 1);
       notify.success({ message: "Evento eliminado correctamente" });
     } catch (error: any) {
       const message = getBackendErrorMessage(error);
-      notify.error({ message });
+
+      // Si el backend responde con conflicto (409) al eliminar,
+      // ofrecer al admin desactivar el evento en su lugar.
+      const status =
+        (error &&
+          (error.status || error.raw?.status || error.raw?.statusCode)) ||
+        null;
+      if (status === 409 || message.includes("No se puede eliminar")) {
+        notify.confirm({
+          message: `${message} ¿Deseas desactivar el evento en su lugar?`,
+          onConfirm: async () => {
+            try {
+              setLoading(true);
+              await adminApiService.toggleEventPassStatus(
+                confirmDelete.id,
+                false
+              );
+              // Actualizar store localmente
+              setAvailableEvents(
+                (availableEvents || []).map((e) =>
+                  e.id === confirmDelete.id ? { ...e, is_active: false } : e
+                )
+              );
+              notify.success({ message: "Evento desactivado correctamente" });
+            } catch (err: any) {
+              notify.error({ message: getBackendErrorMessage(err) });
+            } finally {
+              setLoading(false);
+              setConfirmDelete(null);
+            }
+          },
+          onCancel: () => setConfirmDelete(null),
+        });
+      } else {
+        notify.error({ message });
+      }
     } finally {
       setLoading(false);
       setConfirmDelete(null);
     }
   };
 
-  const openEditModal = (event: EventPass) => {
-    setEditingEvent(event);
+  const openEditModal = (event: any) => {
+    setEditingEvent(event as any);
     setShowEditModal(true);
   };
 
@@ -241,13 +287,13 @@ export const EventsManagementScreen: React.FC = () => {
         notify.success({ message: "El QR se guardó en tus archivos." });
       } catch (err) {
         console.error("Error descargando QR (nativo):", err);
-       const message = getBackendErrorMessage(err);
-       notify.error({ message });
+        const message = getBackendErrorMessage(err);
+        notify.error({ message });
       }
     }
   };
 
-  const filteredEvents = events.filter(
+  const filteredEvents = (availableEvents || []).filter(
     (event) =>
       event.name.toLowerCase().includes(searchText.toLowerCase()) ||
       event.description?.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -264,7 +310,7 @@ export const EventsManagementScreen: React.FC = () => {
     });
   };
 
-  const renderEventCard = (event: EventPass) => {
+  const renderEventCard = (event: any) => {
     const mainImage =
       event.image_url ||
       (Array.isArray(event.images_urls) ? event.images_urls[0] : undefined);
@@ -386,13 +432,16 @@ export const EventsManagementScreen: React.FC = () => {
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statNumber}>
-              {events.filter((e) => e.is_active).length}
+              {(availableEvents || []).filter((e) => e.is_active).length}
             </Text>
             <Text style={styles.statLabel}>Activos</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statNumber}>
-              {events.reduce((sum, e) => sum + e.sold_tickets, 0)}
+              {(availableEvents || []).reduce(
+                (sum, e) => sum + e.sold_tickets,
+                0
+              )}
             </Text>
             <Text style={styles.statLabel}>Tickets Vendidos</Text>
           </View>
@@ -477,7 +526,6 @@ export const EventsManagementScreen: React.FC = () => {
         onClose={() => setShowCreateModal(false)}
         onSuccess={handleCreateSuccess}
         eventTypes={eventTypes}
-        eventTypesError={eventTypesError}
       />
 
       {/* Modal para editar evento */}
@@ -490,7 +538,6 @@ export const EventsManagementScreen: React.FC = () => {
         onSuccess={handleEditSuccess}
         editingEvent={editingEvent}
         eventTypes={eventTypes}
-        eventTypesError={eventTypesError}
       />
 
       {/* Modal para QR */}

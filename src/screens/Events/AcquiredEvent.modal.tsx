@@ -1,33 +1,26 @@
 import React, { useMemo, useRef, useState } from "react";
-import {
-  View,
-  Text,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Animated,
-  Alert,
-} from "react-native";
+import { View, Text, Pressable, StyleSheet, Animated, ScrollView, Dimensions } from "react-native";
 import {
   ArrowLeftRight,
   Calendar,
   MapPin,
   RotateCcw,
-  SquareChevronDown,
   CheckCircle2,
+  SquareChevronDown,
 } from "lucide-react-native";
 import { eventStore } from "@/stores";
 import { colors } from "src/styles";
 import { eventsService } from "src/services/events";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { useNotify } from "src/hooks";
-
+import WarpperModal from "src/components/shared/modals/wrapperModal";
+import { canRefundTicket } from "./helpers/canrefund";
 export const AcquiredEventModal = ({ route }: { route: any }) => {
   const { id_modal } = route.params;
   const { getAcquiredEvent } = eventStore();
   const event = getAcquiredEvent(id_modal);
   const { navigate, goBack } = useCustomNavigation();
-  const notify = useNotify()
+  const notify = useNotify();
   const [visibleImage, setVisibleImage] = useState(0);
   if (!event) return null;
 
@@ -38,8 +31,6 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
     event_city,
     event_date,
     end_sale_date,
-    limit_tickets,
-    sold_tickets,
     is_refundable,
     refund_days_limit,
     image_url,
@@ -77,18 +68,25 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
       setVisibleImage((prev) => (prev + 1) % allImages.length);
     });
   };
-  // const canRefund = new Date() -;
-  const handleClose = () => goBack();
+  const canRefund = useMemo(
+    () =>
+      canRefundTicket({
+        is_refundable,
+        refund_days_limit: refund_days_limit === null ? 3 : refund_days_limit,
+        event_date,
+        user_attended,
+        end_sale_date,
+      }),
+    [is_refundable, refund_days_limit, event_date, user_attended, end_sale_date]
+  );
 
   const handleUse = () => navigate("UseEventScreen", { id: id_modal });
   const handleRefund = async () => {
     notify.info({ message: "Procesando reembolso..." });
     if (!purchase_price || !user_pass_id)
-      return Alert.alert("Error", "No se pudo procesar el reembolso");
-    if (purchase_price === "0.00") {
-      const response = await eventsService.refundEvent(user_pass_id);
-      notify.info(response.message);
-    }
+      return notify.error({ message: "No se pudo procesar el reembolso" });
+    const response = await eventsService.refundEvent(user_pass_id);
+    notify.info(response.message);
   };
 
   const eventStatus = (() => {
@@ -99,14 +97,19 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
   })();
 
   return (
-    <View style={styles.modal}>
-      <View style={styles.container}>
-        <Pressable style={styles.closeButton} onPress={handleClose}>
-          <SquareChevronDown color={colors.textSecondary} />
+    <View style={styles.overlay}>
+      {/* Backdrop */}
+      <Pressable style={styles.backdrop} onPress={goBack} />
+
+      {/* Sheet */}
+      <View style={styles.sheet}>
+        {/* Header */}
+        <Pressable onPress={goBack} style={styles.close}>
+          <SquareChevronDown size={26} color={colors.textSecondary} />
         </Pressable>
 
         <ScrollView showsVerticalScrollIndicator={false}>
-          <View style={{ marginHorizontal: "auto", paddingTop: 20 }}>
+          <View style={styles.content}>
             {/* Imagen principal */}
             <View style={styles.imageContainer}>
               <Animated.Image
@@ -160,64 +163,68 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
                 <View style={[styles.refundBox]}>
                   <RotateCcw color={colors.primary} size={18} />
                   <Text style={styles.refundText}>
-                    Reembolsable hasta {refund_days_limit} días antes del
-                    evento.
+                    {canRefund
+                      ? `Reembolsable hasta ${refund_days_limit} días antes del evento.`
+                      : "Este evento ya no admite reembolsos."}
                   </Text>
                 </View>
               )}
-
-              <View style={styles.actions}>
-                {!user_attended ? (
-                  <>
-                    <Text style={styles.infoText}>
-                      Entrada a nombre de: {holder_name}
-                    </Text>
-                    <Pressable
-                      style={[styles.button, styles.useButton]}
-                      onPress={handleUse}
-                    >
-                      <CheckCircle2 color="white" size={18} />
-                      <Text style={styles.buttonText}>Usar entrada</Text>
-                    </Pressable>
-
-                    {is_refundable && (
-                      <Pressable
-                        style={[styles.button, styles.refundButton]}
-                        onPress={handleRefund}
-                      >
-                        <RotateCcw color="white" size={18} />
-                        <Text style={styles.buttonText}>Devolver</Text>
-                      </Pressable>
-                    )}
-                  </>
-                ) : (
-                  <Text style={styles.infoStrong}>Ya usaste esta entrada</Text>
-                )}
-              </View>
             </View>
           </View>
         </ScrollView>
+
+        {/* Acciones */}
+        <View style={styles.footer}>
+          {!user_attended ? (
+            <>
+              <Text style={styles.infoText}>
+                Entrada a nombre de: {holder_name}
+              </Text>
+              {canRefund && (
+                <Pressable
+                  style={[styles.button, styles.refundButton]}
+                  onPress={handleRefund}
+                >
+                  <RotateCcw color="white" size={18} />
+                  <Text style={styles.buttonText}>Devolver</Text>
+                </Pressable>
+              )}
+              <Pressable
+                style={[styles.button, styles.useButton]}
+                onPress={handleUse}
+              >
+                <CheckCircle2 color="white" size={18} />
+                <Text style={styles.buttonText}>Usar entrada</Text>
+              </Pressable>
+
+            </>
+          ) : (
+            <Text style={styles.infoStrong}>Ya usaste esta entrada</Text>
+          )}
+        </View>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  modal: {
+  overlay: {
     flex: 1,
     justifyContent: "flex-end",
-    backgroundColor: "transparent",
   },
-  container: {
-    width: "100%",
-    height: "98%",
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  sheet: {
     backgroundColor: colors.background,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    height: Dimensions.get("window").height * 0.9,
+    paddingTop: 8,
   },
-  closeButton: {
-    position: "absolute",
-    top: 20,
-    right: 20,
-    zIndex: 3,
+  close: {
+    alignSelf: "flex-end",
+    padding: 12,
   },
   imageContainer: {
     position: "relative",
@@ -250,8 +257,8 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   content: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    marginHorizontal: "auto",
+    paddingTop: 20,
   },
   name: {
     fontSize: 22,
@@ -268,6 +275,7 @@ const styles = StyleSheet.create({
   infoText: {
     color: colors.textSecondary,
     fontSize: 15,
+    textAlign: "center",
   },
   infoStrong: {
     color: colors.textPrimary,
@@ -278,6 +286,7 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     borderColor: colors.primary,
     paddingVertical: 8,
+    paddingHorizontal: 8,
   },
   description: {
     marginVertical: 16,
@@ -302,8 +311,14 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: 14,
   },
-  actions: {
-    gap: 10,
+  footer: {
+    alignItems: "center",
+    gap: 5,
+    flexDirection: Dimensions.get("window").width > 600 ? "row" : "column",
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(0,0,0,0.05)",
+    marginHorizontal: "auto",
   },
   button: {
     flexDirection: "row",
@@ -315,9 +330,11 @@ const styles = StyleSheet.create({
   },
   useButton: {
     backgroundColor: colors.success,
+    paddingHorizontal: 8,
   },
   refundButton: {
     backgroundColor: colors.belandOrange,
+    paddingHorizontal: 8,
   },
   buttonText: {
     color: "white",

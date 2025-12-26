@@ -6,6 +6,7 @@ import {
   ScrollView,
   StyleSheet,
   Animated,
+  Dimensions,
 } from "react-native";
 import {
   ArrowLeftRight,
@@ -51,7 +52,7 @@ export const EventModal = ({ route }: { route: any }) => {
   } = event;
 
   const allImages = useMemo(() => {
-    if (!images_urls || images_urls.length === 0) return [image_url];
+    if (!images_urls?.length) return [image_url];
     return [image_url, ...images_urls];
   }, [image_url, images_urls]);
 
@@ -59,32 +60,26 @@ export const EventModal = ({ route }: { route: any }) => {
 
   const handleNextImage = () => {
     Animated.sequence([
-      Animated.parallel([
-        Animated.timing(translateAnim, {
-          toValue: -20,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]),
-      Animated.parallel([
-        Animated.timing(translateAnim, {
-          toValue: 0,
-          duration: 250,
-          useNativeDriver: true,
-        }),
-      ]),
+      Animated.timing(translateAnim, {
+        toValue: -20,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.timing(translateAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
     ]).start(() => {
       setVisibleImage((prev) => (prev + 1) % allImages.length);
     });
   };
-  // const canRefund = new Date() -;
-  const handleClose = () => goBack();
 
   const handleBuy = async () => {
     if (!canPerformAction) {
       notify.confirm({
-        message: "Debe iniciar sesión para adquirir",
-        onConfirm: () => handleAuth0Login(),
+        message: "Debe iniciar sesión para adquirir",
+        onConfirm: handleAuth0Login,
       });
       return;
     }
@@ -103,144 +98,152 @@ export const EventModal = ({ route }: { route: any }) => {
     });
   };
 
-  const eventStatus = (() => {
-    if (end_sale_date && new Date(end_sale_date) < new Date())
-      return { label: "Finalizado", color: colors.textSecondary };
-    return { label: "Disponible", color: colors.primary };
-  })();
+  const eventStatus =
+    end_sale_date && new Date(end_sale_date) < new Date()
+      ? { label: "Finalizado", color: colors.textSecondary }
+      : { label: "Disponible", color: colors.primary };
 
   const ticketsLeft = limit_tickets - sold_tickets;
 
   return (
-    <View style={styles.modal}>
-      <View style={styles.container}>
-        <Pressable style={styles.closeButton} onPress={handleClose}>
-          <SquareChevronDown color={colors.textSecondary} />
+    <View style={styles.overlay}>
+      {/* Backdrop */}
+      <Pressable style={styles.backdrop} onPress={goBack} />
+
+      {/* Sheet */}
+      <View style={styles.sheet}>
+        {/* Header */}
+        <Pressable onPress={goBack} style={styles.close}>
+          <SquareChevronDown size={26} color={colors.textSecondary} />
         </Pressable>
 
         <ScrollView showsVerticalScrollIndicator={false}>
-          <View style={{ marginHorizontal: "auto", paddingTop: 20 }}>
-            {/* Imagen principal */}
-            <View style={styles.imageContainer}>
-              <Animated.Image
-                source={{ uri: allImages[visibleImage] }}
-                style={[
-                  styles.image,
-                  {
-                    opacity: 1,
-                    transform: [{ translateX: translateAnim }],
-                  },
-                ]}
-              />
-              {allImages.length > 1 && (
-                <Pressable
-                  style={styles.nextImageButton}
-                  onPress={handleNextImage}
-                >
-                  <ArrowLeftRight color="white" size={20} />
-                </Pressable>
-              )}
-              <View
-                style={[
-                  styles.statusBadge,
-                  { backgroundColor: eventStatus.color },
-                ]}
+          <View style={styles.imageContainer}>
+            <Animated.Image
+              source={{ uri: allImages[visibleImage] }}
+              style={[
+                styles.image,
+                { transform: [{ translateX: translateAnim }] },
+              ]}
+            />
+
+            {allImages.length > 1 && (
+              <Pressable
+                style={styles.nextImageButton}
+                onPress={handleNextImage}
               >
-                <Text style={styles.statusText}>{eventStatus.label}</Text>
-              </View>
-            </View>
+                <ArrowLeftRight color="white" size={20} />
+              </Pressable>
+            )}
 
-            <View style={styles.content}>
-              <Text style={styles.name}>{name}</Text>
-              <View style={styles.infoRow}>
-                <Calendar size={18} color={colors.textSecondary} />
-                <Text style={styles.infoText}>
-                  {event_date
-                    ? new Date(event_date).toLocaleDateString()
-                    : "Fecha por confirmar"}
-                </Text>
-              </View>
-              <View style={styles.infoRow}>
-                <MapPin size={18} color={colors.textSecondary} />
-                <Text style={styles.infoText}>
-                  {event_place}, {event_city}
-                </Text>
-              </View>
-
-              <Text style={styles.description}>{description}</Text>
-
-              <View style={styles.section}>
-                <View style={styles.priceContainer}>
-                  <View style={styles.infoRow}>
-                    <DollarSign size={18} color={colors.primary} />
-                    <Text style={styles.infoStrong}>
-                      {price_becoin} Becoins
-                    </Text>
-                  </View>
-                  {/* Badge de precio en USD */}
-                  <View style={styles.usdPriceBadge}>
-                    <Text style={styles.usdPriceText}>
-                      ≈ $
-                      {formatUSDPrice(
-                        convertBeCoinsToUSD(Number(price_becoin))
-                      )}{" "}
-                      USD
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.infoRow}>
-                  <Ticket size={18} color={colors.textSecondary} />
-                  <Text style={styles.infoText}>
-                    {ticketsLeft} tickets disponibles
-                  </Text>
-                </View>
-              </View>
-
-              {is_refundable && (
-                <View style={[styles.refundBox]}>
-                  <RotateCcw color={colors.primary} size={18} />
-                  <Text style={styles.refundText}>
-                    Reembolsable hasta {refund_days_limit} días antes del
-                    evento.
-                  </Text>
-                </View>
-              )}
-
-              <View style={styles.actions}>
-                <Pressable
-                  style={[styles.button, styles.buyButton]}
-                  onPress={handleBuy}
-                >
-                  <Text style={styles.buttonText}>Adquirir</Text>
-                </Pressable>
-              </View>
+            <View
+              style={[
+                styles.statusBadge,
+                { backgroundColor: eventStatus.color },
+              ]}
+            >
+              <Text style={styles.statusText}>{eventStatus.label}</Text>
             </View>
           </View>
+
+          {/* INFO */}
+          <View style={styles.content}>
+            <Text style={styles.name}>{name}</Text>
+
+            <View style={styles.infoRow}>
+              <Calendar size={18} color={colors.textSecondary} />
+              <Text style={styles.infoText}>
+                {event_date
+                  ? new Date(event_date).toLocaleDateString()
+                  : "Fecha por confirmar"}
+              </Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <MapPin size={18} color={colors.textSecondary} />
+              <Text style={styles.infoText}>
+                {event_place}, {event_city}
+              </Text>
+            </View>
+
+            <Text style={styles.description}>{description}</Text>
+
+            <View style={styles.section}>
+              <View style={styles.infoRow}>
+                <DollarSign size={18} color={colors.primary} />
+                <Text style={styles.infoStrong}>{price_becoin} Becoins</Text>
+              </View>
+
+              <View style={styles.usdPriceBadge}>
+                <Text style={styles.usdPriceText}>
+                  ≈ ${formatUSDPrice(convertBeCoinsToUSD(Number(price_becoin)))}{" "}
+                  USD
+                </Text>
+              </View>
+
+              <View style={styles.infoRow}>
+                <Ticket size={18} color={colors.textSecondary} />
+                <Text style={styles.infoText}>
+                  {ticketsLeft} tickets disponibles
+                </Text>
+              </View>
+            </View>
+
+            {is_refundable && (
+              <View style={styles.refundBox}>
+                <RotateCcw size={18} color={colors.primary} />
+                <Text style={styles.refundText}>
+                  Reembolsable hasta {refund_days_limit} días antes del evento
+                </Text>
+              </View>
+            )}
+          </View>
         </ScrollView>
+
+        {/* Acciones */}
+        <View style={styles.footer}>
+          <Pressable
+            style={[styles.button, styles.buyButton]}
+            onPress={handleBuy}
+            disabled={eventStatus.label !== "Disponible"}
+          >
+            <Text style={styles.buttonText}>
+              {eventStatus.label === "Disponible"
+                ? "Adquirir"
+                : "No disponible"}
+            </Text>
+          </Pressable>
+        </View>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  modal: {
+  overlay: {
     flex: 1,
     justifyContent: "flex-end",
-    backgroundColor: "transparent",
   },
-  container: {
-    width: "100%",
-    height: "98%",
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  sheet: {
     backgroundColor: colors.background,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    height: Dimensions.get("window").height * 0.9,
+    paddingTop: 8,
   },
-  closeButton: {
-    position: "absolute",
-    top: 20,
-    right: 20,
-    zIndex: 3,
+  close: {
+    alignSelf: "flex-end",
+    padding: 12,
+  },
+  footer: {
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(0,0,0,0.05)",
   },
   imageContainer: {
-    position: "relative",
     alignItems: "center",
   },
   image: {
@@ -251,8 +254,8 @@ const styles = StyleSheet.create({
   },
   nextImageButton: {
     position: "absolute",
-    bottom: 10,
-    right: 20,
+    bottom: 12,
+    right: 24,
     backgroundColor: "rgba(0,0,0,0.4)",
     borderRadius: 20,
     padding: 6,
@@ -260,7 +263,7 @@ const styles = StyleSheet.create({
   statusBadge: {
     position: "absolute",
     top: 12,
-    left: 20,
+    left: 24,
     paddingVertical: 4,
     paddingHorizontal: 10,
     borderRadius: 8,
@@ -276,23 +279,23 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 22,
     fontWeight: "700",
-    color: colors.textPrimary,
     marginBottom: 12,
+    color: colors.textPrimary,
   },
   infoRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    marginVertical: 2,
+    marginVertical: 4,
   },
   infoText: {
     color: colors.textSecondary,
     fontSize: 15,
   },
   infoStrong: {
-    color: colors.textPrimary,
-    fontWeight: "600",
     fontSize: 16,
+    fontWeight: "600",
+    color: colors.textPrimary,
   },
   description: {
     marginVertical: 16,
@@ -300,12 +303,8 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   section: {
-    marginBottom: 20,
-  },
-  priceContainer: {
-    flexDirection: "column",
     gap: 8,
-    marginBottom: 8,
+    marginBottom: 16,
   },
   usdPriceBadge: {
     alignSelf: "flex-start",
@@ -313,51 +312,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    marginVertical: 6,
   },
   usdPriceText: {
     color: "white",
-    fontSize: 15,
     fontWeight: "700",
   },
   refundBox: {
     flexDirection: "row",
-    alignItems: "center",
     gap: 8,
     padding: 10,
     borderWidth: 1,
     borderColor: colors.primary,
     borderRadius: 12,
-    marginBottom: 20,
     backgroundColor: "rgba(0,0,0,0.02)",
   },
   refundText: {
     color: colors.textSecondary,
     fontSize: 14,
   },
-  actions: {
-    gap: 10,
-  },
   button: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 6,
     paddingVertical: 12,
     borderRadius: 10,
+    alignItems: "center",
   },
   buyButton: {
     backgroundColor: colors.primary,
-  },
-  useButton: {
-    backgroundColor: colors.success,
-  },
-  refundButton: {
-    backgroundColor: colors.belandOrange,
   },
   buttonText: {
     color: "white",

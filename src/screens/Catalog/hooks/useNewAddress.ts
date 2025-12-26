@@ -24,7 +24,7 @@ export const useNewAddress = ({
       city: user?.city || "",
       state: user?.state || "",
       zipCode: "",
-      country: user?.country || "",
+      country: user?.country || "Ecuador",
       phone: user?.phone || "",
       additionalInfo: "",
     }
@@ -61,7 +61,7 @@ export const useNewAddress = ({
     }
   };
   const handleCreateAddress = async () => {
-    console.log(FormData)
+    console.log(FormData);
     const isFormValid = validateForm(FormData);
     if (!isFormValid) {
       notify.error({
@@ -75,7 +75,9 @@ export const useNewAddress = ({
         const fullAddress = `${FormData.street}, ${FormData.city}, ${
           FormData.state || ""
         }, ${FormData.country}`.trim();
-        const geocoded = await mapboxService.forwardGeocode(fullAddress);
+        const geocoded = await mapboxService.forwardGeocode(fullAddress, {
+          country: "EC",
+        });
 
         if (geocoded) {
           // Address validated successfully
@@ -87,7 +89,6 @@ export const useNewAddress = ({
       // If validation failed or no address data, just proceed
       // This allows the flow to work even when geocoding is not available
       onCreateAddress(FormData);
-
     } catch (e) {
       const message = getBackendErrorMessage(e);
       notify.error({ message });

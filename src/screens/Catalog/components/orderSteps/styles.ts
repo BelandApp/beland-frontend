@@ -1,4 +1,5 @@
 import { Dimensions, StyleSheet } from "react-native";
+import { colors } from "src/styles";
 
 export const OrderDeliveryModalStyles = StyleSheet.create({
   overlay: { justifyContent: "flex-end", margin: 0 },
@@ -15,6 +16,14 @@ export const OrderDeliveryModalStyles = StyleSheet.create({
     minHeight: "80%",
     maxHeight: "98%",
     marginTop: "auto",
+  },
+  remove: { color: colors.error, fontSize: 20 },
+  removeContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    position: "absolute",
+    top: 2,
+    right: 2,    
   },
   header: {
     flexDirection: "row",
@@ -34,6 +43,7 @@ export const OrderDeliveryModalStyles = StyleSheet.create({
     marginHorizontal: "auto",
   },
   addressCard: {
+    position:"relative",
     flexDirection: "column",
     gap: 6,
     padding: 12,

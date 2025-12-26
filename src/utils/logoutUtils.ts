@@ -1,5 +1,4 @@
 import { useBeCoinsStore, useCartStore } from "src/stores";
-import { useAuthTokenStore } from "src/stores/useAuthTokenStore";
 import { useCreateGroupStore } from "src/stores/useCreateGroupStore";
 import { useOrdersStoreAPI } from "src/stores/useOrdersStoreAPI";
 

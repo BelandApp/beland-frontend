@@ -18,12 +18,13 @@ import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { useNotify, useBeCoinsPrice, useRecentRecipients } from "src/hooks";
 import { getBackendErrorMessage } from "src/services";
 import RecentRecipients from "./components/RecentRecipients";
+import { ThemedHeader } from "src/components/shared/headers/Header";
 
 type Tab = "amount" | "contacts";
 
 const SendScreen = () => {
   const { navigate, goBack } = useCustomNavigation();
-  const { walletData, refreshAll} = useWallet();
+  const { walletData, refreshAll } = useWallet();
   const { user, handleAuth0Login } = useAuth();
   const { pricePerBeCoin, usdToBeCoins, beCoinsToUsd } = useBeCoinsPrice();
   const {
@@ -38,6 +39,10 @@ const SendScreen = () => {
   const [amountUsd, setAmountUsd] = useState("");
   const [address, setAddress] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [recipientLoading, setRecipientLoading] = useState(false);
+  const [recipientAliases, setRecipientAliases] = useState<
+    Record<string, string>
+  >({});
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   // Verificar modo demo
@@ -49,6 +54,36 @@ const SendScreen = () => {
     if (isNaN(usd) || usd <= 0) return 0;
     return usdToBeCoins(usd);
   }, [amountUsd, usdToBeCoins]);
+
+  React.useEffect(() => {
+    let mounted = true;
+    if (!recipients || recipients.length === 0) {
+      setRecipientAliases({});
+      return;
+    }
+
+    const work = async () => {
+      const map: Record<string, string> = {};
+      await Promise.allSettled(
+        recipients.map(async (r: any) => {
+          if (!r?.wallet_id) return;
+          try {
+            const wallet = await WalletService.getWalletById(r.wallet_id);
+            const alias = wallet && (wallet.alias || (wallet as any).address);
+            if (alias) map[r.wallet_id] = alias;
+          } catch (err) {
+            // ignore individual fetch errors
+          }
+        })
+      );
+      if (mounted) setRecipientAliases(map);
+    };
+
+    work();
+    return () => {
+      mounted = false;
+    };
+  }, [recipients]);
 
   // Saldo disponible en USD
   const balanceUsd = useMemo(() => {
@@ -139,17 +174,18 @@ const SendScreen = () => {
     }
   };
 
-  // Manejar selección de contacto reciente
   const handleSelectRecipient = (recipient: any) => {
-    // Extraer el alias del email (parte antes del @)
-    const emailAlias = recipient.email.split("@")[0];
-    // Convertir a mayúsculas (requisito del sistema)
-    setAddress(emailAlias.toUpperCase());
-    setActiveTab("amount");
+    const alias = recipient?.wallet_id
+      ? recipientAliases[recipient.wallet_id]
+      : undefined;
+    if (alias) {
+      setAddress(alias.toUpperCase());
+      setActiveTab("amount");
+    }
   };
 
   // Montos predefinidos en USD
-  const presetAmounts = [5, 10, 20, 50];
+  const presetAmounts = [1, 2, 5, 10, 20];
 
   const renderAmountTab = () => (
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
@@ -171,14 +207,18 @@ const SendScreen = () => {
             autoCapitalize="characters"
             keyboardType="default"
           />
-          {address.length > 0 && (
-            <TouchableOpacity onPress={() => setAddress("")}>
-              <MaterialCommunityIcons
-                name="close-circle"
-                size={20}
-                color="#9ca3af"
-              />
-            </TouchableOpacity>
+          {recipientLoading ? (
+            <ActivityIndicator size="small" color="#7DA244" />
+          ) : (
+            address.length > 0 && (
+              <TouchableOpacity onPress={() => setAddress("")}>
+                <MaterialCommunityIcons
+                  name="close-circle"
+                  size={20}
+                  color="#9ca3af"
+                />
+              </TouchableOpacity>
+            )
           )}
         </View>
         <Text style={styles.helperText}>
@@ -310,19 +350,19 @@ const SendScreen = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => goBack()} style={styles.backButton}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Enviar Dinero</Text>
-        <TouchableOpacity
-          onPress={() => navigate("QR")}
-          style={styles.qrButton}
-        >
-          <MaterialCommunityIcons name="qrcode-scan" size={24} color="#fff" />
-        </TouchableOpacity>
-      </View>
+      <ThemedHeader
+        title="Enviar Dinero"
+        onBackPress={() => goBack()}
+        buttons={
+          <TouchableOpacity
+            onPress={() => navigate("QR")}
+            style={styles.qrButton}
+          >
+            <MaterialCommunityIcons name="qrcode-scan" size={24} color="#fff" />
+          </TouchableOpacity>
+        }
+        canGoBack
+      />
 
       {/* Tabs */}
       <View style={styles.tabsContainer}>

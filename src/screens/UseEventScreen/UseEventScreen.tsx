@@ -16,7 +16,6 @@ import { ThemedHeader } from "@components/shared";
 import { OpenInGoogleMaps } from "./components/OpenInGoogleMaps";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
-
 export const UseEventScreen = ({ route }: { route: any }) => {
   const { id } = route.params;
   const { getAcquiredEvent } = eventStore();
@@ -32,14 +31,11 @@ export const UseEventScreen = ({ route }: { route: any }) => {
     latitude,
     longitude,
   } = event;
-    const { navigate } = useCustomNavigation();
+  const { navigate } = useCustomNavigation();
 
   const [isReadyToUse, setIsReadyToUse] = useState(true);
 
-  const eventDate = useMemo(
-    () => new Date(event_date),
-    [event_date]
-  );
+  const eventDate = useMemo(() => new Date(event_date), [event_date]);
   // TODO Desabilitado para pruebas
 
   // useEffect(() => {
@@ -62,9 +58,7 @@ export const UseEventScreen = ({ route }: { route: any }) => {
   return (
     <View style={styles.container}>
       <ThemedHeader canGoBack />
-      <ScrollView
-      showsVerticalScrollIndicator={false}
-      >
+      <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
           <Text style={styles.title}>{name}</Text>
 
@@ -77,9 +71,12 @@ export const UseEventScreen = ({ route }: { route: any }) => {
           </Text>
           <View style={styles.buttonContainer}>
             <OpenInGoogleMaps
-              latitude={Number(latitude)}
-              longitude={Number(longitude)}
+              latitude={latitude}
+              longitude={longitude}
               name={name}
+              place={event_place}
+              city={event_city}
+              address={(event as any).address}
             />
 
             <UseTicketButton
@@ -127,8 +124,8 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   buttonContainer: {
-    marginHorizontal:"auto",
+    marginHorizontal: "auto",
     width: "60%",
-    gap: 8
-  }
+    gap: 8,
+  },
 });

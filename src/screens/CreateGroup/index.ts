@@ -1,1 +1,1 @@
-export { CreateGroupScreen } from "./CreateGroupScreen";
+export { default as CreateGroupScreen } from "./CreateGroupScreen";

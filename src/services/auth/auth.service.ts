@@ -33,12 +33,11 @@ export const authService = {
   },
 
   async exchangeAuth0Token(auth0Token: string) {
-    const data = await _core.post(
-      `/auth/exchange-auth0-token`,
-      { auth0Token },
-      { skipAuth: true }
-    );
-    return data.token;
+    const data = await _core.post(`/auth/auth0-login`, {
+      headers: { Authorization: `Bearer ${auth0Token}` },
+      skipAuth: true,
+    });
+    return data;
   },
 
   async getCurrentUser(token: string) {

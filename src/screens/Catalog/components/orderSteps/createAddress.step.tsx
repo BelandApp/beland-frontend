@@ -4,7 +4,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors } from "src/styles";
 import { Button, CustomInput, PhoneInput } from "src/components";
 import { useNewAddress } from "../../hooks/useNewAddress";
-import { AddressMapPicker } from "../AddressMapPicker";
+import { AddressMapPicker } from "@/components";
 import SearchMapInput from "src/components/shared/input/SearchMap.input";
 interface AddressFormProps {
   initialAddress?: DeliveryAddress;
@@ -41,11 +41,13 @@ export const CreateAddress: React.FC<AddressFormProps> = ({
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingVertical: 8 }}
       >
-        <SearchMapInput
-          handleMapPicker={handleMapPicker}
-          onChangeText={onChangeText}
-          setMapPickerVisible={setMapPickerVisible}
-        />
+        <View style={styles.searchWrapper}>
+          <SearchMapInput
+            handleMapPicker={handleMapPicker}
+            onChangeText={onChangeText}
+            setMapPickerVisible={setMapPickerVisible}
+          />
+        </View>
         <View style={styles.row}>
           <CustomInput
             variant="filled"
@@ -199,6 +201,7 @@ const styles = StyleSheet.create({
   container: {
     justifyContent: "space-between",
     flex: 1,
+    overflow: "visible",
   },
   header: {
     flexDirection: "row",
@@ -259,5 +262,10 @@ const styles = StyleSheet.create({
   },
   icon: {
     paddingRight: 12,
+  },
+  searchWrapper: {
+    position: "relative",
+    zIndex: 9999,
+    elevation: 20,
   },
 });

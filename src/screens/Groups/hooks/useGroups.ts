@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import { Group } from "../../../types/Group";
 import { GroupService } from "@services/core";
+import { mapApiGroupToUi } from "src/utils/groupMapper";
 
 export const useGroups = () => {
   const [groups, setGroups] = useState<Group[]>([]);
@@ -15,7 +16,14 @@ export const useGroups = () => {
     setError(null);
     try {
       const apiResponse = await GroupService.getGroups();
-      setGroups((apiResponse.data as any) || []); // TODO: Fix type mapping between API and local Group types
+      // API may return paginated { groups, total } or data array
+      const payload =
+        (apiResponse?.data && (apiResponse.data.groups || apiResponse.data)) ||
+        [];
+      const mapped = (Array.isArray(payload) ? payload : []).map(
+        mapApiGroupToUi
+      );
+      setGroups(mapped);
     } catch (err: any) {
       setError(err.message || "Error al cargar los grupos desde la API.");
       setGroups([]);

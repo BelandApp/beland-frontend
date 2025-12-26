@@ -60,7 +60,7 @@ export const toastConfig = {
       text1NumberOfLines={2}
     />
   ),
-  cartItem: ({ text1, props }: ToastConfigParams<ConfirmProps>) => (
+  cartItem: ({ text1,text2, props }: ToastConfigParams<ConfirmProps>) => (
     <View
       style={{
         width: Dimensions.get("window").width > 600 ? 400 : "90%",
@@ -81,13 +81,11 @@ export const toastConfig = {
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 5,
-        position: "absolute",
-        top: 5,
       }}
     >
       <Text>{text1}</Text>
       <Button
-        title="Ver mis entradas"
+        title={text2 || "Ver"}
         variant="secondary"
         onPress={() => {
           notificationAsync(NotificationFeedbackType.Success);
@@ -100,8 +98,6 @@ export const toastConfig = {
   confirm: ({ text1, props }: ToastConfigParams<ConfirmProps>) => (
     <View
       style={{
-        position: "absolute",
-        top: 5,
         width: Dimensions.get("window").width > 600 ? 400 : "90%",
         backgroundColor: "white",
         borderRadius: 10,
@@ -166,6 +162,7 @@ export const GlobalNotification = () => {
     Toast.show({
       type: current.type,
       text1: current.message,
+      text2: current.message2,
       props: {
         onConfirm: isConfirmAndRun ? current.onConfirm : undefined,
         onCancel: isConfirmAndRun ? current.onCancel : undefined,

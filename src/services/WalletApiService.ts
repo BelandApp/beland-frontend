@@ -343,10 +343,16 @@ class WalletServiceClass extends CoreApiService {
   /**
    * Create amount to payment
    */
-  async createAmountToPayment(amount: number): Promise<any> {
+  async createAmountToPayment(
+    amountOrPayload: number | { amount: number; message?: string }
+  ): Promise<any> {
+    const payload =
+      typeof amountOrPayload === "number"
+        ? { amount: amountOrPayload }
+        : amountOrPayload;
     return this.request("/amount-to-payment", {
       method: "POST",
-      body: JSON.stringify({ amount }),
+      body: JSON.stringify(payload),
     });
   }
 

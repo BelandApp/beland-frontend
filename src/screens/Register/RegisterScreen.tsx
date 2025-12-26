@@ -5,6 +5,7 @@ import {
   ScrollView,
   Dimensions,
   TouchableOpacity,
+  KeyboardAvoidingView,
 } from "react-native";
 import { LoginWave } from "@/components/ui";
 import { BelandLogo } from "@/components/icons";
@@ -14,6 +15,7 @@ import RegisterStep from "./components/RegisterStep";
 import { useRegister } from "./hook/useRegister";
 import CodeStep from "../NewPassword/components/Code.step";
 import { Button } from "src/components";
+import { Platform } from "react-native";
 
 export type RegisterFormData = {
   email: string;
@@ -43,56 +45,61 @@ export default function RegisterScreen() {
   } = useRegister();
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.scroll}
-      showsVerticalScrollIndicator={false}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <BelandLogo
-        width={width * 0.5}
-        height={height * 0.2}
-        style={styles.logo}
-      />
-      <TouchableOpacity
-        onPress={() => navigate("MainTabs", { screen: "Home" })}
-        style={styles.backButton}
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
       >
-        <CircleArrowLeftIcon size={32} color="#FFF" />
-      </TouchableOpacity>
-      <LoginWave />
-
-      <View style={styles.container}>
-        <Text style={styles.title}>
-          {step === "register" ? "Nueva cuenta" : "Confirma tu correo"}
-        </Text>
-        {step === "register" && (
-          <RegisterStep
-            formData={FormData}
-            onChangeText={onChangeText}
-            handleRegister={handleRegister}
-            isLoading={isLoading}
-            errors={errors}
-          />
-        )}
-        {step === "code" && (
-          <CodeStep
-            FormData={FormData}
-            onResendCode={handleReSendCode}
-            onStepBack={handleStepBack}
-            onSubmit={handleVerifyCode}
-            isLoading={isLoading}
-          />
-        )}
-      </View>
-      <View style={styles.containerRow}>
-        <Text style={styles.subtitle}>¿Ya tienes cuenta? </Text>
-        <Button
-          title="Inicia Sesión"
-          onPress={() => navigate("Login")}
-          style={{ paddingLeft: 0 }}
-          textStyle={styles.buttonLink}
-          variant="inline"
+        <BelandLogo
+          width={width * 0.5}
+          height={height * 0.2}
+          style={styles.logo}
         />
-      </View>
-    </ScrollView>
+        <TouchableOpacity
+          onPress={() => navigate("MainTabs", { screen: "Home" })}
+          style={styles.backButton}
+        >
+          <CircleArrowLeftIcon size={32} color="#FFF" />
+        </TouchableOpacity>
+        <LoginWave />
+
+        <View style={styles.container}>
+          <Text style={styles.title}>
+            {step === "register" ? "Nueva cuenta" : "Confirma tu correo"}
+          </Text>
+          {step === "register" && (
+            <RegisterStep
+              formData={FormData}
+              onChangeText={onChangeText}
+              handleRegister={handleRegister}
+              isLoading={isLoading}
+              errors={errors}
+            />
+          )}
+          {step === "code" && (
+            <CodeStep
+              FormData={FormData}
+              onResendCode={handleReSendCode}
+              onStepBack={handleStepBack}
+              onSubmit={handleVerifyCode}
+              isLoading={isLoading}
+            />
+          )}
+        </View>
+        <View style={styles.containerRow}>
+          <Text style={styles.subtitle}>¿Ya tienes cuenta? </Text>
+          <Button
+            title="Inicia Sesión"
+            onPress={() => navigate("Login")}
+            style={{ paddingLeft: 0 }}
+            textStyle={styles.buttonLink}
+            variant="inline"
+          />
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
+import "./global.css";
 import { Platform } from "react-native";
 
 import { View } from "react-native";
@@ -130,6 +131,7 @@ const AppContent = () => {
     currentRoute !== "NewPaymentScreen" &&
     currentRoute !== "ProductsManagement" &&
     currentRoute !== "UserDashboardScreen" &&
+    currentRoute !== "CreateGroup" &&
     currentRoute &&
     !walletActionScreens.includes(currentRoute) &&
     !!user;

@@ -11,12 +11,14 @@ export interface WithdrawAccount {
   user_id: string;
   withdraw_account_type_id: string;
   owner_name: string;
+  holderName: string;
   cbu?: string;
   alias?: string;
   provider?: string;
   phone?: string;
   is_active: boolean;
   created_at: string;
+  currency?: number;
   withdraw_account_type: WithdrawAccountType;
   type?: WithdrawAccountType; // For backward compatibility
 }

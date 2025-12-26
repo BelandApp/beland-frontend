@@ -3,6 +3,7 @@ import {
   PaginatedResponse,
   ApiResponse,
 } from "./core/ApiService";
+import { storage, eventStore } from "@/stores";
 
 // Types for Admin Dashboard
 export interface AdminUser {
@@ -65,7 +66,10 @@ export interface CreateEventPassDto {
   description?: string;
   type_id: string;
   event_place?: string;
+  address?: string;
   event_city?: string;
+  latitude?: number;
+  longitude?: number;
   event_date: Date;
   start_sale_date?: Date;
   end_sale_date?: Date;
@@ -209,7 +213,29 @@ export class AdminApiService extends CoreApiService {
     const endpoint = isActive
       ? `event-pass/active/${eventId}`
       : `event-pass/disactive/${eventId}`;
-    return this.put<EventPass>(endpoint, {});
+    const result = await this.put<EventPass>(endpoint, {});
+    try {
+      const fresh = await this.getEventPass(eventId);
+      try {
+        await storage.removeItem("events_cache");
+      } catch (e) {
+        console.warn("No se pudo limpiar events_cache:", e);
+      }
+      try {
+        eventStore.getState().updateEvent(fresh as any);
+      } catch (e) {}
+      return fresh;
+    } catch (err) {
+      try {
+        await storage.removeItem("events_cache");
+      } catch (e) {
+        console.warn("No se pudo limpiar events_cache:", e);
+      }
+      try {
+        eventStore.getState().updateEvent(result as any);
+      } catch (e) {}
+      return result;
+    }
   }
 
   async getEventPass(eventId: string): Promise<EventPass> {
@@ -323,11 +349,6 @@ export class AdminApiService extends CoreApiService {
       });
     }
 
-    // Nota: ya no duplicamos la imagen principal en `images_urls` para compatibilidad.
-    // El backend debe aceptar `image_url` como imagen principal incluso cuando hay una sola imagen.
-    // Si el backend exige otra convención, ajustar aquí o en el servidor según corresponda.
-
-    // Debugging: Inspeccionar contenido del FormData
     console.log("🔍 Inspeccionando FormData antes del envío:");
 
     // Log para ver cómo armamos el objeto antes de pasarlo a FormData
@@ -375,7 +396,28 @@ export class AdminApiService extends CoreApiService {
     }
 
     // Usar FormData directo con los nombres que espera el backend
-    return this.postFormDataDirect("event-pass", formData);
+    const result = await this.postFormDataDirect<EventPass>(
+      "event-pass",
+      formData
+    );
+    // Invalidar caché de eventos para que otras vistas refresquen
+    try {
+      await storage.removeItem("events_cache");
+    } catch (e) {
+      console.warn("No se pudo limpiar events_cache:", e);
+    }
+    // Actualizar store en memoria para reflejar el nuevo evento inmediatamente
+    try {
+      const setAvailable = eventStore.getState().setAvailableEvents;
+      const current = eventStore.getState().availableEvents || [];
+      setAvailable([
+        result as any as any,
+        ...current.filter((e) => e.id !== (result as any).id),
+      ]);
+    } catch (e) {
+      // no bloquear en caso de error
+    }
+    return result;
   }
 
   private async postFormDataDirect<T>(
@@ -442,18 +484,101 @@ export class AdminApiService extends CoreApiService {
     eventId: string,
     formData: FormData
   ): Promise<EventPass> {
-    return this.putFormDataDirect<EventPass>(`event-pass/${eventId}`, formData);
+    const result = await this.putFormDataDirect<EventPass>(
+      `event-pass/${eventId}`,
+      formData
+    );
+    try {
+      const fresh = await this.getEventPass(eventId);
+      try {
+        await storage.removeItem("events_cache");
+      } catch (e) {
+        console.warn("No se pudo limpiar events_cache:", e);
+      }
+      try {
+        eventStore.getState().updateEvent(fresh as any);
+      } catch (e) {}
+      return fresh;
+    } catch (err) {
+      try {
+        await storage.removeItem("events_cache");
+      } catch (e) {
+        console.warn("No se pudo limpiar events_cache:", e);
+      }
+      try {
+        eventStore.getState().updateEvent(result as any);
+      } catch (e) {}
+      return result;
+    }
   }
 
   async updateEventPass(
     eventId: string,
     eventData: Partial<CreateEventPassDto>
   ): Promise<EventPass> {
-    return this.put<EventPass>(`event-pass/${eventId}`, eventData);
+    const result = await this.put<EventPass>(
+      `event-pass/${eventId}`,
+      eventData
+    );
+    try {
+      const fresh = await this.getEventPass(eventId);
+      try {
+        await storage.removeItem("events_cache");
+      } catch (e) {
+        console.warn("No se pudo limpiar events_cache:", e);
+      }
+      try {
+        eventStore.getState().updateEvent(fresh as any);
+      } catch (e) {}
+      return fresh;
+    } catch (err) {
+      try {
+        await storage.removeItem("events_cache");
+      } catch (e) {
+        console.warn("No se pudo limpiar events_cache:", e);
+      }
+      try {
+        eventStore.getState().updateEvent(result as any);
+      } catch (e) {}
+      return result;
+    }
   }
 
   async deleteEventPass(eventId: string): Promise<void> {
-    return this.delete<void>(`event-pass/${eventId}`);
+    try {
+      await this.delete<void>(`event-pass/${eventId}`);
+    } catch (err: any) {
+      console.error("Error deleting event on API:", err);
+      // Normalize error message for UI consumption
+      const message =
+        err?.message || err?.details?.message || "Error al eliminar el evento";
+      const newErr = new Error(message);
+      // Expose HTTP status when available so UI can react (e.g., 409 Conflict)
+      (newErr as any).status =
+        err?.status || err?.details?.statusCode || err?.statusCode || null;
+      (newErr as any).raw = err;
+      throw newErr;
+    }
+
+    // Solo al confirmar éxito, invalidamos caché y actualizamos el store
+    try {
+      await storage.removeItem("events_cache");
+    } catch (e) {
+      console.warn("No se pudo limpiar events_cache:", e);
+    }
+    try {
+      const setAvailable = eventStore.getState().setAvailableEvents;
+      const setAcquired = eventStore.getState().setAcquiredEvents;
+      const available = eventStore.getState().availableEvents || [];
+      const acquired = eventStore.getState().acquiredEvents || [];
+      setAvailable(available.filter((e) => e.id !== eventId));
+      setAcquired(
+        acquired.filter((e) => e.id !== eventId && e.event_pass_id !== eventId)
+      );
+    } catch (e) {
+      console.warn("Error updating eventStore after delete:", e);
+    }
+    return;
   }
 
   async getEventPassTypes(
@@ -536,9 +661,7 @@ export class AdminApiService extends CoreApiService {
     page: number = 1,
     limit: number = 10
   ): Promise<Organization[]> {
-    return this.get<Organization[]>(
-      `organizations?page=${page}&limit=${limit}`
-    );
+    return this.get<Organization[]>(`merchants?page=${page}&limit=${limit}`);
   }
 
   async toggleOrganizationStatus(
@@ -547,12 +670,10 @@ export class AdminApiService extends CoreApiService {
   ): Promise<Organization> {
     if (!isActive) {
       // Disactivate organization
-      return this.put<Organization>(`organizations/disactive/${orgId}`, {});
+      return this.put<Organization>(`merchants/disactive/${orgId}`, {});
     } else {
       // Reactivate organization
-      return this.put<Organization>(`organizations/${orgId}`, {
-        is_active: true,
-      });
+      return this.put<Organization>(`merchants/activate/${orgId}`, {});
     }
   }
 
