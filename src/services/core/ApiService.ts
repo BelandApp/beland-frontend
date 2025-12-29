@@ -13,7 +13,7 @@ export const API_CONFIG = {
     Constants.expoConfig?.extra?.apiUrl ||
     "http://[::1]:3001/api",
   TIMEOUT: 30000, // 30 seconds
-  RETRY_ATTEMPTS: 3,
+  RETRY_ATTEMPTS: 0,
   RETRY_DELAY: 1000, // 1 second
 };
 

@@ -32,7 +32,8 @@ const Field: React.FC<FieldProps> = ({
         onChangeText={onChangeText}
         placeholder={placeholder}
         multiline={multiline}
-        className="h-13 rounded-xl border border-beland-border px-3 bg-white"
+        className="h-13 rounded-xl border-2 border-primary/60 px-4 py-2 bg-white shadow-soft font-bold  focus:border-primary focus:bg-primary/5"
+        placeholderTextColor="#31c57db9"
         {...inputProps}
       />
     </View>

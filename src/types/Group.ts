@@ -1,4 +1,3 @@
-
 // Tipo de los datos de un grupo
 export interface Group {
   id: string;
@@ -11,6 +10,11 @@ export interface Group {
   created_at: Date;
   updated_at: Date;
   deleted_at: Date | null;
+  group_type?: string | null; // nombre del tipo de grupo (ej: "Social", "Trabajo")
+  privacy?: string | null; // nombre de la privacidad (ej: "Público", "Privado")
+  image_url?: string | null;
+  members_count?: number;
+  is_leader?: boolean;
 }
 
 // Tipo de la respuesta de la API al obtener varios grupos

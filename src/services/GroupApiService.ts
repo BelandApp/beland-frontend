@@ -6,6 +6,13 @@
 import { CoreApiService, PaginatedResponse } from "./core/ApiService";
 
 // Group Types
+export interface GroupType {
+  id: string;
+  name: string;
+  created_at: string;
+}
+
+// Group Types
 export interface Group {
   id: string;
   name: string;
@@ -20,6 +27,12 @@ export interface Group {
   expires_at?: string;
   leader?: { id: string; name?: string; avatar_url?: string };
   members?: GroupMember[];
+  // Extras para UI y compatibilidad
+  image_url?: string;
+  privacy?: string;
+  group_type?: { id: string; name: string };
+  location_label?: string;
+  message_invitation?: string;
 }
 
 export interface GroupMember {
@@ -101,9 +114,27 @@ class GroupServiceClass extends CoreApiService {
     GROUP_MEMBERS: "groups/members",
     GROUP_INVITATIONS: "groups/invitations",
     GROUP_ORDERS: "groups/orders",
-    MY_GROUPS: "groups/my-groups",
+    MY_GROUPS: "groups/by-user",
+    GROUP_TYPE: "group-type",
     // join/leave not implemented in backend; membership managed via group-members or group-invitations
   } as const;
+
+  /**
+   * Get group types (dynamic from backend)
+   */
+  async getGroupTypes(page = 1, limit = 20): Promise<GroupType[]> {
+    const res = await this.get<any>(
+      `${this.ENDPOINTS.GROUP_TYPE}?page=${page}&limit=${limit}`
+    );
+    // Si la respuesta es { data: [...] }
+    if (res && Array.isArray(res.data)) return res.data;
+    // Si la respuesta es un array anidado tipo [[...], total]
+    if (Array.isArray(res) && Array.isArray(res[0])) return res[0];
+    // Si la respuesta es un array plano
+    if (Array.isArray(res)) return res;
+    // Si no, devolver array vacío
+    return [];
+  }
 
   /**
    * Get groups with filtering and pagination

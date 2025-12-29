@@ -3,6 +3,7 @@ import { NavigatorScreenParams } from "@react-navigation/native";
 export type GroupsStackParamList = {
   GroupsList: undefined;
   CreateGroup: undefined;
+  GroupExplore: undefined;
   GroupManagement: {
     groupId: string;
   };
@@ -23,4 +24,3 @@ export type MainTabParamList = {
   Community: undefined;
   Groups: NavigatorScreenParams<GroupsStackParamList>;
 };
-

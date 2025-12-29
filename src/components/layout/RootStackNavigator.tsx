@@ -23,7 +23,7 @@ import {
   WalletSettingsScreen,
   PayphoneSuccessScreen,
 } from "@screens/Wallet";
-import { CreateGroupScreen } from "@screens/CreateGroup";
+import { CreateGroupScreen } from "@screens/Groups/CreateGroupScreen";
 import { QRScannerScreen } from "@screens/QRScannerScreen";
 import PaymentScreen from "@screens/Payment/PaymentScreen";
 import UserDashboardScreen from "@screens/UserDashboardScreen";

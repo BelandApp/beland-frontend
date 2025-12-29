@@ -15,7 +15,7 @@ export const useGroups = () => {
     setLoading(true);
     setError(null);
     try {
-      const apiResponse = await GroupService.getGroups();
+      const apiResponse = await GroupService.getMyGroups();
       // API may return paginated { groups, total } or data array
       const payload =
         (apiResponse?.data && (apiResponse.data.groups || apiResponse.data)) ||

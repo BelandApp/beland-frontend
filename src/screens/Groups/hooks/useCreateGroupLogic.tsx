@@ -60,16 +60,22 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
       const payload: any = {
         name: groupName,
       };
-      if (location) payload.location = location;
-      if (locationUrl) payload.location_url = locationUrl;
-      // map deliveryTime to date_time as ISO string if provided
+      if (description) payload.description = description;
+      // Enviar lat/lng si hay ubicación
+      if (location) {
+        const [lat, lng] = location.split(",").map(Number);
+        if (!isNaN(lat) && !isNaN(lng)) {
+          payload.latitude = lat;
+          payload.longitude = lng;
+        }
+      }
       if (deliveryTime) {
         const parsed = new Date(deliveryTime);
         if (!isNaN(parsed.getTime())) payload.date_time = parsed.toISOString();
         else payload.date_time = deliveryTime;
       }
-      // default status to PENDING for newly created groups
-      payload.status = "PENDING";
+      if (groupType) payload.group_type_id = groupType;
+      // NO enviar location_url ni location ni status
       const created = await GroupService.createGroup(payload);
       return created;
     } catch (e) {

@@ -1,11 +1,8 @@
 import React from "react";
 import { createStackNavigator } from "@react-navigation/stack";
 import { GroupsStackParamList } from "@/types/navigation";
-import {
-  GroupsScreen,
-  CreateGroupScreen,
-  GroupManagementScreen,
-} from "@/screens";
+import { GroupsScreen } from "@/screens";
+import GroupExploreScreen from "@/screens/Groups/GroupExploreScreen";
 
 const Stack = createStackNavigator<GroupsStackParamList>();
 
@@ -17,8 +14,7 @@ export const GroupsStackNavigator = () => {
       }}
     >
       <Stack.Screen name="GroupsList" component={GroupsScreen} />
-      {/* CreateGroup is presented at root level to hide the main tab bar */}
-      <Stack.Screen name="GroupManagement" component={GroupManagementScreen} />
+      <Stack.Screen name="GroupExplore" component={GroupExploreScreen} />
     </Stack.Navigator>
   );
 };
