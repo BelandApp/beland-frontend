@@ -4,9 +4,8 @@ export type GroupsStackParamList = {
   GroupsList: undefined;
   CreateGroup: undefined;
   GroupExplore: undefined;
-  GroupManagement: {
-    groupId: string;
-  };
+  GroupDetailScreen: { groupId: string };
+  GroupMembersScreen: { groupId: string; groupName?: string };
 };
 
 export type OrdersStackParamList = {

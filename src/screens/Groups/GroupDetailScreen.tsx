@@ -1,35 +1,96 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, Image, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  TextInput,
+  Modal,
+} from "react-native";
 import Feather from "react-native-vector-icons/Feather";
+import { ActionMenu } from "src/screens/Groups/components/ActionMenu";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
-import { GroupService, Group } from "@/services/GroupApiService";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { GroupsStackParamList } from "@/types/navigation";
+import { GroupService, Group, GroupMember } from "@/services/GroupApiService";
+import { GroupPrivacy } from "@/services/GroupApiService";
+import { addressService, UserAddress } from "@/services/addressService";
 import * as Clipboard from "expo-clipboard";
 import { useNotify } from "src/hooks";
+import { reverseGeocode } from "@/services/mapboxService";
+import * as Linking from "expo-linking";
+import { GroupMembersList } from "src/components";
+import { useAuth } from "src/context/AuthContext";
 
 type GroupDetailParams = { groupId: string };
 export const GroupDetailScreen = () => {
-  const navigation = useNavigation();
+  const { user } = useAuth();
+  const navigation = useNavigation<StackNavigationProp<GroupsStackParamList>>();
   const route = useRoute<RouteProp<{ params: GroupDetailParams }, "params">>();
   const groupId = (route.params as any)?.groupId;
   const [group, setGroup] = useState<Group | null>(null);
   const [loading, setLoading] = useState(true);
+  const [members, setMembers] = useState<GroupMember[]>([]);
+  const [editName, setEditName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [address, setAddress] = useState<UserAddress | null>(null);
+  // Edición por campo
+  const [editingName, setEditingName] = useState(false);
+  const [editingDescription, setEditingDescription] = useState(false);
+
+  // Tipos de privacidad
+  const [privacyOptions, setPrivacyOptions] = useState<GroupPrivacy[]>([]);
+  useEffect(() => {
+    GroupService.getGroupPrivacies()
+      .then(setPrivacyOptions)
+      .catch(() => setPrivacyOptions([]));
+  }, []);
+
+  const [inviteModal, setInviteModal] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  // Ubicación legible por Mapbox
+  const [locationName, setLocationName] = useState<string>("");
+
   const notify = useNotify();
 
-  const fetchGroup = useCallback(async () => {
+  const fetchGroup = async () => {
     setLoading(true);
     try {
       const data = await GroupService.getGroup(groupId);
       setGroup(data);
+      // Obtener miembros del grupo
+      const membersData = await GroupService.getGroupMembers(groupId);
+      setMembers(membersData);
     } catch (e) {
       notify.error({ message: "No se pudo cargar el grupo" });
     } finally {
       setLoading(false);
     }
-  }, [groupId, notify]);
+  };
 
   useEffect(() => {
     fetchGroup();
-  }, [fetchGroup]);
+  }, [groupId]);
+
+  useEffect(() => {
+    if (group?.user_address_id) {
+      addressService
+        .getAddressById(group.user_address_id)
+        .then(setAddress)
+        .catch(() => setAddress(null));
+      setLocationName("");
+    } else if (group?.latitude && group?.longitude) {
+      setAddress(null);
+      reverseGeocode(Number(group.latitude), Number(group.longitude)).then(
+        (place) => {
+          setLocationName(place?.full_address || "");
+        }
+      );
+    } else {
+      setAddress(null);
+      setLocationName("");
+    }
+  }, [group?.user_address_id, group?.latitude, group?.longitude]);
 
   const handleCopy = async () => {
     if (group?.message_invitation) {
@@ -42,16 +103,93 @@ export const GroupDetailScreen = () => {
     }
   };
 
+  const handleEditName = () => {
+    setEditName(group?.name || "");
+    setEditingName(true);
+  };
+  const handleEditDescription = () => {
+    setEditDescription(group?.description || "");
+    setEditingDescription(true);
+  };
+  const cancelEditName = () => {
+    setEditName(group?.name || "");
+    setEditingName(false);
+  };
+  const cancelEditDescription = () => {
+    setEditDescription(group?.description || "");
+    setEditingDescription(false);
+  };
+  const saveEditName = async () => {
+    try {
+      await GroupService.updateGroup(groupId, {
+        name: editName,
+        description: group?.description || "",
+      });
+      notify.success({ message: "Nombre actualizado" });
+      setLocationName("");
+      setEditingName(false);
+      fetchGroup();
+    } catch {
+      notify.error({ message: "No se pudo actualizar el nombre" });
+    }
+  };
+  const saveEditDescription = async () => {
+    try {
+      await GroupService.updateGroup(groupId, {
+        name: group?.name || "",
+        description: editDescription,
+      });
+      notify.success({ message: "Descripción actualizada" });
+      setEditingDescription(false);
+      fetchGroup();
+    } catch {
+      notify.error({ message: "No se pudo actualizar la descripción" });
+    }
+  };
+
   const handleDelete = () => {
     notify.confirm({
       message: "¿Estás seguro de que deseas eliminar este grupo?",
       onConfirm: async () => {
-        // Aquí iría la lógica de eliminación
-        notify.success({ message: "Grupo eliminado" });
-        navigation.goBack();
+        try {
+          await GroupService.deleteGroup(groupId);
+          notify.success({ message: "Grupo eliminado" });
+          navigation.goBack();
+        } catch {
+          notify.error({ message: "No se pudo eliminar el grupo" });
+        }
       },
       onCancel: () => {},
     });
+  };
+
+  // Menú profesional desplegable
+  const [menuVisible, setMenuVisible] = useState(false);
+  const openMenu = () => setMenuVisible(true);
+  const closeMenu = () => setMenuVisible(false);
+  const groupActions = [
+    {
+      label: "Gestión de miembros",
+      onPress: () =>
+        navigation.navigate("GroupMembersScreen", {
+          groupId,
+          groupName: group?.name || "",
+        }),
+    },
+
+    { label: "Eliminar grupo", onPress: handleDelete, destructive: true },
+  ];
+
+  // Eliminar submitEdit, ahora es saveEdit
+
+  const submitInvite = async () => {
+    try {
+      await GroupService.inviteToGroup(groupId, { email: inviteEmail });
+      notify.success({ message: "Invitación enviada" });
+      setInviteModal(false);
+    } catch {
+      notify.error({ message: "No se pudo invitar" });
+    }
   };
 
   if (loading || !group) {
@@ -66,50 +204,123 @@ export const GroupDetailScreen = () => {
     <View className="flex-1 bg-background-light">
       {/* Header */}
       <View className="flex-row items-center justify-between px-4 pt-8 pb-3 bg-background-light border-b border-gray-100">
-        <TouchableOpacity onPress={() => navigation.goBack()} className="p-2">
-          <Feather name="arrow-left" size={24} color="#101815" />
+        <TouchableOpacity
+          onPress={() => navigation?.goBack?.()}
+          className="mr-4 p-2 border-2 border-green-500 rounded-full"
+        >
+          <Feather name="arrow-left" size={24} color="#00E074" />
         </TouchableOpacity>
         <Text className="flex-1 text-center text-lg font-bold">
           Detalle de Grupo
         </Text>
-        <TouchableOpacity className="p-2">
+        <TouchableOpacity className="p-2" onPress={openMenu}>
           <Feather name="more-vertical" size={24} color="#101815" />
         </TouchableOpacity>
+        <ActionMenu
+          visible={menuVisible}
+          onClose={closeMenu}
+          actions={groupActions}
+        />
       </View>
       <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
-        {/* Imagen y estado */}
+        {/* Avatar y estado */}
         <View className="items-center pt-6 pb-2">
-          <View className="relative">
-            <Image
-              source={{
-                uri:
-                  group.image_url ||
-                  "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=facearea&w=256&q=80",
-              }}
-              className="w-32 h-32 rounded-full bg-gray-200"
-              style={{ borderWidth: 4, borderColor: "#fff" }}
-            />
-            <View className="absolute bottom-1 right-1 bg-primary border-2 border-white w-6 h-6 rounded-full items-center justify-center">
-              <Feather name="check" size={14} color="#000" />
-            </View>
+          <View
+            className="w-32 h-32 rounded-full bg-gray-200 items-center justify-center"
+            style={{ borderWidth: 4, borderColor: "#fff" }}
+          >
+            <Feather name="users" size={64} color="#5e8d76" />
           </View>
-          <Text className="text-2xl font-bold mt-4 text-center">
-            {group.name}
-          </Text>
+          <View className="flex-row items-center justify-center mt-4">
+            {editingName ? (
+              <View className="w-full items-center">
+                <TextInput
+                  value={editName}
+                  onChangeText={setEditName}
+                  autoFocus
+                  className="text-2xl font-bold text-center min-w-[120px] border-b border-primary px-2 py-1"
+                />
+                <View className="flex-row justify-center gap-3 mt-3">
+                  <TouchableOpacity
+                    onPress={saveEditName}
+                    className="bg-primary rounded-lg px-5 py-2"
+                  >
+                    <Text className="text-white font-semibold">Guardar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={cancelEditName}
+                    className="bg-gray-100 rounded-lg px-5 py-2"
+                  >
+                    <Text className="text-gray-700 font-semibold">
+                      Cancelar
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
+              <View className="flex-row items-center justify-center w-full">
+                <TouchableOpacity
+                  activeOpacity={1}
+                  onPress={handleEditName}
+                  className="flex-1"
+                >
+                  <Text className="text-2xl font-bold text-center select-none">
+                    {group.name}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
           <View className="mt-2">
             <Text className="px-3 py-1 rounded-full bg-primary/20 text-green-800 text-xs font-semibold uppercase">
-              {group.status === "ACTIVE" ? "Activo" : group.status}
+              {group.is_active === true ? "Activo" : group.is_active}
             </Text>
           </View>
         </View>
         {/* Descripción */}
-        {group.description ? (
-          <View className="px-6 py-4">
-            <Text className="text-center text-text-sec-light text-base leading-relaxed">
-              {group.description}
-            </Text>
+        <View className="px-6 py-4">
+          <View className="flex-row items-center justify-center">
+            {editingDescription ? (
+              <View className="w-full items-center">
+                <TextInput
+                  value={editDescription}
+                  onChangeText={setEditDescription}
+                  autoFocus
+                  className="text-base text-center min-w-[600px] border-b border-primary px-2 py-1"
+                  multiline
+                />
+                <View className="flex-row justify-center gap-3 mt-3">
+                  <TouchableOpacity
+                    onPress={saveEditDescription}
+                    className="bg-primary rounded-lg px-5 py-2"
+                  >
+                    <Text className="text-white font-semibold">Guardar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={cancelEditDescription}
+                    className="bg-gray-100 rounded-lg px-5 py-2"
+                  >
+                    <Text className="text-gray-700 font-semibold">
+                      Cancelar
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
+              <View className="flex-row items-center justify-center w-full">
+                <TouchableOpacity
+                  activeOpacity={1}
+                  onPress={handleEditDescription}
+                  className="flex-1"
+                >
+                  <Text className="text-center text-text-sec-light text-base leading-relaxed select-none">
+                    {group.description}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
-        ) : null}
+        </View>
         {/* Detalles */}
         <View className="px-4 py-2">
           <View className="rounded-xl bg-white shadow-sm border border-gray-100 overflow-hidden">
@@ -124,7 +335,8 @@ export const GroupDetailScreen = () => {
                 </Text>
               </View>
               <Text className="text-sm font-semibold text-text-main-light">
-                {group.privacy || "Privado"}
+                {privacyOptions.find((p) => p.id === group.privacy_id)?.name ||
+                  "Privado"}
               </Text>
             </View>
             {/* Tipo */}
@@ -138,7 +350,7 @@ export const GroupDetailScreen = () => {
                 </Text>
               </View>
               <Text className="text-sm font-semibold text-text-main-light">
-                {group.group_type?.name || "-"}
+                {group.group_type.name || "-"}
               </Text>
             </View>
             {/* Ubicación */}
@@ -155,8 +367,27 @@ export const GroupDetailScreen = () => {
                 className="text-sm font-semibold text-text-main-light text-right max-w-[50%]"
                 numberOfLines={1}
                 ellipsizeMode="tail"
+                onPress={() => {
+                  if (group?.latitude && group?.longitude) {
+                    const url = `https://www.google.com/maps/dir/?api=1&destination=${group.latitude},${group.longitude}`;
+                    Linking.openURL(url);
+                  }
+                }}
+                style={{
+                  textDecorationLine:
+                    !address && locationName ? "underline" : "none",
+                }}
               >
-                {group.location_label || group.location || "-"}
+                {address && address.addressLine1
+                  ? `${address.addressLine1}${
+                      address.city ? ", " + address.city : ""
+                    }${address.country ? ", " + address.country : ""}`.replace(
+                      /^, |, ,/g,
+                      ""
+                    )
+                  : locationName
+                  ? locationName
+                  : "-"}
               </Text>
             </View>
           </View>
@@ -184,35 +415,47 @@ export const GroupDetailScreen = () => {
             </View>
           </View>
         ) : null}
-        {/* Acciones */}
-        <View className="px-4 pt-2 pb-6 flex flex-col gap-3">
-          <TouchableOpacity
-            className="w-full flex-row items-center justify-center gap-2 h-12 bg-white border border-gray-200 text-text-main-light font-semibold rounded-xl mb-2"
-            onPress={() =>
-              notify.info({ message: "Funcionalidad próximamente..." })
-            }
-          >
-            <Feather name="user-plus" size={20} color="#101815" />
-            <Text>Invitar Miembros</Text>
-          </TouchableOpacity>
-          <View className="flex-row gap-3">
-            <TouchableOpacity
-              className="flex-1 flex-row items-center justify-center gap-2 h-12 bg-white border border-gray-200 text-text-main-light font-semibold rounded-xl"
-              onPress={() =>
-                notify.info({ message: "Funcionalidad próximamente..." })
-              }
-            >
-              <Feather name="edit" size={20} color="#101815" />
-              <Text>Editar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className="flex-1 flex-row items-center justify-center gap-2 h-12 bg-red-50 border border-red-100 text-red-600 font-semibold rounded-xl"
-              onPress={handleDelete}
-            >
-              <Feather name="trash-2" size={20} color="#e53935" />
-              <Text>Eliminar</Text>
-            </TouchableOpacity>
+        {/* Acciones eliminadas del cuerpo, ahora solo en menú */}
+
+        {/* Edición inline, sin modal */}
+
+        {/* Modal Invitar Miembro profesional */}
+        <Modal visible={inviteModal} transparent animationType="fade">
+          <View className="flex-1 bg-black/20 justify-center items-center">
+            <View className="bg-white rounded-2xl px-8 py-7 w-80 shadow-xl items-center border border-gray-100">
+              <Text className="text-2xl font-bold mb-4 text-center text-text-main-light">
+                Invitar Miembro
+              </Text>
+              <TextInput
+                className="border border-gray-200 rounded-lg px-4 py-2 text-base w-64 mb-4 bg-gray-50 focus:border-primary outline-none"
+                placeholder="Correo electrónico"
+                value={inviteEmail}
+                onChangeText={setInviteEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoFocus
+              />
+              <View className="flex-row justify-end w-full gap-3">
+                <TouchableOpacity
+                  onPress={() => setInviteModal(false)}
+                  className="bg-gray-100 rounded-lg px-5 py-2"
+                >
+                  <Text className="text-gray-700 font-semibold">Cancelar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={submitInvite}
+                  className="bg-primary rounded-lg px-5 py-2"
+                >
+                  <Text className="text-white font-semibold">Invitar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
+        </Modal>
+        {/* Lista de miembros */}
+        <View className="px-4 py-4">
+          <Text className="font-bold text-base mb-2">Miembros del grupo</Text>
+          <GroupMembersList members={members} currentUserId={user?.id} />
         </View>
       </ScrollView>
     </View>

@@ -3,137 +3,275 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Image,
-  ScrollView,
   TextInput,
-  FlatList,
+  Modal,
+  Pressable,
+  ActivityIndicator,
+  Image,
 } from "react-native";
 import Feather from "react-native-vector-icons/Feather";
+import { GroupMembersList } from "src/components";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
-import { GroupService, Group } from "@/services/GroupApiService";
+import { GroupService, GroupMember } from "@/services/GroupApiService";
 import { useNotify } from "src/hooks";
+import { useAuth } from "src/context/AuthContext";
 
 const FILTERS = [
   { label: "Todos", value: "all" },
-  { label: "Líderes", value: "leader" },
-  { label: "Miembros", value: "member" },
+  { label: "Líderes", value: "LEADER" },
+  { label: "Miembros", value: "MEMBER" },
 ];
 
-const GroupMembersScreen = () => {
+type InviteMemberModalProps = {
+  visible: boolean;
+  onClose: () => void;
+  onInvite: (data: { email: string; role: "LEADER" | "MEMBER" }) => void;
+  loading: boolean;
+};
+const InviteMemberModal: React.FC<InviteMemberModalProps> = ({
+  visible,
+  onClose,
+  onInvite,
+  loading,
+}) => {
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<"LEADER" | "MEMBER">("MEMBER");
+  const handleInvite = () => {
+    if (!email) return;
+    onInvite({ email, role });
+  };
+  return (
+    <Modal visible={visible} transparent animationType="slide">
+      <View className="flex-1 justify-end bg-black/40">
+        <View className="bg-white rounded-t-2xl p-6">
+          <Text className="text-lg font-bold mb-2">Invitar Nuevo Miembro</Text>
+          <TextInput
+            className="border rounded-lg px-4 py-2 mb-4"
+            placeholder="Correo electrónico"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+          <View className="flex-row mb-4">
+            <TouchableOpacity
+              className={`flex-1 p-2 rounded-lg border mr-2 ${
+                role === "MEMBER"
+                  ? "border-primary bg-primary/10"
+                  : "border-gray-200"
+              }`}
+              onPress={() => setRole("MEMBER")}
+            >
+              <Text
+                className={
+                  role === "MEMBER" ? "text-primary font-bold" : "text-gray-700"
+                }
+              >
+                Miembro
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className={`flex-1 p-2 rounded-lg border ${
+                role === "LEADER"
+                  ? "border-primary bg-primary/10"
+                  : "border-gray-200"
+              }`}
+              onPress={() => setRole("LEADER")}
+            >
+              <Text
+                className={
+                  role === "LEADER" ? "text-primary font-bold" : "text-gray-700"
+                }
+              >
+                Líder
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <View className="flex-row justify-end gap-2">
+            <Pressable
+              onPress={onClose}
+              className="px-4 py-2 rounded-lg bg-gray-100"
+            >
+              <Text className="text-gray-700 font-semibold">Cancelar</Text>
+            </Pressable>
+            <Pressable
+              onPress={handleInvite}
+              className="px-4 py-2 rounded-lg bg-primary"
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text className="text-white font-bold">Invitar</Text>
+              )}
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+type MemberOptionsModalProps = {
+  visible: boolean;
+  member: GroupMember | null;
+  onClose: () => void;
+  onPromote: () => void;
+  onRemove: () => void;
+  loading: boolean;
+};
+const MemberOptionsModal: React.FC<MemberOptionsModalProps> = ({
+  visible,
+  member,
+  onClose,
+  onPromote,
+  onRemove,
+  loading,
+}) => {
+  if (!member) return null;
+  return (
+    <Modal visible={visible} transparent animationType="slide">
+      <View className="flex-1 justify-end bg-black/40">
+        <View className="bg-white rounded-t-2xl p-6">
+          <View className="flex-row items-center mb-4">
+            <Image
+              source={{
+                uri: member.user?.avatar_url || "https://placehold.co/48x48",
+              }}
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: 24,
+                backgroundColor: "#e5e7eb",
+                marginRight: 12,
+              }}
+            />
+            <View>
+              <Text className="text-lg font-bold">
+                {member.user?.name || member.user_id}
+              </Text>
+              <Text className="text-sm text-gray-500">Miembro</Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            className="flex-row items-center gap-2 p-3 rounded-xl mb-2 bg-green-50"
+            onPress={onPromote}
+            disabled={loading}
+          >
+            <Feather name="shield" size={20} color="#00E074" />
+            <Text className="font-semibold text-green-700">
+              Ascender a Líder
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="flex-row items-center gap-2 p-3 rounded-xl mb-2 bg-red-50"
+            onPress={onRemove}
+            disabled={loading}
+          >
+            <Feather name="user-x" size={20} color="#e74c3c" />
+            <Text className="font-semibold text-red-600">
+              Expulsar del Grupo
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity className="mt-2 self-end" onPress={onClose}>
+            <Text className="text-gray-500 font-semibold">Cerrar</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+export const GroupMembersScreen = () => {
+  const { user } = useAuth();
   const navigation = useNavigation();
   const route =
-    useRoute<RouteProp<{ params: { groupId: string } }, "params">>();
+    useRoute<
+      RouteProp<{ params: { groupId: string; groupName?: string } }, "params">
+    >();
   const groupId = (route.params as any)?.groupId;
-  const [group, setGroup] = useState<Group | null>(null);
+  const groupName = (route.params as any)?.groupName || "-";
+  const [members, setMembers] = useState<GroupMember[]>([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [inviteModal, setInviteModal] = useState(false);
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<GroupMember | null>(
+    null
+  );
+  const [optionsModal, setOptionsModal] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
   const notify = useNotify();
 
-  useEffect(() => {
-    const fetchGroup = async () => {
-      setLoading(true);
-      try {
-        const data = await GroupService.getGroup(groupId);
-        setGroup(data);
-      } catch {
-        notify.error({ message: "No se pudo cargar el grupo" });
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchGroup();
-  }, [groupId, notify]);
+  const fetchMembers = async () => {
+    setLoading(true);
+    try {
+      const data = await GroupService.getGroupMembers(groupId);
+      setMembers(data);
+    } catch {
+      notify.error({ message: "No se pudo cargar la lista de miembros" });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const members = useMemo(() => {
-    if (!group?.members) return [];
-    let filtered = group.members;
-    if (filter === "leader")
-      filtered = filtered.filter((m) => m.role === "LEADER");
-    if (filter === "member")
-      filtered = filtered.filter((m) => m.role === "MEMBER");
-    if (search) {
+  useEffect(() => {
+    fetchMembers();
+  }, [groupId]);
+
+  const filteredMembers = useMemo(() => {
+    let filtered = members;
+    if (filter !== "all") filtered = filtered.filter((m) => m.role === filter);
+    if (search)
       filtered = filtered.filter((m) =>
         (m.user?.name || "").toLowerCase().includes(search.toLowerCase())
       );
-    }
     return filtered;
-  }, [group, filter, search]);
+  }, [members, filter, search]);
 
-  const handlePromote = (memberId: string) => {
-    notify.success({ message: "Ascendido a líder (demo)" });
-  };
-  const handleMessage = (memberId: string) => {
-    notify.info({ message: "Chat privado (demo)" });
-  };
-  const handleRemove = (memberId: string) => {
-    notify.confirm({
-      message: "¿Seguro que quieres expulsar a este miembro?",
-      onConfirm: () => notify.success({ message: "Miembro expulsado (demo)" }),
-      onCancel: () => {},
-    });
+  const handleInvite = async ({ email, role }: any) => {
+    setInviteLoading(true);
+    try {
+      await GroupService.inviteToGroup(groupId, { email, role });
+      setInviteModal(false);
+      fetchMembers();
+      notify.success({ message: "Invitación enviada" });
+    } catch {
+      notify.error({ message: "No se pudo invitar al miembro" });
+    } finally {
+      setInviteLoading(false);
+    }
   };
 
-  const renderMember = ({ item }: any) => {
-    const isLeader = item.role === "LEADER";
-    const isYou = item.user?.isCurrentUser;
-    return (
-      <View
-        className={`flex-row items-center bg-white rounded-2xl mb-3 p-3 ${
-          isYou ? "border-2 border-primary/60" : ""
-        }`}
-      >
-        <Image
-          source={{
-            uri: item.user?.avatar_url || "https://placehold.co/48x48",
-          }}
-          className="w-12 h-12 rounded-full bg-gray-200"
-        />
-        <View className="flex-1 ml-3 min-w-0">
-          <Text className="font-bold text-base truncate text-text-main-light">
-            {item.user?.name} {isYou ? "(Tú)" : ""}
-          </Text>
-          <View className="flex-row items-center gap-2 mt-1">
-            <Text className="text-xs text-text-sec-light font-medium">
-              {isLeader ? "Líder" : "Miembro"}
-            </Text>
-            {/* Demo: tiempo en común */}
-            {!isLeader && (
-              <Text className="text-xs text-text-sec-light">
-                • 2 m en común
-              </Text>
-            )}
-          </View>
-          {/* Demo: fecha de unión */}
-          {isYou && (
-            <Text className="text-xs text-text-sec-light mt-1">
-              Se unió el 12 Ene 2023
-            </Text>
-          )}
-        </View>
-        {isLeader && isYou && (
-          <View className="ml-2 bg-primary/10 rounded-full px-2 py-1 flex-row items-center">
-            <Text className="text-xs font-bold text-primary">Líder</Text>
-            <Feather
-              name="shield"
-              size={16}
-              color="#00e074"
-              style={{ marginLeft: 4 }}
-            />
-          </View>
-        )}
-        {!isYou && (
-          <TouchableOpacity
-            onPress={() =>
-              notify.info({ message: "Opciones de miembro (demo)" })
-            }
-            className="ml-2 p-2"
-          >
-            <Feather name="more-vertical" size={22} color="#5e8d76" />
-          </TouchableOpacity>
-        )}
-      </View>
-    );
+  const handlePromote = async () => {
+    if (!selectedMember) return;
+    setActionLoading(true);
+    try {
+      await GroupService.updateMemberRole(groupId, selectedMember.id, "LEADER");
+      setOptionsModal(false);
+      fetchMembers();
+      notify.success({ message: "Miembro ascendido a líder" });
+    } catch {
+      notify.error({ message: "No se pudo ascender al miembro" });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRemove = async () => {
+    if (!selectedMember) return;
+    setActionLoading(true);
+    try {
+      await GroupService.removeMember(groupId, selectedMember.id);
+      setOptionsModal(false);
+      fetchMembers();
+      notify.success({ message: "Miembro expulsado" });
+    } catch {
+      notify.error({ message: "No se pudo expulsar al miembro" });
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   return (
@@ -148,7 +286,7 @@ const GroupMembersScreen = () => {
             Gestión de Miembros
           </Text>
           <Text className="text-center text-sm text-text-sec-light">
-            Grupo: {group?.name || "-"}
+            Grupo: {groupName}
           </Text>
         </View>
         <View style={{ width: 40 }} />
@@ -156,7 +294,7 @@ const GroupMembersScreen = () => {
       {/* Invitar nuevo miembro */}
       <TouchableOpacity
         className="mx-5 my-4 h-12 rounded-full bg-primary flex-row items-center justify-center"
-        onPress={() => notify.info({ message: "Invitar miembro (demo)" })}
+        onPress={() => setInviteModal(true)}
       >
         <Feather
           name="user-plus"
@@ -216,25 +354,29 @@ const GroupMembersScreen = () => {
           <Text className="text-primary font-medium">Ordenar</Text>
         </TouchableOpacity>
       </View>
-      <FlatList
-        data={members}
-        keyExtractor={(item) => item.id}
-        renderItem={renderMember}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}
-        ListEmptyComponent={
-          loading ? (
-            <Text className="text-center text-text-sec-light mt-10">
-              Cargando...
-            </Text>
-          ) : (
-            <Text className="text-center text-text-sec-light mt-10">
-              No se encontraron miembros
-            </Text>
-          )
-        }
+      <GroupMembersList
+        members={filteredMembers}
+        currentUserId={user?.id}
+        loading={loading}
+        onMemberOptions={(member) => {
+          setSelectedMember(member);
+          setOptionsModal(true);
+        }}
       />
-      {/* Demo: Modal de opciones de miembro (puedes implementar un modal real aquí) */}
-      {/* ... */}
+      <InviteMemberModal
+        visible={inviteModal}
+        onClose={() => setInviteModal(false)}
+        onInvite={handleInvite}
+        loading={inviteLoading}
+      />
+      <MemberOptionsModal
+        visible={optionsModal}
+        member={selectedMember}
+        onClose={() => setOptionsModal(false)}
+        onPromote={handlePromote}
+        onRemove={handleRemove}
+        loading={actionLoading}
+      />
     </View>
   );
 };

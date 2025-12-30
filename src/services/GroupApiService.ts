@@ -1,8 +1,3 @@
-/**
- * Group Service - Consolidated group management operations
- * Handles group creation, management, invitations, and purchases
- */
-
 import { CoreApiService, PaginatedResponse } from "./core/ApiService";
 
 // Group Types
@@ -16,23 +11,33 @@ export interface GroupType {
 export interface Group {
   id: string;
   name: string;
+  description: string;
+  message_invitation: string;
+  latitude: string;
+  longitude: string;
+  user_address_id: string;
+  is_active: boolean;
+  is_delete: boolean;
+  created_at: Date;
+  updated_at: Date;
+  deleted_at: Date;
+  user_id: string;
+  group_type: GroupType;
+  group_type_id: string;
+  privacy_id: string;
+  event_pass_id: string;
+}
+
+// Group Privacy
+export interface GroupPrivacy {
+  id: string;
+  code: string;
+  name: string;
   description?: string;
-  // Backend DTO fields (casing and enums match backend)
-  location?: string | null;
-  location_url?: string | null;
-  date_time?: string | Date | null;
-  status: "ACTIVE" | "PENDING" | "INACTIVE" | "DELETE";
-  created_at: string;
-  updated_at?: string;
-  expires_at?: string;
-  leader?: { id: string; name?: string; avatar_url?: string };
-  members?: GroupMember[];
-  // Extras para UI y compatibilidad
-  image_url?: string;
-  privacy?: string;
-  group_type?: { id: string; name: string };
-  location_label?: string;
-  message_invitation?: string;
+  is_visible: boolean;
+  allow_free_join: boolean;
+  require_approval: boolean;
+  is_active: boolean;
 }
 
 export interface GroupMember {
@@ -44,9 +49,13 @@ export interface GroupMember {
     name?: string;
     email?: string;
     avatar_url?: string;
+    full_name?: string;
+    profile_picture_url?: string;
+    created_at?: string;
   };
   role: "LEADER" | "MEMBER";
   joined_at?: string;
+  created_at?: string;
   // backend does not include contribution/payment in DTO by default
 }
 
@@ -86,6 +95,7 @@ export interface CreateGroupDto {
 
 export interface UpdateGroupDto {
   name?: string;
+  description: string;
   location?: string;
   location_url?: string;
   date_time?: string | Date;
@@ -156,11 +166,20 @@ class GroupServiceClass extends CoreApiService {
   }
 
   /**
+   * Get group privacy types (dynamic from backend)
+   */
+  async getGroupPrivacies(): Promise<GroupPrivacy[]> {
+    const res = await this.get<any>("groups/privacy-type");
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res)) return res;
+    return [];
+  }
+  /**
    * Get current user's groups
    */
   async getMyGroups(
     params: {
-      status?: Group["status"];
+      status?: Group["is_active"];
       role?: "admin" | "member";
       page?: number;
       limit?: number;
@@ -185,7 +204,7 @@ class GroupServiceClass extends CoreApiService {
    * Update a group
    */
   async updateGroup(id: string, data: UpdateGroupDto): Promise<Group> {
-    return this.patch<Group>(`${this.ENDPOINTS.GROUPS}/${id}`, data);
+    return this.put<Group>(`${this.ENDPOINTS.GROUPS}/${id}`, data);
   }
 
   /**
@@ -199,9 +218,8 @@ class GroupServiceClass extends CoreApiService {
    * Get group members
    */
   async getGroupMembers(groupId: string): Promise<GroupMember[]> {
-    return this.get<GroupMember[]>(
-      `${this.ENDPOINTS.GROUPS}/${groupId}/members`
-    );
+    // Usa el endpoint real del backend para obtener miembros de grupo
+    return this.get<GroupMember[]>(`group-members/group/${groupId}`);
   }
 
   /**

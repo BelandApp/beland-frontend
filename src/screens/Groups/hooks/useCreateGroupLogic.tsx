@@ -27,6 +27,9 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
     "equal"
   );
   const [isLoading, setIsLoading] = React.useState(false);
+  // Nuevos estados para privacidad y mensaje de invitación
+  const [privacy, setPrivacy] = React.useState<string>("public");
+  const [invitationMsg, setInvitationMsg] = React.useState<string>("");
 
   const addParticipant = (p: Participant) => setParticipants((s) => [...s, p]);
   const removeParticipant = (id: string) =>
@@ -52,7 +55,10 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
     return true;
   };
 
-  const createGroup = async () => {
+  const createGroup = async (extra?: {
+    privacy?: string;
+    message_invitation?: string;
+  }) => {
     if (!validate()) return null;
     setIsLoading(true);
     try {
@@ -75,6 +81,9 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
         else payload.date_time = deliveryTime;
       }
       if (groupType) payload.group_type_id = groupType;
+      // Agregar privacy_id y message_invitation
+      payload.privacy_id = extra?.privacy ?? privacy;
+      payload.message_invitation = extra?.message_invitation ?? invitationMsg;
       // NO enviar location_url ni location ni status
       const created = await GroupService.createGroup(payload);
       return created;
@@ -99,6 +108,8 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
     products,
     splitType,
     isLoading,
+    privacy,
+    invitationMsg,
     // setters
     setGroupName,
     setGroupType,
@@ -109,6 +120,8 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
     setNewParticipantName,
     setNewParticipantInstagram,
     setSplitType,
+    setPrivacy,
+    setInvitationMsg,
     // actions
     addParticipant,
     removeParticipant,

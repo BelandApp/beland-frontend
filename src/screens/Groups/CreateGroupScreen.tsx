@@ -13,25 +13,38 @@ import Field from "./components/Field";
 import { AddressMapPicker } from "@/components/shared/maps/AddressMapPicker";
 import { reverseGeocode } from "@/services/mapboxService";
 import Feather from "react-native-vector-icons/Feather";
-import { GroupService, GroupType } from "@/services/GroupApiService";
+import {
+  GroupService,
+  GroupType,
+  GroupPrivacy,
+} from "@/services/GroupApiService";
 
-const PRIVACY_OPTIONS = [
-  {
-    label: "Público",
-    value: "public",
-    icon: <Feather name="globe" size={22} color="#00E074" />,
-    description: "Cualquiera puede unirse",
-  },
-  {
-    label: "Privado",
-    value: "private",
-    icon: <Feather name="lock" size={22} color="#00E074" />,
-    description: "Requiere aprobación",
-  },
-];
+import { useNotify } from "@/hooks";
+
+// Elimina PRIVACY_OPTIONS, ahora se cargan dinámicamente
 
 export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
+  // Estado para tipos de privacidad dinámicos
+  const [privacyOptions, setPrivacyOptions] = React.useState<GroupPrivacy[]>(
+    []
+  );
+  const [loadingPrivacy, setLoadingPrivacy] = React.useState(false);
+  // Cargar tipos de privacidad desde el backend
+  React.useEffect(() => {
+    let mounted = true;
+    setLoadingPrivacy(true);
+    GroupService.getGroupPrivacies()
+      .then((privs) => {
+        if (mounted) setPrivacyOptions(privs);
+      })
+      .catch(() => setPrivacyOptions([]))
+      .finally(() => setLoadingPrivacy(false));
+    return () => {
+      mounted = false;
+    };
+  }, []);
   const logic = useCreateGroupLogic({ navigation });
+  const notify = useNotify();
 
   // Estado para tipos de grupo dinámicos
   const [groupTypes, setGroupTypes] = React.useState<GroupType[]>([]);
@@ -70,7 +83,7 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
     createGroup,
   } = logic as any;
 
-  const [privacy, setPrivacy] = React.useState("public");
+  const [privacy, setPrivacy] = React.useState<string>("");
   const [invitationMsg, setInvitationMsg] = React.useState("");
   const [showLocationModal, setShowLocationModal] = React.useState(false);
   const [selectedLocation, setSelectedLocation] = React.useState<{
@@ -80,12 +93,32 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
   const [locationLabel, setLocationLabel] = React.useState<string>("");
 
   const handleCreate = async () => {
-    await createGroup({
-      description,
-      group_type: groupType,
-      privacy,
-      message_invitation: invitationMsg,
-    });
+    try {
+      const result = await createGroup({
+        privacy,
+        message_invitation: invitationMsg,
+      });
+      if (result) {
+        notify.success({ message: "¡Grupo creado exitosamente!" });
+        setTimeout(() => {
+          navigation?.navigate("MainTabs", {
+            screen: "Groups",
+            params: { screen: "GroupsList" },
+          });
+        }, 100);
+      }
+    } catch (e) {
+      let errorMsg = "Error al crear el grupo";
+      if (
+        e &&
+        typeof e === "object" &&
+        "message" in e &&
+        typeof e.message === "string"
+      ) {
+        errorMsg = e.message;
+      }
+      notify.error({ message: errorMsg });
+    }
   };
 
   // Manejar selección de ubicación y obtener dirección legible
@@ -178,37 +211,53 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
           </View>
           <Text className="text-base font-medium mb-2">Privacidad</Text>
           <View className="flex-row gap-3">
-            {PRIVACY_OPTIONS.map((opt) => (
-              <TouchableOpacity
-                key={opt.value}
-                className={`flex-1 p-4 rounded-xl border items-center ${
-                  privacy === opt.value
-                    ? "border-primary bg-primary/10"
-                    : "border-gray-200 bg-white"
-                }`}
-                onPress={() => setPrivacy(opt.value)}
-              >
-                <View className="mb-2">{opt.icon}</View>
-                <Text
-                  className={`font-semibold ${
-                    privacy === opt.value ? "text-primary" : "text-gray-700"
+            {loadingPrivacy ? (
+              <Text className="text-gray-400">
+                Cargando tipos de privacidad...
+              </Text>
+            ) : Array.isArray(privacyOptions) && privacyOptions.length > 0 ? (
+              privacyOptions.map((opt) => (
+                <TouchableOpacity
+                  key={opt.id}
+                  className={`flex-1 p-4 rounded-xl border items-center ${
+                    privacy === opt.id
+                      ? "border-primary bg-primary/10"
+                      : "border-gray-200 bg-white"
                   }`}
+                  onPress={() => setPrivacy(opt.id)}
                 >
-                  {opt.label}
-                </Text>
-                <Text className="text-xs text-gray-500 text-center mt-1">
-                  {opt.description}
-                </Text>
-                {privacy === opt.value && (
-                  <Feather
-                    name="check-circle"
-                    size={18}
-                    color="#00E074"
-                    style={{ position: "absolute", top: 8, right: 8 }}
-                  />
-                )}
-              </TouchableOpacity>
-            ))}
+                  <View className="mb-2">
+                    <Feather
+                      name={opt.code === "public" ? "globe" : "lock"}
+                      size={22}
+                      color="#00E074"
+                    />
+                  </View>
+                  <Text
+                    className={`font-semibold ${
+                      privacy === opt.id ? "text-primary" : "text-gray-700"
+                    }`}
+                  >
+                    {opt.name}
+                  </Text>
+                  <Text className="text-xs text-gray-500 text-center mt-1">
+                    {opt.description}
+                  </Text>
+                  {privacy === opt.id && (
+                    <Feather
+                      name="check-circle"
+                      size={18}
+                      color="#00E074"
+                      style={{ position: "absolute", top: 8, right: 8 }}
+                    />
+                  )}
+                </TouchableOpacity>
+              ))
+            ) : (
+              <Text className="text-gray-400">
+                No hay tipos de privacidad disponibles
+              </Text>
+            )}
           </View>
         </Card>
         <Text className="text-lg font-bold text-beland-text-primary mb-2">
@@ -222,9 +271,7 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
             placeholder="¡Hola! Te invito a unirte a mi grupo..."
             multiline
           />
-          <Text className="text-base font-medium mt-4 mb-2">
-            Ubicación <Text className="text-gray-400 text-sm">(Opcional)</Text>
-          </Text>
+          <Text className="text-base font-medium mt-4 mb-2">Ubicación</Text>
           <TouchableOpacity
             onPress={() => setShowLocationModal(true)}
             className=" h-16 rounded-xl border-2 border-primary/60 px-3 justify-center bg-white flex-row items-center shadow-soft"

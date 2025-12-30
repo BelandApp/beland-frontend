@@ -5,6 +5,7 @@ export interface Group {
   leader_id: string;
   location?: string | null;
   location_url?: string | null;
+  is_active: boolean;
   date_time?: Date | null;
   status: "active" | "pending" | "inactive" | "delete" | "completed";
   created_at: Date;

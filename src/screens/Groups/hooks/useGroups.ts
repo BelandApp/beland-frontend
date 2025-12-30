@@ -4,6 +4,22 @@ import { Group } from "../../../types/Group";
 import { GroupService } from "@services/core";
 import { mapApiGroupToUi } from "src/utils/groupMapper";
 
+// Mapeo especial para grupos de usuario (cuando group_type es objeto)
+function mapUserApiGroupToUi(api: any) {
+  return {
+    ...api,
+    group_type:
+      api.group_type?.name ||
+      (typeof api.group_type === "string" ? api.group_type : null),
+    privacy:
+      api.privacy?.name ||
+      (typeof api.privacy === "string" ? api.privacy : null),
+    created_at: api.created_at ? new Date(api.created_at) : new Date(),
+    updated_at: api.updated_at ? new Date(api.updated_at) : new Date(),
+    deleted_at: api.deleted_at ? new Date(api.deleted_at) : null,
+  };
+}
+
 export const useGroups = () => {
   const [groups, setGroups] = useState<Group[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -17,12 +33,20 @@ export const useGroups = () => {
     try {
       const apiResponse = await GroupService.getMyGroups();
       // API may return paginated { groups, total } or data array
-      const payload =
-        (apiResponse?.data && (apiResponse.data.groups || apiResponse.data)) ||
-        [];
-      const mapped = (Array.isArray(payload) ? payload : []).map(
-        mapApiGroupToUi
+      let payload: any[] = [];
+      if (Array.isArray(apiResponse)) {
+        payload = apiResponse;
+      } else if (apiResponse?.data) {
+        payload = Array.isArray(apiResponse.data) ? apiResponse.data : [];
+      }
+
+      // Detectar si los grupos vienen del endpoint de usuario (group_type es objeto)
+      const mapped = (Array.isArray(payload) ? payload : []).map((g) =>
+        typeof g.group_type === "object"
+          ? mapUserApiGroupToUi(g)
+          : mapApiGroupToUi(g)
       );
+
       setGroups(mapped);
     } catch (err: any) {
       setError(err.message || "Error al cargar los grupos desde la API.");
@@ -42,11 +66,8 @@ export const useGroups = () => {
     }, [])
   );
 
-  const getAllGroups = () => groups;
-  const activeGroups = () =>
-    groups.filter(
-      (group) => group.status === "active" || group.status === "pending"
-    );
+  // Ya no se retorna getAllGroups como función, sino el array directamente
+  const activeGroups = () => groups.filter((group) => group.is_active === true);
 
   const completedGroups = () =>
     groups.filter((group) => group.status === "completed");
@@ -65,7 +86,7 @@ export const useGroups = () => {
     setRefreshing(false);
   };
   return {
-    getAllGroups,
+    groups,
     getGroupById,
     activeGroups,
     completedGroups,

@@ -10,16 +10,18 @@ import {
 } from "react-native";
 import Feather from "react-native-vector-icons/Feather";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
-import { GroupService, Group } from "@/services/GroupApiService";
+import { GroupService, Group, GroupMember } from "@/services/GroupApiService";
+import { GroupPrivacy } from "@/services/GroupApiService";
+import { useAuth } from "@/context/AuthContext";
+import { getGroupTypeFeatherIcon } from "./GroupsScreen";
+import { notify } from "@/hooks/notification/notify.external";
 
-const FILTERS = [
-  { label: "Todos", value: "all", icon: "users" },
-  { label: "Públicos", value: "public", icon: "globe" },
-  { label: "Privados", value: "private", icon: "lock" },
-];
+// Los filtros se generan dinámicamente según los tipos de privacidad
 
-const getPrivacyIcon = (privacy: string) =>
-  privacy === "Público" ? "globe" : "lock";
+const getPrivacyIcon = (privacyCode: string) => {
+  if (privacyCode === "public") return "globe";
+  return "lock";
+};
 
 type RootStackParamList = {
   GroupDetailScreen: { groupId: string };
@@ -27,9 +29,58 @@ type RootStackParamList = {
 const GroupExploreScreen = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [groups, setGroups] = useState<Group[]>([]);
+  const [myGroupIds, setMyGroupIds] = useState<Set<string>>(new Set());
+  const { user } = useAuth();
+  // Tipos de privacidad
+  const [privacyOptions, setPrivacyOptions] = useState<GroupPrivacy[]>([]);
+  useEffect(() => {
+    GroupService.getGroupPrivacies()
+      .then(setPrivacyOptions)
+      .catch(() => setPrivacyOptions([]));
+  }, []);
+
+  // Cargar los grupos a los que pertenece el usuario
+  useEffect(() => {
+    const fetchMyGroups = async () => {
+      if (!user) return;
+      try {
+        const res = await GroupService.getMyGroups();
+        const ids = (res.data || []).map((g: Group) => g.id);
+        setMyGroupIds(new Set(ids));
+      } catch {
+        setMyGroupIds(new Set());
+      }
+    };
+    fetchMyGroups();
+  }, [user]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [groupMembersCount, setGroupMembersCount] = useState<
+    Record<string, number>
+  >({});
+
+  useEffect(() => {
+    const fetchMembersCounts = async () => {
+      if (!groups || !Array.isArray(groups)) return;
+      const counts: Record<string, number> = {};
+      await Promise.all(
+        groups.map(async (group) => {
+          try {
+            const members =
+              await require("@/services/GroupApiService").GroupService.getGroupMembers(
+                group.id
+              );
+            counts[group.id] = Array.isArray(members) ? members.length : 0;
+          } catch {
+            counts[group.id] = 0;
+          }
+        })
+      );
+      setGroupMembersCount(counts);
+    };
+    fetchMembersCounts();
+  }, [groups]);
 
   useEffect(() => {
     const fetchGroups = async () => {
@@ -52,39 +103,83 @@ const GroupExploreScreen = () => {
       g.name.toLowerCase().includes(search.toLowerCase()) ||
       (g.group_type?.name || "").toLowerCase().includes(search.toLowerCase());
     if (filter === "all") return matchesSearch;
-    if (filter === "public")
-      return matchesSearch && (g.privacy || "Público") === "Público";
-    if (filter === "private")
-      return matchesSearch && (g.privacy || "Privado") === "Privado";
-    return matchesSearch;
+    // Buscar el code del tipo de privacidad
+    const groupPrivacy = privacyOptions.find((p) => p.id === g.privacy_id);
+    if (groupPrivacy && filter === groupPrivacy.code) return matchesSearch;
+    return false;
   });
 
   const renderGroup = ({ item }: { item: Group }) => {
-    const isPublic = (item.privacy || "Público") === "Público";
-    const membersCount = item.members?.length || 0;
-    // Estado de membresía simulado para demo
-    let action = "Unirse";
-    let actionStyle = "bg-primary text-[#0f2319]";
-    if (!isPublic) {
-      action = "Solicitar";
+    const groupPrivacy = privacyOptions.find((p) => p.id === item.privacy_id);
+    const isPublic = groupPrivacy?.code === "public";
+    const membersCount = groupMembersCount[item.id] ?? 0;
+    const isMember = myGroupIds.has(item.id);
+    const isOwner = user && item.user_id === user.id;
+    let action = isPublic ? "Unirse" : "Solicitar";
+    let actionStyle = isPublic
+      ? "bg-primary text-[#0f2319]"
+      : "bg-gray-100 text-text-main-light";
+    let disabled = false;
+    if (isMember || isOwner) {
+      action = "Miembro";
+      actionStyle = "bg-gray-200 text-text-main-light";
+      disabled = true;
+    } else if (groupPrivacy?.require_approval) {
+      action = "Solicitar acceso";
       actionStyle = "bg-gray-100 text-text-main-light";
     }
 
-    if (item.status === "PENDING") {
-      action = "Pendiente";
-      actionStyle = "bg-transparent border border-gray-200 text-text-sec-light";
-    }
-    return (
-      <TouchableOpacity
-        className="flex-row items-center gap-4 bg-white p-3 pr-4 rounded-2xl shadow-sm border border-transparent mb-3"
-        onPress={() =>
-          navigation.navigate("GroupDetailScreen", { groupId: item.id })
+    // Handler para unirse al grupo
+    const handleJoin = async () => {
+      if (!user) return;
+      if (groupPrivacy?.require_approval) {
+        notify.info({
+          message:
+            "Este grupo requiere aprobación del administrador. No puedes unirte directamente. Espera a que el administrador te invite o apruebe tu solicitud.",
+        });
+        return;
+      }
+      try {
+        await GroupService.post("group-members", {
+          group_id: item.id,
+          user_id: user.id,
+        });
+        // Refrescar grupos del usuario
+        const res = await GroupService.getMyGroups();
+        const ids = (res.data || []).map((g: Group) => g.id);
+        setMyGroupIds(new Set(ids));
+        notify.success({ message: "¡Te has unido al grupo exitosamente!" });
+      } catch (e: any) {
+        let msg = "No se pudo unir al grupo. Intenta nuevamente.";
+        if (e?.response?.data?.message) {
+          msg = e.response.data.message;
+        } else if (e?.message) {
+          msg = e.message;
         }
-      >
+        notify.error({ message: msg });
+      }
+    };
+
+    return (
+      <View className="flex-row items-center gap-4 bg-white p-3 pr-4 rounded-2xl shadow-sm border border-transparent mb-3">
         <View className="relative shrink-0">
-          <Image
-            source={{ uri: item.image_url || "https://placehold.co/64x64" }}
-            className="w-16 h-16 rounded-xl bg-gray-200"
+          <Feather
+            name={
+              item.group_type
+                ? typeof item.group_type === "string"
+                  ? getGroupTypeFeatherIcon(item.group_type).name
+                  : "users"
+                : "users"
+            }
+            size={48}
+            color={
+              item.group_type
+                ? typeof item.group_type === "string"
+                  ? getGroupTypeFeatherIcon(item.group_type).color
+                  : "#5e8d76"
+                : "#5e8d76"
+            }
+            style={{ opacity: 0.7 }}
           />
         </View>
         <View className="flex-1 min-w-0">
@@ -93,30 +188,35 @@ const GroupExploreScreen = () => {
           </Text>
           <View className="flex-row items-center gap-1 mt-1">
             <Feather
-              name={getPrivacyIcon(item.privacy || "Público")}
+              name={getPrivacyIcon(groupPrivacy?.code || "lock")}
               size={14}
               color={isPublic ? "#00e074" : "#5e8d76"}
             />
             <Text className="text-xs font-medium text-text-sec-light truncate">
-              {item.privacy || "Público"} • {membersCount} miembros
+              {groupPrivacy?.name || "Privado"} • {membersCount} miembros
             </Text>
           </View>
         </View>
         <View className="shrink-0">
           <TouchableOpacity
             className={`min-w-[84px] h-9 px-4 rounded-xl items-center justify-center ${actionStyle} flex-row`}
-            disabled={action === "Pendiente"}
+            onPress={!disabled ? handleJoin : undefined}
+            disabled={disabled}
           >
-            <Text
-              className={`text-sm font-bold ${
-                action === "Pendiente" ? "text-text-sec-light" : ""
-              }`}
-            >
-              {action}
-            </Text>
+            <Text className="text-sm font-bold">{action}</Text>
           </TouchableOpacity>
         </View>
-      </TouchableOpacity>
+        {/* Solo si eres miembro puedes navegar al detalle */}
+        {isMember && (
+          <TouchableOpacity
+            className="absolute inset-0"
+            style={{ zIndex: 1 }}
+            onPress={() =>
+              navigation.navigate("GroupDetailScreen", { groupId: item.id })
+            }
+          />
+        )}
+      </View>
     );
   };
 
@@ -125,10 +225,10 @@ const GroupExploreScreen = () => {
       {/* Header */}
       <View className="sticky top-0 z-10 bg-background-light/95 flex-row items-center justify-between p-4 pb-2">
         <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          className="size-12 items-center justify-center rounded-full"
+          onPress={() => navigation?.goBack?.()}
+          className="mr-4 p-2 border-2 border-green-500 rounded-full"
         >
-          <Feather name="arrow-left" size={24} color="#101815" />
+          <Feather name="arrow-left" size={24} color="#00E074" />
         </TouchableOpacity>
         <Text className="flex-1 text-center text-lg font-bold">
           Explorar Grupos
@@ -149,29 +249,53 @@ const GroupExploreScreen = () => {
       </View>
       {/* Filter Chips */}
       <View className="flex-row gap-3 px-4 py-3 pb-4">
-        {FILTERS.map((f) => (
+        <TouchableOpacity
+          key="all"
+          className={`h-9 flex-row items-center gap-x-2 rounded-xl px-4 ${
+            filter === "all"
+              ? "bg-primary shadow-md"
+              : "bg-white border border-gray-200"
+          }`}
+          onPress={() => setFilter("all")}
+        >
+          <Feather
+            name="users"
+            size={20}
+            color={filter === "all" ? "#0f2319" : "#101815"}
+          />
+          <Text
+            className={`text-sm ${
+              filter === "all"
+                ? "font-bold text-[#0f2319]"
+                : "font-medium text-text-main-light"
+            }`}
+          >
+            Todos
+          </Text>
+        </TouchableOpacity>
+        {privacyOptions.map((p) => (
           <TouchableOpacity
-            key={f.value}
+            key={p.code}
             className={`h-9 flex-row items-center gap-x-2 rounded-xl px-4 ${
-              filter === f.value
+              filter === p.code
                 ? "bg-primary shadow-md"
                 : "bg-white border border-gray-200"
             }`}
-            onPress={() => setFilter(f.value)}
+            onPress={() => setFilter(p.code)}
           >
             <Feather
-              name={f.icon as any}
+              name={getPrivacyIcon(p.code)}
               size={20}
-              color={filter === f.value ? "#0f2319" : "#101815"}
+              color={filter === p.code ? "#0f2319" : "#101815"}
             />
             <Text
               className={`text-sm ${
-                filter === f.value
+                filter === p.code
                   ? "font-bold text-[#0f2319]"
                   : "font-medium text-text-main-light"
               }`}
             >
-              {f.label}
+              {p.name}
             </Text>
           </TouchableOpacity>
         ))}

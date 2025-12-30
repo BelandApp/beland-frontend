@@ -8,6 +8,7 @@ export function mapApiGroupToUi(api: ApiGroup): UiGroup {
     name: api.name,
     leader_id: api.leader?.id || api.leader_id || api.user_id || "",
     location: api.location ?? null,
+    is_active: api.is_active,
     location_url: api.location_url ?? null,
     date_time: api.date_time ? new Date(api.date_time) : null,
     status: mapStatus(api.status),
@@ -15,9 +16,8 @@ export function mapApiGroupToUi(api: ApiGroup): UiGroup {
     updated_at: api.updated_at ? new Date(api.updated_at) : new Date(),
     deleted_at: api.deleted_at ?? null,
     group_type:
-      typeof api.group_type === "string"
-        ? api.group_type
-        : api.group_type?.name || null,
+      api.group_type?.name ||
+      (typeof api.group_type === "string" ? api.group_type : null),
     privacy:
       typeof api.privacy === "string" ? api.privacy : api.privacy?.name || null,
     image_url: api.image_url || null,

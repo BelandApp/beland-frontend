@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,13 +10,35 @@ import {
 } from "react-native";
 import { useGroupsNavigation, useGroups } from "./hooks";
 import Feather from "react-native-vector-icons/Feather";
+import { ThemedHeader } from "src/components";
+import { GroupService, GroupPrivacy } from "@/services/GroupApiService";
+// Ícono según código de privacidad
+const getPrivacyIcon = (privacyCode: string) => {
+  if (privacyCode === "public") return "globe";
+  return "lock";
+};
 
-const FILTERS = [
-  { label: "Todos", value: "all" },
-  { label: "Activos", value: "active" },
-  { label: "Social", value: "social" },
-  { label: "Trabajo", value: "work" },
-];
+// Mapea el nombre de la categoría a un ícono Feather
+export const getGroupTypeFeatherIcon = (type: any) => {
+  if (!type) return { name: "tag", color: "#5e8d76" };
+  const t = type.toLowerCase();
+  if (t.includes("cumple")) return { name: "gift", color: "#eab308" };
+  if (t.includes("gradu")) return { name: "award", color: "#6366f1" };
+  if (t.includes("aniversa")) return { name: "heart", color: "#f43f5e" };
+  if (t.includes("amig")) return { name: "users", color: "#5e8d76" };
+  if (t.includes("famil")) return { name: "home", color: "#f59e42" };
+  if (t.includes("temat")) return { name: "star", color: "#fbbf24" };
+  if (t.includes("picnic")) return { name: "sun", color: "#fbbf24" };
+  if (t.includes("asado")) return { name: "coffee", color: "#a16207" };
+  if (t.includes("año nuevo")) return { name: "calendar", color: "#0ea5e9" };
+  if (t.includes("romant")) return { name: "heart", color: "#f43f5e" };
+  if (t.includes("bienven")) return { name: "smile", color: "#22d3ee" };
+  if (t.includes("desped")) return { name: "flag", color: "#f87171" };
+  if (t.includes("infant")) return { name: "smile", color: "#fbbf24" };
+  if (t.includes("deport")) return { name: "activity", color: "#22c55e" };
+  if (t.includes("trabajo")) return { name: "briefcase", color: "#6366f1" };
+  return { name: "tag", color: "#5e8d76" };
+};
 
 const getTypeIcon = (type: string) => {
   switch (type?.toLowerCase()) {
@@ -32,40 +54,50 @@ const getTypeIcon = (type: string) => {
 };
 
 export const GroupsScreen: React.FC = () => {
+  // Tipos de privacidad dinámicos
+  const [privacyOptions, setPrivacyOptions] = useState<GroupPrivacy[]>([]);
+  useEffect(() => {
+    GroupService.getGroupPrivacies()
+      .then(setPrivacyOptions)
+      .catch(() => setPrivacyOptions([]));
+  }, []);
   const { navigateToCreateGroup } = useGroupsNavigation();
   const { navigate } = require("@react-navigation/native").useNavigation();
   const navigateToExploreGroups = () => {
     navigate("GroupExplore");
   };
-  const { activeGroups, onRefresh, refreshing } = useGroups();
+  const { groups, activeGroups, onRefresh, refreshing } = useGroups();
+  const [groupMembersCount, setGroupMembersCount] = useState<
+    Record<string, number>
+  >({});
+
+  React.useEffect(() => {
+    const fetchMembersCounts = async () => {
+      if (!groups || !Array.isArray(groups)) return;
+      const counts: Record<string, number> = {};
+      await Promise.all(
+        groups.map(async (group) => {
+          try {
+            const members =
+              await require("@/services/GroupApiService").GroupService.getGroupMembers(
+                group.id
+              );
+            counts[group.id] = Array.isArray(members) ? members.length : 0;
+          } catch {
+            counts[group.id] = 0;
+          }
+        })
+      );
+      setGroupMembersCount(counts);
+    };
+    fetchMembersCounts();
+  }, [groups]);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("all");
-  const groups =
-    typeof activeGroups === "function" ? activeGroups() : activeGroups;
+  // Eliminado filtro de estados
+  // Obtener todos los grupos del usuario
+  const todosMisGrupos = groups;
 
-  const filteredGroups = useMemo(() => {
-    let filtered = groups || [];
-    if (filter === "active")
-      filtered = filtered.filter((g) => g.status === "active");
-    if (filter === "social")
-      filtered = filtered.filter(
-        (g) => (g.group_type || "").toLowerCase() === "social"
-      );
-    if (filter === "work")
-      filtered = filtered.filter(
-        (g) =>
-          (g.group_type || "").toLowerCase() === "trabajo" ||
-          (g.group_type || "").toLowerCase() === "work"
-      );
-    if (search)
-      filtered = filtered.filter((g) =>
-        g.name.toLowerCase().includes(search.toLowerCase())
-      );
-    return filtered;
-  }, [groups, filter, search]);
-
-  // Estado vacío
-  if (!filteredGroups || filteredGroups.length === 0) {
+  if (!todosMisGrupos || todosMisGrupos.length === 0) {
     return (
       <View className="flex-1 justify-center items-center bg-background-light px-4">
         <View className="items-center w-full">
@@ -121,15 +153,64 @@ export const GroupsScreen: React.FC = () => {
     );
   }
 
+  // Filtros y búsqueda usando group_type como string
+  // Solo búsqueda por nombre o tipo
+  const filteredGroups = todosMisGrupos.filter((g) => {
+    const groupTypeName = g.group_type || "";
+    return (
+      g.name.toLowerCase().includes(search.toLowerCase()) ||
+      groupTypeName.toLowerCase().includes(search.toLowerCase())
+    );
+  });
+
+  // Estado: sin resultados para filtro/búsqueda
+  if (filteredGroups.length === 0) {
+    return (
+      <View className="flex-1 justify-center items-center bg-background-light px-4">
+        <Text className="text-xl font-bold text-gray-500 mb-4 text-center">
+          No hay resultados para tu búsqueda o filtro
+        </Text>
+        <TouchableOpacity
+          className="w-full flex-row items-center justify-center gap-2 rounded-xl bg-primary h-12 mb-3 shadow-lg active:scale-95"
+          onPress={navigateToCreateGroup}
+          style={{ maxWidth: 400 }}
+        >
+          <Text className="text-white text-xl">＋</Text>
+          <Text className="text-white font-bold text-base">
+            Crear nuevo grupo
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          className="w-full flex-row items-center justify-center gap-2 rounded-xl border border-gray-200 h-12 active:scale-95"
+          onPress={navigateToExploreGroups}
+          style={{ maxWidth: 400 }}
+        >
+          <Feather name="compass" size={22} color="#00E074" />
+          <Text className="text-primary font-bold text-base">
+            Explorar grupos
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <View className="flex-1 bg-background-light">
       {/* Header */}
-      <View className="flex-row items-center px-4 pt-12 pb-2 justify-between bg-white sticky top-0 z-20">
+      <ThemedHeader title="Grupos" />
+      <View className="flex-row items-center px-4 pt-12 pb-2 mt-2 justify-between bg-white sticky top-0 ">
         <Text className="text-2xl font-bold text-text-main flex-1">
           Mis Grupos
         </Text>
-        <TouchableOpacity className="w-10 h-10 rounded-full bg-background-light items-center justify-center">
-          <Feather name="bell" size={22} color="#101815" />
+        <TouchableOpacity
+          className="w-full flex-row items-center justify-center gap-2 rounded-xl border border-gray-200 h-12 active:scale-95"
+          onPress={navigateToExploreGroups}
+          style={{ maxWidth: 400 }}
+        >
+          <Feather name="compass" size={22} color="#00E074" />
+          <Text className="text-primary font-bold text-base">
+            Explorar grupos
+          </Text>
         </TouchableOpacity>
       </View>
       {/* Search & Filters */}
@@ -146,29 +227,7 @@ export const GroupsScreen: React.FC = () => {
             />
           </View>
         </View>
-        <View className="flex-row gap-3 py-2 overflow-x-auto">
-          {FILTERS.map((f) => (
-            <TouchableOpacity
-              key={f.value}
-              className={`h-9 flex-row items-center justify-center px-5 rounded-full ${
-                filter === f.value
-                  ? "bg-primary text-white shadow-md"
-                  : "bg-background-light border border-gray-100"
-              }`}
-              onPress={() => setFilter(f.value)}
-            >
-              <Text
-                className={`text-sm ${
-                  filter === f.value
-                    ? "font-semibold text-white"
-                    : "font-medium text-text-main"
-                }`}
-              >
-                {f.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        {/* Filtros eliminados, solo búsqueda */}
       </View>
       {/* Lista de grupos */}
       <FlatList
@@ -183,15 +242,25 @@ export const GroupsScreen: React.FC = () => {
         }
         contentContainerStyle={{ paddingBottom: 100, paddingTop: 8 }}
         renderItem={({ item }) => (
-          <View className="group relative flex flex-col rounded-2xl bg-white p-4 shadow-sm mb-4 border border-transparent">
-            <View className="w-full h-32 rounded-xl mb-3 overflow-hidden bg-gray-100">
-              <Image
-                source={{
-                  uri: item.image_url || "https://placehold.co/400x200",
-                }}
-                style={{ width: "100%", height: "100%" }}
-                resizeMode="cover"
-              />
+          <TouchableOpacity
+            className="group relative flex flex-col rounded-2xl bg-white p-4 shadow-sm mb-4 border border-transparent"
+            onPress={() => navigate("GroupDetailScreen", { groupId: item.id })}
+          >
+            <View className="w-full h-32 rounded-xl mb-3 overflow-hidden bg-gray-100 items-center justify-center">
+              {item.image_url ? (
+                <Image
+                  source={{ uri: item.image_url }}
+                  style={{ width: "100%", height: "100%" }}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Feather
+                  name={getGroupTypeFeatherIcon(item.group_type).name}
+                  size={56}
+                  color={getGroupTypeFeatherIcon(item.group_type).color}
+                  style={{ opacity: 0.7 }}
+                />
+              )}
             </View>
             <View className="flex flex-col justify-between flex-1 gap-2">
               <View className="flex-row justify-between items-start">
@@ -203,17 +272,15 @@ export const GroupsScreen: React.FC = () => {
                   )}
                   <View
                     className={`w-1.5 h-1.5 rounded-full ${
-                      item.status === "active" ? "bg-primary" : "bg-gray-400"
+                      item.is_active === true ? "bg-primary" : "bg-gray-400"
                     }`}
                   />
                   <Text
                     className={`text-xs font-medium ${
-                      item.status === "active"
-                        ? "text-primary"
-                        : "text-gray-500"
+                      item.is_active === true ? "text-primary" : "text-gray-500"
                     }`}
                   >
-                    {item.status === "active" ? "Activo" : "Inactivo"}
+                    {item.is_active === true ? "Activo" : "Inactivo"}
                   </Text>
                 </View>
                 <TouchableOpacity>
@@ -232,25 +299,33 @@ export const GroupsScreen: React.FC = () => {
                     </Text>
                   </View>
                 )}
-                <View className="flex-row items-center gap-1.5 bg-background-light px-2 py-1 rounded-lg">
-                  <Feather
-                    name={item.privacy === "Público" ? "globe" : "lock"}
-                    size={16}
-                    color="#5e8d76"
-                  />
-                  <Text className="text-xs text-gray-500 font-medium">
-                    {item.privacy || "Privado"}
-                  </Text>
-                </View>
+                {/* Privacidad dinámica */}
+                {(() => {
+                  const groupPrivacy = privacyOptions.find(
+                    (p) => p.id === ((item as any).privacy_id || item.privacy)
+                  );
+                  return (
+                    <View className="flex-row items-center gap-1.5 bg-background-light px-2 py-1 rounded-lg">
+                      <Feather
+                        name={getPrivacyIcon(groupPrivacy?.code || "")}
+                        size={16}
+                        color="#5e8d76"
+                      />
+                      <Text className="text-xs text-gray-500 font-medium">
+                        {groupPrivacy?.name || "Privado"}
+                      </Text>
+                    </View>
+                  );
+                })()}
                 <View className="flex-row items-center gap-1.5 bg-background-light px-2 py-1 rounded-lg">
                   <Feather name="users" size={16} color="#5e8d76" />
                   <Text className="text-xs text-gray-500 font-medium">
-                    {item.members_count || 0} Miembros
+                    {groupMembersCount[item.id] ?? 0} Miembros
                   </Text>
                 </View>
               </View>
             </View>
-          </View>
+          </TouchableOpacity>
         )}
       />
       {/* Botón flotante para crear grupo */}
