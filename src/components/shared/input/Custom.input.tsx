@@ -122,6 +122,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
           {label}
         </Animated.Text>
         <TextInput
+          autoCapitalize="none"
           ref={inputRef}
           id={"input-" + label}
           value={value}
@@ -150,11 +151,13 @@ export const CustomInput: React.FC<CustomInputProps> = ({
         {secureTextEntry &&
           (isSecure ? (
             <EyeOff
+              style={{ marginRight: 10 }}
               color={variant === "filled" ? "black" : "white"}
               onPress={() => setIsSecure(!isSecure)}
             />
           ) : (
             <EyeClosed
+              style={{ marginRight: 10 }}
               color={variant === "filled" ? "black" : "white"}
               onPress={() => setIsSecure(!isSecure)}
             />

@@ -17,54 +17,60 @@ import { useRef, useState } from "react";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
 const COLLAPSED_HEIGHT = SCREEN_HEIGHT * 0.55;
-const EXPANDED_HEIGHT = SCREEN_HEIGHT;
+const EXPANDED_HEIGHT = SCREEN_HEIGHT *.95;
 
-type WarpperModalProps = {
+type WrapperModalProps = {
   visible: boolean;
   onClose: () => void;
   header?: React.ReactNode;
   content: React.ReactNode;
   actions: React.ReactNode;
+  headerBackgroundColor?: string;
 };
-const WarpperModal: React.FC<WarpperModalProps> = ({ content, actions,header,visible, onClose }) => {
+export const WrapperModal: React.FC<WrapperModalProps> = ({
+  content,
+  actions,
+  header,
+  visible,
+  onClose,
+  headerBackgroundColor
+}) => {
   const { goBack } = useCustomNavigation();
   const heightAnim = useRef(new Animated.Value(COLLAPSED_HEIGHT)).current;
 
   const [expanded, setExpanded] = useState(false);
-const expandModal = () => {
-  if (expanded) return;
+  const expandModal = () => {
+    if (expanded) return;
+    setExpanded(true);
+    Animated.timing(heightAnim, {
+      toValue: EXPANDED_HEIGHT,
+      duration: 280,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: false,
+    }).start();
+  };
 
-  setExpanded(true);
-  Animated.timing(heightAnim, {
-    toValue: EXPANDED_HEIGHT,
-    duration: 280,
-    easing: Easing.out(Easing.ease),
-    useNativeDriver: false,
-  }).start();
-};
+  const collapseModal = () => {
+    setExpanded(false);
+    Animated.timing(heightAnim, {
+      toValue: COLLAPSED_HEIGHT,
+      duration: 220,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: false,
+    }).start();
+  };
+  const lastScrollY = useRef(0);
 
-const collapseModal = () => {
-  setExpanded(false);
-  Animated.timing(heightAnim, {
-    toValue: COLLAPSED_HEIGHT,
-    duration: 220,
-    easing: Easing.out(Easing.ease),
-    useNativeDriver: false,
-  }).start();
-};
-const lastScrollY = useRef(0);
+  const handleScroll = (e: any) => {
+    const y = e.nativeEvent.contentOffset.y;
 
-const handleScroll = (e: any) => {
-  const y = e.nativeEvent.contentOffset.y;
+    // si está arriba y hace gesto hacia arriba → expandir
+    if (y >= 0 && lastScrollY.current < y) {
+      expandModal();
+    }
 
-  // si está arriba y hace gesto hacia arriba → expandir
-  if (y <= 0 && lastScrollY.current > y) {
-    expandModal();
-  }
-
-  lastScrollY.current = y;
-};
-
+    lastScrollY.current = y;
+  };
 
   return (
     <Modal
@@ -75,9 +81,17 @@ const handleScroll = (e: any) => {
       swipeDirection="down"
       propagateSwipe
       style={styles.modal}
+      
     >
       <Animated.View style={[styles.container, { height: heightAnim }]}>
-        <View style={styles.header}>
+        <View
+          className="w-full px-4 min-h-9 "
+          style={
+            headerBackgroundColor
+              ? { backgroundColor: headerBackgroundColor }
+              : undefined
+          }
+        >
           {header ? (
             header
           ) : (
@@ -106,7 +120,7 @@ const handleScroll = (e: any) => {
   );
 };
 
-export default WarpperModal;
+export default WrapperModal;
 
 const styles = StyleSheet.create({
   modal: {
@@ -118,11 +132,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     overflow: "hidden",
-  },
-  header: {
-    minHeight: 38,
-    width: "100%",
-    paddingHorizontal: 16,
   },
   footer: {
     padding: 16,
