@@ -3,14 +3,18 @@ import {
   View,
   Text,
   TextInput,
+  ScrollView,
   FlatList,
   Image,
   TouchableOpacity,
   RefreshControl,
+  Dimensions,
+  Platform,
 } from "react-native";
 import { useGroupsNavigation, useGroups } from "./hooks";
 import Feather from "react-native-vector-icons/Feather";
 import { ThemedHeader } from "src/components";
+import { CustomLoader } from "@/components/shared/loader/Loader";
 import { GroupService, GroupPrivacy } from "@/services/GroupApiService";
 // Ícono según código de privacidad
 const getPrivacyIcon = (privacyCode: string) => {
@@ -66,7 +70,11 @@ export const GroupsScreen: React.FC = () => {
   const navigateToExploreGroups = () => {
     navigate("GroupExplore");
   };
-  const { groups, activeGroups, onRefresh, refreshing } = useGroups();
+  const { groups, activeGroups, onRefresh, refreshing, loading } = useGroups();
+  // Forzar altura del listado en web mobile para diagnosticar scroll
+  const windowHeight = Dimensions.get("window").height;
+  // Reservar espacio para header + tabbar aproximado (ajusta si es necesario)
+  const listHeight = Math.max(400, windowHeight - 160);
   const [groupMembersCount, setGroupMembersCount] = useState<
     Record<string, number>
   >({});
@@ -96,6 +104,14 @@ export const GroupsScreen: React.FC = () => {
   // Eliminado filtro de estados
   // Obtener todos los grupos del usuario
   const todosMisGrupos = groups;
+
+  if (loading) {
+    return (
+      <View className="flex-1 justify-center items-center bg-background-light">
+        <CustomLoader />
+      </View>
+    );
+  }
 
   if (!todosMisGrupos || todosMisGrupos.length === 0) {
     return (
@@ -163,178 +179,197 @@ export const GroupsScreen: React.FC = () => {
     );
   });
 
-  // Estado: sin resultados para filtro/búsqueda
-  if (filteredGroups.length === 0) {
-    return (
-      <View className="flex-1 justify-center items-center bg-background-light px-4">
-        <Text className="text-xl font-bold text-gray-500 mb-4 text-center">
-          No hay resultados para tu búsqueda o filtro
-        </Text>
-        <TouchableOpacity
-          className="w-full flex-row items-center justify-center gap-2 rounded-xl bg-primary h-12 mb-3 shadow-lg active:scale-95"
-          onPress={navigateToCreateGroup}
-          style={{ maxWidth: 400 }}
-        >
-          <Text className="text-white text-xl">＋</Text>
-          <Text className="text-white font-bold text-base">
-            Crear nuevo grupo
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          className="w-full flex-row items-center justify-center gap-2 rounded-xl border border-gray-200 h-12 active:scale-95"
-          onPress={navigateToExploreGroups}
-          style={{ maxWidth: 400 }}
-        >
-          <Feather name="compass" size={22} color="#00E074" />
-          <Text className="text-primary font-bold text-base">
-            Explorar grupos
-          </Text>
-        </TouchableOpacity>
+  const renderGroup = ({ item }: { item: any }) => (
+    <TouchableOpacity
+      className="group relative flex flex-col rounded-2xl bg-white p-4 shadow-sm mb-4 border border-transparent mx-2"
+      onPress={() => navigate("GroupDetailScreen", { groupId: item.id })}
+    >
+      <View className="w-full h-32 rounded-xl mb-3 overflow-hidden bg-gray-100 items-center justify-center">
+        {item.image_url ? (
+          <Image
+            source={{ uri: item.image_url }}
+            style={{ width: "100%", height: "100%" }}
+            resizeMode="cover"
+          />
+        ) : (
+          <Feather
+            name={getGroupTypeFeatherIcon(item.group_type).name}
+            size={56}
+            color={getGroupTypeFeatherIcon(item.group_type).color}
+            style={{ opacity: 0.7 }}
+          />
+        )}
       </View>
-    );
-  }
-
-  return (
-    <View className="flex-1 bg-background-light">
-      {/* Header */}
-      <ThemedHeader title="Grupos" />
-      <View className="flex-row items-center px-4 pt-12 pb-2 mt-2 justify-between bg-white sticky top-0 ">
-        <Text className="text-2xl font-bold text-text-main flex-1">
-          Mis Grupos
-        </Text>
-        <TouchableOpacity
-          className="w-full flex-row items-center justify-center gap-2 rounded-xl border border-gray-200 h-12 active:scale-95"
-          onPress={navigateToExploreGroups}
-          style={{ maxWidth: 400 }}
-        >
-          <Feather name="compass" size={22} color="#00E074" />
-          <Text className="text-primary font-bold text-base">
-            Explorar grupos
-          </Text>
-        </TouchableOpacity>
-      </View>
-      {/* Search & Filters */}
-      <View className="bg-white px-4 pb-4 sticky top-[72px] z-10">
-        <View className="py-2">
-          <View className="flex-row items-center bg-background-light rounded-xl px-4">
-            <Feather name="search" size={20} color="#5e8d76" />
-            <TextInput
-              className="flex-1 h-12 px-2 text-base"
-              placeholder="Buscar grupos..."
-              value={search}
-              onChangeText={setSearch}
-              placeholderTextColor="#8caea0"
+      <View className="flex flex-col justify-between flex-1 gap-2">
+        <View className="flex-row justify-between items-start">
+          <View className="flex-row items-center gap-2 mb-1">
+            {item.is_leader && (
+              <Text className="px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider">
+                Líder
+              </Text>
+            )}
+            <View
+              className={`w-1.5 h-1.5 rounded-full ${
+                item.is_active === true ? "bg-primary" : "bg-gray-400"
+              }`}
             />
+            <Text
+              className={`text-xs font-medium ${
+                item.is_active === true ? "text-primary" : "text-gray-500"
+              }`}
+            >
+              {item.is_active === true ? "Activo" : "Inactivo"}
+            </Text>
+          </View>
+          <TouchableOpacity>
+            <Feather name="more-vertical" size={20} color="#bdbdbd" />
+          </TouchableOpacity>
+        </View>
+        <Text className="text-lg font-bold text-text-main mb-1">
+          {item.name}
+        </Text>
+        <View className="flex-row flex-wrap items-center gap-2 mt-1">
+          {item.group_type && (
+            <View className="flex-row items-center gap-1.5 bg-background-light px-2 py-1 rounded-lg">
+              {getTypeIcon(item.group_type)}
+              <Text className="text-xs text-gray-500 font-medium">
+                {item.group_type}
+              </Text>
+            </View>
+          )}
+          {/* Privacidad dinámica */}
+          {(() => {
+            const groupPrivacy = privacyOptions.find(
+              (p) => p.id === ((item as any).privacy_id || item.privacy)
+            );
+            return (
+              <View className="flex-row items-center gap-1.5 bg-background-light px-2 py-1 rounded-lg">
+                <Feather
+                  name={getPrivacyIcon(groupPrivacy?.code || "")}
+                  size={16}
+                  color="#5e8d76"
+                />
+                <Text className="text-xs text-gray-500 font-medium">
+                  {groupPrivacy?.name || "Privado"}
+                </Text>
+              </View>
+            );
+          })()}
+          <View className="flex-row items-center gap-1.5 bg-background-light px-2 py-1 rounded-lg">
+            <Feather name="users" size={16} color="#5e8d76" />
+            <Text className="text-xs text-gray-500 font-medium">
+              {groupMembersCount[item.id] ?? 0} Miembros
+            </Text>
           </View>
         </View>
-        {/* Filtros eliminados, solo búsqueda */}
       </View>
-      {/* Lista de grupos */}
-      <FlatList
-        data={filteredGroups}
-        keyExtractor={(item) => item.id}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={["#00e074"]}
-          />
-        }
-        contentContainerStyle={{ paddingBottom: 100, paddingTop: 8 }}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            className="group relative flex flex-col rounded-2xl bg-white p-4 shadow-sm mb-4 border border-transparent"
-            onPress={() => navigate("GroupDetailScreen", { groupId: item.id })}
-          >
-            <View className="w-full h-32 rounded-xl mb-3 overflow-hidden bg-gray-100 items-center justify-center">
-              {item.image_url ? (
-                <Image
-                  source={{ uri: item.image_url }}
-                  style={{ width: "100%", height: "100%" }}
-                  resizeMode="cover"
-                />
-              ) : (
-                <Feather
-                  name={getGroupTypeFeatherIcon(item.group_type).name}
-                  size={56}
-                  color={getGroupTypeFeatherIcon(item.group_type).color}
-                  style={{ opacity: 0.7 }}
-                />
-              )}
-            </View>
-            <View className="flex flex-col justify-between flex-1 gap-2">
-              <View className="flex-row justify-between items-start">
-                <View className="flex-row items-center gap-2 mb-1">
-                  {item.is_leader && (
-                    <Text className="px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider">
-                      Líder
-                    </Text>
-                  )}
-                  <View
-                    className={`w-1.5 h-1.5 rounded-full ${
-                      item.is_active === true ? "bg-primary" : "bg-gray-400"
-                    }`}
-                  />
-                  <Text
-                    className={`text-xs font-medium ${
-                      item.is_active === true ? "text-primary" : "text-gray-500"
-                    }`}
-                  >
-                    {item.is_active === true ? "Activo" : "Inactivo"}
+    </TouchableOpacity>
+  );
+
+  return (
+    <View style={{ flex: 1, backgroundColor: "#F8F9FB" }}>
+      <View style={{ flex: 1 }}>
+        {/* Header */}
+        <ThemedHeader title="Grupos" />
+        <FlatList
+          style={{ height: listHeight, backgroundColor: "#F8F9FB" }}
+          nestedScrollEnabled={true}
+          stickyHeaderIndices={[0]}
+          ListHeaderComponentStyle={{ zIndex: 10 }}
+          contentContainerStyle={{
+            flexGrow: 1,
+            paddingBottom: 120,
+            paddingHorizontal: 0,
+          }}
+          data={filteredGroups}
+          keyExtractor={(item) => item.id}
+          renderItem={renderGroup}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#00e074"]}
+            />
+          }
+          ListHeaderComponent={
+            <View style={{ backgroundColor: "#F8F9FB" }}>
+              <View className="flex-row items-center px-4 pt-2 pb-2 mt-2 justify-between bg-white">
+                <Text className="text-2xl font-bold text-text-main flex-1">
+                  Mis Grupos
+                </Text>
+                <TouchableOpacity
+                  className="flex-row items-center justify-center gap-2 rounded-xl border border-gray-200 h-10 px-4 active:scale-95"
+                  onPress={navigateToExploreGroups}
+                >
+                  <Feather name="compass" size={18} color="#00E074" />
+                  <Text className="text-primary font-bold text-sm">
+                    Explorar
                   </Text>
-                </View>
-                <TouchableOpacity>
-                  <Feather name="more-vertical" size={20} color="#bdbdbd" />
                 </TouchableOpacity>
               </View>
-              <Text className="text-lg font-bold text-text-main mb-1">
-                {item.name}
-              </Text>
-              <View className="flex-row flex-wrap items-center gap-2 mt-1">
-                {item.group_type && (
-                  <View className="flex-row items-center gap-1.5 bg-background-light px-2 py-1 rounded-lg">
-                    {getTypeIcon(item.group_type)}
-                    <Text className="text-xs text-gray-500 font-medium">
-                      {item.group_type}
-                    </Text>
+              {/* Search & Filters */}
+              <View className="bg-white px-4 pb-4">
+                <View className="py-2">
+                  <View className="flex-row items-center bg-background-light rounded-xl px-4">
+                    <Feather name="search" size={20} color="#5e8d76" />
+                    <TextInput
+                      className="flex-1 h-12 px-2 text-base"
+                      placeholder="Buscar por nombre..."
+                      value={search}
+                      onChangeText={setSearch}
+                      placeholderTextColor="#8caea0"
+                    />
                   </View>
-                )}
-                {/* Privacidad dinámica */}
-                {(() => {
-                  const groupPrivacy = privacyOptions.find(
-                    (p) => p.id === ((item as any).privacy_id || item.privacy)
-                  );
-                  return (
-                    <View className="flex-row items-center gap-1.5 bg-background-light px-2 py-1 rounded-lg">
-                      <Feather
-                        name={getPrivacyIcon(groupPrivacy?.code || "")}
-                        size={16}
-                        color="#5e8d76"
-                      />
-                      <Text className="text-xs text-gray-500 font-medium">
-                        {groupPrivacy?.name || "Privado"}
-                      </Text>
-                    </View>
-                  );
-                })()}
-                <View className="flex-row items-center gap-1.5 bg-background-light px-2 py-1 rounded-lg">
-                  <Feather name="users" size={16} color="#5e8d76" />
-                  <Text className="text-xs text-gray-500 font-medium">
-                    {groupMembersCount[item.id] ?? 0} Miembros
-                  </Text>
                 </View>
               </View>
             </View>
-          </TouchableOpacity>
-        )}
-      />
+          }
+          ListEmptyComponent={
+            <Text className="text-center text-text-sec-light mt-10">
+              No se encontraron grupos
+            </Text>
+          }
+        />
+      </View>
       {/* Botón flotante para crear grupo */}
-      <TouchableOpacity
-        className="absolute bottom-8 right-6 h-14 w-14 rounded-full bg-primary items-center justify-center shadow-lg"
-        onPress={navigateToCreateGroup}
+      <View
+        pointerEvents="auto"
+        style={
+          (Platform.OS === "web"
+            ? {
+                position: "fixed" as any,
+                right: 10,
+                bottom: 100,
+                zIndex: 9999,
+              }
+            : {
+                position: "absolute" as any,
+                right: 24,
+                bottom: 32,
+                zIndex: 9999,
+              }) as any
+        }
       >
-        <Feather name="plus" size={28} color="#fff" />
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={{
+            height: 56,
+            width: 56,
+            borderRadius: 28,
+            backgroundColor: "#00E074",
+            alignItems: "center",
+            justifyContent: "center",
+            shadowColor: "#000",
+            shadowOpacity: 0.2,
+            shadowRadius: 8,
+            elevation: 8,
+          }}
+          onPress={navigateToCreateGroup}
+        >
+          <Feather name="plus" size={28} color="#fff" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };

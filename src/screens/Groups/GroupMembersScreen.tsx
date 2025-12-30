@@ -8,13 +8,17 @@ import {
   Pressable,
   ActivityIndicator,
   Image,
+  FlatList,
+  Dimensions,
+  Platform,
 } from "react-native";
 import Feather from "react-native-vector-icons/Feather";
-import { GroupMembersList } from "src/components";
+// removed GroupMembersList import to render list inline for better web/mobile scroll control
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { GroupService, GroupMember } from "@/services/GroupApiService";
 import { useNotify } from "src/hooks";
 import { useAuth } from "src/context/AuthContext";
+import { CustomLoader } from "@/components/shared/loader/Loader";
 
 const FILTERS = [
   { label: "Todos", value: "all" },
@@ -230,6 +234,82 @@ export const GroupMembersScreen = () => {
     return filtered;
   }, [members, filter, search]);
 
+  const windowHeight = Dimensions.get("window").height;
+  const listHeight = Math.max(420, windowHeight - 160);
+
+  const renderMember = ({ item }: { item: any }) => {
+    const isLeader = item.role === "LEADER";
+    const isYou =
+      user && (item.user?.id === user.id || item.user_id === user.id);
+    let fechaUnion = "";
+    const rawDate = item.joined_at || item.created_at;
+    if (rawDate) {
+      const date = new Date(rawDate);
+      fechaUnion = date.toLocaleDateString("es-AR", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+    }
+    const displayName =
+      item.user?.full_name || item.user?.email || item.user_id;
+    const avatarUrl =
+      item.user?.profile_picture_url || "https://placehold.co/48x48";
+
+    return (
+      <View
+        className={`flex-row items-center bg-white rounded-2xl mb-3 p-3 ${
+          isYou ? "border-2 border-primary/60" : ""
+        }`}
+      >
+        <Image
+          source={{ uri: avatarUrl }}
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: 24,
+            backgroundColor: "#e5e7eb",
+          }}
+        />
+        <View className="flex-1 ml-3 min-w-0">
+          <Text className="font-bold text-base truncate text-text-main-light">
+            {displayName} {isYou ? "(Tú)" : ""}
+          </Text>
+          <View className="flex-row items-center gap-2 mt-1">
+            <Text className="text-xs text-text-sec-light font-medium">
+              {isLeader ? "Líder" : "Miembro"}
+            </Text>
+          </View>
+          <Text className="text-xs text-text-sec-light mt-1">
+            {fechaUnion ? `Se unió el ${fechaUnion}` : null}
+          </Text>
+        </View>
+        {isLeader && (
+          <View className="ml-2 bg-primary/10 rounded-full px-2 py-1 flex-row items-center">
+            <Text className="text-xs font-bold text-primary">Líder</Text>
+            <Feather
+              name="shield"
+              size={16}
+              color="#00e074"
+              style={{ marginLeft: 4 }}
+            />
+          </View>
+        )}
+        {!isLeader && (
+          <TouchableOpacity
+            onPress={() => {
+              setSelectedMember(item);
+              setOptionsModal(true);
+            }}
+            className="ml-2 p-2"
+          >
+            <Feather name="more-vertical" size={22} color="#5e8d76" />
+          </TouchableOpacity>
+        )}
+      </View>
+    );
+  };
+
   const handleInvite = async ({ email, role }: any) => {
     setInviteLoading(true);
     try {
@@ -278,8 +358,11 @@ export const GroupMembersScreen = () => {
     <View className="flex-1 bg-background-light">
       {/* Header */}
       <View className="flex-row items-center justify-between px-4 pt-8 pb-1 bg-background-light">
-        <TouchableOpacity onPress={() => navigation.goBack()} className="p-2">
-          <Feather name="arrow-left" size={24} color="#101815" />
+        <TouchableOpacity
+          onPress={() => navigation?.goBack?.()}
+          className="mr-4 p-2 border-2 border-green-500 rounded-full"
+        >
+          <Feather name="arrow-left" size={24} color="#00E074" />
         </TouchableOpacity>
         <View className="flex-1">
           <Text className="text-center text-lg font-bold">
@@ -354,14 +437,36 @@ export const GroupMembersScreen = () => {
           <Text className="text-primary font-medium">Ordenar</Text>
         </TouchableOpacity>
       </View>
-      <GroupMembersList
-        members={filteredMembers}
-        currentUserId={user?.id}
-        loading={loading}
-        onMemberOptions={(member) => {
-          setSelectedMember(member);
-          setOptionsModal(true);
+
+      <FlatList
+        data={filteredMembers}
+        keyExtractor={(item) => item.id}
+        renderItem={renderMember}
+        style={
+          Platform.OS === "web"
+            ? ({ height: listHeight, overflow: "auto" } as any)
+            : { flex: 1 }
+        }
+        contentContainerStyle={{
+          paddingHorizontal: 0,
+          paddingBottom: 40,
+          flexGrow: 1,
         }}
+        nestedScrollEnabled={true}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        refreshing={loading}
+        ListEmptyComponent={
+          loading ? (
+            <View style={{ paddingTop: 24 }}>
+              <CustomLoader />
+            </View>
+          ) : (
+            <Text className="text-center text-text-sec-light mt-10">
+              No se encontraron miembros
+            </Text>
+          )
+        }
       />
       <InviteMemberModal
         visible={inviteModal}

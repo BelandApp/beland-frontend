@@ -6,6 +6,8 @@ import {
   ScrollView,
   TextInput,
   Modal,
+  Dimensions,
+  Platform,
 } from "react-native";
 import Feather from "react-native-vector-icons/Feather";
 import { ActionMenu } from "src/screens/Groups/components/ActionMenu";
@@ -17,6 +19,7 @@ import { GroupPrivacy } from "@/services/GroupApiService";
 import { addressService, UserAddress } from "@/services/addressService";
 import * as Clipboard from "expo-clipboard";
 import { useNotify } from "src/hooks";
+import { CustomLoader } from "@/components/shared/loader/Loader";
 import { reverseGeocode } from "@/services/mapboxService";
 import * as Linking from "expo-linking";
 import { GroupMembersList } from "src/components";
@@ -28,6 +31,9 @@ export const GroupDetailScreen = () => {
   const navigation = useNavigation<StackNavigationProp<GroupsStackParamList>>();
   const route = useRoute<RouteProp<{ params: GroupDetailParams }, "params">>();
   const groupId = (route.params as any)?.groupId;
+  // Calcular altura para scroll en web/mobile
+  const windowHeight = Dimensions.get("window").height;
+  const listHeight = Math.max(420, windowHeight - 160);
   const [group, setGroup] = useState<Group | null>(null);
   const [loading, setLoading] = useState(true);
   const [members, setMembers] = useState<GroupMember[]>([]);
@@ -195,7 +201,7 @@ export const GroupDetailScreen = () => {
   if (loading || !group) {
     return (
       <View className="flex-1 justify-center items-center bg-background-light">
-        <Text>Cargando...</Text>
+        <CustomLoader />
       </View>
     );
   }
@@ -222,7 +228,17 @@ export const GroupDetailScreen = () => {
           actions={groupActions}
         />
       </View>
-      <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView
+        // En web forzamos height + overflow para asegurar scrolling dentro del contenedor
+        style={
+          Platform.OS === "web"
+            ? ({ height: listHeight, overflow: "auto" } as any)
+            : { flex: 1 }
+        }
+        contentContainerStyle={{ paddingBottom: 32, flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+        nestedScrollEnabled={true}
+      >
         {/* Avatar y estado */}
         <View className="items-center pt-6 pb-2">
           <View

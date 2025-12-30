@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, Image, TouchableOpacity, FlatList } from "react-native";
 import Feather from "react-native-vector-icons/Feather";
 import { GroupMember } from "@/services/GroupApiService";
+import { CustomLoader } from "@/components/shared/loader/Loader";
 
 interface GroupMembersListProps {
   members: GroupMember[];
@@ -98,9 +99,9 @@ const GroupMembersList: React.FC<GroupMembersListProps> = ({
       refreshing={loading}
       ListEmptyComponent={
         loading ? (
-          <Text className="text-center text-text-sec-light mt-10">
-            Cargando...
-          </Text>
+          <View style={{ paddingTop: 24 }}>
+            <CustomLoader />
+          </View>
         ) : (
           <Text className="text-center text-text-sec-light mt-10">
             No se encontraron miembros
