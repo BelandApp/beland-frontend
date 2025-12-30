@@ -8,57 +8,61 @@ import { BeCoinIcon } from "../../../components/icons/BeCoinIcon";
 interface TransactionCardProps {
   transaction: Transaction;
 }
+export const getTransactionIcon = (type: Transaction["type"]) => {
+  // Si es transferencia recibida, mostrar icono de entrada
+  if (type === "receive") return "arrow-down-left";
+  if (type === "transferencia") return "arrow-up-right";
+  if (type === "recarga") return "plus-circle";
+  if (type === "canje") return "swap-horizontal";
+  if (type === "pago") return "credit-card-minus";
+  if (type === "collection") return "cash-plus";
+  return "help-circle";
+};
+export const getTransactionColor = (type: Transaction["type"]) => {
+  // Si es transferencia recibida, mostrar verde
+  if (type === "receive" || type === "collection")
+    return "#4caf50";
+  if (type === "transferencia" || type === "pago")
+    return "#f44336";
+  if (type === "recarga") return "#2196f3";
+  if (type === "canje") return "#ff9800";
+  return "#666";
+};
 
+export const getAmountPrefix = (type: Transaction["type"]) => {
+  // Si es transferencia recibida, mostrar '+'
+  if (
+    type === "receive" ||
+    type === "collection" ||
+    type === "recarga"
+  )
+    return "+";
+  if (type === "transferencia" || type === "pago")
+    return "-";
+  return "";
+};
+
+ export const getStatusColor = (status: Transaction["status"]) => {
+   switch (status) {
+     case "exitoso":
+       return "#4caf50";
+     case "pendiente":
+       return "#ff9800";
+     case "error":
+       return "#f44336";
+     default:
+       return "#666";
+   }
+ };
 export const TransactionCard: React.FC<TransactionCardProps> = ({
   transaction,
 }) => {
-  const getTransactionIcon = () => {
-    // Si es transferencia recibida, mostrar icono de entrada
-    if (transaction.type === "receive") return "arrow-down-left";
-    if (transaction.type === "transfer") return "arrow-up-right";
-    if (transaction.type === "recharge") return "plus-circle";
-    if (transaction.type === "exchange") return "swap-horizontal";
-    if (transaction.type === "payment") return "credit-card-minus";
-    if (transaction.type === "collection") return "cash-plus";
-    return "help-circle";
-  };
 
-  const getTransactionColor = () => {
-    // Si es transferencia recibida, mostrar verde
-    if (transaction.type === "receive" || transaction.type === "collection")
-      return "#4caf50";
-    if (transaction.type === "transfer" || transaction.type === "payment")
-      return "#f44336";
-    if (transaction.type === "recharge") return "#2196f3";
-    if (transaction.type === "exchange") return "#ff9800";
-    return "#666";
-  };
+  
 
-  const getAmountPrefix = () => {
-    // Si es transferencia recibida, mostrar '+'
-    if (
-      transaction.type === "receive" ||
-      transaction.type === "collection" ||
-      transaction.type === "recharge"
-    )
-      return "+";
-    if (transaction.type === "transfer" || transaction.type === "payment")
-      return "-";
-    return "";
-  };
+  
 
-  const getStatusColor = () => {
-    switch (transaction.status) {
-      case "completed":
-        return "#4caf50";
-      case "pending":
-        return "#ff9800";
-      case "failed":
-        return "#f44336";
-      default:
-        return "#666";
-    }
-  };
+ 
 
   // Forzar monto positivo para transferencias recibidas y usar el campo preferido
   const resolvedAmount =
@@ -80,13 +84,13 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
           <View
             style={[
               styles.iconContainer,
-              { backgroundColor: `${getTransactionColor()}20` },
+              { backgroundColor: `${getTransactionColor(transaction.type)}20` },
             ]}
           >
             <MaterialCommunityIcons
-              name={getTransactionIcon() as any}
+              name={getTransactionIcon(transaction.type) as any}
               size={20}
-              color={getTransactionColor()}
+              color={getTransactionColor(transaction.type)}
             />
           </View>
           <View style={styles.textContainer}>
@@ -99,15 +103,20 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
         <View style={styles.rightSection}>
           <View style={styles.amountContainer}>
             <BeCoinIcon width={16} height={16} />
-            <Text style={[styles.amount, { color: getTransactionColor() }]}>
-              {getAmountPrefix()}
+            <Text
+              style={[
+                styles.amount,
+                { color: getTransactionColor(transaction.type) },
+              ]}
+            >
+              {getAmountPrefix(transaction.type)}
               {String(Math.abs(displayAmount))}
             </Text>
           </View>
           <View
             style={[
               styles.statusIndicator,
-              { backgroundColor: getStatusColor() },
+              { backgroundColor: getStatusColor(transaction.status) },
             ]}
           />
         </View>

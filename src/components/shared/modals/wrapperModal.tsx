@@ -17,7 +17,7 @@ import { useRef, useState } from "react";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
 const COLLAPSED_HEIGHT = SCREEN_HEIGHT * 0.55;
-const EXPANDED_HEIGHT = SCREEN_HEIGHT;
+const EXPANDED_HEIGHT = SCREEN_HEIGHT *.95;
 
 type WrapperModalProps = {
   visible: boolean;
@@ -81,6 +81,7 @@ export const WrapperModal: React.FC<WrapperModalProps> = ({
       swipeDirection="down"
       propagateSwipe
       style={styles.modal}
+      
     >
       <Animated.View style={[styles.container, { height: heightAnim }]}>
         <View

@@ -1,10 +1,11 @@
-import React from "react";
-import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
+import React, { useState } from "react";
+import { View, Text, TouchableOpacity, ActivityIndicator, Pressable } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { TransactionCard } from "./TransactionCard";
 import { Transaction } from "../types";
 import { recentTransactionsStyles } from "../styles";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
+import TransactionModal from "../modal/transaction.modal";
 
 interface RecentTransactionsProps {
   transactions: Transaction[];
@@ -15,7 +16,7 @@ export const RecentTransactions: React.FC<RecentTransactionsProps> = ({
   transactions,
   isLoading = false,
 }) => {  const { navigate } = useCustomNavigation();
-
+const [modalTransaction, setModalOpen] = useState<Transaction | null>(null);
 
   const handleViewAll = () => {
     navigate("WalletHistoryScreen");
@@ -69,9 +70,20 @@ export const RecentTransactions: React.FC<RecentTransactionsProps> = ({
       ) : (
         <View style={recentTransactionsStyles.transactionsList}>
           {transactions.slice(0, 3).map((transaction) => (
-            <TransactionCard key={transaction.id} transaction={transaction} />
+            <Pressable
+              onPress={() => setModalOpen(transaction)}
+              key={transaction.id}
+            >
+              <TransactionCard transaction={transaction} />
+            </Pressable>
           ))}
         </View>
+      )}
+      {modalTransaction !== null && (
+        <TransactionModal
+          transaction={modalTransaction}
+          onClose={() => setModalOpen(null)}
+        />
       )}
     </View>
   );
