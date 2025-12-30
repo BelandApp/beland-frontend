@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Platform, Alert } from "react-native";
+import { notify } from "src/hooks/notification/notify.external";
 
 // Tipos
 export interface PaymentMethod {
@@ -183,10 +184,9 @@ export function useRecharge() {
   };
 
   const handleBankTransferPayment = () => {
-    Alert.alert(
-      "Transferencia Bancaria",
-      "Función en desarrollo para transferencia bancaria"
-    );
+    notify.info({
+      message: "Función en desarrollo",
+    })
   };
 
   const handleProceedToPayment = async () => {

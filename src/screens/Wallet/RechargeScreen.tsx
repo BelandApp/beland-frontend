@@ -39,9 +39,8 @@ export default function RechargeScreen() {
   const usdBalance = convertBeCoinsToUSD(beCoinsBalance || 0);
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-100 dark:bg-gray-900">
+    <>
       <ThemedHeader title="Recargar BeCoins" canGoBack />
-
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="py-8 px-4">
           {/* Card Principal */}
@@ -342,12 +341,6 @@ export default function RechargeScreen() {
         </View>
       </ScrollView>
 
-      {/* Footer */}
-      <View className="py-6 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800">
-        <Text className="text-xs text-gray-400 dark:text-gray-600 text-center">
-          © 2025 Beland Develop. Todos los derechos reservados.
-        </Text>
-      </View>
-    </SafeAreaView>
+    </>
   );
 }

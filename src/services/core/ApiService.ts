@@ -4,8 +4,7 @@
  */
 
 import Constants from "expo-constants";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-
+import * as SecureStore from "expo-secure-store";
 // API Configuration
 export const API_CONFIG = {
   BASE_URL:
@@ -63,7 +62,7 @@ export class CoreApiService {
       return window.localStorage.getItem("access_token");
     } else {
       try {
-        return await AsyncStorage.getItem("access_token");
+        return SecureStore.getItem("access_token");
       } catch {
         return null;
       }

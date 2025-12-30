@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -10,22 +10,24 @@ import {
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { TransactionCard } from "./components/TransactionCard";
-import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { SearchBarInput, ThemedHeader } from "src/components";
 import { useWallet } from "./hooks";
-
+import { Pressable } from "react-native";
+import { Transaction } from "./types";
+import { CoreApiService } from "src/services";
+import TransactionModal from "./modal/transaction.modal";
 export default function WalletHistoryScreen() {
-  const { goBack } = useCustomNavigation();
-  const {transactions, loadingTransactions} = useWallet()
+  const { transactions, loadingTransactions } = useWallet();
   const [searchText, setSearchText] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
-
+  const [modalTransaction, setModalOpen] = useState<Transaction | null>(null);
   const filterOptions = [
     { id: "all", label: "Todas", icon: "format-list-bulleted" },
-    { id: "transfer", label: "Enviados", icon: "arrow-up-right" },
+    { id: "transferencia", label: "Enviados", icon: "arrow-up-right" },
     { id: "receive", label: "Recibidos", icon: "arrow-down-left" },
-    { id: "recharge", label: "Recargas", icon: "plus-circle" },
-    { id: "exchange", label: "Canjes", icon: "swap-horizontal" },
+    { id: "recarga", label: "Recargas", icon: "plus-circle" },
+    { id: "canje", label: "Canjes", icon: "swap-horizontal" },
+    { id: "pago", label: "Compras", icon: "credit-card-minus" },
   ];
 
   const filteredTransactions = (transactions ?? []).filter((transaction) => {
@@ -42,12 +44,12 @@ export default function WalletHistoryScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-[#f8f9fa]">
       {/* Header */}
-      <ThemedHeader canGoBack title="Historial de Transacciones" />
+      <ThemedHeader canGoBack title="Transacciones" />
 
       {/* Search and Filters */}
-      <View style={styles.searchAndFilters}>
+      <View className="p-4">
         {/* Search Bar */}
         <SearchBarInput
           placeholder="Buscar transacciones..."
@@ -58,16 +60,14 @@ export default function WalletHistoryScreen() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          style={styles.filtersContainer}
-          contentContainerStyle={styles.filtersContent}
+          contentContainerClassName="gap-2"
         >
           {filterOptions.map((option) => (
             <TouchableOpacity
               key={option.id}
-              style={[
-                styles.filterButton,
-                filterType === option.id && styles.filterButtonActive,
-              ]}
+              className={`flex-row items-center px-3 py-2 rounded-xl ${
+                filterType === option.id && "bg-[#F88D2A]"
+              } `}
               onPress={() => handleFilterPress(option.id)}
             >
               <MaterialCommunityIcons
@@ -76,10 +76,9 @@ export default function WalletHistoryScreen() {
                 color={filterType === option.id ? "#fff" : "#666"}
               />
               <Text
-                style={[
-                  styles.filterButtonText,
-                  filterType === option.id && styles.filterButtonTextActive,
-                ]}
+                className={`font-medium ml-1 text-sm text-gray-600 ${
+                  filterType === option.id && "text-white"
+                } `}
               >
                 {option.label}
               </Text>
@@ -89,30 +88,37 @@ export default function WalletHistoryScreen() {
       </View>
 
       {/* Transactions List */}
-      <ScrollView style={styles.transactionsList}>
+      <ScrollView className="flex-1 px-3">
         {loadingTransactions ? (
-          <View style={styles.loadingContainer}>
+          <View className="items-center justify-center py-16">
             <ActivityIndicator size="large" color="#F88D2A" />
-            <Text style={styles.loadingText}>Cargando transacciones...</Text>
+            <Text className="text-base text-gray-600 mt-2">
+              Cargando transacciones...
+            </Text>
           </View>
         ) : filteredTransactions.length === 0 ? (
-          <View style={styles.emptyContainer}>
+          <View className="items-center justify-center py-16 px-8">
             <MaterialCommunityIcons name="receipt" size={64} color="#ccc" />
-            <Text style={styles.emptyTitle}>
+            <Text className="text-sm text-center text-gray-500">
               {searchText || filterType !== "all"
                 ? "No se encontraron transacciones"
                 : "Sin transacciones"}
             </Text>
-            <Text style={styles.emptyText}>
+            <Text className="text-sm text-center text-gray-500">
               {searchText || filterType !== "all"
                 ? "Intenta cambiar los filtros o el término de búsqueda"
                 : "Cuando realices transacciones aparecerán aquí"}
             </Text>
           </View>
         ) : (
-          <View style={styles.transactionsContainer}>
+          <View className="pb-4">
             {filteredTransactions.map((transaction) => (
-              <TransactionCard key={transaction.id} transaction={transaction} />
+              <Pressable
+                onPress={() => setModalOpen(transaction)}
+                key={transaction.id}
+              >
+                <TransactionCard transaction={transaction} />
+              </Pressable>
             ))}
           </View>
         )}
@@ -120,106 +126,18 @@ export default function WalletHistoryScreen() {
 
       {/* Summary */}
       {!loadingTransactions && filteredTransactions.length > 0 && (
-        <View style={styles.summary}>
-          <Text style={styles.summaryText}>
+        <View className="px-4 py-2 border-t border-gray-200">
+          <Text className="text-center text-sm text-gray-500">
             {filteredTransactions.length} transacción(es) encontrada(s)
           </Text>
         </View>
       )}
+      {modalTransaction !== null && (
+        <TransactionModal
+          transaction={modalTransaction}
+          onClose={() => setModalOpen(null)}
+        />
+      )}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f8f9fa",
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#fff",
-    flex: 1,
-  },
-  searchAndFilters: {
-    padding: 16,
-    backgroundColor: "#fff",
-    marginBottom: 8,
-  },
-  filtersContainer: {
-    marginHorizontal: -4,
-  },
-  filtersContent: {
-    paddingHorizontal: 4,
-  },
-  filterButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: "#f5f5f5",
-    marginHorizontal: 4,
-  },
-  filterButtonActive: {
-    backgroundColor: "#F88D2A",
-  },
-  filterButtonText: {
-    fontSize: 14,
-    color: "#666",
-    marginLeft: 4,
-    fontWeight: "500",
-  },
-  filterButtonTextActive: {
-    color: "#fff",
-  },
-  transactionsList: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  loadingContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 64,
-  },
-  loadingText: {
-    fontSize: 16,
-    color: "#666",
-    marginTop: 12,
-  },
-  emptyContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 64,
-    paddingHorizontal: 32,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#333",
-    marginTop: 16,
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  emptyText: {
-    fontSize: 14,
-    color: "#666",
-    textAlign: "center",
-    lineHeight: 20,
-  },
-  transactionsContainer: {
-    paddingBottom: 16,
-  },
-  summary: {
-    backgroundColor: "#fff",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#f0f0f0",
-  },
-  summaryText: {
-    fontSize: 14,
-    color: "#666",
-    textAlign: "center",
-  },
-});
