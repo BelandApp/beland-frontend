@@ -119,7 +119,7 @@ export const UserPanel: React.FC = () => {
     { id: "achievements", label: "Logros" },
   ];
   const renderOverviewTab = () => (
-    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
+    <View style={styles.tabContent}>
       <BalanceCard
         beCoinsBalance={walletBalance || globalBeCoinsBalance || 0}
         usdBalance={beCoinsToUsd(walletBalance || globalBeCoinsBalance || 0)}
@@ -137,18 +137,18 @@ export const UserPanel: React.FC = () => {
       <SpendingStatsCard />
       <ResourcesCard />
       <QuickSettingsCard />
-    </ScrollView>
+    </View>
   );
 
   const renderOrdersTab = () => (
-    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
+    <View style={styles.tabContent}>
       <OrdersStatsCard />
       <RecentOrdersList limit={20} />
-    </ScrollView>
+    </View>
   );
 
   const renderStatsTab = () => (
-    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
+    <View style={styles.tabContent}>
       <SpendingStatsCard />
       <OrdersStatsCard />
       <LevelProgressCard
@@ -158,21 +158,21 @@ export const UserPanel: React.FC = () => {
         totalOrders={orderStats.total}
         totalSpent={orderStats.totalSpent}
       />
-    </ScrollView>
+    </View>
   );
 
   const renderProfileTab = () => (
-    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
+    <View style={styles.tabContent}>
       <EnhancedProfileCard />
       <AccountManagementCard
         onPasswordChange={() => setPasswordModalVisible(true)}
         onAddressManagement={() => setAddressModalVisible(true)}
       />
-    </ScrollView>
+    </View>
   );
 
   const renderAchievementsTab = () => (
-    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
+    <View style={styles.tabContent}>
       <LevelProgressCard
         level={(user as any).level || 1}
         currentXP={(user as any).xp || 0}
@@ -181,7 +181,7 @@ export const UserPanel: React.FC = () => {
         totalSpent={orderStats.totalSpent}
       />
       <ResourcesCard />
-    </ScrollView>
+    </View>
   );
 
   const renderTabContent = () => {
@@ -203,51 +203,58 @@ export const UserPanel: React.FC = () => {
 
   return (
     <DashboardWrapper title="Mi Dashboard" isLoading={isLoading}>
-      <View style={styles.container}>
-        {/* Header Card with Balance */}
-        <View style={styles.headerCard}>
-          <View style={styles.headerLeft}>
-            {user.profile_picture_url ? (
-              <Image
-                source={{ uri: user.profile_picture_url }}
-                style={styles.headerAvatar}
-              />
-            ) : (
-              <View style={styles.headerAvatarPlaceholder}>
-                <Text style={styles.headerAvatarText}>
-                  {(user.full_name || user.email)[0].toUpperCase()}
+      <ScrollView
+        style={styles.scrollContainer}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+        scrollEnabled={true}
+      >
+        <View style={styles.container}>
+          {/* Header Card with Balance */}
+          <View style={styles.headerCard}>
+            <View style={styles.headerLeft}>
+              {user.profile_picture_url ? (
+                <Image
+                  source={{ uri: user.profile_picture_url }}
+                  style={styles.headerAvatar}
+                />
+              ) : (
+                <View style={styles.headerAvatarPlaceholder}>
+                  <Text style={styles.headerAvatarText}>
+                    {(user.full_name || user.email)[0].toUpperCase()}
+                  </Text>
+                </View>
+              )}
+              <View style={styles.headerTextContainer}>
+                <Text style={styles.headerGreeting}>Hola,</Text>
+                <Text style={styles.headerName} numberOfLines={1}>
+                  {user.full_name || user.email.split("@")[0]}
                 </Text>
               </View>
-            )}
-            <View style={styles.headerTextContainer}>
-              <Text style={styles.headerGreeting}>Hola,</Text>
-              <Text style={styles.headerName} numberOfLines={1}>
-                {user.full_name || user.email.split("@")[0]}
+            </View>
+            <View style={styles.balanceContainer}>
+              <Text style={styles.balanceLabel}>Balance</Text>
+              <Text style={styles.balanceAmount} numberOfLines={1}>
+                {walletBalance || globalBeCoinsBalance || 0} BC
+              </Text>
+              <Text style={styles.balanceUSD} numberOfLines={1}>
+                $
+                {beCoinsToUsd(
+                  walletBalance || globalBeCoinsBalance || 0
+                ).toFixed(2)}{" "}
+                USD
               </Text>
             </View>
           </View>
-          <View style={styles.balanceContainer}>
-            <Text style={styles.balanceLabel}>Balance</Text>
-            <Text style={styles.balanceAmount} numberOfLines={1}>
-              {walletBalance || globalBeCoinsBalance || 0} BC
-            </Text>
-            <Text style={styles.balanceUSD} numberOfLines={1}>
-              $
-              {beCoinsToUsd(walletBalance || globalBeCoinsBalance || 0).toFixed(
-                2
-              )}{" "}
-              USD
-            </Text>
+          {/* Tabs Navigation - NO MÁS SCROLL AQUÍ */}
+          <View style={styles.tabsWrapper}>
+            <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab}>
+              {renderTabContent()}
+            </Tabs>
           </View>
         </View>
-
-        {/* Tabs Navigation */}
-        <View style={styles.tabsWrapper}>
-          <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab}>
-            {renderTabContent()}
-          </Tabs>
-        </View>
-      </View>
+      </ScrollView>
 
       {/* Modals */}
       <ChangePasswordModal
@@ -263,10 +270,15 @@ export const UserPanel: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  scrollContainer: {
     backgroundColor: "#F5F5F5",
-    margin: -20,
+  },
+  scrollContent: {
+    paddingBottom: 20,
+  },
+  container: {
+    backgroundColor: "#F5F5F5",
+    paddingBottom: 20,
   },
   errorContainer: {
     flex: 1,
@@ -356,13 +368,12 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   tabContent: {
-    flex: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: 30,
     paddingTop: 16,
     paddingBottom: 20,
-    margin: 30,
   },
   tabsWrapper: {
-    flex: 1,
+    minHeight: 500,
+    backgroundColor: "#F5F5F5",
   },
 });

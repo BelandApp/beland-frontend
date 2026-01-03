@@ -93,17 +93,18 @@ export const Tabs: React.FC<TabsProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    display: "flex",
+    flexDirection: "column",
   },
   tabsContainer: {
     backgroundColor: "#ffffff",
     borderBottomWidth: 1,
     borderBottomColor: "#E0E0E0",
-    flexGrow: 0,
-    maxHeight: 55,
+    height: 55,
     marginHorizontal: 30,
     borderRadius: 12,
     marginTop: 10,
+    flexShrink: 0,
   },
   tabsContainerMobile: {
     maxHeight: "auto",
@@ -168,6 +169,6 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   content: {
-    flex: 1,
+    minHeight: 500,
   },
 });

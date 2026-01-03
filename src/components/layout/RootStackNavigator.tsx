@@ -16,7 +16,6 @@ import {
   CanjearScreen,
   ReceiveScreen,
   CobrarScreen,
-  WithdrawMethodScreen,
   SendScreen,
   WalletHistoryScreen,
   RechargeScreen,
@@ -133,11 +132,7 @@ export const RootStackNavigator = () => {
         options={{ headerShown: false }}
       />
       <Stack.Screen name="CanjearScreen" component={CanjearScreen} />
-      <Stack.Screen
-        name="WithdrawMethodScreen"
-        component={WithdrawMethodScreen}
-        options={{ headerShown: false }}
-      />
+
       <Stack.Screen name="SendScreen" component={SendScreen} />
       <Stack.Screen
         name="WalletHistoryScreen"

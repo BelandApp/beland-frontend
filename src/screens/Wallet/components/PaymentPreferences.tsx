@@ -226,7 +226,7 @@ export const PaymentPreferences: React.FC<{ onRefresh?: () => void }> = ({
           contentContainerStyle={{ gap: 12 }}
           className="p-1"
         >
-          {accounts.slice(0, 2).map((account) => (
+          {accounts.slice(0, 5).map((account) => (
             <TouchableOpacity
               key={account.id}
               onPress={() => {
@@ -377,6 +377,86 @@ export const PaymentPreferences: React.FC<{ onRefresh?: () => void }> = ({
                 <Text className="text-base text-white">Eliminar</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Full view modal for Ver todo */}
+      <Modal
+        visible={showFullView}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowFullView(false)}
+      >
+        <View className="flex-1 bg-white">
+          {/* Header */}
+          <View className="bg-white border-b border-gray-200 px-4 py-4 pt-12 flex-row justify-between items-center">
+            <Text className="text-lg font-bold text-gray-900">
+              Cuentas de retiro
+            </Text>
+            <TouchableOpacity
+              onPress={() => setShowFullView(false)}
+              className="px-3 py-2"
+            >
+              <Text className="text-base text-orange-500 font-semibold">
+                Cerrar
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* List */}
+          <ScrollView className="flex-1 p-4">
+            <View className="space-y-3">
+              {accounts.map((account) => (
+                <TouchableOpacity
+                  key={account.id}
+                  onPress={() => {
+                    setSelectedAccount(account);
+                    setShowAccountDetails(true);
+                  }}
+                  className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm flex-row items-center justify-between"
+                >
+                  <View className="flex-1 flex-row items-center">
+                    <View className="w-12 h-12 bg-gray-50 rounded-lg items-center justify-center mr-3">
+                      {getMethodIcon(account)}
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-sm font-semibold text-gray-900">
+                        {getMethodTitle(account)}
+                      </Text>
+                      <Text className="text-xs text-gray-500 mt-1">
+                        {getMethodSubtitle(account)}
+                      </Text>
+                    </View>
+                  </View>
+                  {account.is_active && (
+                    <View className="bg-green-50 border border-green-200 px-2 py-1 rounded-full ml-2">
+                      <Text className="text-xs text-green-700 font-semibold">
+                        ✓
+                      </Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
+
+          {/* Add button */}
+          <View className="border-t border-gray-200 p-4">
+            <TouchableOpacity
+              onPress={() => {
+                setShowFullView(false);
+                setShowAddModal(true);
+              }}
+              className="bg-orange-500 rounded-lg py-3 items-center"
+            >
+              <View className="flex-row items-center gap-2">
+                <Plus size={20} color="white" />
+                <Text className="text-white font-semibold">
+                  Agregar cuenta nueva
+                </Text>
+              </View>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>

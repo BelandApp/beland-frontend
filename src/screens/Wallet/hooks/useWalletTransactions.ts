@@ -10,7 +10,7 @@ export const mapBackendTransactionToFrontend = (
   backendTransaction: any
 ): Transaction => {
   // Mapear tipo de transacción según el backend
-  console.log(backendTransaction);
+
   let type: Transaction["type"] = "canje";
   const typeName = (
     backendTransaction.type?.name ||
