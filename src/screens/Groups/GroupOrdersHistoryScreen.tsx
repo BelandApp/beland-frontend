@@ -481,24 +481,6 @@ export const GroupOrdersHistoryScreen = () => {
     <View className="flex-1 bg-gray-50">
       {/* Header */}
       <View className="bg-white px-4 py-4 border-b border-gray-100">
-        <View className="flex-row items-center gap-3 mb-3">
-          <TouchableOpacity
-            onPress={() => navigation?.goBack?.()}
-            className="p-2 rounded-lg"
-            style={{ backgroundColor: "#f3f4f6" }}
-          >
-            <Feather name="arrow-left" size={24} color="#6BA43A" />
-          </TouchableOpacity>
-          <View className="flex-1">
-            <Text className="text-2xl font-bold text-gray-900">
-              Historial de Órdenes
-            </Text>
-            <Text className="text-sm text-gray-600 mt-1">
-              Grupo: {groupName}
-            </Text>
-          </View>
-        </View>
-
         {/* Stats */}
         <View className="flex-row gap-2">
           <View className="flex-1 bg-green-50 rounded-lg p-2 border border-green-200">
@@ -522,140 +504,172 @@ export const GroupOrdersHistoryScreen = () => {
       </View>
 
       {/* Filtros */}
-      <View className="bg-white border-b border-gray-200">
-        {/* Filtros de estado */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 8 }}
-        >
-          <TouchableOpacity
-            onPress={() => setStatusFilter("all")}
-            style={{
-              paddingHorizontal: 12,
-              paddingVertical: 6,
-              borderRadius: 16,
-              marginRight: 8,
-              backgroundColor: statusFilter === "all" ? "#6BA43A" : "#f3f4f6",
-              borderWidth: 1,
-              borderColor: statusFilter === "all" ? "#6BA43A" : "#e5e7eb",
-            }}
+      <View className="bg-white border-b border-gray-200 px-4 py-3">
+        {/* Estado de Orden */}
+        <View className="mb-3">
+          <Text className="text-xs font-bold text-gray-600 mb-2 uppercase">
+            Estado
+          </Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 6 }}
           >
-            <Text
-              style={{
-                fontSize: 12,
-                fontWeight: "600",
-                color: statusFilter === "all" ? "#fff" : "#666",
-              }}
-            >
-              Todos
-            </Text>
-          </TouchableOpacity>
-
-          {Object.entries(ORDER_STATUSES).map(([key, value]) => (
             <TouchableOpacity
-              key={key}
-              onPress={() => setStatusFilter(key)}
+              onPress={() => setStatusFilter("all")}
               style={{
                 paddingHorizontal: 12,
                 paddingVertical: 6,
                 borderRadius: 16,
-                marginRight: 8,
-                backgroundColor:
-                  statusFilter === key ? `${value.color}15` : "#f3f4f6",
+                backgroundColor: statusFilter === "all" ? "#6BA43A" : "#f3f4f6",
                 borderWidth: 1,
-                borderColor: statusFilter === key ? value.color : "#e5e7eb",
+                borderColor: statusFilter === "all" ? "#6BA43A" : "#e5e7eb",
               }}
             >
               <Text
                 style={{
                   fontSize: 12,
-                  fontWeight: statusFilter === key ? "600" : "500",
-                  color: statusFilter === key ? value.color : "#666",
+                  fontWeight: statusFilter === "all" ? "600" : "500",
+                  color: statusFilter === "all" ? "#fff" : "#666",
                 }}
               >
-                {value.label}
+                Todos
               </Text>
             </TouchableOpacity>
-          ))}
-        </ScrollView>
 
-        {/* Separador */}
-        <View style={{ height: 1, backgroundColor: "#e5e7eb" }} />
-
-        {/* Filtros de pago y ordenamiento */}
-        <View
-          style={{
-            paddingHorizontal: 12,
-            paddingVertical: 8,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          {/* Filtros de pago */}
-          <View style={{ flexDirection: "row", gap: 6, flex: 1 }}>
-            {Object.entries(PAYMENT_STATUSES).map(([key, value]) => (
+            {Object.entries(ORDER_STATUSES).map(([key, value]) => (
               <TouchableOpacity
                 key={key}
-                onPress={() => setPaymentFilter(key)}
+                onPress={() => setStatusFilter(key)}
                 style={{
-                  paddingHorizontal: 10,
-                  paddingVertical: 5,
-                  borderRadius: 12,
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  borderRadius: 16,
                   backgroundColor:
-                    paymentFilter === key ? `${value.color}15` : "#f3f4f6",
+                    statusFilter === key ? value.color : "#f3f4f6",
                   borderWidth: 1,
-                  borderColor: paymentFilter === key ? value.color : "#e5e7eb",
+                  borderColor: statusFilter === key ? value.color : "#e5e7eb",
                 }}
               >
                 <Text
                   style={{
-                    fontSize: 11,
-                    fontWeight: paymentFilter === key ? "600" : "500",
-                    color: paymentFilter === key ? value.color : "#666",
+                    fontSize: 12,
+                    fontWeight: statusFilter === key ? "600" : "500",
+                    color: statusFilter === key ? "#fff" : "#666",
                   }}
                 >
                   {value.label}
                 </Text>
               </TouchableOpacity>
             ))}
-          </View>
+          </ScrollView>
+        </View>
 
-          {/* Ordenamiento */}
-          <View style={{ flexDirection: "row", gap: 6, alignItems: "center" }}>
-            <Text style={{ fontSize: 11, color: "#666", marginRight: 4 }}>
-              Ordenar:
+        {/* Pago y Ordenamiento en una fila */}
+        <View className="flex-row gap-3">
+          {/* Estado de Pago */}
+          <View className="flex-1">
+            <Text className="text-xs font-bold text-gray-600 mb-2 uppercase">
+              Pago
             </Text>
-            {[
-              { label: "Reciente", value: "recent" },
-              { label: "Antiguo", value: "oldest" },
-              { label: "Cantidad", value: "amount" },
-            ].map((option) => (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 4 }}
+            >
               <TouchableOpacity
-                key={option.value}
-                onPress={() => setSortBy(option.value)}
+                onPress={() => setPaymentFilter("all")}
                 style={{
                   paddingHorizontal: 10,
-                  paddingVertical: 5,
-                  borderRadius: 12,
+                  paddingVertical: 6,
+                  borderRadius: 14,
                   backgroundColor:
-                    sortBy === option.value ? "#22C55E" : "#f3f4f6",
-                  borderWidth: sortBy === option.value ? 0 : 1,
-                  borderColor: "#e5e7eb",
+                    paymentFilter === "all" ? "#6BA43A" : "#f3f4f6",
+                  borderWidth: 1,
+                  borderColor: paymentFilter === "all" ? "#6BA43A" : "#e5e7eb",
                 }}
               >
                 <Text
                   style={{
                     fontSize: 11,
-                    fontWeight: sortBy === option.value ? "600" : "500",
-                    color: sortBy === option.value ? "#fff" : "#666",
+                    fontWeight: paymentFilter === "all" ? "600" : "500",
+                    color: paymentFilter === "all" ? "#fff" : "#666",
                   }}
                 >
-                  {option.label}
+                  Todos
                 </Text>
               </TouchableOpacity>
-            ))}
+
+              {Object.entries(PAYMENT_STATUSES).map(([key, value]) => (
+                <TouchableOpacity
+                  key={key}
+                  onPress={() => setPaymentFilter(key)}
+                  style={{
+                    paddingHorizontal: 10,
+                    paddingVertical: 6,
+                    borderRadius: 14,
+                    backgroundColor:
+                      paymentFilter === key ? value.color : "#f3f4f6",
+                    borderWidth: 1,
+                    borderColor:
+                      paymentFilter === key ? value.color : "#e5e7eb",
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 11,
+                      fontWeight: paymentFilter === key ? "600" : "500",
+                      color: paymentFilter === key ? "#fff" : "#666",
+                    }}
+                  >
+                    {value.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
+          {/* Ordenamiento */}
+          <View className="flex-1">
+            <Text className="text-xs font-bold text-gray-600 mb-2 uppercase">
+              Orden
+            </Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 4 }}
+            >
+              {[
+                { label: "Reciente", value: "recent" },
+                { label: "Antiguo", value: "oldest" },
+                { label: "Monto", value: "amount" },
+              ].map((option) => (
+                <TouchableOpacity
+                  key={option.value}
+                  onPress={() => setSortBy(option.value)}
+                  style={{
+                    paddingHorizontal: 10,
+                    paddingVertical: 6,
+                    borderRadius: 14,
+                    backgroundColor:
+                      sortBy === option.value ? "#6BA43A" : "#f3f4f6",
+                    borderWidth: 1,
+                    borderColor:
+                      sortBy === option.value ? "#6BA43A" : "#e5e7eb",
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 11,
+                      fontWeight: sortBy === option.value ? "600" : "500",
+                      color: sortBy === option.value ? "#fff" : "#666",
+                    }}
+                  >
+                    {option.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
         </View>
       </View>

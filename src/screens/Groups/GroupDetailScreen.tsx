@@ -26,6 +26,7 @@ import * as Linking from "expo-linking";
 import { GroupMembersList } from "src/components";
 import { useAuth } from "src/context/AuthContext";
 import { GroupServicesScreen } from "src/screens/Groups";
+import { GroupOrdersHistoryScreen } from "src/screens/Groups";
 import { Service } from "@/services/ServicesApiService";
 import { GroupServiceModal } from "@/components/modals/GroupServiceModal";
 
@@ -37,7 +38,7 @@ export const GroupDetailScreen = () => {
   const groupId = (route.params as any)?.groupId;
   // Calcular altura para scroll en web/mobile
   const windowHeight = Dimensions.get("window").height;
-  const listHeight = Math.max(420, windowHeight - 160);
+  const listHeight = Math.max(420, windowHeight - 220);
   const [group, setGroup] = useState<Group | null>(null);
   const [loading, setLoading] = useState(true);
   const [members, setMembers] = useState<GroupMember[]>([]);
@@ -58,7 +59,9 @@ export const GroupDetailScreen = () => {
 
   const [inviteModal, setInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
-  const [activeTab, setActiveTab] = useState<"info" | "servicios">("info");
+  const [activeTab, setActiveTab] = useState<
+    "info" | "servicios" | "historial"
+  >("info");
   const [serviceModalVisible, setServiceModalVisible] = useState(false);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   // Ubicación legible por Mapbox
@@ -320,16 +323,23 @@ export const GroupDetailScreen = () => {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() =>
-            navigation.navigate("GroupOrdersHistoryScreen" as any, {
-              groupId,
-              groupName: group?.name || "Grupo",
-            })
-          }
-          className={`flex-1 py-3 px-4 flex-row items-center justify-center gap-2`}
+          onPress={() => setActiveTab("historial")}
+          className={`flex-1 py-3 px-4 flex-row items-center justify-center gap-2 ${
+            activeTab === "historial"
+              ? "border-b-2 border-blue-500 bg-blue-50"
+              : ""
+          }`}
         >
-          <MaterialCommunityIcons name="history" size={20} color="#0066CC" />
-          <Text className={`font-semibold text-sm text-blue-600`}>
+          <MaterialCommunityIcons
+            name="history"
+            size={20}
+            color={activeTab === "historial" ? "#0066CC" : "#666"}
+          />
+          <Text
+            className={`font-semibold text-sm ${
+              activeTab === "historial" ? "text-blue-600" : "text-gray-600"
+            }`}
+          >
             Historial
           </Text>
         </TouchableOpacity>
@@ -631,15 +641,33 @@ export const GroupDetailScreen = () => {
             <GroupMembersList members={members} currentUserId={user?.id} />
           </View>
         </ScrollView>
+      ) : activeTab === "servicios" ? (
+        <View
+          style={
+            Platform.OS === "web"
+              ? { height: listHeight, overflow: "scroll" }
+              : { flex: 1 }
+          }
+        >
+          <GroupServicesScreen
+            groupId={groupId}
+            isGroupLeader={user?.id === group?.user_id}
+            onServiceSelect={(service: Service) => {
+              setSelectedService(service);
+              setServiceModalVisible(true);
+            }}
+          />
+        </View>
       ) : (
-        <GroupServicesScreen
-          groupId={groupId}
-          isGroupLeader={user?.id === group?.user_id}
-          onServiceSelect={(service: Service) => {
-            setSelectedService(service);
-            setServiceModalVisible(true);
-          }}
-        />
+        <View
+          style={
+            Platform.OS === "web"
+              ? { height: listHeight, overflow: "scroll" }
+              : { flex: 1 }
+          }
+        >
+          <GroupOrdersHistoryScreen />
+        </View>
       )}
 
       {/* Service Selection Modal */}
