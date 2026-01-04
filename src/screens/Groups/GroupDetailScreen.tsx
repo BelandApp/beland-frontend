@@ -493,14 +493,12 @@ export const GroupDetailScreen = () => {
                   numberOfLines={1}
                   ellipsizeMode="tail"
                   onPress={() => {
-                    if (group?.latitude && group?.longitude) {
-                      const url = `https://www.google.com/maps/dir/?api=1&destination=${group.latitude},${group.longitude}`;
+                    const lat = address?.latitude || group?.latitude;
+                    const lon = address?.longitude || group?.longitude;
+                    if (lat && lon) {
+                      const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`;
                       Linking.openURL(url);
                     }
-                  }}
-                  style={{
-                    textDecorationLine:
-                      !address && locationName ? "underline" : "none",
                   }}
                 >
                   {address && address.addressLine1
