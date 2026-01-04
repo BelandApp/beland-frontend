@@ -11,7 +11,9 @@ import {
   FlatList,
   Dimensions,
   Platform,
+  ScrollView,
 } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Feather from "react-native-vector-icons/Feather";
 // removed GroupMembersList import to render list inline for better web/mobile scroll control
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
@@ -123,6 +125,7 @@ type MemberOptionsModalProps = {
   onPromote: () => void;
   onRemove: () => void;
   loading: boolean;
+  isGroupLeader: boolean;
 };
 const MemberOptionsModal: React.FC<MemberOptionsModalProps> = ({
   visible,
@@ -131,54 +134,161 @@ const MemberOptionsModal: React.FC<MemberOptionsModalProps> = ({
   onPromote,
   onRemove,
   loading,
+  isGroupLeader,
 }) => {
   if (!member) return null;
+
+  const isLeader = member.role === "LEADER";
+
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View className="flex-1 justify-end bg-black/40">
-        <View className="bg-white rounded-t-2xl p-6">
-          <View className="flex-row items-center mb-4">
+        <View className="bg-white rounded-t-3xl p-6">
+          {/* Header con avatar */}
+          <View className="flex-row items-center mb-6 pb-4 border-b border-gray-100">
             <Image
               source={{
-                uri: member.user?.avatar_url || "https://placehold.co/48x48",
+                uri:
+                  member.user?.profile_picture_url ||
+                  member.user?.avatar_url ||
+                  "https://placehold.co/64x64",
               }}
               style={{
-                width: 48,
-                height: 48,
-                borderRadius: 24,
+                width: 64,
+                height: 64,
+                borderRadius: 32,
                 backgroundColor: "#e5e7eb",
                 marginRight: 12,
               }}
             />
-            <View>
-              <Text className="text-lg font-bold">
-                {member.user?.name || member.user_id}
+            <View className="flex-1">
+              <Text className="text-lg font-bold text-gray-900">
+                {member.user?.name || member.user?.full_name || member.user_id}
               </Text>
-              <Text className="text-sm text-gray-500">Miembro</Text>
+              <View className="flex-row items-center gap-1 mt-1">
+                <MaterialCommunityIcons
+                  name={isLeader ? "crown" : "account"}
+                  size={14}
+                  color={isLeader ? "#6BA43A" : "#666"}
+                />
+                <Text
+                  className={`text-sm font-semibold ${
+                    isLeader ? "text-green-600" : "text-gray-600"
+                  }`}
+                >
+                  {isLeader ? "Líder del grupo" : "Miembro"}
+                </Text>
+              </View>
+              <Text className="text-xs text-gray-500 mt-1">
+                {member.user?.email || "Sin email"}
+              </Text>
             </View>
           </View>
+
+          {/* Información adicional */}
+          <View className="bg-gray-50 rounded-xl p-4 mb-4">
+            <View className="flex-row items-center justify-between mb-3">
+              <View>
+                <Text className="text-xs text-gray-600 font-medium mb-1">
+                  FECHA DE UNIÓN
+                </Text>
+                <Text className="text-sm font-semibold text-gray-900">
+                  {(() => {
+                    const dateStr = member.joined_at || member.created_at;
+                    if (!dateStr) return "Sin fecha";
+                    return new Date(dateStr as string).toLocaleDateString(
+                      "es-AR",
+                      {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      }
+                    );
+                  })()}
+                </Text>
+              </View>
+              <View>
+                <Text className="text-xs text-gray-600 font-medium mb-1">
+                  ESTADO
+                </Text>
+                <View className="flex-row items-center gap-1">
+                  <View className="w-2 h-2 rounded-full bg-green-500" />
+                  <Text className="text-sm font-semibold text-gray-900">
+                    Activo
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+
+          {/* Acciones */}
+          {isGroupLeader && (
+            <View className="gap-3 mb-4">
+              {/* Cambiar rol */}
+              {!isLeader && (
+                <TouchableOpacity
+                  className="flex-row items-center gap-3 p-4 rounded-xl bg-green-50 border border-green-200"
+                  onPress={onPromote}
+                  disabled={loading}
+                >
+                  <MaterialCommunityIcons
+                    name="crown"
+                    size={20}
+                    color="#6BA43A"
+                  />
+                  <Text className="flex-1 font-semibold text-green-700">
+                    Ascender a Líder
+                  </Text>
+                  {loading && <ActivityIndicator color="#6BA43A" />}
+                </TouchableOpacity>
+              )}
+
+              {isLeader && (
+                <TouchableOpacity
+                  className="flex-row items-center gap-3 p-4 rounded-xl bg-orange-50 border border-orange-200"
+                  onPress={onPromote}
+                  disabled={loading}
+                >
+                  <MaterialCommunityIcons
+                    name="shield-account"
+                    size={20}
+                    color="#F88D2A"
+                  />
+                  <Text className="flex-1 font-semibold text-orange-700">
+                    Remover del Liderazgo
+                  </Text>
+                  {loading && <ActivityIndicator color="#F88D2A" />}
+                </TouchableOpacity>
+              )}
+
+              {/* Remover miembro */}
+              <TouchableOpacity
+                className="flex-row items-center gap-3 p-4 rounded-xl bg-red-50 border border-red-200"
+                onPress={onRemove}
+                disabled={loading}
+              >
+                <MaterialCommunityIcons
+                  name="account-remove"
+                  size={20}
+                  color="#DC2626"
+                />
+                <Text className="flex-1 font-semibold text-red-700">
+                  Expulsar del Grupo
+                </Text>
+                {loading && <ActivityIndicator color="#DC2626" />}
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Botón cerrar */}
           <TouchableOpacity
-            className="flex-row items-center gap-2 p-3 rounded-xl mb-2 bg-green-50"
-            onPress={onPromote}
+            className="w-full py-3 rounded-lg bg-gray-100"
+            onPress={onClose}
             disabled={loading}
           >
-            <Feather name="shield" size={20} color="#00E074" />
-            <Text className="font-semibold text-green-700">
-              Ascender a Líder
+            <Text className="text-center font-semibold text-gray-700">
+              Cerrar
             </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            className="flex-row items-center gap-2 p-3 rounded-xl mb-2 bg-red-50"
-            onPress={onRemove}
-            disabled={loading}
-          >
-            <Feather name="user-x" size={20} color="#e74c3c" />
-            <Text className="font-semibold text-red-600">
-              Expulsar del Grupo
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity className="mt-2 self-end" onPress={onClose}>
-            <Text className="text-gray-500 font-semibold">Cerrar</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -207,6 +317,10 @@ export const GroupMembersScreen = () => {
   const [optionsModal, setOptionsModal] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const notify = useNotify();
+  const isCurrentUserLeader = members.some(
+    (m) =>
+      (m.user?.id === user?.id || m.user_id === user?.id) && m.role === "LEADER"
+  );
 
   const fetchMembers = async () => {
     setLoading(true);
@@ -258,52 +372,86 @@ export const GroupMembersScreen = () => {
 
     return (
       <View
-        className={`flex-row items-center bg-white rounded-2xl mb-3 p-3 ${
-          isYou ? "border-2 border-primary/60" : ""
+        className={`flex-row items-center bg-white rounded-2xl mb-3 p-4 mx-5 ${
+          isYou
+            ? "border-2 border-green-500 bg-green-50/30"
+            : "border border-gray-200"
         }`}
+        style={{
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.08,
+          shadowRadius: 2,
+          elevation: 2,
+        }}
       >
-        <Image
-          source={{ uri: avatarUrl }}
-          style={{
-            width: 48,
-            height: 48,
-            borderRadius: 24,
-            backgroundColor: "#e5e7eb",
-          }}
-        />
-        <View className="flex-1 ml-3 min-w-0">
-          <Text className="font-bold text-base truncate text-text-main-light">
-            {displayName} {isYou ? "(Tú)" : ""}
-          </Text>
-          <View className="flex-row items-center gap-2 mt-1">
-            <Text className="text-xs text-text-sec-light font-medium">
-              {isLeader ? "Líder" : "Miembro"}
+        {/* Avatar */}
+        <View className="relative">
+          <Image
+            source={{ uri: avatarUrl }}
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: 28,
+              backgroundColor: "#e5e7eb",
+            }}
+          />
+          {isLeader && (
+            <View className="absolute -bottom-1 -right-1 bg-yellow-400 rounded-full p-1 border-2 border-white">
+              <MaterialCommunityIcons name="crown" size={12} color="#000" />
+            </View>
+          )}
+        </View>
+
+        {/* Info */}
+        <View className="flex-1 ml-4 min-w-0">
+          <View className="flex-row items-center gap-2 mb-1">
+            <Text className="font-bold text-base truncate text-gray-900">
+              {displayName}
+            </Text>
+            {isYou && (
+              <View className="bg-blue-100 rounded-full px-2 py-0.5">
+                <Text className="text-xs font-bold text-blue-700">Tú</Text>
+              </View>
+            )}
+          </View>
+
+          <View className="flex-row items-center gap-2 mb-1">
+            <MaterialCommunityIcons
+              name={isLeader ? "shield-check" : "account"}
+              size={14}
+              color={isLeader ? "#6BA43A" : "#666"}
+            />
+            <Text
+              className={`text-xs font-semibold ${
+                isLeader ? "text-green-600" : "text-gray-600"
+              }`}
+            >
+              {isLeader ? "Líder del grupo" : "Miembro"}
             </Text>
           </View>
-          <Text className="text-xs text-text-sec-light mt-1">
-            {fechaUnion ? `Se unió el ${fechaUnion}` : null}
-          </Text>
+
+          {fechaUnion && (
+            <Text className="text-xs text-gray-500 mt-0.5">
+              Se unió el {fechaUnion}
+            </Text>
+          )}
         </View>
-        {isLeader && (
-          <View className="ml-2 bg-primary/10 rounded-full px-2 py-1 flex-row items-center">
-            <Text className="text-xs font-bold text-primary">Líder</Text>
-            <Feather
-              name="shield"
-              size={16}
-              color="#00e074"
-              style={{ marginLeft: 4 }}
-            />
-          </View>
-        )}
-        {!isLeader && (
+
+        {/* Acciones */}
+        {isCurrentUserLeader && !isYou && (
           <TouchableOpacity
             onPress={() => {
               setSelectedMember(item);
               setOptionsModal(true);
             }}
-            className="ml-2 p-2"
+            className="ml-3 p-2 hover:bg-gray-100 rounded-lg"
           >
-            <Feather name="more-vertical" size={22} color="#5e8d76" />
+            <MaterialCommunityIcons
+              name="dots-vertical"
+              size={20}
+              color="#6BA43A"
+            />
           </TouchableOpacity>
         )}
       </View>
@@ -328,12 +476,17 @@ export const GroupMembersScreen = () => {
     if (!selectedMember) return;
     setActionLoading(true);
     try {
-      await GroupService.updateMemberRole(groupId, selectedMember.id, "LEADER");
+      const newRole = selectedMember.role === "LEADER" ? "MEMBER" : "LEADER";
+      await GroupService.updateMemberRole(groupId, selectedMember.id, newRole);
       setOptionsModal(false);
       fetchMembers();
-      notify.success({ message: "Miembro ascendido a líder" });
+      const message =
+        newRole === "LEADER"
+          ? "Miembro ascendido a líder"
+          : "Líder degradado a miembro";
+      notify.success({ message });
     } catch {
-      notify.error({ message: "No se pudo ascender al miembro" });
+      notify.error({ message: "No se pudo cambiar el rol del miembro" });
     } finally {
       setActionLoading(false);
     }
@@ -481,6 +634,7 @@ export const GroupMembersScreen = () => {
         onPromote={handlePromote}
         onRemove={handleRemove}
         loading={actionLoading}
+        isGroupLeader={isCurrentUserLeader}
       />
     </View>
   );

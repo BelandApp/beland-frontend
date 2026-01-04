@@ -10,14 +10,14 @@ import {
 import useCreateGroupLogic from "./hooks/useCreateGroupLogic";
 import Card from "./components/Card";
 import Field from "./components/Field";
-import { AddressMapPicker } from "@/components/shared/maps/AddressMapPicker";
-import { reverseGeocode } from "@/services/mapboxService";
+import { AddressManagementModal } from "@/screens/DashboardUser/components/settings/AddressManagementModal";
 import Feather from "react-native-vector-icons/Feather";
 import {
   GroupService,
   GroupType,
   GroupPrivacy,
 } from "@/services/GroupApiService";
+import { addressService, UserAddress } from "@/services/addressService";
 
 import { useNotify } from "@/hooks";
 
@@ -29,13 +29,59 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
     []
   );
   const [loadingPrivacy, setLoadingPrivacy] = React.useState(false);
+
+  // Estado para tipos de pago dinámicos
+  const [paymentTypes, setPaymentTypes] = React.useState<any[]>([]);
+  const [loadingPaymentTypes, setLoadingPaymentTypes] = React.useState(false);
+
+  // Estado para direcciones del usuario
+  const [userAddresses, setUserAddresses] = React.useState<UserAddress[]>([]);
+  const [loadingAddresses, setLoadingAddresses] = React.useState(false);
+
+  // Cargar direcciones del usuario
+  React.useEffect(() => {
+    let mounted = true;
+    setLoadingAddresses(true);
+    addressService
+      .getUserAddresses()
+      .then((addresses: UserAddress[]) => {
+        if (mounted) setUserAddresses(addresses);
+      })
+      .catch(() => setUserAddresses([]))
+      .finally(() => setLoadingAddresses(false));
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // Cargar tipos de pago desde el backend
+  React.useEffect(() => {
+    let mounted = true;
+    setLoadingPaymentTypes(true);
+    GroupService.getPaymentTypes()
+      .then((types) => {
+        if (mounted) setPaymentTypes(types);
+      })
+      .catch(() => setPaymentTypes([]))
+      .finally(() => setLoadingPaymentTypes(false));
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   // Cargar tipos de privacidad desde el backend
   React.useEffect(() => {
     let mounted = true;
     setLoadingPrivacy(true);
     GroupService.getGroupPrivacies()
       .then((privs) => {
-        if (mounted) setPrivacyOptions(privs);
+        if (mounted) {
+          setPrivacyOptions(privs);
+          // Fijar automáticamente el primer tipo de privacidad como predeterminado
+          if (privs && privs.length > 0) {
+            setPrivacy(privs[0].id);
+          }
+        }
       })
       .catch(() => setPrivacyOptions([]))
       .finally(() => setLoadingPrivacy(false));
@@ -58,7 +104,13 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
         // Si la respuesta es un array anidado, extraer el primer elemento
         const arr =
           Array.isArray(types) && Array.isArray(types[0]) ? types[0] : types;
-        if (mounted) setGroupTypes(arr);
+        if (mounted) {
+          setGroupTypes(arr);
+          // Fijar automáticamente el primer tipo de grupo como predeterminado
+          if (arr && arr.length > 0) {
+            setGroupType(arr[0].id);
+          }
+        }
       })
       .catch(() => setGroupTypes([]))
       .finally(() => setLoadingGroupTypes(false));
@@ -70,33 +122,42 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
     groupName,
     groupType,
     description,
-    location = "",
-    locationUrl,
     deliveryTime,
     isLoading,
     setGroupName,
     setGroupType,
     setDescription,
-    setLocation,
-    setLocationUrl,
     setDeliveryTime,
+    paymentTypeId,
+    setPaymentTypeId,
+    userAddressId,
+    setUserAddressId,
     createGroup,
   } = logic as any;
 
   const [privacy, setPrivacy] = React.useState<string>("");
   const [invitationMsg, setInvitationMsg] = React.useState("");
-  const [showLocationModal, setShowLocationModal] = React.useState(false);
-  const [selectedLocation, setSelectedLocation] = React.useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
-  const [locationLabel, setLocationLabel] = React.useState<string>("");
+  const [showAddressModal, setShowAddressModal] = React.useState(false);
 
   const handleCreate = async () => {
+    // Validar que se haya seleccionado una privacidad
+    if (!privacy || privacy.trim() === "") {
+      notify.error({ message: "Debes seleccionar un tipo de privacidad" });
+      return;
+    }
+
+    // Validar que se haya seleccionado un tipo de grupo
+    if (!groupType || groupType.trim() === "") {
+      notify.error({ message: "Debes seleccionar un tipo de grupo" });
+      return;
+    }
+
     try {
       const result = await createGroup({
         privacy,
         message_invitation: invitationMsg,
+        payment_type_id: paymentTypeId,
+        group_type_id: groupType,
       });
       if (result) {
         notify.success({ message: "¡Grupo creado exitosamente!" });
@@ -118,24 +179,6 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
         errorMsg = e.message;
       }
       notify.error({ message: errorMsg });
-    }
-  };
-
-  // Manejar selección de ubicación y obtener dirección legible
-  const handleLocationSelect = async (coords: {
-    latitude: number;
-    longitude: number;
-  }) => {
-    setSelectedLocation(coords);
-    setLocation(`${coords.latitude},${coords.longitude}`);
-    setLocationLabel("Cargando dirección...");
-    try {
-      const place = await reverseGeocode(coords.latitude, coords.longitude);
-      setLocationLabel(
-        place?.full_address || `${coords.latitude},${coords.longitude}`
-      );
-    } catch {
-      setLocationLabel(`${coords.latitude},${coords.longitude}`);
     }
   };
 
@@ -228,7 +271,7 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
                 >
                   <View className="mb-2">
                     <Feather
-                      name={opt.code === "public" ? "globe" : "lock"}
+                      name={opt.code === "PUBLIC" ? "unlock" : "lock"}
                       size={22}
                       color="#00E074"
                     />
@@ -259,39 +302,142 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
               </Text>
             )}
           </View>
+          <Text className="text-base font-medium mb-2 mt-4">Tipo de Pago</Text>
+          <View className="flex-row gap-3 flex-wrap">
+            {loadingPaymentTypes ? (
+              <Text className="text-gray-400">Cargando tipos de pago...</Text>
+            ) : Array.isArray(paymentTypes) && paymentTypes.length > 0 ? (
+              paymentTypes.map((type) => (
+                <TouchableOpacity
+                  key={type.id}
+                  className={`flex-1 min-w-[45%] p-4 rounded-xl border items-center ${
+                    paymentTypeId === type.id
+                      ? "border-primary bg-primary/10"
+                      : "border-gray-200 bg-white"
+                  }`}
+                  onPress={() => setPaymentTypeId(type.id)}
+                >
+                  <View className="mb-2">
+                    <Feather
+                      name={
+                        type.code === "EQUAL_SPLIT"
+                          ? "users"
+                          : type.code === "SPLIT"
+                          ? "layers"
+                          : "credit-card"
+                      }
+                      size={22}
+                      color="#00E074"
+                    />
+                  </View>
+                  <Text
+                    className={`font-semibold text-center ${
+                      paymentTypeId === type.id
+                        ? "text-primary"
+                        : "text-gray-700"
+                    }`}
+                  >
+                    {type.code === "EQUAL_SPLIT"
+                      ? "Dividida"
+                      : type.code === "SPLIT"
+                      ? "Por Consumo"
+                      : type.code === "FULL"
+                      ? "Completo"
+                      : type.code}
+                  </Text>
+                  <Text className="text-xs text-gray-500 text-center mt-1">
+                    {type.description}
+                  </Text>
+                  {paymentTypeId === type.id && (
+                    <Feather
+                      name="check-circle"
+                      size={18}
+                      color="#00E074"
+                      style={{ position: "absolute", top: 8, right: 8 }}
+                    />
+                  )}
+                </TouchableOpacity>
+              ))
+            ) : (
+              <Text className="text-gray-400">
+                No hay tipos de pago disponibles
+              </Text>
+            )}
+          </View>
         </Card>
         <Text className="text-lg font-bold text-beland-text-primary mb-2">
           Detalles Adicionales
         </Text>
         <Card className="mb-4">
+          <Text className="text-base font-medium mb-2">
+            Ubicación del Grupo
+          </Text>
+          {loadingAddresses ? (
+            <Text className="text-gray-400">Cargando direcciones...</Text>
+          ) : userAddresses.length > 0 ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 0, gap: 8 }}
+            >
+              {userAddresses.map((addr) => (
+                <TouchableOpacity
+                  key={addr.id}
+                  className={`p-3 rounded-lg border-2 min-w-[280px] ${
+                    userAddressId === addr.id
+                      ? "border-primary bg-primary/10"
+                      : "border-gray-200 bg-white"
+                  }`}
+                  onPress={() => setUserAddressId(addr.id)}
+                >
+                  <View className="flex-row items-start gap-2">
+                    <Feather name="map-pin" size={16} color="#00E074" />
+                    <View className="flex-1">
+                      <Text
+                        className={`font-semibold text-sm ${
+                          userAddressId === addr.id
+                            ? "text-primary"
+                            : "text-gray-800"
+                        }`}
+                        numberOfLines={1}
+                      >
+                        {addr.addressLine1}
+                      </Text>
+                      <Text className="text-xs text-gray-500" numberOfLines={1}>
+                        {addr.city}, {addr.country}
+                      </Text>
+                      {addr.isDefault && (
+                        <Text className="text-xs text-green-600 mt-1">
+                          Dirección principal
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          ) : (
+            <Text className="text-gray-400">
+              No hay direcciones registradas
+            </Text>
+          )}
+          <TouchableOpacity
+            onPress={() => setShowAddressModal(true)}
+            className="mt-3 px-4 py-2 rounded-lg bg-primary/10 border border-primary flex-row items-center justify-center gap-2"
+          >
+            <Feather name="plus" size={18} color="#00E074" />
+            <Text className="font-semibold text-primary">
+              Agregar Dirección
+            </Text>
+          </TouchableOpacity>
           <Field
             label="Mensaje de Invitación"
             value={invitationMsg}
             onChangeText={setInvitationMsg}
             placeholder="¡Hola! Te invito a unirte a mi grupo..."
             multiline
+            className="mt-4"
           />
-          <Text className="text-base font-medium mt-4 mb-2">Ubicación</Text>
-          <TouchableOpacity
-            onPress={() => setShowLocationModal(true)}
-            className=" h-16 rounded-xl border-2 border-primary/60 px-3 justify-center bg-white flex-row items-center shadow-soft"
-          >
-            <Feather
-              name="map-pin"
-              size={18}
-              color="#00E074"
-              style={{ marginRight: 8 }}
-            />
-            <Text
-              className={
-                locationLabel || location
-                  ? "text-beland-text-primary"
-                  : "text-green-500 font-bold"
-              }
-            >
-              {locationLabel || (location ? location : "Añadir ubicación")}
-            </Text>
-          </TouchableOpacity>
         </Card>
       </View>
       <TouchableOpacity
@@ -305,12 +451,15 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
           {isLoading ? "Creando..." : "Crear Grupo"}
         </Text>
       </TouchableOpacity>
-      {/* Modal de selección de ubicación con Mapbox */}
-      <AddressMapPicker
-        visible={showLocationModal}
-        initial={selectedLocation ?? undefined}
-        onSelect={handleLocationSelect}
-        onClose={() => setShowLocationModal(false)}
+      {/* Modal para gestionar direcciones */}
+      <AddressManagementModal
+        visible={showAddressModal}
+        onClose={() => setShowAddressModal(false)}
+        onCreated={(address) => {
+          setUserAddressId(address.id);
+          setUserAddresses((prev) => [...prev, address]);
+          setShowAddressModal(false);
+        }}
       />
     </View>
   );

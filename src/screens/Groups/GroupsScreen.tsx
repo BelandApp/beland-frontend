@@ -261,6 +261,21 @@ export const GroupsScreen: React.FC = () => {
               {groupMembersCount[item.id] ?? 0} Miembros
             </Text>
           </View>
+          {/* Tipo de Pago */}
+          {item.payment_type && (
+            <View className="flex-row items-center gap-1.5 bg-background-light px-2 py-1 rounded-lg">
+              <Feather name="credit-card" size={16} color="#5e8d76" />
+              <Text className="text-xs text-gray-500 font-medium">
+                {item.payment_type.code === "EQUAL_SPLIT"
+                  ? "Dividida"
+                  : item.payment_type.code === "SPLIT"
+                  ? "Por Consumo"
+                  : item.payment_type.code === "FULL"
+                  ? "Completo"
+                  : item.payment_type.code}
+              </Text>
+            </View>
+          )}
         </View>
       </View>
     </TouchableOpacity>

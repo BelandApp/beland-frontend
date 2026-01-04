@@ -6,6 +6,9 @@ export type GroupsStackParamList = {
   GroupExplore: undefined;
   GroupDetailScreen: { groupId: string };
   GroupMembersScreen: { groupId: string; groupName?: string };
+  GroupOrdersHistoryScreen: { groupId: string; groupName?: string };
+  GroupServicesHistoryScreen: { groupId: string; groupName?: string };
+  GroupFinancialPanelScreen: { groupId: string; groupName?: string };
 };
 
 export type OrdersStackParamList = {

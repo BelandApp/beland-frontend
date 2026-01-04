@@ -26,12 +26,18 @@ const GroupMembersList: React.FC<GroupMembersListProps> = ({
     let fechaUnion = "";
     const rawDate = item.joined_at || item.created_at;
     if (rawDate) {
-      const date = new Date(rawDate);
-      fechaUnion = date.toLocaleDateString("es-AR", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      });
+      try {
+        const date = new Date(rawDate);
+        if (!isNaN(date.getTime())) {
+          fechaUnion = date.toLocaleDateString("es-AR", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          });
+        }
+      } catch (error) {
+        console.error("Error parsing date:", rawDate, error);
+      }
     }
     // Preferir: user.full_name, user.email, user_id
     const displayName =
@@ -64,7 +70,7 @@ const GroupMembersList: React.FC<GroupMembersListProps> = ({
             </Text>
           </View>
           <Text className="text-xs text-text-sec-light mt-1">
-            {fechaUnion ? `Se unió el ${fechaUnion}` : null}
+            {fechaUnion && `Se unió el ${fechaUnion}`}
           </Text>
         </View>
         {isLeader && (

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -7,15 +7,23 @@ import {
   ScrollView,
   TextInput,
   FlatList,
+  ActivityIndicator,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import Feather from "react-native-vector-icons/Feather";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
-import { GroupService, Group, GroupMember } from "@/services/GroupApiService";
+import {
+  GroupService,
+  Group,
+  GroupMember,
+  PaymentType,
+} from "@/services/GroupApiService";
 import { GroupPrivacy } from "@/services/GroupApiService";
 import { useAuth } from "@/context/AuthContext";
 import { CustomLoader } from "@/components/shared/loader/Loader";
 import { getGroupTypeFeatherIcon } from "./GroupsScreen";
 import { notify } from "@/hooks/notification/notify.external";
+import { useGroupPaymentTypes } from "@/hooks/useGroupPaymentTypes";
 
 // Los filtros se generan dinámicamente según los tipos de privacidad
 
@@ -32,30 +40,14 @@ const GroupExploreScreen = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [groups, setGroups] = useState<Group[]>([]);
   const [myGroupIds, setMyGroupIds] = useState<Set<string>>(new Set());
+  const [joiningGroupId, setJoiningGroupId] = useState<string | null>(null);
   const { user } = useAuth();
 
   // Tipos de privacidad
   const [privacyOptions, setPrivacyOptions] = useState<GroupPrivacy[]>([]);
-  useEffect(() => {
-    GroupService.getGroupPrivacies()
-      .then(setPrivacyOptions)
-      .catch(() => setPrivacyOptions([]));
-  }, []);
 
-  // Cargar los grupos a los que pertenece el usuario
-  useEffect(() => {
-    const fetchMyGroups = async () => {
-      if (!user) return;
-      try {
-        const res = await GroupService.getMyGroups();
-        const ids = (res.data || []).map((g: Group) => g.id);
-        setMyGroupIds(new Set(ids));
-      } catch {
-        setMyGroupIds(new Set());
-      }
-    };
-    fetchMyGroups();
-  }, [user]);
+  // Cargar payment types con hook (cachado con useMemo)
+  const { paymentTypesMap } = useGroupPaymentTypes();
 
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
@@ -63,6 +55,56 @@ const GroupExploreScreen = () => {
   const [groupMembersCount, setGroupMembersCount] = useState<
     Record<string, number>
   >({});
+
+  // Cargar privacidades y grupos en paralelo
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        // Cargar privacidades y grupos en paralelo
+        const [privaciesData, groupsRes] = await Promise.all([
+          GroupService.getGroupPrivacies().catch(() => []),
+          GroupService.getGroups().catch(() => ({ data: [] })),
+        ]);
+
+        setPrivacyOptions(privaciesData || []);
+        setGroups(groupsRes?.data || []);
+      } catch (error) {
+        console.error("Error cargando datos:", error);
+        setPrivacyOptions([]);
+        setGroups([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Función para recargar myGroupIds desde el backend
+  const reloadMyGroups = React.useCallback(async () => {
+    if (!user) return;
+    try {
+      const res = await GroupService.getMyGroups();
+      // getMyGroups() devuelve un array directo, no una respuesta paginada
+      const groups = Array.isArray(res) ? res : res?.data || [];
+      const ids = groups.map((g: Group) => g.id);
+      setMyGroupIds(new Set(ids));
+    } catch (error) {
+      setMyGroupIds(new Set());
+    }
+  }, [user]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      reloadMyGroups();
+    }, [reloadMyGroups])
+  );
+
+  // Cargar los grupos a los que pertenece el usuario al montar
+  useEffect(() => {
+    reloadMyGroups();
+  }, [reloadMyGroups]);
 
   useEffect(() => {
     const fetchMembersCounts = async () => {
@@ -86,21 +128,6 @@ const GroupExploreScreen = () => {
     fetchMembersCounts();
   }, [groups]);
 
-  useEffect(() => {
-    const fetchGroups = async () => {
-      setLoading(true);
-      try {
-        const res = await GroupService.getGroups();
-        setGroups(res.data || []);
-      } catch {
-        setGroups([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchGroups();
-  }, []);
-
   const filteredGroups = groups.filter((g) => {
     const matchesSearch =
       g.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -113,11 +140,14 @@ const GroupExploreScreen = () => {
 
   const renderGroup = ({ item }: { item: Group }) => {
     const groupPrivacy = privacyOptions.find((p) => p.id === item.privacy_id);
-    const isPublic = groupPrivacy?.code === "public";
+    // Usar allow_free_join para determinar si es público (permite unirse libremente)
+    const isPublic = groupPrivacy?.allow_free_join === true;
+
     const membersCount = groupMembersCount[item.id] ?? 0;
     const isMember = myGroupIds.has(item.id);
     const isOwner = user && item.user_id === user.id;
-    let action = isPublic ? "Unirse" : "Solicitar";
+
+    let action = isPublic ? "Unirse" : "Privado";
     let actionStyle = isPublic
       ? "bg-primary text-[#0f2319]"
       : "bg-gray-100 text-text-main-light";
@@ -126,37 +156,63 @@ const GroupExploreScreen = () => {
       action = "Miembro";
       actionStyle = "bg-gray-200 text-text-main-light";
       disabled = true;
-    } else if (groupPrivacy?.require_approval) {
-      action = "Solicitar acceso";
+    } else if (!isPublic) {
+      action = "Privado";
       actionStyle = "bg-gray-100 text-text-main-light";
+      disabled = true; // Desabilitar porque no se puede unir desde aquí
     }
 
     const handleJoin = async () => {
-      if (!user) return;
-      if (groupPrivacy?.require_approval) {
-        notify.info({
-          message:
-            "Este grupo requiere aprobación del administrador. No puedes unirte directamente. Espera a que el administrador te invite o apruebe tu solicitud.",
+      if (!user) {
+        notify.error({
+          message: "Debes estar autenticado para unirte a un grupo.",
         });
         return;
       }
+
+      setJoiningGroupId(item.id);
       try {
-        await GroupService.post("group-members", {
-          group_id: item.id,
-          user_id: user.id,
-        });
-        const res = await GroupService.getMyGroups();
-        const ids = (res.data || []).map((g: Group) => g.id);
-        setMyGroupIds(new Set(ids));
-        notify.success({ message: "¡Te has unido al grupo exitosamente!" });
-      } catch (e) {
-        let msg = "No se pudo unir al grupo. Intenta nuevamente.";
-        if ((e as any)?.response?.data?.message) {
-          msg = (e as any).response.data.message;
-        } else if ((e as any)?.message) {
-          msg = (e as any).message;
+        // Obtener información de privacidad del grupo
+        const groupPrivacy = privacyOptions.find(
+          (p) => p.id === item.privacy_id
+        );
+        const isPublic = groupPrivacy?.allow_free_join === true;
+
+        // Si es privado, mostrar error
+        if (!isPublic) {
+          notify.error({
+            message:
+              "Este grupo es privado. Contacta al creador del grupo para solicitar acceso.",
+          });
+          return;
         }
-        notify.error({ message: msg });
+
+        // Unirse a grupo público
+        await GroupService.joinGroup(item.id, user.id);
+        notify.success({
+          message: "¡Te has unido al grupo exitosamente!",
+        });
+
+        // Recargar la lista de mis grupos desde el backend
+        await reloadMyGroups();
+      } catch (error: any) {
+        let errorMsg = "No se pudo unir al grupo. Intenta nuevamente.";
+
+        if (error?.response?.status === 403) {
+          errorMsg = "No tienes permiso para unirte a este grupo.";
+        } else if (error?.response?.status === 409) {
+          errorMsg = "Ya eres miembro de este grupo.";
+          // Recargar desde el backend para sincronizar
+          await reloadMyGroups();
+        } else if (error?.response?.data?.message) {
+          errorMsg = error.response.data.message;
+        } else if (error?.message) {
+          errorMsg = error.message;
+        }
+
+        notify.error({ message: errorMsg });
+      } finally {
+        setJoiningGroupId(null);
       }
     };
 
@@ -196,14 +252,57 @@ const GroupExploreScreen = () => {
               {groupPrivacy?.name || "Privado"} • {membersCount} miembros
             </Text>
           </View>
+          <View className="flex-row items-center gap-2 mt-1">
+            <Text className="text-xs text-gray-600">
+              {item.group_type && typeof item.group_type !== "string"
+                ? item.group_type.name
+                : "Otro"}
+            </Text>
+            <View className="w-1 h-1 bg-gray-400 rounded-full" />
+            <Text className="text-xs text-gray-600">
+              {(() => {
+                if (!item.payment_type_id) return "Sin especificar";
+                const paymentType = paymentTypesMap[item.payment_type_id];
+                if (!paymentType) return "Sin especificar";
+
+                switch (paymentType.code) {
+                  case "EQUAL_SPLIT":
+                    return "Dividida";
+                  case "SPLIT":
+                    return "Por Consumo";
+                  case "FULL":
+                    return "Completo";
+                  default:
+                    return paymentType.code || "Pago";
+                }
+              })()}
+            </Text>
+          </View>
         </View>
         <View className="shrink-0">
           <TouchableOpacity
-            className={`min-w-[84px] h-9 px-4 rounded-xl items-center justify-center ${actionStyle} flex-row`}
-            onPress={!disabled ? handleJoin : undefined}
-            disabled={disabled}
+            className={`min-w-[84px] h-9 px-4 rounded-xl items-center justify-center ${actionStyle} flex-row ${
+              joiningGroupId === item.id ? "opacity-70" : ""
+            }`}
+            onPress={
+              isMember || isOwner
+                ? () =>
+                    navigation.navigate("GroupDetailScreen", {
+                      groupId: item.id,
+                    })
+                : !disabled && joiningGroupId !== item.id
+                ? handleJoin
+                : undefined
+            }
+            disabled={
+              (!isMember && !isOwner && disabled) || joiningGroupId === item.id
+            }
           >
-            <Text className="text-sm font-bold">{action}</Text>
+            {joiningGroupId === item.id ? (
+              <ActivityIndicator size="small" color="#0f2319" />
+            ) : (
+              <Text className="text-sm font-bold">{action}</Text>
+            )}
           </TouchableOpacity>
         </View>
         {isMember && (

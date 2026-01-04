@@ -238,6 +238,7 @@ class OrderServiceClass extends CoreApiService {
 
   /**
    * Create a new order from current cart
+   * Supports both individual and group orders with different payment types
    */
   async createOrder(data: any): Promise<{
     order: Order;
@@ -254,6 +255,109 @@ class OrderServiceClass extends CoreApiService {
     }
 
     return this.post(`${this.ENDPOINTS.CREATE_ORDER}?cart_id=${cartId}`, {});
+  }
+
+  /**
+   * Create group order with equal split payment
+   * Handles setting group, payment type, and creating order
+   */
+  async createGroupOrderEqualSplit(groupId: string): Promise<{
+    order: Order;
+    payment_intent?: any;
+  }> {
+    try {
+      // 1. Get current cart
+      const cart = await CartService.getCart();
+
+      // 2. Set group for cart
+      await CartService.setCartGroup(groupId);
+
+      // 3. Get payment types to find EQUAL_SPLIT
+      const response = await this.get<any>("/payment-types");
+
+      // Desenrollar respuesta si está envuelta en array
+      let paymentTypes =
+        Array.isArray(response) && Array.isArray(response[0])
+          ? response[0]
+          : response;
+
+      console.log("[OrderService] Payment Types:", paymentTypes);
+
+      // Buscar por código EQUAL_SPLIT
+      let equalSplitPaymentType = paymentTypes.find(
+        (pt: any) => pt.code === "EQUAL_SPLIT"
+      );
+
+      if (!equalSplitPaymentType) {
+        throw new Error(
+          `Tipo de pago EQUAL_SPLIT no disponible. Disponibles: ${paymentTypes
+            .map((pt: any) => pt.code)
+            .join(", ")}`
+        );
+      }
+
+      // 4. Set payment type to EQUAL_SPLIT
+      await CartService.setPaymentType(equalSplitPaymentType.id);
+
+      // 5. Create order
+      return this.createOrder({ cart_id: cart.id });
+    } catch (error) {
+      throw new Error(
+        `Error creando orden de grupo: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
+  }
+
+  /**
+   * Create group order with full payment (only leader pays)
+   */
+  async createGroupOrderFull(groupId: string): Promise<{
+    order: Order;
+    payment_intent?: any;
+  }> {
+    try {
+      // 1. Get current cart
+      const cart = await CartService.getCart();
+
+      // 2. Set group for cart
+      await CartService.setCartGroup(groupId);
+
+      // 3. Get payment types to find FULL
+      const response = await this.get<any>("/payment-types");
+
+      // Desenrollar respuesta si está envuelta en array
+      let paymentTypes =
+        Array.isArray(response) && Array.isArray(response[0])
+          ? response[0]
+          : response;
+
+      console.log("[OrderService] Payment Types:", paymentTypes);
+
+      // Buscar por código FULL
+      let fullPaymentType = paymentTypes.find((pt: any) => pt.code === "FULL");
+
+      if (!fullPaymentType) {
+        throw new Error(
+          `Tipo de pago FULL no disponible. Disponibles: ${paymentTypes
+            .map((pt: any) => pt.code)
+            .join(", ")}`
+        );
+      }
+
+      // 4. Set payment type to FULL
+      await CartService.setPaymentType(fullPaymentType.id);
+
+      // 5. Create order
+      return this.createOrder({ cart_id: cart.id });
+    } catch (error) {
+      throw new Error(
+        `Error creando orden de grupo: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
   }
 
   /**
@@ -436,6 +540,65 @@ class OrderServiceClass extends CoreApiService {
    */
   async getDeliveryStatuses(): Promise<DeliveryStatus[]> {
     return this.get("delivery-status");
+  }
+
+  /**
+   * Get all orders for a specific group
+   */
+  async getGroupOrders(
+    groupId: string,
+    query: OrderQuery = {}
+  ): Promise<PaginatedResponse<Order>> {
+    const queryString = this.buildQueryString(query);
+    const endpoint = queryString
+      ? `groups/${groupId}/orders?${queryString}`
+      : `groups/${groupId}/orders`;
+
+    const raw = await this.get<any>(endpoint);
+
+    // Normalize response same as getOrders
+    let data: Order[] = [];
+    let total = 0;
+    const page = query.page ?? 1;
+    let limit = query.limit ?? 0;
+
+    if (Array.isArray(raw)) {
+      if (raw.length > 0 && Array.isArray(raw[0])) {
+        data = raw[0] as Order[];
+        total = Number(raw[1] ?? data.length) || data.length;
+      } else {
+        data = raw as Order[];
+        total = data.length;
+      }
+    } else if (raw && typeof raw === "object") {
+      if (Array.isArray(raw.data)) {
+        data = raw.data as Order[];
+        total = Number(raw.total ?? data.length) || data.length;
+      } else if (raw.data && raw.data.data && Array.isArray(raw.data.data)) {
+        data = raw.data.data as Order[];
+        total = Number(raw.data.total ?? data.length) || data.length;
+      } else if (Array.isArray(raw.orders)) {
+        data = raw.orders as Order[];
+        total = Number(raw.total ?? data.length) || data.length;
+      } else {
+        const found = Object.values(raw).find((v) => Array.isArray(v));
+        if (found) {
+          data = found as Order[];
+          total = Number((raw as any).total ?? data.length) || data.length;
+        }
+      }
+    }
+
+    if (!limit || limit <= 0) limit = data.length || 50;
+    const totalPages = limit > 0 ? Math.max(1, Math.ceil(total / limit)) : 1;
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages,
+    } as PaginatedResponse<Order>;
   }
 }
 

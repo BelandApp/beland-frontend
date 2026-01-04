@@ -27,9 +27,11 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
     "equal"
   );
   const [isLoading, setIsLoading] = React.useState(false);
-  // Nuevos estados para privacidad y mensaje de invitación
-  const [privacy, setPrivacy] = React.useState<string>("public");
+  // Nuevos estados para privacidad, mensaje de invitación, tipo de pago y dirección
+  const [privacy, setPrivacy] = React.useState<string>("");
   const [invitationMsg, setInvitationMsg] = React.useState<string>("");
+  const [paymentTypeId, setPaymentTypeId] = React.useState<string>("");
+  const [userAddressId, setUserAddressId] = React.useState<string>("");
 
   const addParticipant = (p: Participant) => setParticipants((s) => [...s, p]);
   const removeParticipant = (id: string) =>
@@ -58,6 +60,9 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
   const createGroup = async (extra?: {
     privacy?: string;
     message_invitation?: string;
+    payment_type_id?: string;
+    user_address_id?: string;
+    group_type_id?: string;
   }) => {
     if (!validate()) return null;
     setIsLoading(true);
@@ -67,24 +72,19 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
         name: groupName,
       };
       if (description) payload.description = description;
-      // Enviar lat/lng si hay ubicación
-      if (location) {
-        const [lat, lng] = location.split(",").map(Number);
-        if (!isNaN(lat) && !isNaN(lng)) {
-          payload.latitude = lat;
-          payload.longitude = lng;
-        }
-      }
       if (deliveryTime) {
         const parsed = new Date(deliveryTime);
         if (!isNaN(parsed.getTime())) payload.date_time = parsed.toISOString();
         else payload.date_time = deliveryTime;
       }
-      if (groupType) payload.group_type_id = groupType;
-      // Agregar privacy_id y message_invitation
+      // Usar group_type_id del extra si viene, si no usar el del hook
+      payload.group_type_id = extra?.group_type_id ?? groupType;
+      // Agregar privacy_id, message_invitation, payment_type_id y user_address_id
       payload.privacy_id = extra?.privacy ?? privacy;
       payload.message_invitation = extra?.message_invitation ?? invitationMsg;
-      // NO enviar location_url ni location ni status
+      payload.payment_type_id = extra?.payment_type_id ?? paymentTypeId;
+      payload.user_address_id = extra?.user_address_id ?? userAddressId;
+      // NO enviar location_url, location, latitude, longitude ni status
       const created = await GroupService.createGroup(payload);
       return created;
     } catch (e) {
@@ -110,6 +110,8 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
     isLoading,
     privacy,
     invitationMsg,
+    paymentTypeId,
+    userAddressId,
     // setters
     setGroupName,
     setGroupType,
@@ -122,6 +124,8 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
     setSplitType,
     setPrivacy,
     setInvitationMsg,
+    setPaymentTypeId,
+    setUserAddressId,
     // actions
     addParticipant,
     removeParticipant,

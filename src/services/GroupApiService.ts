@@ -25,6 +25,8 @@ export interface Group {
   group_type: GroupType;
   group_type_id: string;
   privacy_id: string;
+  payment_type_id?: string;
+  payment_type?: PaymentType;
   event_pass_id: string;
 }
 
@@ -85,12 +87,28 @@ export interface GroupOrderItem {
   member_id: string;
 }
 
+export interface PaymentType {
+  id: string;
+  code: string;
+  description: string;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface CreateGroupDto {
   name: string;
+  description?: string;
+  message_invitation?: string;
   location?: string;
   location_url?: string;
   date_time?: string | Date;
   status?: "ACTIVE" | "PENDING" | "INACTIVE" | "DELETE";
+  latitude?: number;
+  longitude?: number;
+  group_type_id?: string;
+  privacy_id?: string;
+  payment_type_id?: string;
 }
 
 export interface UpdateGroupDto {
@@ -155,25 +173,55 @@ class GroupServiceClass extends CoreApiService {
       ? `${this.ENDPOINTS.GROUPS}?${queryString}`
       : this.ENDPOINTS.GROUPS;
 
-    return this.get<PaginatedResponse<Group>>(endpoint);
+    const res = await this.get<any>(endpoint);
+
+    // Handle wrapped format [[data], count]
+    if (Array.isArray(res) && Array.isArray(res[0])) {
+      return {
+        data: res[0],
+        total: res[1] || 0,
+        page: 1,
+        limit: res[0].length,
+        totalPages: 1,
+      };
+    }
+
+    // Handle direct PaginatedResponse
+    if (res?.data) return res;
+
+    // Handle direct array
+    if (Array.isArray(res))
+      return {
+        data: res,
+        total: res.length,
+        page: 1,
+        limit: res.length,
+        totalPages: 1,
+      };
+
+    return { data: [], total: 0, page: 1, limit: 0, totalPages: 0 };
   }
 
   /**
-   * Get a single group by ID
+   * Get a specific group by ID
    */
   async getGroup(id: string): Promise<Group> {
     return this.get<Group>(`${this.ENDPOINTS.GROUPS}/${id}`);
   }
 
   /**
-   * Get group privacy types (dynamic from backend)
+   * Get payment types for groups
    */
-  async getGroupPrivacies(): Promise<GroupPrivacy[]> {
-    const res = await this.get<any>("groups/privacy-type");
+  async getPaymentTypes(): Promise<PaymentType[]> {
+    const res = await this.get<any>("payment-types");
     if (Array.isArray(res?.data)) return res.data;
+    // Handle wrapped format [[data], count]
+    if (Array.isArray(res) && Array.isArray(res[0])) return res[0];
+    // Handle direct array
     if (Array.isArray(res)) return res;
     return [];
   }
+
   /**
    * Get current user's groups
    */
@@ -223,6 +271,31 @@ class GroupServiceClass extends CoreApiService {
   }
 
   /**
+   * Join a public group or add member to group
+   */
+  async joinGroup(groupId: string, userId: string): Promise<GroupMember> {
+    return this.post<GroupMember>("group-members", {
+      group_id: groupId,
+      user_id: userId,
+    });
+  }
+
+  /**
+   * Leave a group
+   */
+  async leaveGroup(
+    groupId: string,
+    userId: string
+  ): Promise<{
+    message: string;
+    success: boolean;
+  }> {
+    return this.delete(
+      `group-members/group-and-user?groupId=${groupId}&userId=${userId}`
+    );
+  }
+
+  /**
    * Invite users to group
    */
   async inviteToGroup(groupId: string, invite: InviteToGroupDto): Promise<any> {
@@ -242,9 +315,7 @@ class GroupServiceClass extends CoreApiService {
     groupId: string,
     memberId: string
   ): Promise<{ success: boolean }> {
-    return this.delete(
-      `${this.ENDPOINTS.GROUPS}/${groupId}/members/${memberId}`
-    );
+    return this.delete(`group-members/${memberId}`);
   }
 
   /**
@@ -319,6 +390,19 @@ class GroupServiceClass extends CoreApiService {
     return this.delete(
       `${this.ENDPOINTS.GROUP_INVITATIONS}/${invitationId}/hard`
     );
+  }
+
+  /**
+   * Get group privacy options
+   */
+  async getGroupPrivacies(): Promise<GroupPrivacy[]> {
+    const res = await this.get<any>("groups/privacy-type");
+    if (Array.isArray(res?.data)) return res.data;
+    // Handle wrapped format [[data], count]
+    if (Array.isArray(res) && Array.isArray(res[0])) return res[0];
+    // Handle direct array
+    if (Array.isArray(res)) return res;
+    return [];
   }
 }
 
