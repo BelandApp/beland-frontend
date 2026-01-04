@@ -643,11 +643,7 @@ export const GroupDetailScreen = () => {
         </ScrollView>
       ) : activeTab === "servicios" ? (
         <View
-          style={
-            Platform.OS === "web"
-              ? { height: listHeight, overflow: "scroll" }
-              : { flex: 1 }
-          }
+          style={Platform.OS === "web" ? { height: listHeight } : { flex: 1 }}
         >
           <GroupServicesScreen
             groupId={groupId}
@@ -660,11 +656,7 @@ export const GroupDetailScreen = () => {
         </View>
       ) : (
         <View
-          style={
-            Platform.OS === "web"
-              ? { height: listHeight, overflow: "scroll" }
-              : { flex: 1 }
-          }
+          style={Platform.OS === "web" ? { height: listHeight } : { flex: 1 }}
         >
           <GroupOrdersHistoryScreen />
         </View>
