@@ -549,56 +549,45 @@ class OrderServiceClass extends CoreApiService {
     groupId: string,
     query: OrderQuery = {}
   ): Promise<PaginatedResponse<Order>> {
-    const queryString = this.buildQueryString(query);
-    const endpoint = queryString
-      ? `groups/${groupId}/orders?${queryString}`
-      : `groups/${groupId}/orders`;
+    try {
+      // Obtener todas las órdenes del usuario
+      const userOrders = await this.getOrders(query);
 
-    const raw = await this.get<any>(endpoint);
+      // Filtrar solo las órdenes que pertenecen a este grupo
+      const groupOrders = (userOrders.data || []).filter(
+        (order: any) => order.group_id === groupId
+      );
 
-    // Normalize response same as getOrders
-    let data: Order[] = [];
-    let total = 0;
-    const page = query.page ?? 1;
-    let limit = query.limit ?? 0;
-
-    if (Array.isArray(raw)) {
-      if (raw.length > 0 && Array.isArray(raw[0])) {
-        data = raw[0] as Order[];
-        total = Number(raw[1] ?? data.length) || data.length;
-      } else {
-        data = raw as Order[];
-        total = data.length;
-      }
-    } else if (raw && typeof raw === "object") {
-      if (Array.isArray(raw.data)) {
-        data = raw.data as Order[];
-        total = Number(raw.total ?? data.length) || data.length;
-      } else if (raw.data && raw.data.data && Array.isArray(raw.data.data)) {
-        data = raw.data.data as Order[];
-        total = Number(raw.data.total ?? data.length) || data.length;
-      } else if (Array.isArray(raw.orders)) {
-        data = raw.orders as Order[];
-        total = Number(raw.total ?? data.length) || data.length;
-      } else {
-        const found = Object.values(raw).find((v) => Array.isArray(v));
-        if (found) {
-          data = found as Order[];
-          total = Number((raw as any).total ?? data.length) || data.length;
+      console.log(
+        `[OrderService.getGroupOrders] Filtrando órdenes para grupo ${groupId}:`,
+        {
+          totalUserOrders: userOrders.data?.length || 0,
+          groupOrders: groupOrders.length,
+          sampleOrder: groupOrders[0] || "sin órdenes",
         }
-      }
+      );
+
+      return {
+        data: groupOrders,
+        total: groupOrders.length,
+        page: query.page ?? 1,
+        limit: query.limit ?? 10,
+        totalPages: Math.max(
+          1,
+          Math.ceil(groupOrders.length / (query.limit ?? 10))
+        ),
+      } as PaginatedResponse<Order>;
+    } catch (error) {
+      console.error("[OrderService.getGroupOrders] Error:", error);
+      // Retornar respuesta vacía en caso de error
+      return {
+        data: [],
+        total: 0,
+        page: query.page ?? 1,
+        limit: query.limit ?? 10,
+        totalPages: 0,
+      } as PaginatedResponse<Order>;
     }
-
-    if (!limit || limit <= 0) limit = data.length || 50;
-    const totalPages = limit > 0 ? Math.max(1, Math.ceil(total / limit)) : 1;
-
-    return {
-      data,
-      total,
-      page,
-      limit,
-      totalPages,
-    } as PaginatedResponse<Order>;
   }
 }
 

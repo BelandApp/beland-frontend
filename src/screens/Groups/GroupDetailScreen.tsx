@@ -321,7 +321,10 @@ export const GroupDetailScreen = () => {
 
         <TouchableOpacity
           onPress={() =>
-            navigation.navigate("GroupOrdersHistoryScreen" as any, { groupId })
+            navigation.navigate("GroupOrdersHistoryScreen" as any, {
+              groupId,
+              groupName: group?.name || "Grupo",
+            })
           }
           className={`flex-1 py-3 px-4 flex-row items-center justify-center gap-2`}
         >

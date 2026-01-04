@@ -54,6 +54,25 @@ const PAYMENT_STATUSES = {
 };
 
 /**
+ * Formatea una cantidad con su moneda
+ */
+const formatCurrency = (
+  amount: number,
+  currency: string = "BECOIN"
+): string => {
+  const currency_upper = (currency || "BECOIN").toUpperCase();
+
+  if (currency_upper.includes("BECOIN") || currency_upper === "BC") {
+    return `${amount.toFixed(2)} becoins`;
+  }
+  if (currency_upper === "USD") {
+    return `$ ${amount.toFixed(2)}`;
+  }
+  // Default a Becoins
+  return `${amount.toFixed(2)} becoins`;
+};
+
+/**
  * Modal de detalles de la orden
  */
 type OrderDetailsModalProps = {
@@ -164,11 +183,12 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                       {item.product?.name || "Producto"}
                     </Text>
                     <Text className="text-xs text-gray-500 mt-1">
-                      {item.quantity}x @ BsF {item.unit_price.toFixed(2)}
+                      {item.quantity}x @{" "}
+                      {formatCurrency(item.unit_price, order.currency)}
                     </Text>
                   </View>
                   <Text className="font-bold text-gray-900">
-                    BsF {item.total_price.toFixed(2)}
+                    {formatCurrency(item.total_price, order.currency)}
                   </Text>
                 </View>
               ))}
@@ -179,14 +199,14 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
               <View className="flex-row justify-between mb-2">
                 <Text className="text-gray-700">Subtotal:</Text>
                 <Text className="font-semibold">
-                  BsF {order.subtotal.toFixed(2)}
+                  {formatCurrency(order.subtotal, order.currency)}
                 </Text>
               </View>
               {order.tax_amount > 0 && (
                 <View className="flex-row justify-between mb-2">
                   <Text className="text-gray-700">Impuesto:</Text>
                   <Text className="font-semibold">
-                    BsF {order.tax_amount.toFixed(2)}
+                    {formatCurrency(order.tax_amount, order.currency)}
                   </Text>
                 </View>
               )}
@@ -194,7 +214,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                 <View className="flex-row justify-between mb-2">
                   <Text className="text-gray-700">Envío:</Text>
                   <Text className="font-semibold">
-                    BsF {order.shipping_amount.toFixed(2)}
+                    {formatCurrency(order.shipping_amount, order.currency)}
                   </Text>
                 </View>
               )}
@@ -204,14 +224,14 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                     Descuento:
                   </Text>
                   <Text className="font-semibold text-green-700">
-                    -BsF {order.discount_amount.toFixed(2)}
+                    -{formatCurrency(order.discount_amount, order.currency)}
                   </Text>
                 </View>
               )}
               <View className="border-t border-green-200 pt-2 flex-row justify-between">
                 <Text className="font-bold text-green-900">TOTAL:</Text>
                 <Text className="text-lg font-bold text-green-600">
-                  BsF {order.total_amount.toFixed(2)}
+                  {formatCurrency(order.total_amount, order.currency)}
                 </Text>
               </View>
             </View>
@@ -245,7 +265,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                         </Text>
                       </View>
                       <Text className="font-bold text-gray-900">
-                        BsF {payment.amount.toFixed(2)}
+                        {formatCurrency(payment.amount, order.currency)}
                       </Text>
                     </View>
                   ))}
@@ -389,7 +409,7 @@ export const GroupOrdersHistoryScreen = () => {
 
           <View className="items-end">
             <Text className="text-lg font-bold text-gray-900">
-              BsF {item.total_amount.toFixed(2)}
+              {formatCurrency(item.total_amount, item.currency)}
             </Text>
             <View
               className="mt-1 rounded-full px-2 py-1"
@@ -484,8 +504,12 @@ export const GroupOrdersHistoryScreen = () => {
           <View className="flex-1 bg-green-50 rounded-lg p-2 border border-green-200">
             <Text className="text-xs text-green-600 font-medium">TOTAL</Text>
             <Text className="text-lg font-bold text-green-900">
-              BsF{" "}
-              {orders.reduce((sum, o) => sum + o.total_amount, 0).toFixed(2)}
+              {orders.length > 0
+                ? formatCurrency(
+                    orders.reduce((sum, o) => sum + o.total_amount, 0),
+                    orders[0]?.currency || "BECOIN"
+                  )
+                : formatCurrency(0)}
             </Text>
           </View>
           <View className="flex-1 bg-blue-50 rounded-lg p-2 border border-blue-200">
