@@ -80,6 +80,53 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
       notify.error({ message });
     }
   };
+  const renderItem = ({ item }: { item: any }) => (
+    <View style={styles.itemRow}>
+      {item.image && (
+        <Image source={{ uri: item.image }} style={styles.image} />
+      )}
+      <View style={styles.itemInfo}>
+        <Text style={styles.itemName} numberOfLines={1}>
+          {item.name}
+        </Text>
+        <View>
+          <Text style={styles.itemPrice}>
+            {CURRENCY_CONFIG.CURRENCY_DISPLAY_SYMBOL}
+            {formatUSDPrice(item.price)}
+          </Text>
+          <Text style={styles.itemPriceBecoins}>
+            {formatBeCoins(convertUSDToBeCoins(item.price))}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.qtyContainer}>
+        <Text style={{ fontSize: 10, color: "#666" }}>Cantidad</Text>
+        <View style={styles.qtyRow}>
+          <TouchableOpacity
+            onPress={() =>
+              handleUpdateQuantity(item.id, Math.max(1, item.quantity - 1))
+            }
+          >
+            <Text style={styles.qtyBtn}>-</Text>
+          </TouchableOpacity>
+          <Text style={styles.qty}>{item.quantity}</Text>
+          <TouchableOpacity
+            onPress={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+          >
+            <Text style={styles.qtyBtn}>+</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <TouchableOpacity
+        onPress={() => handleRemoveProduct(item.id)}
+        style={styles.removeContainer}
+      >
+        <Text style={styles.remove}>✕</Text>
+      </TouchableOpacity>
+    </View>
+  );
   return (
     <>
       <WarpperModal
@@ -98,65 +145,21 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
           </View>
         }
         content={
-          items.length > 0 ? (
-            items.map((item) => (
-              <View style={styles.itemRow} key={item.id}>
-                {item.image && (
-                  <Image source={{ uri: item.image }} style={styles.image} />
-                )}
-
-                <View style={styles.itemInfo}>
-                  <Text style={styles.itemName}>{item.name}</Text>
-                  <View>
-                    <Text style={styles.itemPrice}>
-                      {CURRENCY_CONFIG.CURRENCY_DISPLAY_SYMBOL}
-                      {formatUSDPrice(item.price)}
-                    </Text>
-                    <Text style={styles.itemPriceBecoins}>
-                      {formatBeCoins(convertUSDToBeCoins(item.price))}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.qtyContainer}>
-                  <Text>Cantidad</Text>
-                  <View style={styles.qtyRow}>
-                    <TouchableOpacity
-                      onPress={() =>
-                        handleUpdateQuantity(
-                          item.id,
-                          Math.max(1, item.quantity - 1)
-                        )
-                      }
-                    >
-                      <Text style={styles.qtyBtn}>-</Text>
-                    </TouchableOpacity>
-
-                    <Text style={styles.qty}>{item.quantity}</Text>
-
-                    <TouchableOpacity
-                      onPress={() =>
-                        handleUpdateQuantity(item.id, item.quantity + 1)
-                      }
-                    >
-                      <Text style={styles.qtyBtn}>+</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                <TouchableOpacity
-                  onPress={() => handleRemoveProduct(item.id)}
-                  style={styles.removeContainer}
-                >
-                  <Text style={styles.remove}>✕</Text>
-                </TouchableOpacity>
+          <FlatList
+            data={items}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            // Importante: esto permite que el modal no se cierre
+            // accidentalmente mientras scrolleas la lista
+            bounces={true}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>Tu carrito está vacío</Text>
               </View>
-            ))
-          ) : (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>Tu carrito está vacío</Text>
-            </View>
-          )
+            }
+          />
         }
         actions={
           <View style={styles.footer}>
@@ -210,12 +213,14 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
 
 const styles = StyleSheet.create({
   header: {
-    flexGrow:1,
+    flex: 1,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 6,
-    gap: 8,
+    paddingRight: 10,
+  },
+  listContent: {
+    paddingBottom: 20,
   },
   title: { fontSize: 20, fontWeight: "bold" },
   clear: { color: "#FF6B35", fontWeight: "600" },
@@ -229,10 +234,11 @@ const styles = StyleSheet.create({
   itemRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 12,
+    marginBottom: 12,
     backgroundColor: "#f7f7f7",
     borderRadius: 10,
-    height: 80,
+    height: 90,
+    overflow: "hidden",
   },
   image: { width: 48, height: 48, borderRadius: 8, marginRight: 10 },
   itemInfo: { flex: 1, paddingVertical: 10, paddingLeft: 10 },

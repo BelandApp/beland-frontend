@@ -40,11 +40,11 @@ export const WrapperModal: React.FC<WrapperModalProps> = ({
   return (
     <RBSheet
       ref={refRBSheet}
-      // useNativeDriver={true}
       draggable={true}
-      dragOnContent={true}
-      height={SCREEN_HEIGHT * 0.85}
+      dragOnContent={false}
+      height={SCREEN_HEIGHT * 0.9}
       onClose={onClose}
+      
       customStyles={{
         wrapper: { backgroundColor: "rgba(0,0,0,0.5)" },
         container: styles.sheetContainer,
@@ -104,6 +104,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     borderBottomWidth: 1,
     borderBottomColor: "rgba(0,0,0,0.05)",
+    gap: 8,
   },
   contentWrapper: {
     flex: 1, // Esto es lo que hace que el contenido sea flexible
