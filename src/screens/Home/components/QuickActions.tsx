@@ -32,7 +32,7 @@ export const QuickActions = ({
 }) => {
   const { user } = useAuth();
   const {navigate}=useCustomNavigation()
-  const { isMobile, isDesktop } = useResponsiveLayout();
+  const { isMobile } = useResponsiveLayout();
 
   // Ocultar QuickActions si el usuario no está logueado
   if (!user) {
@@ -126,8 +126,8 @@ export const QuickActions = ({
     actionButton: {
       ...styles.actionButton,
       width: Platform.OS === "web" ? (isMobile ? "45%" : "18%") : "22%",
-      minWidth: Platform.OS === "web" ? (isMobile ? 100 : 120) : 75,
-      maxWidth: Platform.OS === "web" ? (isMobile ? 140 : 160) : 85,
+      minWidth: Platform.OS === "web" ? (isMobile ? 100 : 120) : 100,
+      maxWidth: Platform.OS === "web" ? (isMobile ? 140 : 160) : 100,
     },
   });
 

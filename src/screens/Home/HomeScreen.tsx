@@ -1,5 +1,5 @@
 import React from "react";
-import { View, ScrollView, Platform, StyleSheet, Dimensions } from "react-native";
+import { View, ScrollView, StyleSheet, Dimensions } from "react-native";
 import {
   HeroSection,
   QuickActions,
@@ -7,11 +7,7 @@ import {
   StatsCard,
 } from "./components";
 import { RecentTransactions } from "@/screens/Wallet/components/RecentTransactions";
-import {
-  useDashboardNavigation,
-  useDashboardData,
-  useResponsiveLayout,
-} from "./hooks";
+import { useDashboardNavigation, useDashboardData } from "./hooks";
 import { useWallet } from "../Wallet/hooks";
 import { useBeCoinsStore } from "@/stores";
 import { HomeWave } from "src/components/ui/waves/Home.wave";
@@ -26,7 +22,7 @@ export const HomeScreen = () => {
   } = useDashboardNavigation();
   const { userStats, activities } = useDashboardData();
   const { getBeCoinsInUSD } = useBeCoinsStore();
-  const { loadingWallet: loading, transactions }=useWallet()
+  const { loadingWallet: loading, transactions } = useWallet();
 
   // Usar la constante centralizada para el cálculo de USD
   const balance = userStats?.coinsAmount ?? 0;
@@ -39,50 +35,45 @@ export const HomeScreen = () => {
     ? lockedBalance
     : undefined;
 
+  return (
+    <View style={styles.container}>
+      <ThemedHeader title="Inicio" logo />
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.content}>
+          <HeroSection
+            balance={balance}
+            locked_balance={lockedBalanceToPass}
+            estimatedValue={estimatedValue.toFixed(2)}
+            isLoading={loading}
+          />
+          <QuickActions />
 
-
-    return (
-      <View style={styles.container}>
-        <ThemedHeader title="Inicio" logo />
-        <ScrollView
-          style={styles.scrollView}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.content}>
-            <HeroSection
-              balance={balance}
-              locked_balance={lockedBalanceToPass}
-              estimatedValue={estimatedValue.toFixed(2)}
-              isLoading={loading}
+          <View style={styles.featuresGrid}>
+            <FeatureCard
+              type="recycling"
+              data={{ bottlesRecycled: userStats?.bottlesRecycled ?? 0 }}
+              onPress={navigateRecyclingMapPress}
             />
-            <QuickActions />
-
-            <View style={styles.featuresGrid}>
-              <FeatureCard
-                type="recycling"
-                data={{ bottlesRecycled: userStats?.bottlesRecycled ?? 0 }}
-                onPress={navigateRecyclingMapPress}
-              />
-              <FeatureCard type="delivery" onPress={navigateDelivery} />
-              <FeatureCard type="community" onPress={navigateCommunity} />
-            </View>
-
-            <StatsCard
-              becoins={balance}
-              bottlesRecycled={userStats?.bottlesRecycled ?? 0}
-              estimatedValue={estimatedValue.toFixed(2)}
-            />
-
-            <RecentTransactions transactions={transactions ?? []} />
+            <FeatureCard type="delivery" onPress={navigateDelivery} />
+            <FeatureCard type="community" onPress={navigateCommunity} />
           </View>
-          <HomeWave />
-        </ScrollView>
-      </View>
-    );
-  }
 
-  
+          <StatsCard
+            becoins={balance}
+            bottlesRecycled={userStats?.bottlesRecycled ?? 0}
+            estimatedValue={estimatedValue.toFixed(2)}
+          />
 
+          <RecentTransactions transactions={transactions ?? []} />
+        </View>
+        <HomeWave />
+      </ScrollView>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -99,8 +90,8 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
   },
   featuresGrid: {
-    flexDirection:Dimensions.get("window").width > 600 ? "row" : "column",
-    gap:  24,
+    flexDirection: Dimensions.get("window").width > 600 ? "row" : "column",
+    gap: 24,
     marginVertical: 24,
     flexWrap: "wrap",
   },
