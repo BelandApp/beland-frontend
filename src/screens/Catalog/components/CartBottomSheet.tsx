@@ -83,25 +83,18 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
   return (
     <>
       <WarpperModal
-        visible={visible}
+        isOpen={visible}
         onClose={onClose}
         header={
           <View style={styles.header}>
             <Text style={styles.title}>Carrito</Text>
-            <View style={styles.header}>
-              <Button
-                title="Vaciar"
-                variant="secondary"
-                onPress={clearCart}
-                disabled={items.length === 0}
-              />
-              <Button
-                title="cerrar"
-                variant="onlyIcon"
-                icon={<ArrowDown color={colors.belandOrange} />}
-                onPress={onClose}
-              />
-            </View>
+            <Button
+              title="Vaciar"
+              variant="secondary"
+              onPress={clearCart}
+              disabled={items.length === 0}
+              style={{ marginLeft: "auto" }}
+            />
           </View>
         }
         content={
@@ -217,6 +210,7 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
 
 const styles = StyleSheet.create({
   header: {
+    flexGrow:1,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -236,10 +230,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginVertical: 12,
-    marginHorizontal: 4,
-    paddingLeft:4,
     backgroundColor: "#f7f7f7",
     borderRadius: 10,
+    height: 80,
   },
   image: { width: 48, height: 48, borderRadius: 8, marginRight: 10 },
   itemInfo: { flex: 1, paddingVertical: 10, paddingLeft: 10 },

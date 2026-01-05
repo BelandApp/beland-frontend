@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import "./global.css";
 import { Platform } from "react-native";
-
+import "react-native-gesture-handler";
 import { View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import * as NavigationBar from "expo-navigation-bar";

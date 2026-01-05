@@ -42,6 +42,7 @@ export const CatalogTabs: React.FC<Props> = ({ activeTab, tabs, onPress }) => {
             onPress={() => onPress(tab.tab)}
             style={{
               paddingHorizontal: 14,
+              paddingVertical: 8,
               flexDirection: "row",
               alignItems: "center",
               borderRadius: 20,
