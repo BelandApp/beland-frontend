@@ -1,8 +1,9 @@
-import { StyleSheet, Platform } from "react-native";
+import { StyleSheet, Platform, Dimensions } from "react-native";
 import { colors } from "../../../styles/colors";
 
 export const actionsStyles = StyleSheet.create({
   actionsContainer: {
+    width: "100%",
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
@@ -10,7 +11,7 @@ export const actionsStyles = StyleSheet.create({
     paddingVertical: 28,
     paddingHorizontal: 20,
     borderRadius: 20,
-    gap: Platform.OS === "web" ? 16 : 12,
+    gap: 10,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -19,14 +20,13 @@ export const actionsStyles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 16,
     elevation: 8,
-    marginHorizontal: Platform.OS === "web" ? 0 : 16,
     marginVertical: 16,
   },
   actionButton: {
+    flex:1,
     alignItems: "center",
-    gap: 10,
-    flex: 1,
-    maxWidth: Platform.OS === "web" ? 100 : 80,
+    gap: 6,
+    maxWidth: 100,
     padding: Platform.OS === "web" ? 12 : 10,
     borderRadius: 16,
     backgroundColor: "rgba(255, 255, 255, 0.08)",
