@@ -11,12 +11,14 @@ export interface WithdrawAccount {
   user_id: string;
   withdraw_account_type_id: string;
   owner_name: string;
+  holderName: string;
   cbu?: string;
   alias?: string;
   provider?: string;
   phone?: string;
   is_active: boolean;
   created_at: string;
+  currency?: number;
   withdraw_account_type: WithdrawAccountType;
   type?: WithdrawAccountType; // For backward compatibility
 }
@@ -72,6 +74,13 @@ class WithdrawServiceClass extends CoreApiService {
     WITHDRAW_ACCOUNT_TYPES: "withdraw-account-type",
     USER_WITHDRAW: "user-withdraw",
   } as const;
+
+  /**
+   * Get enums / options for withdraw accounts (countries, document types, currencies)
+   */
+  async getWithdrawEnums(): Promise<any> {
+    return this.get(`${this.ENDPOINTS.WITHDRAW_ACCOUNTS}/enums`);
+  }
 
   // Account Management
   /**

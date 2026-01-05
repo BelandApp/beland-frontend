@@ -1,41 +1,49 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
-  StyleSheet,
+  ScrollView,
   Modal,
   ActivityIndicator,
+  Alert,
 } from "react-native";
-import { Plus, CreditCard, Building2, MoreVertical } from "lucide-react-native";
+import {
+  Plus,
+  CreditCard,
+  Building2,
+  MoreVertical,
+  Trash,
+} from "lucide-react-native";
 import PayphoneIcon from "src/components/icons/PayphoneIcon";
 import {
   WithdrawService,
   WithdrawAccount,
 } from "../../../services/withdrawService";
-import { AddWithdrawAccountModal } from "./AddWithdrawAccountModal";
+import AddWithdrawAccountModal from "./AddWithdrawAccountModal";
+import useAddWithdrawAccount from "../hooks/useAddWithdrawAccount";
 import { useNotify } from "src/hooks";
 import { getBackendErrorMessage } from "src/services";
 
-interface PaymentPreferencesProps {
-  onRefresh?: () => void;
-}
-
-export const PaymentPreferences: React.FC<PaymentPreferencesProps> = ({
+export const PaymentPreferences: React.FC<{ onRefresh?: () => void }> = ({
   onRefresh,
 }) => {
   const notify = useNotify();
-  // TODO HACER UN HOOK
   const [accounts, setAccounts] = useState<WithdrawAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+
+  const [showFullView, setShowFullView] = useState(false);
+  const [showAccountDetails, setShowAccountDetails] = useState(false);
+  const [selectedAccount, setSelectedAccount] =
+    useState<WithdrawAccount | null>(null);
   const [activeMethodMenu, setActiveMethodMenu] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [accountToDelete, setAccountToDelete] = useState<{
     id: string;
     name: string;
   } | null>(null);
-  // Cargar cuentas al montar el componente
+
   useEffect(() => {
     loadAccounts();
   }, []);
@@ -43,514 +51,424 @@ export const PaymentPreferences: React.FC<PaymentPreferencesProps> = ({
   const loadAccounts = async () => {
     try {
       setLoading(true);
-
-      const response = await WithdrawService.getWithdrawAccounts();
-
-      // Validación defensiva: asegurar que response.data sea un array
-      const accountsData = Array.isArray(response.data) ? response.data : [];
-
-      setAccounts(accountsData);
-    } catch (error) {
-      console.error("❌ Error cargando cuentas:", error);
+      const resp = await WithdrawService.getWithdrawAccounts();
+      // Accept both paginated [items,total] and direct array
+      const items = Array.isArray((resp as any)?.data)
+        ? (resp as any).data
+        : Array.isArray(resp) && Array.isArray(resp[0])
+        ? resp[0]
+        : Array.isArray(resp)
+        ? resp
+        : [];
+      setAccounts(items || []);
+    } catch (error: any) {
+      console.error("Error cargando cuentas:", error);
       const message = getBackendErrorMessage(error);
       notify.error({ message: message || "Error cargando cuentas de retiro" });
-      setAccounts([]); // Establecer array vacío en caso de error
+      setAccounts([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAddMethod = async () => {
-    try {
-      // Cerrar el modal inmediatamente
-      setShowAddModal(false);
-
-      // El modal ya maneja la creación internamente
-      await loadAccounts(); // Recargar lista
-      onRefresh?.(); // Notificar al componente padre
-
-      notify.success({ message: "Cuenta creada exitosamente" });
-    } catch (error: any) {
-      const message = getBackendErrorMessage(error);
-      notify.error({ message: message || "Error creando cuenta de retiro" });
-    }
+  const handleAddSuccess = async () => {
+    setShowAddModal(false);
+    await loadAccounts();
+    onRefresh?.();
+    notify.success({ message: "Cuenta creada exitosamente" });
   };
 
-  const getMethodIcon = (account: WithdrawAccount) => {
-    const accountTypeName = account.type?.name?.toLowerCase() || "";
+  const addHook = useAddWithdrawAccount({
+    visible: showAddModal,
+    onAdd: handleAddSuccess,
+    onClose: () => setShowAddModal(false),
+  });
 
+  const getMethodIcon = (account: WithdrawAccount) => {
+    const accountTypeName = (
+      account.type?.name ||
+      account.withdraw_account_type?.name ||
+      ""
+    ).toLowerCase();
     if (
       accountTypeName.includes("payphone") ||
       account.provider?.toLowerCase() === "payphone"
     ) {
       return <PayphoneIcon />;
     }
-
     return <Building2 size={18} color="#666" />;
   };
 
   const getMethodTitle = (account: WithdrawAccount) => {
-    const accountTypeName = account.type?.name || "Cuenta";
-
+    const accountTypeName =
+      account.type?.name || account.withdraw_account_type?.name || "Cuenta";
     if (
       accountTypeName.toLowerCase().includes("payphone") ||
       account.provider?.toLowerCase() === "payphone"
     ) {
       return "Payphone";
     }
-
     return accountTypeName;
   };
 
   const getMethodSubtitle = (account: WithdrawAccount) => {
-    const accountTypeName = account.type?.name?.toLowerCase() || "";
-
-    if (
-      accountTypeName.includes("payphone") ||
-      account.provider?.toLowerCase() === "payphone"
-    ) {
-      return account.phone || "Teléfono no disponible";
-    }
-
-    // Para cuentas bancarias, mostrar CBU o alias
-    if (account.cbu) {
-      return `CBU: ${account.cbu.slice(-4)}`;
-    }
-
-    if (account.alias) {
-      return `Alias: ${account.alias}`;
-    }
-
-    return "Cuenta bancaria";
+    if (account.cbu) return `CBU •••• ${String(account.cbu).slice(-4)}`;
+    if (account.alias) return `Alias ${account.alias}`;
+    if (account.phone) return account.phone;
+    return "Cuenta";
   };
 
   const handleMethodOptions = (account: WithdrawAccount) => {
-    console.log("⋮ Abriendo menú para cuenta:", account.id, account.owner_name);
     setActiveMethodMenu(account.id);
   };
 
-  const closeMethodMenu = () => {
-    setActiveMethodMenu(null);
-  };
+  const closeMethodMenu = () => setActiveMethodMenu(null);
 
-  const handleDeleteAccount = async (accountId: string) => {
-    console.log("🗑️ Iniciando eliminación de cuenta:", accountId);
-
-    // Encontrar el nombre de la cuenta para mostrarlo en el mensaje
-    const account = accounts.find((acc) => acc.id === accountId);
-    const accountName = account ? account.owner_name : "esta cuenta";
-
-    console.log("📋 Cuenta a eliminar:", { accountId, accountName, account });
-
-    // Configurar el modal de confirmación
-    setAccountToDelete({ id: accountId, name: accountName });
+  const handleDeleteAccount = (accountId: string) => {
+    const acc = accounts.find((a) => a.id === accountId);
+    setAccountToDelete({
+      id: accountId,
+      name: acc?.owner_name || "esta cuenta",
+    });
     setShowDeleteModal(true);
     closeMethodMenu();
   };
 
   const confirmDeleteAccount = async () => {
     if (!accountToDelete) return;
-
-    console.log("🚀 Usuario confirmó - Eliminando cuenta:", accountToDelete.id);
     try {
       setLoading(true);
-      setShowDeleteModal(false);
-      console.log("📞 Llamando a withdrawService.deleteWithdrawAccount...");
       await WithdrawService.deleteWithdrawAccount(accountToDelete.id);
-      console.log("✅ Eliminación completada");
-      // No mostrar alert, solo recargar la lista
-      console.log("🔄 Recargando lista de cuentas...");
       await loadAccounts();
+      setShowDeleteModal(false);
+      setAccountToDelete(null);
+      notify.success({ message: "Cuenta eliminada" });
     } catch (error: any) {
-      console.error("❌ Error en eliminación:", error);
-
-      let message = "No se pudo eliminar la cuenta.";
-
-      if (error?.message?.includes("404")) {
-        message = "La cuenta no existe.";
-      } else if (error?.message?.includes("409")) {
-        message = "No se puede eliminar, tiene transacciones asociadas.";
-      } else if (error?.message?.includes("403")) {
-        message = "No tienes permisos para eliminar esta cuenta.";
-      } else if (error?.message) {
-        message = error.message;
-      }
-      notify.error({ message });
+      console.error("Error eliminando cuenta:", error);
+      const msg =
+        getBackendErrorMessage(error) || "No se pudo eliminar la cuenta";
+      notify.error({ message: msg });
     } finally {
       setLoading(false);
-      setAccountToDelete(null);
     }
   };
 
-  const cancelDeleteAccount = () => {
-    console.log("❌ Usuario canceló la eliminación");
+  const cancelDelete = () => {
     setShowDeleteModal(false);
     setAccountToDelete(null);
   };
 
-  const handleActivateAccount = async (accountId: string) => {
+  const handleActivate = async (id: string) => {
     try {
-      await WithdrawService.activateWithdrawAccount(accountId);
-      // No usamos Alert.alert aquí tampoco
+      await WithdrawService.activateWithdrawAccount(id);
       await loadAccounts();
       closeMethodMenu();
+      notify.success({ message: "Cuenta activada" });
     } catch (error: any) {
-      console.error("Error activando cuenta:", error);
+      console.error("Error activando:", error);
+      notify.error({ message: getBackendErrorMessage(error) || "Error" });
     }
   };
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Cuentas de retiro</Text>
+      <View className="bg-white rounded-lg p-4 mt-4">
+        <View className="flex-row justify-between items-center mb-3">
+          <Text className="text-sm font-semibold text-gray-900">
+            Cuentas de retiro
+          </Text>
+          <TouchableOpacity
+            onPress={() => setShowAddModal(true)}
+            className="w-8 h-8 rounded-full bg-gray-100 items-center justify-center"
+          >
+            <Plus size={18} color="#FF6B35" />
+          </TouchableOpacity>
         </View>
-        <View style={styles.loadingContainer}>
+        <View className="items-center py-6">
           <ActivityIndicator size="large" color="#FF6B35" />
-          <Text style={styles.loadingText}>Cargando cuentas...</Text>
+          <Text className="mt-2 text-sm text-gray-500">
+            Cargando cuentas...
+          </Text>
         </View>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Cuentas de retiro</Text>
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => setShowAddModal(true)}
-        >
-          <Plus size={18} color="#FF6B35" />
-        </TouchableOpacity>
-      </View>
-
-      {accounts.length === 0 ? (
-        <View style={styles.emptyState}>
-          <CreditCard size={24} color="#999" strokeWidth={1.5} />
-          <Text style={styles.emptyText}>No hay cuentas agregadas</Text>
+    <>
+      {/* Compact card */}
+      <View className="bg-white rounded-lg p-4 mt-4">
+        <View className="flex-row justify-between items-center mb-3">
+          <Text className="text-sm font-semibold text-gray-900">
+            Cuentas de retiro
+          </Text>
+          <View className="flex-row items-center space-x-2">
+            <TouchableOpacity
+              onPress={() => setShowFullView(true)}
+              className="px-3 py-1"
+            >
+              <Text className="text-sm text-orange-500 font-semibold">
+                Ver todo
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setShowAddModal(true)}
+              className="w-8 h-8 rounded-full bg-gray-100 items-center justify-center"
+            >
+              <Plus size={18} color="#FF6B35" />
+            </TouchableOpacity>
+          </View>
         </View>
-      ) : (
-        <View style={styles.methodsList}>
-          {accounts.map((account, index) => (
-            <View key={account.id} style={styles.methodCard}>
-              <View style={styles.methodRow}>
-                <View style={styles.methodIconSimple}>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 12 }}
+          className="p-1"
+        >
+          {accounts.slice(0, 5).map((account) => (
+            <TouchableOpacity
+              key={account.id}
+              onPress={() => {
+                setSelectedAccount(account);
+                setShowAccountDetails(true);
+              }}
+              className="bg-white rounded-2xl p-4 mr-3 border border-gray-100 shadow-md"
+              style={{ minWidth: 240, overflow: "hidden" }}
+            >
+              <View className="absolute top-3 right-3 z-50">
+                <TouchableOpacity
+                  onPress={() => handleDeleteAccount(account.id)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  className="p-2 bg-white rounded-full shadow"
+                >
+                  <Trash size={16} color="#e02424" strokeWidth={2} />
+                </TouchableOpacity>
+              </View>
+              <View className="flex-row items-start">
+                <View className="w-12 h-12 bg-gray-50 rounded-lg items-center justify-center ">
                   {getMethodIcon(account)}
                 </View>
-                <View style={styles.methodInfo}>
-                  <Text style={styles.methodTitle} numberOfLines={1}>
+                <View className="flex-1">
+                  <Text
+                    className="text-sm font-semibold text-gray-900"
+                    numberOfLines={2}
+                  >
                     {getMethodTitle(account)}
                   </Text>
-                  <Text style={styles.methodSubtitle} numberOfLines={1}>
+                  {account.owner_name ? (
+                    <Text
+                      className="text-xs text-gray-500 mt-1"
+                      numberOfLines={2}
+                    >
+                      {account.owner_name}
+                    </Text>
+                  ) : null}
+                  <Text
+                    className="text-xs text-gray-500 mt-1"
+                    numberOfLines={2}
+                  >
                     {getMethodSubtitle(account)}
                   </Text>
                 </View>
-                <TouchableOpacity
-                  style={styles.deleteButton}
-                  onPress={() => handleMethodOptions(account)}
-                >
-                  <MoreVertical size={20} color="#999" strokeWidth={2} />
-                </TouchableOpacity>
               </View>
-              {!account.is_active && (
-                <View style={styles.inactiveLabel}>
-                  <Text style={styles.inactiveLabelText}>Inactiva</Text>
+              {account.is_active && (
+                <View
+                  className="bg-green-50 border border-green-200 px-2 py-1 mt-2 rounded-full"
+                  style={{
+                    alignSelf: "flex-start",
+                  }}
+                >
+                  <Text className=" text-xs text-green-700 font-semibold">
+                    VERIFICADA
+                  </Text>
                 </View>
               )}
-
-              {/* Menu de opciones */}
-              {activeMethodMenu === account.id && (
-                <Modal
-                  transparent
-                  visible={true}
-                  onRequestClose={closeMethodMenu}
-                  animationType="fade"
-                >
-                  <TouchableOpacity
-                    style={styles.menuOverlay}
-                    activeOpacity={1}
-                    onPress={closeMethodMenu}
-                  >
-                    <View style={styles.menuContainer}>
-                      {/* Solo opción para eliminar cuenta */}
-                      <TouchableOpacity
-                        style={styles.menuOption}
-                        onPress={() => {
-                          console.log(
-                            "🗑️ Botón eliminar presionado para cuenta:",
-                            account.id
-                          );
-                          handleDeleteAccount(account.id);
-                        }}
-                      >
-                        <Text
-                          style={[styles.menuOptionText, { color: "#dc3545" }]}
-                        >
-                          Eliminar cuenta
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  </TouchableOpacity>
-                </Modal>
-              )}
-            </View>
+            </TouchableOpacity>
           ))}
-        </View>
+
+          <TouchableOpacity
+            onPress={() => setShowAddModal(true)}
+            className="w-56 h-28 rounded-2xl border-2 border-dashed border-gray-200 items-center justify-center mr-3 bg-white shadow-sm"
+            style={{ overflow: "hidden" }}
+          >
+            <View className="w-12 h-12 rounded-full bg-gray-50 items-center justify-center mb-2">
+              <Text className="text-2xl text-gray-400">+</Text>
+            </View>
+            <Text className="text-sm text-gray-500">Agregar cuenta nueva</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
+
+      {/* Detalle rápido de cuenta al tocar tarjeta */}
+      {selectedAccount && (
+        <Modal
+          visible={showAccountDetails}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowAccountDetails(false)}
+        >
+          <View className="flex-1 bg-black/60 justify-center items-center p-4">
+            <View className="bg-white rounded-xl p-6 w-full max-w-md">
+              <View className="flex-row justify-between items-start">
+                <Text className="text-lg font-bold">Detalle de cuenta</Text>
+                <TouchableOpacity onPress={() => setShowAccountDetails(false)}>
+                  <Text className="text-sm font-bold rounded-full p-2  bg-orange-500 text-black">
+                    Cerrar
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <View className="mt-3 space-y-2">
+                <Text className="text-sm text-gray-700">
+                  <Text className="font-semibold">Tipo: </Text>
+                  {getMethodTitle(selectedAccount)}
+                </Text>
+                <Text className="text-sm text-gray-700">
+                  <Text className="font-semibold">Titular: </Text>
+                  {selectedAccount.holderName ||
+                    selectedAccount.owner_name ||
+                    "-"}
+                </Text>
+                <Text className="text-sm text-gray-700">
+                  <Text className="font-semibold">CBU: </Text>
+                  {selectedAccount.cbu || "-"}
+                </Text>
+                <Text className="text-sm text-gray-700">
+                  <Text className="font-semibold">Alias: </Text>
+                  {selectedAccount.alias || "-"}
+                </Text>
+                <Text className="text-sm text-gray-700">
+                  <Text className="font-semibold">Teléfono: </Text>
+                  {selectedAccount.phone || "-"}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </Modal>
       )}
 
-      {/* Modal para agregar nueva cuenta */}
-      <AddWithdrawAccountModal
-        visible={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        onAdd={handleAddMethod}
-      />
-
-      {/* Modal de confirmación para eliminar cuenta */}
-      <Modal visible={showDeleteModal} transparent={true} animationType="fade">
-        <View style={styles.deleteModalOverlay}>
-          <View style={styles.deleteModalContainer}>
-            <View style={styles.deleteModalIcon}>
-              <Text style={styles.deleteModalIconText}>⚠️</Text>
+      {/* Delete confirm modal */}
+      <Modal visible={showDeleteModal} transparent animationType="fade">
+        <View className="flex-1 bg-black/60 justify-center items-center p-4">
+          <View className=" flex justify-center items-center bg-white rounded-xl p-6 w-full max-w-md">
+            <View className="w-14 h-14 rounded-full bg-amber-100 border border-amber-200 justify-center items-center mb-4">
+              <Text className="text-xl">⚠️</Text>
             </View>
-            <Text style={styles.deleteModalTitle}>Eliminar cuenta</Text>
-            <Text style={styles.deleteModalMessage}>
+            <Text className="text-lg font-bold text-gray-900 mb-2">
+              Eliminar cuenta
+            </Text>
+            <Text className="text-base text-gray-600 mb-4">
               {accountToDelete
                 ? `¿Eliminar la cuenta de ${accountToDelete.name}?\n\nEsta acción no se puede deshacer.`
                 : "Confirmar eliminación"}
             </Text>
-            <View style={styles.deleteModalButtons}>
+            <View className="flex-row space-x-3">
               <TouchableOpacity
-                style={[
-                  styles.deleteModalButton,
-                  styles.deleteModalCancelButton,
-                ]}
-                onPress={cancelDeleteAccount}
+                className="flex-1 py-3 px-3 rounded-lg bg-gray-100 items-center"
+                onPress={cancelDelete}
               >
-                <Text style={styles.deleteModalCancelText}>Cancelar</Text>
+                <Text className="text-base text-gray-700">Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[
-                  styles.deleteModalButton,
-                  styles.deleteModalConfirmButton,
-                ]}
+                className="flex-1 py-3 px-3 rounded-lg bg-red-600 items-center"
                 onPress={confirmDeleteAccount}
               >
-                <Text style={styles.deleteModalConfirmText}>Eliminar</Text>
+                <Text className="text-base text-white">Eliminar</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
-    </View>
+
+      {/* Full view modal for Ver todo */}
+      <Modal
+        visible={showFullView}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowFullView(false)}
+      >
+        <View className="flex-1 bg-white">
+          {/* Header */}
+          <View className="bg-white border-b border-gray-200 px-4 py-4 pt-12 flex-row justify-between items-center">
+            <Text className="text-lg font-bold text-gray-900">
+              Cuentas de retiro
+            </Text>
+            <TouchableOpacity
+              onPress={() => setShowFullView(false)}
+              className="px-3 py-2"
+            >
+              <Text className="text-base text-orange-500 font-semibold">
+                Cerrar
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* List */}
+          <ScrollView className="flex-1 p-4">
+            <View className="space-y-3">
+              {accounts.map((account) => (
+                <TouchableOpacity
+                  key={account.id}
+                  onPress={() => {
+                    setSelectedAccount(account);
+                    setShowAccountDetails(true);
+                  }}
+                  className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm flex-row items-center justify-between"
+                >
+                  <View className="flex-1 flex-row items-center">
+                    <View className="w-12 h-12 bg-gray-50 rounded-lg items-center justify-center mr-3">
+                      {getMethodIcon(account)}
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-sm font-semibold text-gray-900">
+                        {getMethodTitle(account)}
+                      </Text>
+                      <Text className="text-xs text-gray-500 mt-1">
+                        {getMethodSubtitle(account)}
+                      </Text>
+                    </View>
+                  </View>
+                  {account.is_active && (
+                    <View className="bg-green-50 border border-green-200 px-2 py-1 rounded-full ml-2">
+                      <Text className="text-xs text-green-700 font-semibold">
+                        ✓
+                      </Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
+
+          {/* Add button */}
+          <View className="border-t border-gray-200 p-4">
+            <TouchableOpacity
+              onPress={() => {
+                setShowFullView(false);
+                setShowAddModal(true);
+              }}
+              className="bg-orange-500 rounded-lg py-3 items-center"
+            >
+              <View className="flex-row items-center gap-2">
+                <Plus size={20} color="white" />
+                <Text className="text-white font-semibold">
+                  Agregar cuenta nueva
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal y lógica SIEMPRE renderizados, solo visible cuando showAddModal es true */}
+      <AddWithdrawAccountModal
+        visible={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        form={addHook}
+      />
+    </>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "#fff",
-    marginTop: 16,
-    borderRadius: 8,
-    padding: 16,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#333",
-  },
-  addButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#f5f5f5",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  loadingContainer: {
-    alignItems: "center",
-    paddingVertical: 20,
-  },
-  loadingText: {
-    fontSize: 13,
-    color: "#999",
-    marginTop: 8,
-  },
-  emptyState: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 20,
-    gap: 8,
-  },
-  emptyText: {
-    fontSize: 13,
-    color: "#999",
-  },
-  methodsList: {
-    gap: 8,
-  },
-  methodCard: {
-    backgroundColor: "#FAFAFA",
-    borderRadius: 8,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "#F0F0F0",
-  },
-  methodRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  methodIconSimple: {
-    width: 32,
-    height: 32,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  methodInfo: {
-    flex: 1,
-  },
-  methodTitle: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#333",
-    marginBottom: 2,
-  },
-  methodSubtitle: {
-    fontSize: 12,
-    color: "#666",
-  },
-  deleteButton: {
-    padding: 4,
-  },
-  inactiveLabel: {
-    marginTop: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: "#F0F0F0",
-  },
-  inactiveLabelText: {
-    fontSize: 11,
-    color: "#FF6B6B",
-    fontWeight: "500",
-  },
-  // Estilos para el menú de opciones
-  menuOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.3)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  menuContainer: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    paddingVertical: 8,
-    minWidth: 200,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  menuOption: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
-  menuOptionDanger: {
-    borderBottomWidth: 0,
-  },
-  menuOptionText: {
-    fontSize: 16,
-    color: "#333",
-    textAlign: "center",
-  },
-  menuOptionTextDanger: {
-    color: "#FF3B30",
-  },
-  // Estilos para Modal de Eliminación
-  deleteModalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  deleteModalContainer: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 24,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 8,
-    minWidth: 300,
-    maxWidth: 400,
-  },
-  deleteModalIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "#fff3cd",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 16,
-    borderWidth: 2,
-    borderColor: "#ffc107",
-  },
-  deleteModalIconText: {
-    fontSize: 32,
-  },
-  deleteModalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 12,
-  },
-  deleteModalMessage: {
-    fontSize: 16,
-    color: "#666",
-    textAlign: "center",
-    lineHeight: 22,
-    marginBottom: 24,
-  },
-  deleteModalButtons: {
-    flexDirection: "row",
-    gap: 12,
-    width: "100%",
-  },
-  deleteModalButton: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  deleteModalCancelButton: {
-    backgroundColor: "#f8f9fa",
-    borderWidth: 1,
-    borderColor: "#dee2e6",
-  },
-  deleteModalConfirmButton: {
-    backgroundColor: "#dc3545",
-  },
-  deleteModalCancelText: {
-    fontSize: 16,
-    color: "#6c757d",
-    fontWeight: "600",
-  },
-  deleteModalConfirmText: {
-    fontSize: 16,
-    color: "#fff",
-    fontWeight: "600",
-  },
-});
+export default PaymentPreferences;

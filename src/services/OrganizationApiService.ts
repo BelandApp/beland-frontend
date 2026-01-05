@@ -11,16 +11,10 @@ export interface Organization {
   name: string;
   legal_name?: string;
   ruc?: string;
-  category?: string;
   description?: string;
   phone?: string;
   email?: string;
-  address?: string;
-  city?: string;
-  province?: string;
-  country?: string;
-  latitude?: number;
-  longitude?: number;
+  address_id: string;
   logo_url?: string;
   website?: string;
   is_active: boolean;
@@ -31,19 +25,12 @@ export interface Organization {
 
 export interface CreateOrganizationDto {
   name: string;
-  user_id: string;
   legal_name?: string;
   ruc?: string;
-  category?: string;
   description?: string;
   phone?: string;
   email?: string;
-  address?: string;
-  city?: string;
-  province?: string;
-  country?: string;
-  latitude?: number;
-  longitude?: number;
+  address_id?: string;
   logo_url?: string;
   website?: string;
   is_active?: boolean;
@@ -53,16 +40,10 @@ export interface UpdateOrganizationDto {
   name?: string;
   legal_name?: string;
   ruc?: string;
-  category?: string;
   description?: string;
   phone?: string;
   email?: string;
-  address?: string;
-  city?: string;
-  province?: string;
-  country?: string;
-  latitude?: number;
-  longitude?: number;
+  address_id?: string;
   logo_url?: string;
   website?: string;
   is_active?: boolean;
@@ -73,14 +54,14 @@ class OrganizationService extends CoreApiService {
    * Create a new organization and transform user to MERCHANT role
    */
   async createOrganization(data: CreateOrganizationDto): Promise<Organization> {
-    return this.post<Organization>("/organizations", data);
+    return this.post<Organization>("/merchants", data);
   }
 
   /**
    * Get organization by ID
    */
   async getOrganization(id: string): Promise<Organization> {
-    return this.get<Organization>(`/organizations/${id}`);
+    return this.get<Organization>(`/merchants/${id}`);
   }
 
   /**
@@ -90,21 +71,21 @@ class OrganizationService extends CoreApiService {
     id: string,
     data: UpdateOrganizationDto
   ): Promise<Organization> {
-    return this.put<Organization>(`/organizations/${id}`, data);
+    return this.put<Organization>(`/merchants/${id}`, data);
   }
 
   /**
    * Disactivate organization and revert user to USER role
    */
   async disactivateOrganization(id: string): Promise<Organization> {
-    return this.put<Organization>(`/organizations/disactive/${id}`, {});
+    return this.put<Organization>(`/merchants/disactive/${id}`, {});
   }
 
   /**
    * Delete organization
    */
   async deleteOrganization(id: string): Promise<void> {
-    return this.delete(`/organizations/${id}`);
+    return this.delete(`/merchants/${id}`);
   }
 
   /**
@@ -112,14 +93,34 @@ class OrganizationService extends CoreApiService {
    */
   async getUserOrganization(userId: string): Promise<Organization | null> {
     try {
-      // Backend returns [Organization[], count] tuple
-      const [organizations] = await this.get<[Organization[], number]>(
-        `/organizations?user_id=${userId}&limit=1`
-      );
-      return organizations && organizations.length > 0
-        ? organizations[0]
-        : null;
+      // New backend provides endpoint GET /merchants/user/:user_id
+      // Disable retries and reduce timeout for this check because backend
+      // may return a server error when the merchant does not exist; we
+      // want to fail fast and open the modal without long delays.
+      const org = await this.get<Organization>(`/merchants/user/${userId}`, {
+        retries: 0,
+        timeout: 5000,
+      });
+      return org || null;
     } catch (error) {
+      // If the backend responds with a not-found style error or a
+      // message indicating "No se encontró", treat it as "no org".
+      try {
+        const e: any = error;
+        const msg =
+          e?.details?.message ||
+          e?.message ||
+          (e?.details && JSON.stringify(e.details));
+        if (
+          e?.status === 404 ||
+          (typeof msg === "string" && msg.includes("No se encontró"))
+        ) {
+          return null;
+        }
+      } catch (inner) {
+        // ignore parsing errors
+      }
+
       console.error("Error fetching user organization:", error);
       return null;
     }

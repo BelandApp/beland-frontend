@@ -3,9 +3,12 @@ import { NavigatorScreenParams } from "@react-navigation/native";
 export type GroupsStackParamList = {
   GroupsList: undefined;
   CreateGroup: undefined;
-  GroupManagement: {
-    groupId: string;
-  };
+  GroupExplore: undefined;
+  GroupDetailScreen: { groupId: string };
+  GroupMembersScreen: { groupId: string; groupName?: string };
+  GroupOrdersHistoryScreen: { groupId: string; groupName?: string };
+  GroupServicesHistoryScreen: { groupId: string; groupName?: string };
+  GroupFinancialPanelScreen: { groupId: string; groupName?: string };
 };
 
 export type OrdersStackParamList = {
@@ -23,4 +26,3 @@ export type MainTabParamList = {
   Community: undefined;
   Groups: NavigatorScreenParams<GroupsStackParamList>;
 };
-

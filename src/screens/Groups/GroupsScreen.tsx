@@ -1,114 +1,390 @@
-import React from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   View,
-  ScrollView,
-  Dimensions,
-  TouchableOpacity,
   Text,
+  TextInput,
+  ScrollView,
+  FlatList,
+  Image,
+  TouchableOpacity,
   RefreshControl,
+  Dimensions,
+  Platform,
 } from "react-native";
-import { WaveBottomGray } from "../../components/icons";
+import { useGroupsNavigation, useGroups } from "./hooks";
+import Feather from "react-native-vector-icons/Feather";
+import { ThemedHeader } from "src/components";
+import { CustomLoader } from "@/components/shared/loader/Loader";
+import { GroupService, GroupPrivacy } from "@/services/GroupApiService";
+// Ícono según código de privacidad
+const getPrivacyIcon = (privacyCode: string) => {
+  if (privacyCode === "public") return "globe";
+  return "lock";
+};
 
-type Tabs = "Activos" | "Historial";
+// Mapea el nombre de la categoría a un ícono Feather
+export const getGroupTypeFeatherIcon = (type: any) => {
+  if (!type) return { name: "tag", color: "#5e8d76" };
+  const t = type.toLowerCase();
+  if (t.includes("cumple")) return { name: "gift", color: "#eab308" };
+  if (t.includes("gradu")) return { name: "award", color: "#6366f1" };
+  if (t.includes("aniversa")) return { name: "heart", color: "#f43f5e" };
+  if (t.includes("amig")) return { name: "users", color: "#5e8d76" };
+  if (t.includes("famil")) return { name: "home", color: "#f59e42" };
+  if (t.includes("temat")) return { name: "star", color: "#fbbf24" };
+  if (t.includes("picnic")) return { name: "sun", color: "#fbbf24" };
+  if (t.includes("asado")) return { name: "coffee", color: "#a16207" };
+  if (t.includes("año nuevo")) return { name: "calendar", color: "#0ea5e9" };
+  if (t.includes("romant")) return { name: "heart", color: "#f43f5e" };
+  if (t.includes("bienven")) return { name: "smile", color: "#22d3ee" };
+  if (t.includes("desped")) return { name: "flag", color: "#f87171" };
+  if (t.includes("infant")) return { name: "smile", color: "#fbbf24" };
+  if (t.includes("deport")) return { name: "activity", color: "#22c55e" };
+  if (t.includes("trabajo")) return { name: "briefcase", color: "#6366f1" };
+  return { name: "tag", color: "#5e8d76" };
+};
 
-// Hooks
-import { useGroupsNavigation, useGroups, useGroupTypeFilter } from "./hooks";
+const getTypeIcon = (type: string) => {
+  switch (type?.toLowerCase()) {
+    case "social":
+      return <Feather name="users" size={16} color="#5e8d76" />;
+    case "work":
+      return <Feather name="briefcase" size={16} color="#5e8d76" />;
+    case "viajes":
+      return <Feather name="map" size={16} color="#5e8d76" />;
+    default:
+      return <Feather name="tag" size={16} color="#5e8d76" />;
+  }
+};
 
-// Components
-import { GroupsList, GroupTypeFilter } from "./components";
+export const GroupsScreen: React.FC = () => {
+  // Tipos de privacidad dinámicos
+  const [privacyOptions, setPrivacyOptions] = useState<GroupPrivacy[]>([]);
+  useEffect(() => {
+    GroupService.getGroupPrivacies()
+      .then(setPrivacyOptions)
+      .catch(() => setPrivacyOptions([]));
+  }, []);
+  const { navigateToCreateGroup } = useGroupsNavigation();
+  const { navigate } = require("@react-navigation/native").useNavigation();
+  const navigateToExploreGroups = () => {
+    navigate("GroupExplore");
+  };
+  const { groups, activeGroups, onRefresh, refreshing, loading } = useGroups();
+  // Forzar altura del listado en web mobile para diagnosticar scroll
+  const windowHeight = Dimensions.get("window").height;
+  // Reservar espacio para header + tabbar aproximado (ajusta si es necesario)
+  const listHeight = Math.max(400, windowHeight - 160);
+  const [groupMembersCount, setGroupMembersCount] = useState<
+    Record<string, number>
+  >({});
 
-// Styles
-import { buttonStyles, containerStyles } from "./styles";
-import { ThemedHeader } from "src/components/shared/headers/Header";
-import { useThemedTabs } from "src/components";
-import ThemedTabs from "src/components/shared/Tabs/ThemedTabs";
-import { colors } from "src/styles";
+  React.useEffect(() => {
+    const fetchMembersCounts = async () => {
+      if (!groups || !Array.isArray(groups)) return;
+      const counts: Record<string, number> = {};
+      await Promise.all(
+        groups.map(async (group) => {
+          try {
+            const members =
+              await require("@/services/GroupApiService").GroupService.getGroupMembers(
+                group.id
+              );
+            counts[group.id] = Array.isArray(members) ? members.length : 0;
+          } catch {
+            counts[group.id] = 0;
+          }
+        })
+      );
+      setGroupMembersCount(counts);
+    };
+    fetchMembersCounts();
+  }, [groups]);
+  const [search, setSearch] = useState("");
+  // Eliminado filtro de estados
+  // Obtener todos los grupos del usuario
+  const todosMisGrupos = groups;
 
-export const GroupsScreen: React.FC<any> = (props) => {
-  // Hooks
-  const { navigateToCreateGroup, navigateToGroupManagement } =
-    useGroupsNavigation();
-  const {
-    getAllGroups,
-    onRefresh,
-    refreshing,
-    filters,
-    activeGroups,
-    completedGroups,
-  } = useGroups();
-  // Obtener los grupos
-  const groups = getAllGroups();
+  if (loading) {
+    return (
+      <View className="flex-1 justify-center items-center bg-background-light">
+        <CustomLoader />
+      </View>
+    );
+  }
 
-  const { tabs, activeTab, getFilteredByActiveTab, onTabChange } =
-    useThemedTabs([
-      { label: "Activos", count: activeGroups.length },
-      { label: "Historial", count: completedGroups.length },
-    ]);
-  const baseGroups = getFilteredByActiveTab(groups, filters);
+  if (!todosMisGrupos || todosMisGrupos.length === 0) {
+    return (
+      <View className="flex-1 justify-center items-center bg-background-light px-4">
+        <View className="items-center w-full">
+          <View className="relative mb-8 mt-2 items-center justify-center">
+            <View
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 rounded-full bg-emerald-100 opacity-70 shadow-2xl"
+              style={{ zIndex: 0 }}
+            />
+            <Image
+              source={{
+                uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuA4N_ZsKNWSdlE8ZSCcyRHk3LtrbeN68wQll9_elKK53ia_bisDkguRt0mi8B-bD2k_YjQkJvPDCxSmqHqbfKiNvDJ_o2yMmMIXn9VAIJpEdoaKiX8C89MiStbEh7IEcEZ4eXgp3Fal98gM3Qi-h7HuybKV0iU6BEDSQh_1ZaRINnZppuHFE2TVsbAItxxRIFWNyYrTAJdenzvqgiRWw5if2pi0CRPyYQnlw0Hbj3x2anlMY-OZzMSw4Z6LbIDOZaOWU1hubT_5S-Q",
+              }}
+              className="w-40 h-40 rounded-3xl border-4 border-white shadow-xl"
+              resizeMode="cover"
+              style={{ zIndex: 1 }}
+            />
+            <View
+              className="absolute bottom-2 right-2 bg-white rounded-full shadow-lg p-1 items-center justify-center"
+              style={{ zIndex: 2 }}
+            >
+              <Text className="text-primary text-2xl">＋</Text>
+            </View>
+          </View>
+          <Text className="text-2xl font-bold text-text-main mb-2 text-center tracking-tight">
+            No tienes grupos aún
+          </Text>
+          <Text className="text-base text-gray-500 mb-8 text-center max-w-xs">
+            Únete a una comunidad existente o crea tu propio espacio para
+            empezar a colaborar con otros.
+          </Text>
+          <TouchableOpacity
+            className="w-full flex-row items-center justify-center gap-2 rounded-xl bg-primary h-12 mb-3 shadow-lg active:scale-95"
+            onPress={navigateToCreateGroup}
+            style={{ maxWidth: 400 }}
+          >
+            <Text className="text-white text-xl">＋</Text>
+            <Text className="text-white font-bold text-base">
+              Crear nuevo grupo
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="w-full flex-row items-center justify-center gap-2 rounded-xl border border-gray-200 h-12 active:scale-95"
+            onPress={navigateToExploreGroups}
+            style={{ maxWidth: 400 }}
+          >
+            <Feather name="compass" size={22} color="#00E074" />
+            <Text className="text-primary font-bold text-base">
+              Explorar grupos
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
-  // Hook para filtrar por tipo
-  const {
-    selectedType,
-    availableTypes,
-    filteredGroups,
-    handleTypeChange,
-    hasActiveFilter,
-  } = useGroupTypeFilter(baseGroups);
+  // Filtros y búsqueda usando group_type como string
+  // Solo búsqueda por nombre o tipo
+  const filteredGroups = todosMisGrupos.filter((g) => {
+    const groupTypeName = g.group_type || "";
+    return (
+      g.name.toLowerCase().includes(search.toLowerCase()) ||
+      groupTypeName.toLowerCase().includes(search.toLowerCase())
+    );
+  });
 
-  // Los grupos a mostrar son los filtrados
-  const currentGroups = filteredGroups;
+  const renderGroup = ({ item }: { item: any }) => (
+    <TouchableOpacity
+      className="group relative flex flex-col rounded-2xl bg-white p-4 shadow-sm mb-4 border border-transparent mx-2"
+      onPress={() => navigate("GroupDetailScreen", { groupId: item.id })}
+    >
+      <View className="w-full h-32 rounded-xl mb-3 overflow-hidden bg-gray-100 items-center justify-center">
+        {item.image_url ? (
+          <Image
+            source={{ uri: item.image_url }}
+            style={{ width: "100%", height: "100%" }}
+            resizeMode="cover"
+          />
+        ) : (
+          <Feather
+            name={getGroupTypeFeatherIcon(item.group_type).name}
+            size={56}
+            color={getGroupTypeFeatherIcon(item.group_type).color}
+            style={{ opacity: 0.7 }}
+          />
+        )}
+      </View>
+      <View className="flex flex-col justify-between flex-1 gap-2">
+        <View className="flex-row justify-between items-start">
+          <View className="flex-row items-center gap-2 mb-1">
+            {item.is_leader && (
+              <Text className="px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider">
+                Líder
+              </Text>
+            )}
+            <View
+              className={`w-1.5 h-1.5 rounded-full ${
+                item.is_active === true ? "bg-primary" : "bg-gray-400"
+              }`}
+            />
+            <Text
+              className={`text-xs font-medium ${
+                item.is_active === true ? "text-primary" : "text-gray-500"
+              }`}
+            >
+              {item.is_active === true ? "Activo" : "Inactivo"}
+            </Text>
+          </View>
+          <TouchableOpacity>
+            <Feather name="more-vertical" size={20} color="#bdbdbd" />
+          </TouchableOpacity>
+        </View>
+        <Text className="text-lg font-bold text-text-main mb-1">
+          {item.name}
+        </Text>
+        <View className="flex-row flex-wrap items-center gap-2 mt-1">
+          {item.group_type && (
+            <View className="flex-row items-center gap-1.5 bg-background-light px-2 py-1 rounded-lg">
+              {getTypeIcon(item.group_type)}
+              <Text className="text-xs text-gray-500 font-medium">
+                {item.group_type}
+              </Text>
+            </View>
+          )}
+          {/* Privacidad dinámica */}
+          {(() => {
+            const groupPrivacy = privacyOptions.find(
+              (p) => p.id === ((item as any).privacy_id || item.privacy)
+            );
+            return (
+              <View className="flex-row items-center gap-1.5 bg-background-light px-2 py-1 rounded-lg">
+                <Feather
+                  name={getPrivacyIcon(groupPrivacy?.code || "")}
+                  size={16}
+                  color="#5e8d76"
+                />
+                <Text className="text-xs text-gray-500 font-medium">
+                  {groupPrivacy?.name || "Privado"}
+                </Text>
+              </View>
+            );
+          })()}
+          <View className="flex-row items-center gap-1.5 bg-background-light px-2 py-1 rounded-lg">
+            <Feather name="users" size={16} color="#5e8d76" />
+            <Text className="text-xs text-gray-500 font-medium">
+              {groupMembersCount[item.id] ?? 0} Miembros
+            </Text>
+          </View>
+          {/* Tipo de Pago */}
+          {item.payment_type && (
+            <View className="flex-row items-center gap-1.5 bg-background-light px-2 py-1 rounded-lg">
+              <Feather name="credit-card" size={16} color="#5e8d76" />
+              <Text className="text-xs text-gray-500 font-medium">
+                {item.payment_type.code === "EQUAL_SPLIT"
+                  ? "Dividida"
+                  : item.payment_type.code === "SPLIT"
+                  ? "Por Consumo"
+                  : item.payment_type.code === "FULL"
+                  ? "Completo"
+                  : item.payment_type.code}
+              </Text>
+            </View>
+          )}
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
 
   return (
-    <>
-      <ThemedHeader
-        title="Mis Grupos"
-        buttons={
-          <>
-            <TouchableOpacity
-              style={buttonStyles.createButton}
-              activeOpacity={0.8}
-              onPress={navigateToCreateGroup}
-            >
-              <Text style={buttonStyles.createButtonText}>+ Grupo</Text>
-            </TouchableOpacity>
-          </>
-        }
-      />
-      <ScrollView
-        style={containerStyles.scrollView}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={[colors.primary]}
-            style={{ padding: 0 }}
-          />
+    <View style={{ flex: 1, backgroundColor: "#F8F9FB" }}>
+      <View style={{ flex: 1 }}>
+        {/* Header */}
+        <ThemedHeader title="Grupos" />
+        <FlatList
+          style={{ height: listHeight, backgroundColor: "#F8F9FB" }}
+          nestedScrollEnabled={true}
+          stickyHeaderIndices={[0]}
+          ListHeaderComponentStyle={{ zIndex: 10 }}
+          contentContainerStyle={{
+            flexGrow: 1,
+            paddingBottom: 120,
+            paddingHorizontal: 0,
+          }}
+          data={filteredGroups}
+          keyExtractor={(item) => item.id}
+          renderItem={renderGroup}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#00e074"]}
+            />
+          }
+          ListHeaderComponent={
+            <View style={{ backgroundColor: "#F8F9FB" }}>
+              <View className="flex-row items-center px-4 pt-2 pb-2 mt-2 justify-between bg-white">
+                <Text className="text-2xl font-bold text-text-main flex-1">
+                  Mis Grupos
+                </Text>
+                <TouchableOpacity
+                  className="flex-row items-center justify-center gap-2 rounded-xl border border-gray-200 h-10 px-4 active:scale-95"
+                  onPress={navigateToExploreGroups}
+                >
+                  <Feather name="compass" size={18} color="#00E074" />
+                  <Text className="text-primary font-bold text-sm">
+                    Explorar
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              {/* Search & Filters */}
+              <View className="bg-white px-4 pb-4">
+                <View className="py-2">
+                  <View className="flex-row items-center bg-background-light rounded-xl px-4">
+                    <Feather name="search" size={20} color="#5e8d76" />
+                    <TextInput
+                      className="flex-1 h-12 px-2 text-base"
+                      placeholder="Buscar por nombre..."
+                      value={search}
+                      onChangeText={setSearch}
+                      placeholderTextColor="#8caea0"
+                    />
+                  </View>
+                </View>
+              </View>
+            </View>
+          }
+          ListEmptyComponent={
+            <Text className="text-center text-text-sec-light mt-10">
+              No se encontraron grupos
+            </Text>
+          }
+        />
+      </View>
+      {/* Botón flotante para crear grupo */}
+      <View
+        pointerEvents="auto"
+        style={
+          (Platform.OS === "web"
+            ? {
+                position: "fixed" as any,
+                right: 10,
+                bottom: 100,
+                zIndex: 9999,
+              }
+            : {
+                position: "absolute" as any,
+                right: 24,
+                bottom: 32,
+                zIndex: 9999,
+              }) as any
         }
       >
-        <View style={containerStyles.content}>
-          <ThemedTabs tabs={tabs} onTabChange={onTabChange} />
-          {/* Filtro por tipo de grupo */}
-          {availableTypes.length > 0 && (
-            <GroupTypeFilter
-              selectedType={selectedType}
-              onTypeChange={handleTypeChange}
-              availableTypes={availableTypes}
-            />
-          )}
-
-          {/* Lista de grupos */}
-          <GroupsList
-            groups={currentGroups}
-            onGroupPress={navigateToGroupManagement}
-            emptyStateType={activeTab as Tabs}
-          />
-        </View>
-      </ScrollView>
-
-      {/* Ola de fondo */}
-      <View style={containerStyles.waveContainer}>
-        <WaveBottomGray width={Dimensions.get("window").width} height={120} />
+        <TouchableOpacity
+          style={{
+            height: 56,
+            width: 56,
+            borderRadius: 28,
+            backgroundColor: "#00E074",
+            alignItems: "center",
+            justifyContent: "center",
+            shadowColor: "#000",
+            shadowOpacity: 0.2,
+            shadowRadius: 8,
+            elevation: 8,
+          }}
+          onPress={navigateToCreateGroup}
+        >
+          <Feather name="plus" size={28} color="#fff" />
+        </TouchableOpacity>
       </View>
-    </>
+    </View>
   );
 };

@@ -156,6 +156,48 @@ class CartServiceClass extends CoreApiService {
     );
   }
 
+  /**
+   * Set a group for the cart (for group orders)
+   */
+  async setCartGroup(groupId: string): Promise<Cart> {
+    const cart = await this.getCart();
+    return this.put<Cart>(`carts/group/${cart.id}?group_id=${groupId}`, {});
+  }
+
+  /**
+   * Set payment type for the cart (FULL or EQUAL_SPLIT)
+   */
+  async setPaymentType(paymentTypeId: string): Promise<Cart> {
+    const cart = await this.getCart();
+    return this.put<Cart>(
+      `carts/payment-type/${cart.id}?payment_type_id=${paymentTypeId}`,
+      {}
+    );
+  }
+
+  /**
+   * Set delivery address for the cart
+   */
+  async setCartAddress(addressId: string): Promise<Cart> {
+    const cart = await this.getCart();
+    return this.put<Cart>(
+      `carts/address/${cart.id}?address_id=${addressId}`,
+      {}
+    );
+  }
+
+  /**
+   * Set delivery details (cost, distance, duration)
+   */
+  async setDeliveryDetails(data: {
+    delivery_cost: number;
+    distance_km: number;
+    duration_min: number;
+  }): Promise<Cart> {
+    const cart = await this.getCart();
+    return this.put<Cart>(`carts/delivery/${cart.id}`, data);
+  }
+
   async syncCart(localCartItems: Omit<AddToCartDto, "id">[]): Promise<Cart> {
     // TODO: Implement proper sync when backend supports it
     // For now, just return the current cart
@@ -176,10 +218,7 @@ class CartServiceClass extends CoreApiService {
     durationMin: number;
     cost: number;
   }> {
-    return this.post(
-      this.ENDPOINTS.DELIVERY_COST,
-      data
-    );
+    return this.post(this.ENDPOINTS.DELIVERY_COST, data);
   }
 }
 

@@ -21,16 +21,18 @@ import type {
 } from "src/services/addressService";
 import * as mapboxService from "src/services/mapboxService";
 import type { MapboxSuggestion } from "src/services/mapboxService";
-import { AddressMapPicker } from "@/components";
+import { AddressMapPicker } from "src/components/shared/maps/AddressMapPicker";
 
 interface AddressManagementModalProps {
   visible: boolean;
   onClose: () => void;
+  onCreated?: (address: UserAddress) => void;
 }
 
 export const AddressManagementModal: React.FC<AddressManagementModalProps> = ({
   visible,
   onClose,
+  onCreated,
 }) => {
   const {
     addresses,
@@ -154,6 +156,16 @@ export const AddressManagementModal: React.FC<AddressManagementModalProps> = ({
         notify.success({
           message: "Dirección agregada correctamente",
         });
+        // Si el consumer quiere recibir la nueva dirección, llamarlo y cerrar
+        if (onCreated) {
+          try {
+            onCreated(newAddress);
+          } catch (e) {
+            console.warn("onCreated callback failed", e);
+          }
+          handleClose();
+          return;
+        }
         resetForm();
       }
     }

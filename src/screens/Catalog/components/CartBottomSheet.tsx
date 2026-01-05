@@ -26,6 +26,7 @@ import { useCartStore } from "@/stores";
 import Toast from "react-native-toast-message";
 import { useAuth } from "src/context";
 import WarpperModal from "src/components/shared/modals/wrapperModal";
+import { GroupOrderButton } from "../../../components/buttons/GroupOrderButton";
 
 interface CartBottomSheetProps {
   visible: boolean;
@@ -162,35 +163,54 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
           />
         }
         actions={
-          <View style={styles.footer}>
-            <View>
-              <Text style={styles.total}>
-                Total: {CURRENCY_CONFIG.CURRENCY_DISPLAY_SYMBOL}
-                {formatUSDPrice(totalUSD())}
-              </Text>
-              <Text style={styles.totalBecoins}>
-                {formatBeCoins(totalBecoins())}
-              </Text>
-            </View>
-            <Button
-              title="Finalizar compra"
-              disabled={items.length === 0}
-              onPress={() => {
-                if (!isAuthenticated) {
-                  notify.confirm({
-                    message: "Debes iniciar sesión para comprar",
-                    onConfirm: () => handleAuth0Login(),
+          <View>
+            <View style={styles.groupOrderButtonContainer}>
+              <GroupOrderButton
+                disabled={
+                  items.length === 0 ||
+                  (balance || 0) < totalBecoins() ||
+                  !isAuthenticated
+                }
+                onOrderCreated={(orderId) => {
+                  // Aquí puedes hacer lo que necesites después de crear la orden
+                  onClose();
+                  clearCart();
+                  notify.success({
+                    message: `Orden de grupo #${orderId} creada exitosamente`,
                   });
-                  return;
-                }
-                // Verificar saldo en BeCoins antes de proceder
-                if ((balance || 0) < totalBecoins()) {
-                  setInsufficientModalVisible(true);
-                  return;
-                }
-                onCheckout && onCheckout();
-              }}
-            />
+                }}
+              />
+            </View>
+            <View style={styles.footer}>
+              <View>
+                <Text style={styles.total}>
+                  Total: {CURRENCY_CONFIG.CURRENCY_DISPLAY_SYMBOL}
+                  {formatUSDPrice(totalUSD())}
+                </Text>
+                <Text style={styles.totalBecoins}>
+                  {formatBeCoins(totalBecoins())}
+                </Text>
+              </View>
+              <Button
+                title="Finalizar compra"
+                disabled={items.length === 0}
+                onPress={() => {
+                  if (!isAuthenticated) {
+                    notify.confirm({
+                      message: "Debes iniciar sesión para comprar",
+                      onConfirm: () => handleAuth0Login(),
+                    });
+                    return;
+                  }
+
+                  if ((balance || 0) < totalBecoins()) {
+                    setInsufficientModalVisible(true);
+                    return;
+                  }
+                  onCheckout && onCheckout();
+                }}
+              />{" "}
+            </View>{" "}
           </View>
         }
       />
@@ -264,6 +284,10 @@ const styles = StyleSheet.create({
   qty: { fontSize: 16, fontWeight: "bold", marginHorizontal: 4 },
   qtyContainer: {
     alignItems: "center",
+  },
+
+  groupOrderButtonContainer: {
+    marginBottom: 12,
   },
 
   footer: {
