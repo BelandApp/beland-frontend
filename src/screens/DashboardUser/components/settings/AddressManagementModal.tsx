@@ -194,6 +194,7 @@ export const AddressManagementModal: React.FC<AddressManagementModalProps> = ({
           searchQuery,
           {
             language: "es",
+            country: "ec",
             limit: 5,
           }
         );

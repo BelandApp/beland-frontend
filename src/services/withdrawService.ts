@@ -75,6 +75,13 @@ class WithdrawServiceClass extends CoreApiService {
     USER_WITHDRAW: "user-withdraw",
   } as const;
 
+  /**
+   * Get enums / options for withdraw accounts (countries, document types, currencies)
+   */
+  async getWithdrawEnums(): Promise<any> {
+    return this.get(`${this.ENDPOINTS.WITHDRAW_ACCOUNTS}/enums`);
+  }
+
   // Account Management
   /**
    * Get all withdraw accounts for authenticated user

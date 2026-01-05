@@ -1,139 +1,126 @@
-import { SquareChevronDown } from "lucide-react-native";
-import {
-  Dimensions,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-  Platform,
-} from "react-native";
-import Modal from "react-native-modal";
+import { ArrowDown } from "lucide-react-native";
+import { Dimensions, StyleSheet, View } from "react-native";
 import Toast from "react-native-toast-message";
-import { useCustomNavigation } from "src/hooks";
 import { colors } from "src/styles";
 import { toastConfig } from "../notification/GlobalNotification";
-import { Animated, Easing } from "react-native";
-import { useRef, useState } from "react";
-
+import { useEffect, useRef, ComponentRef } from "react";
+import { Button } from "../buttons";
+import RBSheet from "react-native-raw-bottom-sheet";
 const SCREEN_HEIGHT = Dimensions.get("window").height;
-const COLLAPSED_HEIGHT = SCREEN_HEIGHT * 0.55;
-const EXPANDED_HEIGHT = SCREEN_HEIGHT;
 
-type WarpperModalProps = {
-  visible: boolean;
+type RBSheetRef = ComponentRef<typeof RBSheet>;
+
+type WrapperModalProps = {
+  isOpen: boolean;
   onClose: () => void;
   header?: React.ReactNode;
   content: React.ReactNode;
   actions: React.ReactNode;
-};
-const WarpperModal: React.FC<WarpperModalProps> = ({ content, actions,header,visible, onClose }) => {
-  const { goBack } = useCustomNavigation();
-  const heightAnim = useRef(new Animated.Value(COLLAPSED_HEIGHT)).current;
-
-  const [expanded, setExpanded] = useState(false);
-const expandModal = () => {
-  if (expanded) return;
-
-  setExpanded(true);
-  Animated.timing(heightAnim, {
-    toValue: EXPANDED_HEIGHT,
-    duration: 280,
-    easing: Easing.out(Easing.ease),
-    useNativeDriver: false,
-  }).start();
+  headerBackgroundColor?: string;
 };
 
-const collapseModal = () => {
-  setExpanded(false);
-  Animated.timing(heightAnim, {
-    toValue: COLLAPSED_HEIGHT,
-    duration: 220,
-    easing: Easing.out(Easing.ease),
-    useNativeDriver: false,
-  }).start();
-};
-const lastScrollY = useRef(0);
+export const WrapperModal: React.FC<WrapperModalProps> = ({
+  content,
+  actions,
+  header,
+  isOpen,
+  onClose,
+  headerBackgroundColor,
+}) => {
+  const refRBSheet = useRef<RBSheetRef>(null);
 
-const handleScroll = (e: any) => {
-  const y = e.nativeEvent.contentOffset.y;
-
-  // si está arriba y hace gesto hacia arriba → expandir
-  if (y <= 0 && lastScrollY.current > y) {
-    expandModal();
-  }
-
-  lastScrollY.current = y;
-};
-
+  useEffect(() => {
+    if (isOpen) {
+      refRBSheet.current?.open();
+    } else {
+      refRBSheet.current?.close();
+    }
+  }, [isOpen]);
 
   return (
-    <Modal
-      isVisible={visible}
-      backdropOpacity={0.3}
-      onBackdropPress={onClose}
-      onSwipeComplete={onClose}
-      swipeDirection="down"
-      propagateSwipe
-      style={styles.modal}
+    <RBSheet
+      ref={refRBSheet}
+      draggable={true}
+      dragOnContent={false}
+      height={SCREEN_HEIGHT * 0.9}
+      onClose={onClose}
+      
+      customStyles={{
+        wrapper: { backgroundColor: "rgba(0,0,0,0.5)" },
+        container: styles.sheetContainer,
+        draggableIcon: styles.dragHandle,
+      }}
     >
-      <Animated.View style={[styles.container, { height: heightAnim }]}>
-        <View style={styles.header}>
-          {header ? (
-            header
-          ) : (
-            <Pressable
-              onPress={expanded ? collapseModal : goBack}
-              style={{ alignSelf: "flex-end", marginVertical: 10 }}
-            >
-              <SquareChevronDown color={colors.textSecondary} size={26} />
-            </Pressable>
-          )}
-        </View>
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          onScroll={handleScroll}
-          scrollEventThrottle={16}
+      <View style={styles.mainContainer}>
+        {/* HEADER */}
+        <View
+          style={[
+            styles.header,
+            headerBackgroundColor
+              ? { backgroundColor: headerBackgroundColor }
+              : null,
+          ]}
         >
-          {content}
-        </ScrollView>
+          {header}
+          <Button
+            variant="onlyIcon"
+            icon={<ArrowDown color={colors.belandOrange} />}
+            onPress={() => refRBSheet.current?.close()}
+            title="cerrar"
+          />
+        </View>
+
+        {/* CONTENT */}
+        <View style={styles.contentWrapper}>{content}</View>
+
+        {/* FOOTER */}
         <View style={styles.footer}>{actions}</View>
-      </Animated.View>
+      </View>
+
       <Toast config={toastConfig} />
-    </Modal>
+    </RBSheet>
   );
 };
+export default WrapperModal;
 
-export default WarpperModal;
+/* ------------------ STYLES ------------------ */
 
 const styles = StyleSheet.create({
-  modal: {
-    margin: 0,
-    justifyContent: "flex-end",
-  },
-  container: {
+  sheetContainer: {
     backgroundColor: colors.background,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    overflow: "hidden",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    // Eliminamos el height de aquí porque RBSheet lo maneja por prop
+  },
+  mainContainer: {
+    flex: 1, // Ocupa todo el alto del RBSheet (85% de la pantalla)
   },
   header: {
-    minHeight: 38,
     width: "100%",
     paddingHorizontal: 16,
+    minHeight: 50,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(0,0,0,0.05)",
+    gap: 8,
+  },
+  contentWrapper: {
+    flex: 1, // Esto es lo que hace que el contenido sea flexible
+    padding: 16,
   },
   footer: {
     padding: 16,
+    paddingBottom: 34, // Espacio extra para el área segura de iOS/Android
     borderTopWidth: 1,
     borderTopColor: "rgba(0,0,0,0.05)",
     backgroundColor: colors.background,
   },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 24,
+  dragHandle: {
+    backgroundColor: "#D1D5DB",
+    width: 50,
+    height: 5,
+    marginTop: 10,
   },
 });

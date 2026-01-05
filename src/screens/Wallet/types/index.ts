@@ -18,19 +18,20 @@ export interface WalletAction {
 export interface Transaction {
   id: string;
   type:
-    | "transfer"
+    | "transferencia"
     | "receive"
-    | "recharge"
-    | "exchange"
-    | "payment"
+    | "recarga"
+    | "canje"
+    | "pago"
     | "collection";
   // Legacy: `amount` (numeric), older `amount_beicon`, and new `amount_becoin`
+  type_description: string;
   amount: number;
   amount_beicon: number;
   amount_becoin?: number;
   description: string;
   date: string;
-  status: "completed" | "pending" | "failed";
+  status: "exitoso" | "pendiente" | "error";
   from?: string;
   to?: string;
 }

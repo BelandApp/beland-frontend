@@ -1,25 +1,45 @@
-/**
- * Group Service - Consolidated group management operations
- * Handles group creation, management, invitations, and purchases
- */
-
 import { CoreApiService, PaginatedResponse } from "./core/ApiService";
+
+// Group Types
+export interface GroupType {
+  id: string;
+  name: string;
+  created_at: string;
+}
 
 // Group Types
 export interface Group {
   id: string;
   name: string;
+  description: string;
+  message_invitation: string;
+  latitude: string;
+  longitude: string;
+  user_address_id: string;
+  is_active: boolean;
+  is_delete: boolean;
+  created_at: Date;
+  updated_at: Date;
+  deleted_at: Date;
+  user_id: string;
+  group_type: GroupType;
+  group_type_id: string;
+  privacy_id: string;
+  payment_type_id?: string;
+  payment_type?: PaymentType;
+  event_pass_id: string;
+}
+
+// Group Privacy
+export interface GroupPrivacy {
+  id: string;
+  code: string;
+  name: string;
   description?: string;
-  // Backend DTO fields (casing and enums match backend)
-  location?: string | null;
-  location_url?: string | null;
-  date_time?: string | Date | null;
-  status: "ACTIVE" | "PENDING" | "INACTIVE" | "DELETE";
-  created_at: string;
-  updated_at?: string;
-  expires_at?: string;
-  leader?: { id: string; name?: string; avatar_url?: string };
-  members?: GroupMember[];
+  is_visible: boolean;
+  allow_free_join: boolean;
+  require_approval: boolean;
+  is_active: boolean;
 }
 
 export interface GroupMember {
@@ -31,9 +51,13 @@ export interface GroupMember {
     name?: string;
     email?: string;
     avatar_url?: string;
+    full_name?: string;
+    profile_picture_url?: string;
+    created_at?: string;
   };
   role: "LEADER" | "MEMBER";
   joined_at?: string;
+  created_at?: string;
   // backend does not include contribution/payment in DTO by default
 }
 
@@ -63,16 +87,33 @@ export interface GroupOrderItem {
   member_id: string;
 }
 
+export interface PaymentType {
+  id: string;
+  code: string;
+  description: string;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface CreateGroupDto {
   name: string;
+  description?: string;
+  message_invitation?: string;
   location?: string;
   location_url?: string;
   date_time?: string | Date;
   status?: "ACTIVE" | "PENDING" | "INACTIVE" | "DELETE";
+  latitude?: number;
+  longitude?: number;
+  group_type_id?: string;
+  privacy_id?: string;
+  payment_type_id?: string;
 }
 
 export interface UpdateGroupDto {
   name?: string;
+  description: string;
   location?: string;
   location_url?: string;
   date_time?: string | Date;
@@ -101,9 +142,27 @@ class GroupServiceClass extends CoreApiService {
     GROUP_MEMBERS: "groups/members",
     GROUP_INVITATIONS: "groups/invitations",
     GROUP_ORDERS: "groups/orders",
-    MY_GROUPS: "groups/my-groups",
+    MY_GROUPS: "groups/by-user",
+    GROUP_TYPE: "group-type",
     // join/leave not implemented in backend; membership managed via group-members or group-invitations
   } as const;
+
+  /**
+   * Get group types (dynamic from backend)
+   */
+  async getGroupTypes(page = 1, limit = 20): Promise<GroupType[]> {
+    const res = await this.get<any>(
+      `${this.ENDPOINTS.GROUP_TYPE}?page=${page}&limit=${limit}`
+    );
+    // Si la respuesta es { data: [...] }
+    if (res && Array.isArray(res.data)) return res.data;
+    // Si la respuesta es un array anidado tipo [[...], total]
+    if (Array.isArray(res) && Array.isArray(res[0])) return res[0];
+    // Si la respuesta es un array plano
+    if (Array.isArray(res)) return res;
+    // Si no, devolver array vacío
+    return [];
+  }
 
   /**
    * Get groups with filtering and pagination
@@ -114,14 +173,53 @@ class GroupServiceClass extends CoreApiService {
       ? `${this.ENDPOINTS.GROUPS}?${queryString}`
       : this.ENDPOINTS.GROUPS;
 
-    return this.get<PaginatedResponse<Group>>(endpoint);
+    const res = await this.get<any>(endpoint);
+
+    // Handle wrapped format [[data], count]
+    if (Array.isArray(res) && Array.isArray(res[0])) {
+      return {
+        data: res[0],
+        total: res[1] || 0,
+        page: 1,
+        limit: res[0].length,
+        totalPages: 1,
+      };
+    }
+
+    // Handle direct PaginatedResponse
+    if (res?.data) return res;
+
+    // Handle direct array
+    if (Array.isArray(res))
+      return {
+        data: res,
+        total: res.length,
+        page: 1,
+        limit: res.length,
+        totalPages: 1,
+      };
+
+    return { data: [], total: 0, page: 1, limit: 0, totalPages: 0 };
   }
 
   /**
-   * Get a single group by ID
+   * Get a specific group by ID
    */
   async getGroup(id: string): Promise<Group> {
     return this.get<Group>(`${this.ENDPOINTS.GROUPS}/${id}`);
+  }
+
+  /**
+   * Get payment types for groups
+   */
+  async getPaymentTypes(): Promise<PaymentType[]> {
+    const res = await this.get<any>("payment-types");
+    if (Array.isArray(res?.data)) return res.data;
+    // Handle wrapped format [[data], count]
+    if (Array.isArray(res) && Array.isArray(res[0])) return res[0];
+    // Handle direct array
+    if (Array.isArray(res)) return res;
+    return [];
   }
 
   /**
@@ -129,7 +227,7 @@ class GroupServiceClass extends CoreApiService {
    */
   async getMyGroups(
     params: {
-      status?: Group["status"];
+      status?: Group["is_active"];
       role?: "admin" | "member";
       page?: number;
       limit?: number;
@@ -154,7 +252,7 @@ class GroupServiceClass extends CoreApiService {
    * Update a group
    */
   async updateGroup(id: string, data: UpdateGroupDto): Promise<Group> {
-    return this.patch<Group>(`${this.ENDPOINTS.GROUPS}/${id}`, data);
+    return this.put<Group>(`${this.ENDPOINTS.GROUPS}/${id}`, data);
   }
 
   /**
@@ -168,8 +266,32 @@ class GroupServiceClass extends CoreApiService {
    * Get group members
    */
   async getGroupMembers(groupId: string): Promise<GroupMember[]> {
-    return this.get<GroupMember[]>(
-      `${this.ENDPOINTS.GROUPS}/${groupId}/members`
+    // Usa el endpoint real del backend para obtener miembros de grupo
+    return this.get<GroupMember[]>(`group-members/group/${groupId}`);
+  }
+
+  /**
+   * Join a public group or add member to group
+   */
+  async joinGroup(groupId: string, userId: string): Promise<GroupMember> {
+    return this.post<GroupMember>("group-members", {
+      group_id: groupId,
+      user_id: userId,
+    });
+  }
+
+  /**
+   * Leave a group
+   */
+  async leaveGroup(
+    groupId: string,
+    userId: string
+  ): Promise<{
+    message: string;
+    success: boolean;
+  }> {
+    return this.delete(
+      `group-members/group-and-user?groupId=${groupId}&userId=${userId}`
     );
   }
 
@@ -193,9 +315,7 @@ class GroupServiceClass extends CoreApiService {
     groupId: string,
     memberId: string
   ): Promise<{ success: boolean }> {
-    return this.delete(
-      `${this.ENDPOINTS.GROUPS}/${groupId}/members/${memberId}`
-    );
+    return this.delete(`group-members/${memberId}`);
   }
 
   /**
@@ -270,6 +390,19 @@ class GroupServiceClass extends CoreApiService {
     return this.delete(
       `${this.ENDPOINTS.GROUP_INVITATIONS}/${invitationId}/hard`
     );
+  }
+
+  /**
+   * Get group privacy options
+   */
+  async getGroupPrivacies(): Promise<GroupPrivacy[]> {
+    const res = await this.get<any>("groups/privacy-type");
+    if (Array.isArray(res?.data)) return res.data;
+    // Handle wrapped format [[data], count]
+    if (Array.isArray(res) && Array.isArray(res[0])) return res[0];
+    // Handle direct array
+    if (Array.isArray(res)) return res;
+    return [];
   }
 }
 

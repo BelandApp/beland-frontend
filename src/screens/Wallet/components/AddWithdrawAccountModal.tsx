@@ -23,8 +23,18 @@ import {
   CircleAlert,
 } from "lucide-react-native";
 import { useNotify } from "src/hooks";
+import { WithdrawService } from "src/services/withdrawService";
 import Toast, { BaseToast } from "react-native-toast-message";
 import { toastConfig } from "src/components/shared/notification/GlobalNotification";
+
+// Helper to normalize document type by removing accents
+const normalizeDocType = (docType: string): string => {
+  const map: { [key: string]: string } = {
+    CÉDULA: "CEDULA",
+    CEDULA: "CEDULA",
+  };
+  return map[docType] || docType;
+};
 
 interface AddWithdrawAccountModalProps {
   visible: boolean;
@@ -103,23 +113,79 @@ export const AddWithdrawAccountModal: React.FC<
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
   const [showAccountTypePicker, setShowAccountTypePicker] = useState(false);
   const [showDocTypePicker, setShowDocTypePicker] = useState(false);
-  const docTypes = ["DNI", "CUIT", "CUIL", "CÉDULA", "RUC", "NIT"];
-  const countries = [
+  const [docTypes, setDocTypes] = useState<string[]>([
+    "DNI",
+    "CUIT",
+    "CUIL",
+    "CÉDULA",
+    "RUC",
+    "NIT",
+  ]);
+  const [countries, setCountries] = useState<
+    { label: string; value: string }[]
+  >([
     { label: "Argentina", value: "ARGENTINA" },
-    // { label: "Colombia", value: "COLOMBIA" },
     { label: "Ecuador", value: "ECUADOR" },
-    // { label: "Uruguay", value: "URUGUAY" },
-    // { label: "Chile", value: "CHILE" },
-    // { label: "Perú", value: "PERU" },
-  ];
-  const currencies = [
+  ]);
+  const [currencies, setCurrencies] = useState<
+    { label: string; value: string }[]
+  >([
     { label: "ARS - Peso Argentino", value: "ARS" },
     { label: "USD - Dólar Estadounidense", value: "USD" },
-    // { label: "COP - Peso Colombiano", value: "COP" },
-    // { label: "UYU - Peso Uruguayo", value: "UYU" },
-    // { label: "CLP - Peso Chileno", value: "CLP" },
-    // { label: "PEN - Sol Peruano", value: "PEN" },
-  ];
+  ]);
+  const [enumsLoading, setEnumsLoading] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchEnums = async () => {
+      try {
+        setEnumsLoading(true);
+        const res = await WithdrawService.getWithdrawEnums();
+        if (!mounted) return;
+        if (res?.countrys) {
+          const vals = Object.values(res.countrys).filter(
+            (v) => typeof v === "string"
+          ) as string[];
+          setCountries(vals.map((v) => ({ label: v, value: v })));
+        }
+        if (res?.currency) {
+          const vals = Object.values(res.currency).filter(
+            (v) => typeof v === "string"
+          ) as string[];
+          setCurrencies(vals.map((v) => ({ label: v, value: v })));
+        }
+        if (res?.documentType) {
+          const vals = Object.values(res.documentType).filter(
+            (v) => typeof v === "string"
+          ) as string[];
+          setDocTypes(vals);
+        }
+        if (form.country) setCountry(form.country);
+        if (form.currency) setCurrency(form.currency);
+        if (form.holderDocumentType)
+          setHolderDocumentType(form.holderDocumentType);
+      } catch (err) {
+        // Fallback to local defaults if backend /enums is temporarily broken (avoid surfacing 400)
+        if (mounted) {
+          setCountries([
+            { label: "Argentina", value: "ARGENTINA" },
+            { label: "Ecuador", value: "ECUADOR" },
+          ]);
+          setCurrencies([
+            { label: "ARS - Peso Argentino", value: "ARS" },
+            { label: "USD - Dólar Estadounidense", value: "USD" },
+          ]);
+          setDocTypes(["DNI", "CUIT", "CUIL", "CÉDULA", "RUC", "NIT"]);
+        }
+      } finally {
+        if (mounted) setEnumsLoading(false);
+      }
+    };
+    fetchEnums();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <Modal
@@ -239,6 +305,11 @@ export const AddWithdrawAccountModal: React.FC<
                           onPress={() => {
                             setCountry(c.value);
                             if (form.setCountry) form.setCountry(c.value);
+                            // clear AR-only fields when selecting other countries
+                            if (c.value !== "ARGENTINA") {
+                              if (form.setCbu) form.setCbu("");
+                              if (form.setAlias) form.setAlias("");
+                            }
                             setShowCountryPicker(false);
                           }}
                         >
@@ -541,38 +612,45 @@ export const AddWithdrawAccountModal: React.FC<
                   .find((t: any) => t.id === form.selectedType)?.code || ""
               ) && (
                 <>
-                  <View className="mb-4">
-                    <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
-                      CBU
-                    </Text>
-                    <TextInput
-                      placeholder="CBU (22 dígitos)"
-                      placeholderTextColor="#57534e"
-                      className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 text-white"
-                      value={form.cbu}
-                      onChangeText={(text) =>
-                        form.setCbu(text.replace(/[^0-9]/g, "").slice(0, 22))
-                      }
-                      keyboardType="numeric"
-                      maxLength={22}
-                      multiline={false}
-                    />
-                  </View>
-                  <View className="mb-4">
-                    <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
-                      Alias (opcional)
-                    </Text>
-                    <TextInput
-                      placeholder="Alias bancario"
-                      placeholderTextColor="#57534e"
-                      className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 text-white"
-                      value={form.alias}
-                      onChangeText={(text) =>
-                        form.setAlias(text.replace(/\n/g, "").trim())
-                      }
-                      multiline={false}
-                    />
-                  </View>
+                  {/* Only show CBU/Alias for Argentina (backend requires CBU for AR) */}
+                  {form.country === "ARGENTINA" && (
+                    <>
+                      <View className="mb-4">
+                        <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
+                          CBU
+                        </Text>
+                        <TextInput
+                          placeholder="CBU (22 dígitos)"
+                          placeholderTextColor="#57534e"
+                          className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 text-white"
+                          value={form.cbu}
+                          onChangeText={(text) =>
+                            form.setCbu(
+                              text.replace(/[^0-9]/g, "").slice(0, 22)
+                            )
+                          }
+                          keyboardType="numeric"
+                          maxLength={22}
+                          multiline={false}
+                        />
+                      </View>
+                      <View className="mb-4">
+                        <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
+                          Alias (opcional)
+                        </Text>
+                        <TextInput
+                          placeholder="Alias bancario"
+                          placeholderTextColor="#57534e"
+                          className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 text-white"
+                          value={form.alias}
+                          onChangeText={(text) =>
+                            form.setAlias(text.replace(/\n/g, "").trim())
+                          }
+                          multiline={false}
+                        />
+                      </View>
+                    </>
+                  )}
                 </>
               )}
             {form.selectedType &&
@@ -636,15 +714,18 @@ export const AddWithdrawAccountModal: React.FC<
                 onPress={() => {
                   if (form.setCountry) form.setCountry(country);
                   if (form.setCurrency) form.setCurrency(currency);
+                  const normalizedDocType =
+                    normalizeDocType(holderDocumentType);
                   if (form.setHolderDocumentType)
-                    form.setHolderDocumentType(holderDocumentType);
+                    form.setHolderDocumentType(normalizedDocType);
                   if (typeof handleSubmit === "function") {
                     handleSubmit({
                       country: country,
                       currency: currency,
-                      holderDocumentType: holderDocumentType,
+                      holderDocumentType: normalizedDocType,
                       cbu: form.cbu,
                       alias: form.alias,
+                      accountNumber: form.accountNumber,
                       selectedType: form.selectedType,
                     });
                   }

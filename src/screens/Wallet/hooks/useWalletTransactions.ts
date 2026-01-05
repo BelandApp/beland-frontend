@@ -10,7 +10,8 @@ export const mapBackendTransactionToFrontend = (
   backendTransaction: any
 ): Transaction => {
   // Mapear tipo de transacción según el backend
-  let type: Transaction["type"] = "exchange";
+
+  let type: Transaction["type"] = "canje";
   const typeName = (
     backendTransaction.type?.name ||
     backendTransaction.type?.code ||
@@ -18,45 +19,45 @@ export const mapBackendTransactionToFrontend = (
   ).toLowerCase();
 
   if (typeName.includes("recarga") || typeName.includes("recharge")) {
-    type = "recharge";
+    type = "recarga";
   } else if (
     typeName.includes("transferencia enviada") ||
     typeName.includes("transfer_send")
   ) {
-    type = "transfer";
+    type = "transferencia";
   } else if (
     typeName.includes("transferencia recibida") ||
     typeName.includes("transfer_received")
   ) {
     type = "receive";
   } else if (typeName.includes("compra") || typeName.includes("purchase")) {
-    type = "payment";
+    type = "pago";
   } else if (typeName.includes("venta") || typeName.includes("sale")) {
     type = "collection";
   } else if (typeName.includes("canje") || typeName.includes("exchange")) {
-    type = "exchange";
+    type = "canje";
   } else {
-    type = "exchange";
+    type = "canje";
   }
 
   // Mapear estado
-  let status: Transaction["status"] = "completed";
+  let status: Transaction["status"] = "exitoso";
   if (backendTransaction.status?.name) {
     const stateName = backendTransaction.status.name.toLowerCase();
     if (stateName.includes("pendiente") || stateName.includes("pending")) {
-      status = "pending";
+      status = "pendiente";
     } else if (
       stateName.includes("fallido") ||
       stateName.includes("failed") ||
       stateName.includes("error")
     ) {
-      status = "failed";
+      status = "error";
     } else if (
       stateName.includes("completado") ||
       stateName.includes("completed") ||
       stateName.includes("exitoso")
     ) {
-      status = "completed";
+      status = "exitoso";
     }
   }
 
@@ -81,6 +82,8 @@ export const mapBackendTransactionToFrontend = (
     formattedDate = `${diffDays} días atrás`;
   } else {
     formattedDate = date.toLocaleDateString("es-ES", {
+      hour: "2-digit",
+      minute: "2-digit",
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -93,6 +96,7 @@ export const mapBackendTransactionToFrontend = (
   return {
     id: backendTransaction.id,
     type,
+    type_description: backendTransaction.type?.description || "",
     amount: Math.abs(amount),
     amount_beicon: Math.abs(amount), // Para compatibilidad
     amount_becoin: Math.abs(amount),
@@ -110,17 +114,17 @@ const getTransactionDescription = (
   backendTransaction: any
 ): string => {
   switch (type) {
-    case "recharge":
+    case "recarga":
       return "Recarga de billetera";
-    case "transfer":
+    case "transferencia":
       return "Transferencia enviada";
     case "receive":
       return "Transferencia recibida";
-    case "payment":
-      return "Pago realizado";
+    case "pago":
+      return "Compra";
     case "collection":
       return "Cobro recibido";
-    case "exchange":
+    case "canje":
       return "Canjeado por premio";
     default:
       return backendTransaction.reference || "Transacción";

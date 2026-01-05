@@ -26,6 +26,7 @@ import { useCartStore } from "@/stores";
 import Toast from "react-native-toast-message";
 import { useAuth } from "src/context";
 import WarpperModal from "src/components/shared/modals/wrapperModal";
+import { GroupOrderButton } from "../../../components/buttons/GroupOrderButton";
 
 interface CartBottomSheetProps {
   visible: boolean;
@@ -80,121 +81,136 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
       notify.error({ message });
     }
   };
+  const renderItem = ({ item }: { item: any }) => (
+    <View style={styles.itemRow}>
+      {item.image && (
+        <Image source={{ uri: item.image }} style={styles.image} />
+      )}
+      <View style={styles.itemInfo}>
+        <Text style={styles.itemName} numberOfLines={1}>
+          {item.name}
+        </Text>
+        <View>
+          <Text style={styles.itemPrice}>
+            {CURRENCY_CONFIG.CURRENCY_DISPLAY_SYMBOL}
+            {formatUSDPrice(item.price)}
+          </Text>
+          <Text style={styles.itemPriceBecoins}>
+            {formatBeCoins(convertUSDToBeCoins(item.price))}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.qtyContainer}>
+        <Text style={{ fontSize: 10, color: "#666" }}>Cantidad</Text>
+        <View style={styles.qtyRow}>
+          <TouchableOpacity
+            onPress={() =>
+              handleUpdateQuantity(item.id, Math.max(1, item.quantity - 1))
+            }
+          >
+            <Text style={styles.qtyBtn}>-</Text>
+          </TouchableOpacity>
+          <Text style={styles.qty}>{item.quantity}</Text>
+          <TouchableOpacity
+            onPress={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+          >
+            <Text style={styles.qtyBtn}>+</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <TouchableOpacity
+        onPress={() => handleRemoveProduct(item.id)}
+        style={styles.removeContainer}
+      >
+        <Text style={styles.remove}>✕</Text>
+      </TouchableOpacity>
+    </View>
+  );
   return (
     <>
       <WarpperModal
-        visible={visible}
+        isOpen={visible}
         onClose={onClose}
         header={
           <View style={styles.header}>
             <Text style={styles.title}>Carrito</Text>
-            <View style={styles.header}>
-              <Button
-                title="Vaciar"
-                variant="secondary"
-                onPress={clearCart}
-                disabled={items.length === 0}
-              />
-              <Button
-                title="cerrar"
-                variant="onlyIcon"
-                icon={<ArrowDown color={colors.belandOrange} />}
-                onPress={onClose}
-              />
-            </View>
+            <Button
+              title="Vaciar"
+              variant="secondary"
+              onPress={clearCart}
+              disabled={items.length === 0}
+              style={{ marginLeft: "auto" }}
+            />
           </View>
         }
         content={
-          items.length > 0 ? (
-            items.map((item) => (
-              <View style={styles.itemRow} key={item.id}>
-                {item.image && (
-                  <Image source={{ uri: item.image }} style={styles.image} />
-                )}
-
-                <View style={styles.itemInfo}>
-                  <Text style={styles.itemName}>{item.name}</Text>
-                  <View>
-                    <Text style={styles.itemPrice}>
-                      {CURRENCY_CONFIG.CURRENCY_DISPLAY_SYMBOL}
-                      {formatUSDPrice(item.price)}
-                    </Text>
-                    <Text style={styles.itemPriceBecoins}>
-                      {formatBeCoins(convertUSDToBeCoins(item.price))}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.qtyContainer}>
-                  <Text>Cantidad</Text>
-                  <View style={styles.qtyRow}>
-                    <TouchableOpacity
-                      onPress={() =>
-                        handleUpdateQuantity(
-                          item.id,
-                          Math.max(1, item.quantity - 1)
-                        )
-                      }
-                    >
-                      <Text style={styles.qtyBtn}>-</Text>
-                    </TouchableOpacity>
-
-                    <Text style={styles.qty}>{item.quantity}</Text>
-
-                    <TouchableOpacity
-                      onPress={() =>
-                        handleUpdateQuantity(item.id, item.quantity + 1)
-                      }
-                    >
-                      <Text style={styles.qtyBtn}>+</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                <TouchableOpacity
-                  onPress={() => handleRemoveProduct(item.id)}
-                  style={styles.removeContainer}
-                >
-                  <Text style={styles.remove}>✕</Text>
-                </TouchableOpacity>
+          <FlatList
+            data={items}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            // Importante: esto permite que el modal no se cierre
+            // accidentalmente mientras scrolleas la lista
+            bounces={true}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>Tu carrito está vacío</Text>
               </View>
-            ))
-          ) : (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>Tu carrito está vacío</Text>
-            </View>
-          )
+            }
+          />
         }
         actions={
-          <View style={styles.footer}>
-            <View>
-              <Text style={styles.total}>
-                Total: {CURRENCY_CONFIG.CURRENCY_DISPLAY_SYMBOL}
-                {formatUSDPrice(totalUSD())}
-              </Text>
-              <Text style={styles.totalBecoins}>
-                {formatBeCoins(totalBecoins())}
-              </Text>
-            </View>
-            <Button
-              title="Finalizar compra"
-              disabled={items.length === 0}
-              onPress={() => {
-                if (!isAuthenticated) {
-                  notify.confirm({
-                    message: "Debes iniciar sesión para comprar",
-                    onConfirm: () => handleAuth0Login(),
+          <View>
+            <View style={styles.groupOrderButtonContainer}>
+              <GroupOrderButton
+                disabled={
+                  items.length === 0 ||
+                  (balance || 0) < totalBecoins() ||
+                  !isAuthenticated
+                }
+                onOrderCreated={(orderId) => {
+                  // Aquí puedes hacer lo que necesites después de crear la orden
+                  onClose();
+                  clearCart();
+                  notify.success({
+                    message: `Orden de grupo #${orderId} creada exitosamente`,
                   });
-                  return;
-                }
-                // Verificar saldo en BeCoins antes de proceder
-                if ((balance || 0) < totalBecoins()) {
-                  setInsufficientModalVisible(true);
-                  return;
-                }
-                onCheckout && onCheckout();
-              }}
-            />
+                }}
+              />
+            </View>
+            <View style={styles.footer}>
+              <View>
+                <Text style={styles.total}>
+                  Total: {CURRENCY_CONFIG.CURRENCY_DISPLAY_SYMBOL}
+                  {formatUSDPrice(totalUSD())}
+                </Text>
+                <Text style={styles.totalBecoins}>
+                  {formatBeCoins(totalBecoins())}
+                </Text>
+              </View>
+              <Button
+                title="Finalizar compra"
+                disabled={items.length === 0}
+                onPress={() => {
+                  if (!isAuthenticated) {
+                    notify.confirm({
+                      message: "Debes iniciar sesión para comprar",
+                      onConfirm: () => handleAuth0Login(),
+                    });
+                    return;
+                  }
+
+                  if ((balance || 0) < totalBecoins()) {
+                    setInsufficientModalVisible(true);
+                    return;
+                  }
+                  onCheckout && onCheckout();
+                }}
+              />{" "}
+            </View>{" "}
           </View>
         }
       />
@@ -217,11 +233,14 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
 
 const styles = StyleSheet.create({
   header: {
+    flex: 1,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 6,
-    gap: 8,
+    paddingRight: 10,
+  },
+  listContent: {
+    paddingBottom: 20,
   },
   title: { fontSize: 20, fontWeight: "bold" },
   clear: { color: "#FF6B35", fontWeight: "600" },
@@ -235,11 +254,11 @@ const styles = StyleSheet.create({
   itemRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 12,
-    marginHorizontal: 4,
-    paddingLeft:4,
+    marginBottom: 12,
     backgroundColor: "#f7f7f7",
     borderRadius: 10,
+    height: 90,
+    overflow: "hidden",
   },
   image: { width: 48, height: 48, borderRadius: 8, marginRight: 10 },
   itemInfo: { flex: 1, paddingVertical: 10, paddingLeft: 10 },
@@ -265,6 +284,10 @@ const styles = StyleSheet.create({
   qty: { fontSize: 16, fontWeight: "bold", marginHorizontal: 4 },
   qtyContainer: {
     alignItems: "center",
+  },
+
+  groupOrderButtonContainer: {
+    marginBottom: 12,
   },
 
   footer: {

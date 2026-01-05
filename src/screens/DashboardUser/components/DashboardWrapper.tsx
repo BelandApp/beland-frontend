@@ -25,13 +25,11 @@ const DashboardWrapper: React.FC<DashboardWrapperProps> = ({
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.contentContainer}
-        showsVerticalScrollIndicator={true}
+        showsVerticalScrollIndicator={false}
         scrollEnabled={true}
-        alwaysBounceVertical={true}
-        bounces={true}
+        bounces={false}
         keyboardShouldPersistTaps="handled"
-        nestedScrollEnabled={true}
-        removeClippedSubviews={false}
+        nestedScrollEnabled={false}
       >
         {isLoading ? (
           <View style={styles.loadingContainer}>
@@ -56,13 +54,10 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   contentContainer: {
-    flexGrow: 1,
-    minHeight: "150%", // Forzar altura mínima
-    paddingBottom: 200,
+    paddingBottom: 20,
   },
   content: {
-    padding: 20,
-    minHeight: 1000, // Altura mínima forzada
+    padding: 0,
   },
   loadingContainer: {
     flex: 1,

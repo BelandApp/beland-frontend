@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import "./global.css";
 import { Platform } from "react-native";
-
+import "react-native-gesture-handler";
 import { View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import * as NavigationBar from "expo-navigation-bar";
@@ -23,8 +23,6 @@ import { TokenService } from "src/services/auth/token.service";
 import { SocketService } from "src/services/SocketService";
 import { NotificationProvider } from "./src/hooks/NotificationContext";
 import { NotificationBanner } from "./src/components/ui/NotificationBanner";
-import PayphoneSuccessScreen from "./src/screens/Wallet/PayphoneSuccessScreen";
-import SocketStatus from "./src/components/SocketStatus";
 import { usePaymentSocket } from "src/hooks/usePaymentSocket";
 import { useOrderSocket } from "src/hooks/useOrderSocket";
 import { colors } from "src/styles";
@@ -43,6 +41,8 @@ const AppContent = () => {
   const [currentRoute, setCurrentRoute] = useState<string | undefined>(
     undefined
   );
+  // Estado para saber si estamos en algún screen de grupos
+  const [isInGroups, setIsInGroups] = useState(false);
   // Conexión global a sockets para notificaciones de pagos
   usePaymentSocket(() => {});
   useOrderSocket(() => {});
@@ -97,52 +97,30 @@ const AppContent = () => {
     }
   };
 
+  // Detectar la tab activa dentro de MainTabs
+  const getActiveTab = (
+    state: NavigationState | undefined
+  ): string | undefined => {
+    if (!state) return undefined;
+    const route = state.routes[state.index];
+    if (route.name === "MainTabs" && route.state) {
+      // Buscar la tab activa dentro de MainTabs
+      return getActiveTab(route.state as NavigationState);
+    }
+    return route.name;
+  };
+
   const onNavigationStateChange = (state: NavigationState | undefined) => {
     if (state) {
-      // Obtener la ruta actual del stack principal
-      const currentRouteName = state.routes[state.index]?.name;
-      setCurrentRoute(currentRouteName);
+      const activeTab = getActiveTab(state);
+      setCurrentRoute(activeTab);
     }
   };
 
-  // Solo mostrar el botón QR si no estamos en la pantalla QR, RecyclingMap ni en screens de acciones de la wallet
-  const walletActionScreens = [
-    "CanjearScreen",
-    "SendScreen",
-    "ReceiveScreen",
-    "RechargeScreen",
-    "WalletHistoryScreen",
-    "PaymentScreen",
-    "PayphoneSuccess",
-    "CobrarScreen",
-  ];
-
+  // Mostrar QR solo en Home, Wallet, Catalog, Events
+  const allowedQRTabs = ["Home", "Wallet", "Catalog", "Community"];
   const shouldShowQRButton =
-    currentRoute !== "QR" &&
-    currentRoute !== "RecyclingMap" &&
-    currentRoute !== "user-dashboard" &&
-    currentRoute !== "OrdersManagement" &&
-    currentRoute !== "OrderAdminDetail" &&
-    currentRoute !== "OrderDetail" &&
-    currentRoute !== "Orders" &&
-    currentRoute !== "DeliveryScreen" &&
-    currentRoute !== "EventModal" &&
-    currentRoute !== "AcquiredEventModal" &&
-    currentRoute !== "NewPaymentScreen" &&
-    currentRoute !== "ProductsManagement" &&
-    currentRoute !== "UserDashboardScreen" &&
-    currentRoute !== "CreateGroup" &&
-    currentRoute &&
-    !walletActionScreens.includes(currentRoute) &&
-    !!user;
-
-  // const isPayphoneSuccess =
-  //   typeof window !== "undefined" &&
-  //   window.location.pathname.startsWith("/payphone-success");
-
-  // if (isPayphoneSuccess) {
-  //   return <PayphoneSuccessScreen />;
-  // }
+    !!user && currentRoute && allowedQRTabs.includes(currentRoute);
 
   // Configuración de linking para rutas web
   const linking = {

@@ -13,6 +13,7 @@ export { ResourceService } from "./ResourceApiService";
 export { WalletService } from "./WalletApiService";
 export { WithdrawService } from "./withdrawService";
 export { organizationService } from "./OrganizationApiService";
+export { ServicesApiService } from "./ServicesApiService";
 
 // Other services
 export * from "./auth";
