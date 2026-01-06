@@ -115,57 +115,60 @@ export const GroupsScreen: React.FC = () => {
 
   if (!todosMisGrupos || todosMisGrupos.length === 0) {
     return (
-      <View className="flex-1 justify-center items-center bg-background-light px-4">
-        <View className="items-center w-full">
-          <View className="relative mb-8 mt-2 items-center justify-center">
-            <View
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 rounded-full bg-emerald-100 opacity-70 shadow-2xl"
-              style={{ zIndex: 0 }}
-            />
-            <Image
-              source={{
-                uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuA4N_ZsKNWSdlE8ZSCcyRHk3LtrbeN68wQll9_elKK53ia_bisDkguRt0mi8B-bD2k_YjQkJvPDCxSmqHqbfKiNvDJ_o2yMmMIXn9VAIJpEdoaKiX8C89MiStbEh7IEcEZ4eXgp3Fal98gM3Qi-h7HuybKV0iU6BEDSQh_1ZaRINnZppuHFE2TVsbAItxxRIFWNyYrTAJdenzvqgiRWw5if2pi0CRPyYQnlw0Hbj3x2anlMY-OZzMSw4Z6LbIDOZaOWU1hubT_5S-Q",
-              }}
-              className="w-40 h-40 rounded-3xl border-4 border-white shadow-xl"
-              resizeMode="cover"
-              style={{ zIndex: 1 }}
-            />
-            <View
-              className="absolute bottom-2 right-2 bg-white rounded-full shadow-lg p-1 items-center justify-center"
-              style={{ zIndex: 2 }}
-            >
-              <Text className="text-primary text-2xl">＋</Text>
+      <>
+        <ThemedHeader title="Grupos" />
+        <View className="flex-1 justify-center items-center bg-background-light px-4">
+          <View className="items-center w-full">
+            <View className="relative mb-8 mt-2 items-center justify-center">
+              <View
+                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full bg-emerald-100 opacity-70 shadow-2xl"
+                style={{ zIndex: 0 }}
+              />
+              <Image
+                source={{
+                  uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuA4N_ZsKNWSdlE8ZSCcyRHk3LtrbeN68wQll9_elKK53ia_bisDkguRt0mi8B-bD2k_YjQkJvPDCxSmqHqbfKiNvDJ_o2yMmMIXn9VAIJpEdoaKiX8C89MiStbEh7IEcEZ4eXgp3Fal98gM3Qi-h7HuybKV0iU6BEDSQh_1ZaRINnZppuHFE2TVsbAItxxRIFWNyYrTAJdenzvqgiRWw5if2pi0CRPyYQnlw0Hbj3x2anlMY-OZzMSw4Z6LbIDOZaOWU1hubT_5S-Q",
+                }}
+                className="w-20 h-20 rounded-3xl border-4 border-white shadow-xl"
+                resizeMode="cover"
+                style={{ zIndex: 1 }}
+              />
+              <View
+                className="absolute bottom-2 right-2 bg-white rounded-full shadow-lg p-1 items-center justify-center"
+                style={{ zIndex: 2 }}
+              >
+                <Text className="text-primary text-2xl">＋</Text>
+              </View>
             </View>
+            <Text className="text-2xl font-bold text-text-main mb-2 text-center tracking-tight">
+              No tienes grupos aún
+            </Text>
+            <Text className="text-base text-gray-500 mb-8 text-center max-w-xs">
+              Únete a una comunidad existente o crea tu propio espacio para
+              empezar a colaborar con otros.
+            </Text>
+            <TouchableOpacity
+              className="w-full flex-row items-center justify-center gap-2 rounded-xl bg-primary h-12 mb-3 shadow-lg active:scale-95"
+              onPress={navigateToCreateGroup}
+              style={{ maxWidth: 400 }}
+            >
+              <Text className="text-white text-xl">＋</Text>
+              <Text className="text-white font-bold text-base">
+                Crear nuevo grupo
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="w-full flex-row items-center justify-center gap-2 rounded-xl border border-gray-200 h-12 active:scale-95"
+              onPress={navigateToExploreGroups}
+              style={{ maxWidth: 400 }}
+            >
+              <Feather name="compass" size={22} color="#00E074" />
+              <Text className="text-primary font-bold text-base">
+                Explorar grupos
+              </Text>
+            </TouchableOpacity>
           </View>
-          <Text className="text-2xl font-bold text-text-main mb-2 text-center tracking-tight">
-            No tienes grupos aún
-          </Text>
-          <Text className="text-base text-gray-500 mb-8 text-center max-w-xs">
-            Únete a una comunidad existente o crea tu propio espacio para
-            empezar a colaborar con otros.
-          </Text>
-          <TouchableOpacity
-            className="w-full flex-row items-center justify-center gap-2 rounded-xl bg-primary h-12 mb-3 shadow-lg active:scale-95"
-            onPress={navigateToCreateGroup}
-            style={{ maxWidth: 400 }}
-          >
-            <Text className="text-white text-xl">＋</Text>
-            <Text className="text-white font-bold text-base">
-              Crear nuevo grupo
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            className="w-full flex-row items-center justify-center gap-2 rounded-xl border border-gray-200 h-12 active:scale-95"
-            onPress={navigateToExploreGroups}
-            style={{ maxWidth: 400 }}
-          >
-            <Feather name="compass" size={22} color="#00E074" />
-            <Text className="text-primary font-bold text-base">
-              Explorar grupos
-            </Text>
-          </TouchableOpacity>
         </View>
-      </View>
+      </>
     );
   }
 

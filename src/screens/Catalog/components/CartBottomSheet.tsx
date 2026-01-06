@@ -152,8 +152,6 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
             renderItem={renderItem}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
-            // Importante: esto permite que el modal no se cierre
-            // accidentalmente mientras scrolleas la lista
             bounces={true}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
@@ -172,7 +170,6 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
                   !isAuthenticated
                 }
                 onOrderCreated={(orderId) => {
-                  // Aquí puedes hacer lo que necesites después de crear la orden
                   onClose();
                   clearCart();
                   notify.success({

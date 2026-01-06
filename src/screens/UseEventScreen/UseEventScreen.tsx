@@ -71,8 +71,8 @@ export const UseEventScreen = ({ route }: { route: any }) => {
           </Text>
           <View style={styles.buttonContainer}>
             <OpenInGoogleMaps
-              latitude={latitude}
-              longitude={longitude}
+              latitude={Number(latitude)}
+              longitude={Number(longitude)}
               name={name}
               place={event_place}
               city={event_city}

@@ -14,6 +14,7 @@ type HeaderProps = {
   onBackPress?: () => void;
   buttons?: React.ReactNode;
   centerTitle?: boolean;
+  hideUserMenu?: boolean;
 };
 
 export const ThemedHeader: React.FC<HeaderProps> = ({
@@ -24,6 +25,7 @@ export const ThemedHeader: React.FC<HeaderProps> = ({
   onBackPress,
   buttons,
   centerTitle = false,
+  hideUserMenu = false,
 }) => {
   const { navigate } = useCustomNavigation();
 
@@ -76,7 +78,7 @@ export const ThemedHeader: React.FC<HeaderProps> = ({
       {renderLeftContent()}
       <View style={HeaderStyles.right}>
         {buttons}
-        <UserMenu />
+        {!hideUserMenu && <UserMenu />}
       </View>
     </View>
   );

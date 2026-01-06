@@ -105,7 +105,7 @@ export type RootStackParamList = {
   UsersManagement: undefined;
   ProductsManagement: undefined;
 
-  MisEntradas: undefined;
+  MisEntradas: {tab: string|undefined};
   // Events Screens
   EventModal: { id: string };
   AcquiredEventModal: { id_modal: string };
@@ -269,6 +269,7 @@ export const RootStackNavigator = () => {
           animation: "slide_from_bottom",
           animationTypeForReplace: "pop",
         }}
+        
       />
       <Stack.Screen
         name="AcquiredEventModal"

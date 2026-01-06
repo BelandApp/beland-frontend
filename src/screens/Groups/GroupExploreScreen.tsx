@@ -24,6 +24,7 @@ import { CustomLoader } from "@/components/shared/loader/Loader";
 import { getGroupTypeFeatherIcon } from "./GroupsScreen";
 import { notify } from "@/hooks/notification/notify.external";
 import { useGroupPaymentTypes } from "@/hooks/useGroupPaymentTypes";
+import { useCustomNavigation } from "src/hooks";
 
 // Los filtros se generan dinámicamente según los tipos de privacidad
 
@@ -32,12 +33,9 @@ const getPrivacyIcon = (privacyCode: string) => {
   return "lock";
 };
 
-type RootStackParamList = {
-  GroupDetailScreen: { groupId: string };
-};
 
 const GroupExploreScreen = () => {
-  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const { navigate, goBack } = useCustomNavigation();
   const [groups, setGroups] = useState<Group[]>([]);
   const [myGroupIds, setMyGroupIds] = useState<Set<string>>(new Set());
   const [joiningGroupId, setJoiningGroupId] = useState<string | null>(null);
@@ -192,7 +190,10 @@ const GroupExploreScreen = () => {
         notify.success({
           message: "¡Te has unido al grupo exitosamente!",
         });
-
+        navigate("Groups", {
+          screen: "GroupDetailScreen",
+          params: { groupId: item.id },
+        });
         // Recargar la lista de mis grupos desde el backend
         await reloadMyGroups();
       } catch (error: any) {
@@ -287,8 +288,9 @@ const GroupExploreScreen = () => {
             onPress={
               isMember || isOwner
                 ? () =>
-                    navigation.navigate("GroupDetailScreen", {
-                      groupId: item.id,
+                    navigate("Groups", {
+                      screen: "GroupDetailScreen",
+                      params: { groupId: item.id },
                     })
                 : !disabled && joiningGroupId !== item.id
                 ? handleJoin
@@ -310,7 +312,7 @@ const GroupExploreScreen = () => {
             className="absolute inset-0"
             style={{ zIndex: 1 }}
             onPress={() =>
-              navigation.navigate("GroupDetailScreen", { groupId: item.id })
+              navigate("Groups",{ screen: "GroupDetailScreen", params: { groupId: item.id } })
             }
           />
         )}
@@ -323,7 +325,7 @@ const GroupExploreScreen = () => {
       {/* Header */}
       <View className="sticky top-0 z-10 bg-background-light/95 flex-row items-center justify-between p-4 pb-2">
         <TouchableOpacity
-          onPress={() => navigation?.goBack?.()}
+          onPress={() => goBack()}
           className="mr-4 p-2 border-2 border-green-500 rounded-full"
         >
           <Feather name="arrow-left" size={24} color="#00E074" />

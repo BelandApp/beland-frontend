@@ -1,27 +1,36 @@
 import React, { useMemo, useRef, useState } from "react";
-import { View, Text, Pressable, StyleSheet, Animated, ScrollView, Dimensions } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  Animated,
+  ScrollView,
+  Dimensions,
+} from "react-native";
 import {
   ArrowLeftRight,
   Calendar,
   MapPin,
   RotateCcw,
   CheckCircle2,
-  SquareChevronDown,
 } from "lucide-react-native";
 import { eventStore } from "@/stores";
 import { colors } from "src/styles";
 import { eventsService } from "src/services/events";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { useNotify } from "src/hooks";
-import WarpperModal from "src/components/shared/modals/wrapperModal";
 import { canRefundTicket } from "./helpers/canrefund";
+import { WrapperModal } from "src/components";
 export const AcquiredEventModal = ({ route }: { route: any }) => {
   const { id_modal } = route.params;
   const { getAcquiredEvent } = eventStore();
   const event = getAcquiredEvent(id_modal);
-  const { navigate, goBack } = useCustomNavigation();
+  const { navigate } = useCustomNavigation();
   const notify = useNotify();
   const [visibleImage, setVisibleImage] = useState(0);
+  const [isOpen, setIsOpen] = useState(true);
+  
   if (!event) return null;
 
   const {
@@ -41,6 +50,15 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
     holder_name,
   } = event;
 
+  const handleClose = () => {
+    setIsOpen(false);
+    const targetTab =
+      new Date(end_sale_date) < new Date() ? "Anteriores" : "Próximos";
+
+    setTimeout(() => {
+      navigate("MisEntradas", { tab: targetTab });
+    }, 300);
+  };
   const allImages = useMemo(() => {
     if (!images_urls || images_urls.length === 0) return [image_url];
     return [image_url, ...images_urls];
@@ -97,17 +115,15 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
   })();
 
   return (
-    <View style={styles.overlay}>
-      {/* Backdrop */}
-      <Pressable style={styles.backdrop} onPress={goBack} />
-
-      {/* Sheet */}
-      <View style={styles.sheet}>
-        {/* Header */}
-        <Pressable onPress={goBack} style={styles.close}>
-          <SquareChevronDown size={26} color={colors.textSecondary} />
-        </Pressable>
-
+    <WrapperModal
+      isOpen={isOpen}
+      onClose={handleClose}
+      header={
+        <Text style={styles.headerTitle} numberOfLines={1}>
+          {event.name}
+        </Text>
+      }
+      content={
         <ScrollView showsVerticalScrollIndicator={false}>
           <View style={styles.content}>
             {/* Imagen principal */}
@@ -172,8 +188,8 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
             </View>
           </View>
         </ScrollView>
-
-        {/* Acciones */}
+      }
+      actions={
         <View style={styles.footer}>
           {!user_attended ? (
             <>
@@ -196,35 +212,27 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
                 <CheckCircle2 color="white" size={18} />
                 <Text style={styles.buttonText}>Usar entrada</Text>
               </Pressable>
-
             </>
           ) : (
             <Text style={styles.infoStrong}>Ya usaste esta entrada</Text>
           )}
         </View>
-      </View>
-    </View>
+      }
+    />
   );
 };
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: "flex-end",
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: colors.textPrimary,
   },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  sheet: {
-    backgroundColor: colors.background,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    height: Dimensions.get("window").height * 0.9,
-    paddingTop: 8,
-  },
-  close: {
-    alignSelf: "flex-end",
-    padding: 12,
+  scrollViewContent: {
+    // @ts-ignore - Esta propiedad es específica para Web para evitar selecciones y tener desplazamiento fluido
+    userSelect: "none",
+    // @ts-ignore
+    WebkitUserSelect: "none",
   },
   imageContainer: {
     position: "relative",
@@ -257,7 +265,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   content: {
-    marginHorizontal: "auto",
     paddingTop: 20,
   },
   name: {
@@ -315,9 +322,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 5,
     flexDirection: Dimensions.get("window").width > 600 ? "row" : "column",
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(0,0,0,0.05)",
     marginHorizontal: "auto",
   },
   button: {

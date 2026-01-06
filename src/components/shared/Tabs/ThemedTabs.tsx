@@ -12,6 +12,7 @@ export type TabItem = {
 type ThemedTabsProps = {
   tabs: TabItem[];
   onTabChange?: (tabKey: string) => void;
+  initalTab?: string;
   /** Estilos personalizados */
   containerStyle?: ViewStyle;
   tabStyle?: ViewStyle;
@@ -24,8 +25,11 @@ const ThemedTabs: React.FC<ThemedTabsProps> = ({
   containerStyle,
   tabStyle,
   textStyle,
+  initalTab,
 }) => {
-  const [activeTab, setActiveTab] = useState<string>(tabs[0].label);
+  const [activeTab, setActiveTab] = useState<string>(
+    initalTab ? initalTab : tabs[0].label
+  );
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
@@ -33,7 +37,7 @@ const ThemedTabs: React.FC<ThemedTabsProps> = ({
   };
   return (
     <View style={[styles.container, containerStyle]}>
-      {tabs.map(({ label, icon, disabled,count }) => {
+      {tabs.map(({ label, icon, disabled, count }) => {
         const isActive = label === activeTab;
         return (
           <Pressable
@@ -58,8 +62,7 @@ const ThemedTabs: React.FC<ThemedTabsProps> = ({
                 disabled && styles.disabledText,
               ]}
             >
-              {label}{" "}
-              {count}
+              {label} {count}
             </Text>
           </Pressable>
         );

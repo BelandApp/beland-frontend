@@ -15,7 +15,7 @@ import {
   Ticket,
   DollarSign,
   RotateCcw,
-  SquareChevronDown,
+  ArrowDown,
 } from "lucide-react-native";
 import { eventStore } from "@/stores";
 import { colors } from "src/styles";
@@ -23,6 +23,7 @@ import { useAuth } from "src/context";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { useNotify } from "src/hooks";
 import { convertBeCoinsToUSD, formatUSDPrice } from "src/constants/currency";
+import { Button, WrapperModal } from "src/components";
 
 export const EventModal = ({ route }: { route: any }) => {
   const { id } = route.params;
@@ -32,7 +33,12 @@ export const EventModal = ({ route }: { route: any }) => {
   const { navigate, goBack } = useCustomNavigation();
   const { canPerformAction, handleAuth0Login } = useAuth();
   const [visibleImage, setVisibleImage] = useState(0);
+  const [isOpen, setIsOpen] = useState(true);
 
+  const handleClose = () => {
+    setIsOpen(false);
+    setTimeout(() => navigate("MainTabs", { screen: "Community" }), 300);
+  };
   if (!event) return null;
 
   const {
@@ -106,17 +112,15 @@ export const EventModal = ({ route }: { route: any }) => {
   const ticketsLeft = limit_tickets - sold_tickets;
 
   return (
-    <View style={styles.overlay}>
-      {/* Backdrop */}
-      <Pressable style={styles.backdrop} onPress={goBack} />
-
-      {/* Sheet */}
-      <View style={styles.sheet}>
-        {/* Header */}
-        <Pressable onPress={goBack} style={styles.close}>
-          <SquareChevronDown size={26} color={colors.textSecondary} />
-        </Pressable>
-
+    <WrapperModal
+      isOpen={isOpen}
+      onClose={handleClose}
+      header={
+        <Text style={styles.headerTitle} numberOfLines={1}>
+          {event.name}
+        </Text>
+      }
+      content={
         <ScrollView showsVerticalScrollIndicator={false}>
           <View style={styles.imageContainer}>
             <Animated.Image
@@ -199,49 +203,33 @@ export const EventModal = ({ route }: { route: any }) => {
             )}
           </View>
         </ScrollView>
-
-        {/* Acciones */}
-        <View style={styles.footer}>
-          <Pressable
-            style={[styles.button, styles.buyButton]}
-            onPress={handleBuy}
-            disabled={eventStatus.label !== "Disponible"}
-          >
-            <Text style={styles.buttonText}>
-              {eventStatus.label === "Disponible"
-                ? "Adquirir"
-                : "No disponible"}
-            </Text>
-          </Pressable>
-        </View>
-      </View>
-    </View>
+      }
+      actions={
+        <Pressable
+          style={[styles.button, styles.buyButton]}
+          onPress={handleBuy}
+          disabled={eventStatus.label !== "Disponible"}
+        >
+          <Text style={styles.buttonText}>
+            {eventStatus.label === "Disponible" ? "Adquirir" : "No disponible"}
+          </Text>
+        </Pressable>
+      }
+    />
   );
 };
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: "flex-end",
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: colors.textPrimary,
   },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  sheet: {
-    backgroundColor: colors.background,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    height: Dimensions.get("window").height * 0.9,
-    paddingTop: 8,
-  },
-  close: {
-    alignSelf: "flex-end",
-    padding: 12,
-  },
-  footer: {
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(0,0,0,0.05)",
+  scrollViewContent: {
+    // @ts-ignore - Esta propiedad es específica para Web para evitar selecciones y tener desplazamiento fluido
+    userSelect: "none",
+    // @ts-ignore
+    WebkitUserSelect: "none",
   },
   imageContainer: {
     alignItems: "center",
