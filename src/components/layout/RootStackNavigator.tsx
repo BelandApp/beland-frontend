@@ -269,6 +269,7 @@ export const RootStackNavigator = () => {
           animation: "slide_from_bottom",
           animationTypeForReplace: "pop",
         }}
+        
       />
       <Stack.Screen
         name="AcquiredEventModal"

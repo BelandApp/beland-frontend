@@ -93,7 +93,11 @@ const styles = StyleSheet.create({
     // Eliminamos el height de aquí porque RBSheet lo maneja por prop
   },
   mainContainer: {
-    flex: 1, // Ocupa todo el alto del RBSheet (85% de la pantalla)
+    flex: 1,
+    // @ts-ignore - Esta propiedad es específica para Web para evitar selecciones y tener desplazamiento fluido
+    userSelect: "none",
+    // @ts-ignore
+    WebkitUserSelect: "none",
   },
   header: {
     width: "100%",
