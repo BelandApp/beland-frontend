@@ -67,6 +67,9 @@ export interface GroupMemberConsumption {
   group_member_id: string;
   product_id: string;
   user_id: string;
+  groupMember?: {
+    user_id: string;
+  };
   notes?: string;
   created_at: string;
   updated_at: string;
@@ -476,6 +479,35 @@ class GroupServiceClass extends CoreApiService {
   }
 
   /**
+   * Obtener todos los consumos (filtrados)
+   * Usado para obtener todos los consumos de un grupo y luego procesarlos en frontend
+   */
+  async getAllConsumptions(
+    filters: Record<string, any>
+  ): Promise<GroupMemberConsumption[]> {
+    const queryString = this.buildQueryString(filters);
+    const endpoint = queryString
+      ? `group-member-consumptions?${queryString}`
+      : "group-member-consumptions";
+    const res = await this.get<any>(endpoint);
+
+    // Manejar respuesta paginada { data, total, page, limit }
+    if (res?.data && Array.isArray(res.data)) return res.data;
+    if (Array.isArray(res)) return res;
+    return [];
+  }
+
+  /**
+   * Obtener todos los consumos de un grupo
+   */
+  async getGroupAllConsumptions(
+    groupId: string
+  ): Promise<GroupMemberConsumption[]> {
+    // Pedimos un limite alto para traer todos
+    return this.getAllConsumptions({ group_id: groupId, limit: 100 });
+  }
+
+  /**
    * Crear una sugerencia de consumo
    */
   async createConsumption(
@@ -503,9 +535,7 @@ class GroupServiceClass extends CoreApiService {
    * Obtener el carrito del usuario autenticado
    */
   async getMyCart(): Promise<any> {
-    const res = await this.get<any>("carts/my");
-    if (res?.data) return res.data;
-    return res;
+    return this.get<any>("carts/user");
   }
 
   /**

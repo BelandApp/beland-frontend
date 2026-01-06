@@ -152,6 +152,22 @@ export const GroupPurchaseScreen: React.FC<GroupPurchaseScreenProps> = ({
     }
   };
 
+  const handleQuickAdd = async (product: Product) => {
+    const success = await addProductToCart(
+      {
+        id: product.id,
+        name: product.name,
+        price: toNumber(product.price),
+        image_url: product.image_url,
+        description: product.description,
+      },
+      1
+    );
+    if (success) {
+      notify.success({ message: "Producto agregado al carrito" });
+    }
+  };
+
   const filteredProducts = products.filter(
     (p) =>
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -393,7 +409,10 @@ export const GroupPurchaseScreen: React.FC<GroupPurchaseScreenProps> = ({
                               <Heart size={16} color="#ef4444" fill="#ef4444" />
                             </TouchableOpacity>
                             {/* Add to Cart Button */}
-                            <TouchableOpacity className="p-2 bg-orange-100 rounded-lg">
+                            <TouchableOpacity
+                              onPress={() => handleQuickAdd(product)}
+                              className="p-2 bg-orange-100 rounded-lg"
+                            >
                               <Plus size={16} color="#FF6B35" />
                             </TouchableOpacity>
                           </View>
@@ -555,33 +574,7 @@ export const GroupPurchaseScreen: React.FC<GroupPurchaseScreenProps> = ({
                 <CustomLoader />
               ) : cart && cart.items.length > 0 ? (
                 <View>
-                  {/* Consumption Summary Banner */}
-                  {consumptionSummary.length > 0 && (
-                    <View className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                      <Text className="text-sm font-bold text-blue-600 mb-2">
-                        📋 SUGERENCIAS DEL GRUPO
-                      </Text>
-                      <Text className="text-xs text-blue-700">
-                        {consumptionSummary.reduce(
-                          (sum, item) => sum + item.total_consumers,
-                          0
-                        )}{" "}
-                        productos sugeridos por {members.length} miembros
-                      </Text>
-                    </View>
-                  )}
-
                   {cart.items.map((item: any) => {
-                    // Obtener el miembro que sugirió el producto
-                    const suggester = members.find(
-                      (m) => m.user_id === item.suggested_by
-                    );
-
-                    // Obtener sugerencias para este producto
-                    const productSuggestions = consumptionSummary.find(
-                      (s) => s.product_id === item.product_id
-                    );
-
                     return (
                       <View
                         key={item.id}
@@ -616,38 +609,6 @@ export const GroupPurchaseScreen: React.FC<GroupPurchaseScreenProps> = ({
                               ${toNumber(item.total_price).toFixed(2)}
                             </Text>
                           </View>
-                        </View>
-
-                        {/* Suggested by + Consumption Count */}
-                        <View className="mb-3 pb-3 border-b border-gray-200">
-                          <View className="flex-row items-center gap-2 mb-2">
-                            <View className="w-6 h-6 rounded-full bg-orange-200 justify-center items-center">
-                              <Text className="text-xs font-bold text-orange-600">
-                                {suggester?.user?.name?.charAt(0) || "U"}
-                              </Text>
-                            </View>
-                            <Text className="text-xs text-gray-600">
-                              Agregado por{" "}
-                              <Text className="font-semibold">
-                                {suggester?.user?.name || "Desconocido"}
-                              </Text>
-                            </Text>
-                          </View>
-
-                          {/* Consumption Info */}
-                          {productSuggestions &&
-                            productSuggestions.total_consumers > 0 && (
-                              <View className="flex-row items-center gap-2">
-                                <View className="bg-blue-100 px-2 py-1 rounded flex-row items-center gap-1">
-                                  <Text className="text-xs font-semibold text-blue-700">
-                                    {productSuggestions.total_consumers}{" "}
-                                    {productSuggestions.total_consumers === 1
-                                      ? "persona sugiere"
-                                      : "personas sugieren"}
-                                  </Text>
-                                </View>
-                              </View>
-                            )}
                         </View>
 
                         {/* Quantity Controls */}
@@ -768,7 +729,7 @@ export const GroupPurchaseScreen: React.FC<GroupPurchaseScreenProps> = ({
         <View className="flex-1 bg-black/50 justify-end">
           <View className="bg-white rounded-t-3xl max-h-[90%]">
             {/* Header with Gradient Background */}
-            <View className="bg-gradient-to-r from-red-600 to-red-700 px-6 py-6 pt-8 rounded-t-3xl flex-row items-center justify-between">
+            <View className=" px-6 py-6 pt-8 rounded-t-3xl flex-row items-center justify-between">
               <View className="flex-row items-center gap-3 flex-1">
                 <View className="p-2.5 bg-white/20 rounded-full">
                   <Heart size={24} color="#ef4444" fill="#ef4444" />
@@ -962,7 +923,7 @@ export const GroupPurchaseScreen: React.FC<GroupPurchaseScreenProps> = ({
             <View className="px-5 py-5 border-t border-gray-100">
               <TouchableOpacity
                 onPress={() => setSuggestionsModalVisible(false)}
-                className="bg-gradient-to-r from-red-600 to-red-700 py-4 rounded-xl justify-center items-center active:opacity-90"
+                className="bg-gradient-to-r from-red-500 to-red-600 py-4 rounded-xl justify-center items-center active:opacity-90"
               >
                 <Text className="text-black font-bold text-lg">Cerrar</Text>
               </TouchableOpacity>

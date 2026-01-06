@@ -21,7 +21,11 @@ export const ShareGroupCard = React.forwardRef<View, ShareGroupCardProps>(
     const cardWidth = Math.min(screenWidth * 0.9, 400);
 
     return (
-      <View ref={ref} style={[styles.container, { width: cardWidth }]}>
+      <View
+        ref={ref}
+        collapsable={false}
+        style={[styles.container, { width: cardWidth }]}
+      >
         <LinearGradient
           colors={[colors.primary, "#00b35f", "#008f4a"]}
           start={{ x: 0, y: 0 }}

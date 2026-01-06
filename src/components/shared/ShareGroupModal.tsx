@@ -12,7 +12,6 @@ import {
 import { ShareGroupCard } from "./ShareGroupCard";
 import {
   shareNative,
-  shareOnWhatsApp,
   captureAndShareGroupCard,
   ShareGroupData,
 } from "@/utils/shareHelper";
@@ -38,7 +37,8 @@ export const ShareGroupModal: React.FC<ShareGroupModalProps> = ({
     try {
       switch (platform) {
         case "whatsapp":
-          await shareOnWhatsApp(groupData);
+          // Usamos la misma lógica de imagen para WhatsApp ya que el usuario prefiere compartir la visual
+          await captureAndShareGroupCard(cardRef, groupData);
           break;
         case "image":
           await captureAndShareGroupCard(cardRef, groupData);

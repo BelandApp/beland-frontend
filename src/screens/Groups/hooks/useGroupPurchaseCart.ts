@@ -135,10 +135,16 @@ export const useGroupPurchaseCart = (groupId: string) => {
    * Obtener el precio total del carrito (sin envío)
    */
   const getTotalPrice = (): number => {
-    if (!cart) return 0;
-    return cart.items.reduce((sum: number, item: GroupPurchaseCartItem) => {
-      return sum + item.total_price;
-    }, 0);
+    if (!cart || !cart.items) return 0;
+    // Prefer user cart.total_amount if reliable, otherwise sum items
+    // Ensure we return a number
+    const total = cart.items.reduce(
+      (sum: number, item: GroupPurchaseCartItem) => {
+        return sum + Number(item.total_price);
+      },
+      0
+    );
+    return Number(total);
   };
 
   /**

@@ -33,8 +33,8 @@ const generateShareMessage = (data: ShareGroupData): string => {
     message += `\n${description}\n`;
   }
 
-  message += `\n🔗 Abre en Beland: ${deepLink}`;
-  message += `\n📱 Descarga la app: https://beland.app`;
+  // Por el momento solo compartimos la URL genérica
+  message += `\n🔗 Descarga la app: https://beland.app`;
 
   return message;
 };
