@@ -30,10 +30,7 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
   const notify = useNotify();
   const [visibleImage, setVisibleImage] = useState(0);
   const [isOpen, setIsOpen] = useState(true);
-  const handleClose = () => {
-    setIsOpen(false);
-    setTimeout(() => navigate("MisEntradas"), 300);
-  };
+  
   if (!event) return null;
 
   const {
@@ -53,6 +50,15 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
     holder_name,
   } = event;
 
+  const handleClose = () => {
+    setIsOpen(false);
+    const targetTab =
+      new Date(end_sale_date) < new Date() ? "Anteriores" : "Próximos";
+
+    setTimeout(() => {
+      navigate("MisEntradas", { tab: targetTab });
+    }, 300);
+  };
   const allImages = useMemo(() => {
     if (!images_urls || images_urls.length === 0) return [image_url];
     return [image_url, ...images_urls];

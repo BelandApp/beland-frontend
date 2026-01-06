@@ -105,7 +105,7 @@ export type RootStackParamList = {
   UsersManagement: undefined;
   ProductsManagement: undefined;
 
-  MisEntradas: undefined;
+  MisEntradas: {tab: string|undefined};
   // Events Screens
   EventModal: { id: string };
   AcquiredEventModal: { id_modal: string };

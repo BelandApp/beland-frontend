@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -14,30 +14,41 @@ import { useEvents } from "src/hooks/event/useEvents";
 import { AcquiredEventCard } from "src/screens/Events/components/AcquiredEventCard";
 import { CustomLoader } from "src/components";
 
-const MisEntradasScreen: React.FC = () => {
-  const { tabs, onTabChange, activeTab } = useThemedTabs([
-    "Próximos",
-    "Anteriores",
-  ]);
+const MisEntradasScreen = ({ route }: { route: any }) => {
+  const params = route?.params;
+  const { tabs, onTabChange, activeTab, setActiveTab } = useThemedTabs(
+    ["Próximos", "Anteriores"],
+    params?.tab 
+  );
   const { acquiredEvents, isLoading, refresh } = useEvents();
 
   const windowWidth = Dimensions.get("window").width;
   const numColumns = windowWidth >= 760 ? 2 : 1;
 
+  const showList = useMemo(() => {
+    const now = Date.now();
+    const proximos = acquiredEvents.filter((e: any) =>
+      e?.event_date ? new Date(e.event_date).getTime() >= now : true
+    );
+    const anteriores = acquiredEvents.filter((e: any) =>
+      e?.event_date ? new Date(e.event_date).getTime() < now : false
+    );
+
+    return activeTab === "Próximos" ? proximos : anteriores;
+  }, [acquiredEvents, activeTab]);
+
+ useEffect(() => {
+   if (params?.tab && params.tab !== activeTab) {
+     setActiveTab(params.tab);
+   }
+ }, [params?.tab]);
+
   if (isLoading) return <CustomLoader />;
-
-  const now = Date.now();
-  const proximos = acquiredEvents.filter((e: any) =>
-    e?.event_date ? new Date(e.event_date).getTime() >= now : true
-  );
-  const anteriores = acquiredEvents.filter((e: any) =>
-    e?.event_date ? new Date(e.event_date).getTime() < now : false
-  );
-
-  const listToShow = activeTab === "Próximos" ? proximos : anteriores;
-
   const renderItem = ({ item }: { item: any }) => (
-    <View style={[styles.itemContainer, numColumns > 1 && styles.itemTablet]}>
+    <View
+      key={item.id}
+      style={[styles.itemContainer, numColumns > 1 && styles.itemTablet]}
+    >
       <AcquiredEventCard {...item} />
     </View>
   );
@@ -45,10 +56,10 @@ const MisEntradasScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <ThemedHeader title="Mis Entradas" canGoBack />
-      <ThemedTabs tabs={tabs} onTabChange={onTabChange} />
+      <ThemedTabs tabs={tabs} onTabChange={onTabChange} initalTab={activeTab} />
 
       <FlatList
-        data={listToShow}
+        data={showList}
         keyExtractor={(ev: any) =>
           String(ev.user_pass_id || ev.id || ev.event_pass_id)
         }

@@ -336,7 +336,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
               style={styles.menuItem}
               onPress={() => {
                 setMenuVisible(false);
-                navigate("MisEntradas");
+                navigate("MisEntradas",{ tab: "Próximos"});
               }}
             >
               <Ticket size={18} color="#333" />
