@@ -127,6 +127,40 @@ export const captureAndShareGroupCard = async (
       throw new Error("Referencia a la vista no válida");
     }
 
+    if (Platform.OS === "web") {
+      // Importación dinámica para evitar errores en native si la librería trata de acceder a document/window
+      const { toPng } = await import("html-to-image");
+
+      // En React Native Web, el ref suele ser el componente.
+      // Necesitamos el nodo DOM. A veces ref.current es el nodo, a veces es un wrapper.
+      // Intentamos obtener el nodo DOM.
+      const domNode = viewRef.current as unknown as HTMLElement;
+
+      if (!domNode) {
+        throw new Error(
+          "No se pudo obtener el nodo DOM para la captura en web"
+        );
+      }
+
+      const dataUrl = await toPng(domNode, { cacheBust: true });
+
+      // En Web, "compartir" una imagen generada suele significar descargarla
+      // o usar navigator.share si soporta archivos (aún limitado).
+      // Vamos a intentar descargarla por defecto para asegurar funcionalidad.
+      const link = document.createElement("a");
+      link.download = `grupo-${data.groupName
+        .replace(/\s+/g, "-")
+        .toLowerCase()}.png`;
+      link.href = dataUrl;
+      link.click();
+
+      // Opcional: Si quieres intentar compartir API
+      // if (navigator.share) { ... }
+
+      return;
+    }
+
+    // NATIVE IMPLEMENTATION
     // Capturar la vista como imagen
     const uri = await captureRef(viewRef, {
       format: "png",
