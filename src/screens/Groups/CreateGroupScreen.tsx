@@ -6,20 +6,24 @@ import {
   TextInput,
   TouchableOpacity,
   Platform,
+  Alert,
 } from "react-native";
 import useCreateGroupLogic from "./hooks/useCreateGroupLogic";
 import Card from "./components/Card";
 import Field from "./components/Field";
 import { AddressManagementModal } from "@/screens/DashboardUser/components/settings/AddressManagementModal";
+import { ShareGroupModal } from "@/components/shared/ShareGroupModal";
 import Feather from "react-native-vector-icons/Feather";
 import {
   GroupService,
   GroupType,
   GroupPrivacy,
+  Group,
 } from "@/services/GroupApiService";
 import { addressService, UserAddress } from "@/services/addressService";
-
+import { useAuth } from "@/context";
 import { useNotify } from "@/hooks";
+import { ShareGroupData } from "@/utils/shareHelper";
 
 // Elimina PRIVACY_OPTIONS, ahora se cargan dinámicamente
 
@@ -91,6 +95,11 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
   }, []);
   const logic = useCreateGroupLogic({ navigation });
   const notify = useNotify();
+  const { user } = useAuth();
+
+  // Estado para modal de compartir
+  const [showShareModal, setShowShareModal] = React.useState(false);
+  const [createdGroup, setCreatedGroup] = React.useState<Group | null>(null);
 
   // Estado para tipos de grupo dinámicos
   const [groupTypes, setGroupTypes] = React.useState<GroupType[]>([]);
@@ -160,13 +169,14 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
         group_type_id: groupType,
       });
       if (result) {
-        notify.success({ message: "¡Grupo creado exitosamente!" });
-        setTimeout(() => {
-          navigation?.navigate("MainTabs", {
-            screen: "Groups",
-            params: { screen: "GroupsList" },
-          });
-        }, 100);
+        // Guardar el grupo creado y mostrar modal de compartir
+        setCreatedGroup(result);
+        setShowShareModal(true);
+
+        // Mostrar notificación simple de éxito
+        notify.success({
+          message: `¡Grupo "${result.name}" creado exitosamente!`,
+        });
       }
     } catch (e) {
       let errorMsg = "Error al crear el grupo";
@@ -208,7 +218,7 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
             placeholder="Ej. Club de Lectura"
           />
           <Field
-            label="Descripción *"
+            label="Descripción (opcional)"
             value={description}
             onChangeText={setDescription}
             placeholder="¿De qué trata este grupo?"
@@ -431,7 +441,7 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
             </Text>
           </TouchableOpacity>
           <Field
-            label="Mensaje de Invitación"
+            label="Mensaje de Invitación (opcional)"
             value={invitationMsg}
             onChangeText={setInvitationMsg}
             placeholder="¡Hola! Te invito a unirte a mi grupo..."
@@ -461,6 +471,29 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
           setShowAddressModal(false);
         }}
       />
+
+      {/* Modal para compartir grupo */}
+      {createdGroup && (
+        <ShareGroupModal
+          visible={showShareModal}
+          onClose={() => {
+            setShowShareModal(false);
+            // Navegar a la lista de grupos después de cerrar
+            navigation?.navigate("MainTabs", {
+              screen: "Groups",
+              params: { screen: "GroupsList" },
+            });
+          }}
+          groupData={{
+            groupName: createdGroup.name,
+            groupId: createdGroup.id,
+            description: createdGroup.description,
+            memberCount: 1, // El creador es el primer miembro
+            creatorName:
+              user?.full_name || user?.username || user?.email || "Tú",
+          }}
+        />
+      )}
     </View>
   );
 };

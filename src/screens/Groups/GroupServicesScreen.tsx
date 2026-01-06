@@ -75,8 +75,8 @@ export const GroupServicesScreen: React.FC<GroupServicesScreenProps> = ({
       }
     };
 
-    const price = service.price_becoin || service.price;
-    const priceLabel = service.price_becoin ? "Becoins" : "BsF";
+    const price = service.price || 0;
+    const priceLabel = "USD";
 
     return (
       <TouchableOpacity

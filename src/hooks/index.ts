@@ -5,6 +5,7 @@ export * from "./useOrderStatusSocket";
 export * from "./useAddresses";
 export * from "./useOrders";
 export * from "./useGroupOrders";
+export * from "../screens/Groups/hooks/useGroupPurchaseCart";
 export * from "./usePaymentTypes";
 export * from "./useUserBalance";
 export * from "./product/useProducts";

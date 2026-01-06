@@ -162,22 +162,6 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
         }
         actions={
           <View>
-            <View style={styles.groupOrderButtonContainer}>
-              <GroupOrderButton
-                disabled={
-                  items.length === 0 ||
-                  (balance || 0) < totalBecoins() ||
-                  !isAuthenticated
-                }
-                onOrderCreated={(orderId) => {
-                  onClose();
-                  clearCart();
-                  notify.success({
-                    message: `Orden de grupo #${orderId} creada exitosamente`,
-                  });
-                }}
-              />
-            </View>
             <View style={styles.footer}>
               <View>
                 <Text style={styles.total}>

@@ -56,20 +56,14 @@ const PAYMENT_STATUSES = {
 /**
  * Formatea una cantidad con su moneda
  */
-const formatCurrency = (
-  amount: number,
-  currency: string = "BECOIN"
-): string => {
-  const currency_upper = (currency || "BECOIN").toUpperCase();
+const formatCurrency = (amount: number, currency: string = "USD"): string => {
+  const currency_upper = (currency || "USD").toUpperCase();
 
-  if (currency_upper.includes("BECOIN") || currency_upper === "BC") {
-    return `${amount.toFixed(2)} becoins`;
-  }
   if (currency_upper === "USD") {
     return `$ ${amount.toFixed(2)}`;
   }
-  // Default a Becoins
-  return `${amount.toFixed(2)} becoins`;
+  // Default a USD
+  return `$ ${amount.toFixed(2)}`;
 };
 
 /**
@@ -489,7 +483,7 @@ export const GroupOrdersHistoryScreen = () => {
               {orders.length > 0
                 ? formatCurrency(
                     orders.reduce((sum, o) => sum + o.total_amount, 0),
-                    orders[0]?.currency || "BECOIN"
+                    orders[0]?.currency || "USD"
                   )
                 : formatCurrency(0)}
             </Text>
