@@ -23,7 +23,7 @@ import { useNotify } from "src/hooks";
 import { CustomLoader } from "@/components/shared/loader/Loader";
 import { reverseGeocode } from "@/services/mapboxService";
 import * as Linking from "expo-linking";
-import { GroupMembersList } from "src/components";
+import { GroupMembersList, ThemedHeader } from "src/components";
 import { useAuth } from "src/context/AuthContext";
 import { GroupServicesScreen } from "src/screens/Groups";
 import { GroupOrdersHistoryScreen } from "src/screens/Groups";
@@ -256,7 +256,24 @@ export const GroupDetailScreen = () => {
   return (
     <View className="flex-1 bg-background-light">
       {/* Header */}
-      <View className="flex-row items-center justify-between px-4 pt-8 pb-3 bg-background-light border-b border-gray-100">
+      <ThemedHeader
+        canGoBack
+        title="Detalle de Grupo"
+        hideUserMenu={true}
+        buttons={
+          <>
+            <TouchableOpacity className="p-2" onPress={openMenu}>
+              <Feather name="more-vertical" size={24} color="#101815" />
+            </TouchableOpacity>
+            <ActionMenu
+              visible={menuVisible}
+              onClose={closeMenu}
+              actions={groupActions}
+            />
+          </>
+        }
+      />
+      {/* <View className="flex-row items-center justify-between px-4 pt-8 pb-3 bg-background-light border-b border-gray-100">
         <TouchableOpacity
           onPress={() => navigation?.goBack?.()}
           className="mr-4 p-2 border-2 border-green-500 rounded-full"
@@ -274,7 +291,7 @@ export const GroupDetailScreen = () => {
           onClose={closeMenu}
           actions={groupActions}
         />
-      </View>
+      </View> */}
 
       {/* Tabs */}
       <View className="flex-row bg-white border-b border-gray-200">
