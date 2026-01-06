@@ -7,7 +7,9 @@ import {
   TouchableOpacity,
   Platform,
   Alert,
+  Modal,
 } from "react-native";
+
 import useCreateGroupLogic from "./hooks/useCreateGroupLogic";
 import Card from "./components/Card";
 import Field from "./components/Field";
@@ -24,6 +26,7 @@ import { addressService, UserAddress } from "@/services/addressService";
 import { useAuth } from "@/context";
 import { useNotify } from "@/hooks";
 import { ShareGroupData } from "@/utils/shareHelper";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 // Elimina PRIVACY_OPTIONS, ahora se cargan dinámicamente
 
@@ -142,11 +145,14 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
     userAddressId,
     setUserAddressId,
     createGroup,
+    eventDate,
+    setEventDate,
   } = logic as any;
 
   const [privacy, setPrivacy] = React.useState<string>("");
   const [invitationMsg, setInvitationMsg] = React.useState("");
   const [showAddressModal, setShowAddressModal] = React.useState(false);
+  const [showDatePicker, setShowDatePicker] = React.useState(false);
 
   const handleCreate = async () => {
     // Validar que se haya seleccionado una privacidad
@@ -158,6 +164,18 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
     // Validar que se haya seleccionado un tipo de grupo
     if (!groupType || groupType.trim() === "") {
       notify.error({ message: "Debes seleccionar un tipo de grupo" });
+      return;
+    }
+
+    // Validar que se haya seleccionado una fecha de evento
+    if (!eventDate || eventDate.trim() === "") {
+      notify.error({ message: "Debes seleccionar la fecha del evento" });
+      return;
+    }
+
+    // Validar que la fecha sea futura
+    if (new Date(eventDate) <= new Date()) {
+      notify.error({ message: "La fecha del evento debe ser futura" });
       return;
     }
 
@@ -225,6 +243,177 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
             multiline
             className="mt-4"
           />
+
+          {/* Event Date/Time Field */}
+          <View className="mt-4">
+            <Text className="text-base font-medium mb-2">
+              Fecha y Hora del Evento *
+            </Text>
+            {Platform.OS === "web" ? (
+              // Web: Separate date and time inputs for better UX
+              <View>
+                <View className="flex-row gap-3">
+                  {/* Date Input */}
+                  <View className="flex-1">
+                    <View className="flex-row items-center border-2 border-gray-300 rounded-xl bg-white overflow-hidden shadow-sm hover:border-primary transition-colors">
+                      <View className="px-4 py-3 bg-gradient-to-r from-primary/10 to-primary/5 border-r border-gray-200">
+                        <Feather name="calendar" size={20} color="#00E074" />
+                      </View>
+                      <input
+                        type="date"
+                        value={
+                          eventDate
+                            ? new Date(eventDate).toISOString().slice(0, 10)
+                            : ""
+                        }
+                        onChange={(e: any) => {
+                          const dateValue = e.target.value;
+                          if (dateValue) {
+                            const currentTime = eventDate
+                              ? new Date(eventDate).toISOString().slice(11, 16)
+                              : "12:00";
+                            setEventDate(
+                              new Date(
+                                `${dateValue}T${currentTime}`
+                              ).toISOString()
+                            );
+                          }
+                        }}
+                        min={new Date().toISOString().slice(0, 10)}
+                        style={{
+                          flex: 1,
+                          padding: "12px 16px",
+                          fontSize: "15px",
+                          fontWeight: "500",
+                          color: "#1f2937",
+                          border: "none",
+                          outline: "none",
+                          minHeight: "48px",
+                          cursor: "pointer",
+                          backgroundColor: "transparent",
+                        }}
+                      />
+                    </View>
+                  </View>
+
+                  {/* Time Input */}
+                  <View className="flex-1">
+                    <View className="flex-row items-center border-2 border-gray-300 rounded-xl bg-white overflow-hidden shadow-sm hover:border-primary transition-colors">
+                      <View className="px-4 py-3 bg-gradient-to-r from-primary/10 to-primary/5 border-r border-gray-200">
+                        <Feather name="clock" size={20} color="#00E074" />
+                      </View>
+                      <input
+                        type="time"
+                        value={
+                          eventDate
+                            ? new Date(eventDate).toISOString().slice(11, 16)
+                            : ""
+                        }
+                        onChange={(e: any) => {
+                          const timeValue = e.target.value;
+                          if (timeValue && eventDate) {
+                            const dateValue = new Date(eventDate)
+                              .toISOString()
+                              .slice(0, 10);
+                            setEventDate(
+                              new Date(
+                                `${dateValue}T${timeValue}`
+                              ).toISOString()
+                            );
+                          }
+                        }}
+                        style={{
+                          flex: 1,
+                          padding: "12px 16px",
+                          fontSize: "15px",
+                          fontWeight: "500",
+                          color: "#1f2937",
+                          border: "none",
+                          outline: "none",
+                          minHeight: "48px",
+                          cursor: "pointer",
+                          backgroundColor: "transparent",
+                        }}
+                      />
+                    </View>
+                  </View>
+                </View>
+              </View>
+            ) : (
+              // Mobile: TouchableOpacity to open Modal
+              <TouchableOpacity
+                onPress={() => setShowDatePicker(true)}
+                className="border-2 border-gray-300 rounded-lg bg-white"
+              >
+                <View className="flex-row items-center">
+                  <View className="px-3 py-3 bg-primary/10 border-r border-gray-300">
+                    <Feather name="calendar" size={20} color="#00E074" />
+                  </View>
+                  <View className="flex-1 px-3 py-2">
+                    <Text
+                      className={
+                        eventDate
+                          ? "text-gray-900 text-base"
+                          : "text-gray-400 text-base"
+                      }
+                    >
+                      {eventDate
+                        ? new Date(eventDate).toLocaleString("es-ES", {
+                            dateStyle: "full",
+                            timeStyle: "short",
+                          })
+                        : "Selecciona fecha y hora del evento"}
+                    </Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Native Modal with DateTimePicker for mobile */}
+          {Platform.OS !== "web" && showDatePicker && (
+            <Modal
+              transparent={true}
+              animationType="slide"
+              visible={showDatePicker}
+              onRequestClose={() => setShowDatePicker(false)}
+            >
+              <View className="flex-1 justify-end bg-black/50">
+                <View className="bg-white rounded-t-3xl p-6">
+                  <View className="flex-row justify-between items-center mb-4">
+                    <Text className="text-lg font-bold">
+                      Selecciona Fecha y Hora
+                    </Text>
+                    <TouchableOpacity onPress={() => setShowDatePicker(false)}>
+                      <Feather name="x" size={24} color="#666" />
+                    </TouchableOpacity>
+                  </View>
+
+                  <DateTimePicker
+                    value={eventDate ? new Date(eventDate) : new Date()}
+                    mode="datetime"
+                    display="spinner"
+                    onChange={(event, selectedDate) => {
+                      if (selectedDate) {
+                        setEventDate(selectedDate.toISOString());
+                      }
+                    }}
+                    minimumDate={new Date()}
+                    locale="es-ES"
+                  />
+
+                  <TouchableOpacity
+                    onPress={() => setShowDatePicker(false)}
+                    className="mt-4 bg-primary rounded-xl py-3"
+                  >
+                    <Text className="text-white text-center font-bold text-base">
+                      Confirmar
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+          )}
         </Card>
         <Text className="text-lg font-bold text-beland-text-primary mb-2">
           Configuración

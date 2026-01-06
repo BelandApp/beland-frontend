@@ -32,6 +32,7 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
   const [invitationMsg, setInvitationMsg] = React.useState<string>("");
   const [paymentTypeId, setPaymentTypeId] = React.useState<string>("");
   const [userAddressId, setUserAddressId] = React.useState<string>("");
+  const [eventDate, setEventDate] = React.useState<string>(""); // ISO string
 
   const addParticipant = (p: Participant) => setParticipants((s) => [...s, p]);
   const removeParticipant = (id: string) =>
@@ -91,6 +92,12 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
 
       payload.payment_type_id = extra?.payment_type_id ?? paymentTypeId;
       payload.user_address_id = extra?.user_address_id ?? userAddressId;
+
+      // Add event_date if provided (for future backend support)
+      if (eventDate) {
+        payload.event_date = eventDate;
+      }
+
       // NO enviar location_url, location, latitude, longitude ni status
       const created = await GroupService.createGroup(payload);
       return created;
@@ -119,6 +126,7 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
     invitationMsg,
     paymentTypeId,
     userAddressId,
+    eventDate,
     // setters
     setGroupName,
     setGroupType,
@@ -133,6 +141,7 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
     setInvitationMsg,
     setPaymentTypeId,
     setUserAddressId,
+    setEventDate,
     // actions
     addParticipant,
     removeParticipant,
