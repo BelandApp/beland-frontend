@@ -168,6 +168,7 @@ export const GlobalNotification = () => {
         onCancel: isConfirmAndRun ? current.onCancel : undefined,
       },
       autoHide: current.type !== "confirm",
+      topOffset: 40,
       visibilityTime: current.type !== "confirm" ? 3000 : undefined,
       position: "top",
       onPress() {
