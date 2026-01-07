@@ -254,6 +254,7 @@ export const GlobalNotification = () => {
         onShare: isGroupCreated ? current.onShare : undefined,
         onDismiss: isGroupCreated ? current.onDismiss : undefined,
       },
+      topOffset: 40,
       autoHide: current.type !== "confirm" && current.type !== "groupCreated",
       visibilityTime:
         current.type !== "confirm" && current.type !== "groupCreated"

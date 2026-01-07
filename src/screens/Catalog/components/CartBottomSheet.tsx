@@ -190,8 +190,8 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
                   }
                   onCheckout && onCheckout();
                 }}
-              />{" "}
-            </View>{" "}
+              />
+            </View>
           </View>
         }
       />
