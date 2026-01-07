@@ -14,6 +14,7 @@ export * from "./notification/useNotify";
 export * from "./useBeCoinsPrice";
 export * from "./useRecentRecipients";
 export * from "./categories/useCategories";
+export * from "./useOnboardingTour";
 // Hooks de utilidad
 export * from "./useErrorHandler";
 export * from "./useLoadingState";
