@@ -12,10 +12,11 @@ import { CustomInput, SocialButton, Button } from "@components/shared";
 import { LoginWave } from "@components/ui";
 import { BelandLogo } from "@/components";
 import { styles } from "./styles";
-import { CircleArrowLeftIcon } from "lucide-react-native";
+import { CircleArrowLeftIcon, Mail } from "lucide-react-native";
 import { useLogin } from "./hook/useLogin";
 export default function LoginScreen() {
   const { width, height } = Dimensions.get("window");
+  const [showLocalLogin, setShowLocalLogin] = useState(false);
 
   const {
     handleLogin,
@@ -54,6 +55,7 @@ export default function LoginScreen() {
         <LoginWave />
         <View style={styles.container}>
           <SocialButton onPress={handleLoginAuth0} disabled={isLoading} />
+
           <View
             style={{
               width: "100%",
@@ -63,47 +65,63 @@ export default function LoginScreen() {
             }}
           />
 
-          <Text style={styles.subtitle}>Ingresar con tu correo:</Text>
-          <CustomInput
-            label="Correo Electrónico"
-            onChangeText={(email) => setFormData({ ...FormData, email })}
-            value={FormData.email}
-            keyboardType="email-address"
-            error={errors.email}
-            variant="filled"
-          />
+          {!showLocalLogin ? (
+            <TouchableOpacity
+              onPress={() => setShowLocalLogin(true)}
+              style={styles.localLoginButton}
+            >
+              <Mail size={20} color="#FF6B35" />
+              <Text style={styles.localLoginButtonText}>
+                Ingresar con email y contraseña
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <>
+              <Text style={styles.subtitle}>Ingresar con tu correo:</Text>
+              <CustomInput
+                label="Correo Electrónico"
+                onChangeText={(email) => setFormData({ ...FormData, email })}
+                value={FormData.email}
+                keyboardType="email-address"
+                error={errors.email}
+                variant="filled"
+              />
 
-          <CustomInput
-            label="Contraseña"
-            onChangeText={(password) => setFormData({ ...FormData, password })}
-            value={FormData.password}
-            secureTextEntry
-            error={errors.password}
-            variant="filled"
-          />
-          <Button
-            title="Ingresar"
-            onPress={handleLogin}
-            variant="secondary"
-            isLoading={isLoading}
-          />
-          <View style={styles.containerRow}>
-            <Text style={styles.subtitle}>¿Eres nuevo? </Text>
-            <Button
-              title="Registrate"
-              onPress={() => navigate("Register")}
-              style={{ paddingLeft: 0 }}
-              textStyle={styles.forgetText}
-              variant="inline"
-            />
-          </View>
-          <Button
-            title="Olvide mi contraseña"
-            onPress={() => navigate("NewPassword")}
-            textStyle={styles.forgetText}
-            style={{ marginRight: "auto" }}
-            variant="inline"
-          />
+              <CustomInput
+                label="Contraseña"
+                onChangeText={(password) =>
+                  setFormData({ ...FormData, password })
+                }
+                value={FormData.password}
+                secureTextEntry
+                error={errors.password}
+                variant="filled"
+              />
+              <Button
+                title="Ingresar"
+                onPress={handleLogin}
+                variant="secondary"
+                isLoading={isLoading}
+              />
+              <View style={styles.containerRow}>
+                <Text style={styles.subtitle}>¿Eres nuevo? </Text>
+                <Button
+                  title="Registrate"
+                  onPress={() => navigate("Register")}
+                  style={{ paddingLeft: 0 }}
+                  textStyle={styles.forgetText}
+                  variant="inline"
+                />
+              </View>
+              <Button
+                title="Olvide mi contraseña"
+                onPress={() => navigate("NewPassword")}
+                textStyle={styles.forgetText}
+                style={{ marginRight: "auto" }}
+                variant="inline"
+              />
+            </>
+          )}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

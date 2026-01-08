@@ -47,9 +47,14 @@ export const useResetPassword = () => {
     setFormData({ ...FormData, password, confirmPassword: password });
     try {
       setLoading(true);
-      await authService.resetPassword(FormData);
+      await authService.resetPassword({
+        email: FormData.email,
+        code: FormData.code,
+        password: password,
+        confirmPassword: password,
+      });
       notify.success({ message: "Contraseña actualizada" });
-      navigate("MainTabs", { screen: "Home" });
+      navigate("Login");
     } catch (error) {
       const message = getBackendErrorMessage(error);
       notify.error({ message });

@@ -29,6 +29,7 @@ export type RegisterFormData = {
   city: string;
   country: string;
 };
+
 export default function RegisterScreen() {
   const { width, height } = Dimensions.get("window");
   const {
@@ -46,29 +47,31 @@ export default function RegisterScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1 }}
+      style={{ flex: 1, backgroundColor: "#fff" }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        <BelandLogo
-          width={width * 0.5}
-          height={height * 0.2}
-          style={styles.logo}
-        />
         <TouchableOpacity
-          onPress={() => navigate("MainTabs", { screen: "Home" })}
+          onPress={() => navigate("Login")}
           style={styles.backButton}
         >
-          <CircleArrowLeftIcon size={32} color="#FFF" />
+          <CircleArrowLeftIcon size={24} color="#FF6B35" />
         </TouchableOpacity>
+
         <LoginWave />
+
+        <BelandLogo
+          width={width * 0.4}
+          height={height * 0.15}
+          style={styles.logo}
+        />
 
         <View style={styles.container}>
           <Text style={styles.title}>
-            {step === "register" ? "Nueva cuenta" : "Confirma tu correo"}
+            {step === "register" ? "Crear Cuenta" : "Verificar Correo"}
           </Text>
           {step === "register" && (
             <RegisterStep
@@ -89,6 +92,7 @@ export default function RegisterScreen() {
             />
           )}
         </View>
+
         <View style={styles.containerRow}>
           <Text style={styles.subtitle}>¿Ya tienes cuenta? </Text>
           <Button
