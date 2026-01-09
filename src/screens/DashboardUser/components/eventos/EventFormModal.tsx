@@ -249,7 +249,7 @@ export default function EventFormModal({
                   <Image
                     source={{ uri: form.images[0] }}
                     className="absolute inset-0 w-full h-full opacity-30"
-                    style={{ resizeMode: "cover" }}
+                    resizeMode="cover"
                   />
                 ) : null}
                 <View className="z-10 items-center justify-center">
@@ -276,7 +276,7 @@ export default function EventFormModal({
                       <Image
                         source={{ uri }}
                         className="w-20 h-20"
-                        style={{ resizeMode: "cover" }}
+                        resizeMode="cover"
                       />
                       <TouchableOpacity
                         onPress={() => removeImage(idx)}

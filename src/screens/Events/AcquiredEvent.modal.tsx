@@ -30,7 +30,12 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
   const notify = useNotify();
   const [visibleImage, setVisibleImage] = useState(0);
   const [isOpen, setIsOpen] = useState(true);
-  
+  const allImages = useMemo(() => {
+    if (!event || !event.images_urls?.length) return [event?.image_url];
+    return [event.image_url, ...event.images_urls];
+  }, [event]);
+
+  const translateAnim = useRef(new Animated.Value(0)).current;
   if (!event) return null;
 
   const {
@@ -42,8 +47,6 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
     end_sale_date,
     is_refundable,
     refund_days_limit,
-    image_url,
-    images_urls,
     user_attended,
     purchase_price,
     user_pass_id,
@@ -59,12 +62,6 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
       navigate("MisEntradas", { tab: targetTab });
     }, 300);
   };
-  const allImages = useMemo(() => {
-    if (!images_urls || images_urls.length === 0) return [image_url];
-    return [image_url, ...images_urls];
-  }, [image_url, images_urls]);
-
-  const translateAnim = useRef(new Animated.Value(0)).current;
 
   const handleNextImage = () => {
     Animated.sequence([
@@ -130,6 +127,7 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
             <View style={styles.imageContainer}>
               <Animated.Image
                 source={{ uri: allImages[visibleImage] }}
+                resizeMode="cover"
                 style={[
                   styles.image,
                   {
@@ -242,7 +240,6 @@ const styles = StyleSheet.create({
     width: "90%",
     height: 220,
     borderRadius: 16,
-    resizeMode: "cover",
   },
   nextImageButton: {
     position: "absolute",
