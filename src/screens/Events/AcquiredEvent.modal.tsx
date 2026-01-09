@@ -127,6 +127,7 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
             <View style={styles.imageContainer}>
               <Animated.Image
                 source={{ uri: allImages[visibleImage] }}
+                resizeMode="cover"
                 style={[
                   styles.image,
                   {
@@ -239,7 +240,6 @@ const styles = StyleSheet.create({
     width: "90%",
     height: 220,
     borderRadius: 16,
-    resizeMode: "cover",
   },
   nextImageButton: {
     position: "absolute",

@@ -60,7 +60,6 @@ export const EventModal = ({ route }: { route: any }) => {
     is_refundable,
     refund_days_limit,
     image_url,
-    images_urls,
   } = event;
 
   
@@ -125,6 +124,7 @@ export const EventModal = ({ route }: { route: any }) => {
           <View style={styles.imageContainer}>
             <Animated.Image
               source={{ uri: allImages[visibleImage] }}
+              resizeMode="cover"
               style={[
                 styles.image,
                 { transform: [{ translateX: translateAnim }] },
@@ -238,7 +238,6 @@ const styles = StyleSheet.create({
     width: "90%",
     height: 220,
     borderRadius: 16,
-    resizeMode: "cover",
   },
   nextImageButton: {
     position: "absolute",
