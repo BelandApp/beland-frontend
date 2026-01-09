@@ -25,10 +25,12 @@ import { reverseGeocode } from "@/services/mapboxService";
 import * as Linking from "expo-linking";
 import { GroupMembersList, ThemedHeader } from "src/components";
 import { useAuth } from "src/context/AuthContext";
-import { GroupServicesScreen } from "src/screens/Groups";
+import { GroupServicesScreen, GroupPurchaseScreen } from "src/screens/Groups";
 import { GroupOrdersHistoryScreen } from "src/screens/Groups";
 import { Service } from "@/services/ServicesApiService";
 import { GroupServiceModal } from "@/components/modals/GroupServiceModal";
+import { ShareGroupModal } from "@/components/shared/ShareGroupModal";
+import { ShareGroupData } from "@/utils/shareHelper";
 
 type GroupDetailParams = { groupId: string };
 export const GroupDetailScreen = () => {
@@ -60,12 +62,14 @@ export const GroupDetailScreen = () => {
   const [inviteModal, setInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [activeTab, setActiveTab] = useState<
-    "info" | "servicios" | "historial"
+    "info" | "servicios" | "compra" | "historial"
   >("info");
   const [serviceModalVisible, setServiceModalVisible] = useState(false);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   // Ubicación legible por Mapbox
   const [locationName, setLocationName] = useState<string>("");
+  // Modal de compartir
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const notify = useNotify();
 
@@ -211,27 +215,30 @@ export const GroupDetailScreen = () => {
   const isMember = members.some((m) => m.user_id === user?.id);
   const isOwner = user && group?.user_id === user.id;
 
-  const groupActions = isOwner
-    ? [
-        {
-          label: "Gestión de miembros",
-          onPress: () =>
-            navigation.navigate("GroupMembersScreen", {
-              groupId,
-              groupName: group?.name || "",
-            }),
-        },
-        { label: "Eliminar grupo", onPress: handleDelete, destructive: true },
-      ]
-    : isMember
-    ? [
-        {
-          label: "Salir del grupo",
-          onPress: handleLeaveGroup,
-          destructive: true,
-        },
-      ]
-    : [];
+  const groupActions = [
+    // Acciones específicas según rol
+    ...(isOwner
+      ? [
+          {
+            label: "Gestión de miembros",
+            onPress: () =>
+              navigation.navigate("GroupMembersScreen", {
+                groupId,
+                groupName: group?.name || "",
+              }),
+          },
+          { label: "Eliminar grupo", onPress: handleDelete, destructive: true },
+        ]
+      : isMember
+      ? [
+          {
+            label: "Salir del grupo",
+            onPress: handleLeaveGroup,
+            destructive: true,
+          },
+        ]
+      : []),
+  ];
 
   // Eliminar submitEdit, ahora es saveEdit
 
@@ -262,6 +269,12 @@ export const GroupDetailScreen = () => {
         hideUserMenu={true}
         buttons={
           <>
+            <TouchableOpacity
+              className="p-2 mr-1"
+              onPress={() => setShowShareModal(true)}
+            >
+              <Feather name="share-2" size={22} color="#101815" />
+            </TouchableOpacity>
             <TouchableOpacity className="p-2" onPress={openMenu}>
               <Feather name="more-vertical" size={24} color="#101815" />
             </TouchableOpacity>
@@ -273,25 +286,6 @@ export const GroupDetailScreen = () => {
           </>
         }
       />
-      {/* <View className="flex-row items-center justify-between px-4 pt-8 pb-3 bg-background-light border-b border-gray-100">
-        <TouchableOpacity
-          onPress={() => navigation?.goBack?.()}
-          className="mr-4 p-2 border-2 border-green-500 rounded-full"
-        >
-          <Feather name="arrow-left" size={24} color="#00E074" />
-        </TouchableOpacity>
-        <Text className="flex-1 text-center text-lg font-bold">
-          Detalle de Grupo
-        </Text>
-        <TouchableOpacity className="p-2" onPress={openMenu}>
-          <Feather name="more-vertical" size={24} color="#101815" />
-        </TouchableOpacity>
-        <ActionMenu
-          visible={menuVisible}
-          onClose={closeMenu}
-          actions={groupActions}
-        />
-      </View> */}
 
       {/* Tabs */}
       <View className="flex-row bg-white border-b border-gray-200">
@@ -340,6 +334,28 @@ export const GroupDetailScreen = () => {
         </TouchableOpacity>
 
         <TouchableOpacity
+          onPress={() => setActiveTab("compra")}
+          className={`flex-1 py-3 px-4 flex-row items-center justify-center gap-2 ${
+            activeTab === "compra"
+              ? "border-b-2 border-purple-500 bg-purple-50"
+              : ""
+          }`}
+        >
+          <MaterialCommunityIcons
+            name="cart-outline"
+            size={20}
+            color={activeTab === "compra" ? "#9333EA" : "#666"}
+          />
+          <Text
+            className={`font-semibold text-sm ${
+              activeTab === "compra" ? "text-purple-600" : "text-gray-600"
+            }`}
+          >
+            Compra en Grupo
+          </Text>
+        </TouchableOpacity>
+        {/* 
+        <TouchableOpacity
           onPress={() => setActiveTab("historial")}
           className={`flex-1 py-3 px-4 flex-row items-center justify-center gap-2 ${
             activeTab === "historial"
@@ -359,7 +375,7 @@ export const GroupDetailScreen = () => {
           >
             Historial
           </Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       {/* Contenido */}
@@ -564,9 +580,6 @@ export const GroupDetailScreen = () => {
               </View>
             </View>
           ) : null}
-          {/* Acciones eliminadas del cuerpo, ahora solo en menú */}
-
-          {/* Edición inline, sin modal */}
 
           {/* Modal Invitar Miembro profesional */}
           <Modal visible={inviteModal} transparent animationType="fade">
@@ -604,7 +617,7 @@ export const GroupDetailScreen = () => {
             </View>
           </Modal>
           {/* Accesos Rápidos */}
-          <View className="px-4 py-4 gap-2">
+          {/* <View className="px-4 py-4 gap-2">
             <View className="flex-row gap-2">
               <TouchableOpacity
                 onPress={() =>
@@ -650,7 +663,7 @@ export const GroupDetailScreen = () => {
                 </View>
               </TouchableOpacity>
             </View>
-          </View>
+          </View> */}
 
           {/* Lista de miembros */}
           <View className="px-4 py-4">
@@ -670,6 +683,12 @@ export const GroupDetailScreen = () => {
               setServiceModalVisible(true);
             }}
           />
+        </View>
+      ) : activeTab === "compra" ? (
+        <View
+          style={Platform.OS === "web" ? { height: listHeight } : { flex: 1 }}
+        >
+          <GroupPurchaseScreen groupId={groupId} />
         </View>
       ) : (
         <View
@@ -695,6 +714,23 @@ export const GroupDetailScreen = () => {
         onServiceCreated={() => {
           // Refrescar miembros o hacer otra acción necesaria
           fetchGroup();
+        }}
+      />
+
+      {/* Share Group Modal */}
+      <ShareGroupModal
+        visible={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        groupData={{
+          groupName: group?.name || "",
+          groupId: group?.id || groupId,
+          description: group?.description,
+          memberCount: members.length,
+          creatorName:
+            members.find((m) => m.role === "LEADER")?.user?.full_name ||
+            members.find((m) => m.role === "LEADER")?.user?.name ||
+            members.find((m) => m.role === "LEADER")?.user?.email ||
+            "Creador",
         }}
       />
     </View>

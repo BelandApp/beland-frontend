@@ -32,6 +32,7 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
   const [invitationMsg, setInvitationMsg] = React.useState<string>("");
   const [paymentTypeId, setPaymentTypeId] = React.useState<string>("");
   const [userAddressId, setUserAddressId] = React.useState<string>("");
+  const [eventDate, setEventDate] = React.useState<string>(""); // ISO string
 
   const addParticipant = (p: Participant) => setParticipants((s) => [...s, p]);
   const removeParticipant = (id: string) =>
@@ -71,7 +72,10 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
       const payload: any = {
         name: groupName,
       };
-      if (description) payload.description = description;
+      // Solo incluir description si tiene contenido
+      const desc = description?.trim();
+      if (desc && desc.length >= 3) payload.description = desc;
+
       if (deliveryTime) {
         const parsed = new Date(deliveryTime);
         if (!isNaN(parsed.getTime())) payload.date_time = parsed.toISOString();
@@ -81,9 +85,19 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
       payload.group_type_id = extra?.group_type_id ?? groupType;
       // Agregar privacy_id, message_invitation, payment_type_id y user_address_id
       payload.privacy_id = extra?.privacy ?? privacy;
-      payload.message_invitation = extra?.message_invitation ?? invitationMsg;
+
+      // Solo incluir message_invitation si tiene contenido
+      const invMsg = (extra?.message_invitation ?? invitationMsg)?.trim();
+      if (invMsg && invMsg.length >= 3) payload.message_invitation = invMsg;
+
       payload.payment_type_id = extra?.payment_type_id ?? paymentTypeId;
       payload.user_address_id = extra?.user_address_id ?? userAddressId;
+
+      // Add event_date if provided (for future backend support)
+      if (eventDate) {
+        payload.event_date = eventDate;
+      }
+
       // NO enviar location_url, location, latitude, longitude ni status
       const created = await GroupService.createGroup(payload);
       return created;
@@ -112,6 +126,7 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
     invitationMsg,
     paymentTypeId,
     userAddressId,
+    eventDate,
     // setters
     setGroupName,
     setGroupType,
@@ -126,6 +141,7 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
     setInvitationMsg,
     setPaymentTypeId,
     setUserAddressId,
+    setEventDate,
     // actions
     addParticipant,
     removeParticipant,
