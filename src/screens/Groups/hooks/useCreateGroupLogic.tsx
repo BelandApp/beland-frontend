@@ -76,11 +76,6 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
       const desc = description?.trim();
       if (desc && desc.length >= 3) payload.description = desc;
 
-      if (deliveryTime) {
-        const parsed = new Date(deliveryTime);
-        if (!isNaN(parsed.getTime())) payload.date_time = parsed.toISOString();
-        else payload.date_time = deliveryTime;
-      }
       // Usar group_type_id del extra si viene, si no usar el del hook
       payload.group_type_id = extra?.group_type_id ?? groupType;
       // Agregar privacy_id, message_invitation, payment_type_id y user_address_id
@@ -93,9 +88,12 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
       payload.payment_type_id = extra?.payment_type_id ?? paymentTypeId;
       payload.user_address_id = extra?.user_address_id ?? userAddressId;
 
-      // Add event_date if provided (for future backend support)
+      // Add event_at (required by backend)
       if (eventDate) {
-        payload.event_date = eventDate;
+        payload.event_at = eventDate;
+      } else {
+        // Si no hay fecha, usar fecha actual como fallback
+        payload.event_at = new Date().toISOString();
       }
 
       // NO enviar location_url, location, latitude, longitude ni status

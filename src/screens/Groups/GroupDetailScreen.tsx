@@ -30,7 +30,6 @@ import { GroupOrdersHistoryScreen } from "src/screens/Groups";
 import { Service } from "@/services/ServicesApiService";
 import { GroupServiceModal } from "@/components/modals/GroupServiceModal";
 import { ShareGroupModal } from "@/components/shared/ShareGroupModal";
-import { ShareGroupData } from "@/utils/shareHelper";
 
 type GroupDetailParams = { groupId: string };
 export const GroupDetailScreen = () => {
@@ -267,6 +266,7 @@ export const GroupDetailScreen = () => {
         canGoBack
         title="Detalle de Grupo"
         hideUserMenu={true}
+        onBackPress={() => navigation.navigate("GroupsList")}
         buttons={
           <>
             <TouchableOpacity

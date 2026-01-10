@@ -158,15 +158,11 @@ export interface CreateGroupDto {
   name: string;
   description?: string;
   message_invitation?: string;
-  location?: string;
-  location_url?: string;
-  date_time?: string | Date;
-  status?: "ACTIVE" | "PENDING" | "INACTIVE" | "DELETE";
-  latitude?: number;
-  longitude?: number;
+  user_address_id?: string;
   group_type_id?: string;
   privacy_id?: string;
   payment_type_id?: string;
+  event_at?: string | Date;
 }
 
 export interface UpdateGroupDto {

@@ -185,6 +185,7 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
         message_invitation: invitationMsg,
         payment_type_id: paymentTypeId,
         group_type_id: groupType,
+        user_address_id: userAddressId,
       });
       if (result) {
         // Guardar el grupo creado y mostrar modal de compartir
@@ -306,20 +307,27 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
                         type="time"
                         value={
                           eventDate
-                            ? new Date(eventDate).toISOString().slice(11, 16)
+                            ? (() => {
+                                const date = new Date(eventDate);
+                                const hours = String(date.getHours()).padStart(
+                                  2,
+                                  "0"
+                                );
+                                const minutes = String(
+                                  date.getMinutes()
+                                ).padStart(2, "0");
+                                return `${hours}:${minutes}`;
+                              })()
                             : ""
                         }
                         onChange={(e: any) => {
                           const timeValue = e.target.value;
                           if (timeValue && eventDate) {
-                            const dateValue = new Date(eventDate)
-                              .toISOString()
-                              .slice(0, 10);
-                            setEventDate(
-                              new Date(
-                                `${dateValue}T${timeValue}`
-                              ).toISOString()
-                            );
+                            const date = new Date(eventDate);
+                            const [hours, minutes] = timeValue.split(":");
+                            date.setHours(parseInt(hours, 10));
+                            date.setMinutes(parseInt(minutes, 10));
+                            setEventDate(date.toISOString());
                           }
                         }}
                         style={{

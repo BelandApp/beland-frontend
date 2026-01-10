@@ -14,7 +14,7 @@ export const styles = StyleSheet.create({
   container: {
     flexDirection: "column",
     marginHorizontal: "auto",
-    marginBottom: "auto",
+    marginVertical: "auto",
     padding: 24,
     gap: 8,
     height: Platform.OS === "web" ? "auto" : undefined,
