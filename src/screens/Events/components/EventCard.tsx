@@ -46,7 +46,7 @@ export const EventCard: React.FC<Event> = ({
         </View>
       )}
       {/* Main Image */}
-      <Image source={{ uri: image_url }} style={styles.image} />
+      <Image source={{ uri: image_url }} style={styles.image} resizeMode="cover" />
       {/* Container */}
       <View style={styles.container}>
         <View style={styles.header}>
@@ -127,7 +127,6 @@ const styles = StyleSheet.create({
     width: "35%",
     borderTopLeftRadius: 24,
     borderBottomLeftRadius: 24,
-    resizeMode: "cover",
     overflow: "hidden",
   },
   container: {

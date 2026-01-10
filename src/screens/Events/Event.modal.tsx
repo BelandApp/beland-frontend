@@ -30,7 +30,7 @@ export const EventModal = ({ route }: { route: any }) => {
   const notify = useNotify();
   const { getEvent } = eventStore();
   const event = getEvent(id);
-  const { navigate, goBack } = useCustomNavigation();
+  const { navigate } = useCustomNavigation();
   const { canPerformAction, handleAuth0Login } = useAuth();
   const [visibleImage, setVisibleImage] = useState(0);
   const [isOpen, setIsOpen] = useState(true);
@@ -39,6 +39,12 @@ export const EventModal = ({ route }: { route: any }) => {
     setIsOpen(false);
     setTimeout(() => navigate("MainTabs", { screen: "Community" }), 300);
   };
+  const allImages = useMemo(() => {
+    if (!event || !event.images_urls?.length) return [event?.image_url];
+    return [event.image_url, ...event.images_urls];
+  }, [event]);
+
+  const translateAnim = useRef(new Animated.Value(0)).current;
   if (!event) return null;
 
   const {
@@ -54,16 +60,9 @@ export const EventModal = ({ route }: { route: any }) => {
     is_refundable,
     refund_days_limit,
     image_url,
-    images_urls,
   } = event;
 
-  const allImages = useMemo(() => {
-    if (!images_urls?.length) return [image_url];
-    return [image_url, ...images_urls];
-  }, [image_url, images_urls]);
-
-  const translateAnim = useRef(new Animated.Value(0)).current;
-
+  
   const handleNextImage = () => {
     Animated.sequence([
       Animated.timing(translateAnim, {
@@ -125,6 +124,7 @@ export const EventModal = ({ route }: { route: any }) => {
           <View style={styles.imageContainer}>
             <Animated.Image
               source={{ uri: allImages[visibleImage] }}
+              resizeMode="cover"
               style={[
                 styles.image,
                 { transform: [{ translateX: translateAnim }] },
@@ -238,7 +238,6 @@ const styles = StyleSheet.create({
     width: "90%",
     height: 220,
     borderRadius: 16,
-    resizeMode: "cover",
   },
   nextImageButton: {
     position: "absolute",

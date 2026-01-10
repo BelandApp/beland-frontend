@@ -32,6 +32,7 @@ import {
   toastConfig,
 } from "src/components/shared/notification/GlobalNotification";
 import Toast from "react-native-toast-message";
+import { ErrorBoundary } from "src/components/layout/ErrorBoundary";
 
 const AppContent = () => {
   const { user } = useAuth();
@@ -176,7 +177,9 @@ const App = () => {
         <NotificationProvider>
           {/* <SocketStatus /> */}
           <Toast config={toastConfig} />
-          <AppContent />
+          <ErrorBoundary>
+            <AppContent />
+          </ErrorBoundary>
           <GlobalNotification />
           <NotificationBanner />
         </NotificationProvider>
