@@ -21,6 +21,7 @@ export interface Group {
   created_at: Date;
   updated_at: Date;
   deleted_at: Date;
+  event_at?: Date | string;
   user_id: string;
   group_type: GroupType;
   group_type_id: string;

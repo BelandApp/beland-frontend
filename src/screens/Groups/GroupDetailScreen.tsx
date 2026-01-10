@@ -555,6 +555,38 @@ export const GroupDetailScreen = () => {
                     : "-"}
                 </Text>
               </View>
+              {/* Fecha y Hora del Evento */}
+              {group.event_at && (
+                <View className="flex-row items-center justify-between p-4 border-t border-gray-100">
+                  <View className="flex-row items-center gap-3">
+                    <View className="w-8 h-8 rounded-full bg-gray-100 items-center justify-center">
+                      <Feather name="calendar" size={18} color="#5e8d76" />
+                    </View>
+                    <Text className="text-sm font-medium text-text-sec-light">
+                      Fecha y Hora
+                    </Text>
+                  </View>
+                  <View className="flex-col items-end">
+                    <Text className="text-sm font-semibold text-text-main-light">
+                      {new Date(group.event_at).toLocaleDateString("es-AR", {
+                        weekday: "short",
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </Text>
+                    <View className="flex-row items-center gap-1 mt-1">
+                      <Feather name="clock" size={14} color="#5e8d76" />
+                      <Text className="text-xs font-medium text-primary">
+                        {new Date(group.event_at).toLocaleTimeString("es-AR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              )}
             </View>
           </View>
           {/* Mensaje de invitación */}
