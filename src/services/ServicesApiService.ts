@@ -77,7 +77,7 @@ class ServicesServiceClass extends CoreApiService {
    */
   async getGroupServices(groupId: string): Promise<GroupService[]> {
     const response = await this.get<any>(
-      `${this.ENDPOINTS.GROUP_SERVICES}?group_id=${groupId}`
+      `${this.ENDPOINTS.GROUP_SERVICES}?group_id=${groupId}`,
     );
 
     // Handle wrapped array format
@@ -99,17 +99,20 @@ class ServicesServiceClass extends CoreApiService {
   async createGroupService(
     groupId: string,
     serviceId: string,
-    paymentTypeId: string
+    paymentTypeId?: string,
   ): Promise<GroupService> {
     const payload: any = {
       group_id: groupId,
       service_id: serviceId,
-      payment_type_id: paymentTypeId,
     };
+
+    if (paymentTypeId) {
+      payload.payment_type_id = paymentTypeId;
+    }
 
     const response = await this.post<GroupService>(
       this.ENDPOINTS.GROUP_SERVICES,
-      payload
+      payload,
     );
     return response;
   }
@@ -120,7 +123,7 @@ class ServicesServiceClass extends CoreApiService {
   async completeGroupService(groupServiceId: string): Promise<GroupService> {
     const response = await this.post<GroupService>(
       `${this.ENDPOINTS.GROUP_SERVICES}/complete/${groupServiceId}`,
-      {}
+      {},
     );
     return response;
   }

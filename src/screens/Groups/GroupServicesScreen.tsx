@@ -7,35 +7,70 @@ import {
   Image,
   ActivityIndicator,
   RefreshControl,
+  Dimensions,
+  Modal,
+  Alert,
 } from "react-native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { ServicesApiService, Service } from "@/services/ServicesApiService";
+import { MaterialCommunityIcons, Feather } from "@expo/vector-icons";
+import {
+  ServicesApiService,
+  Service,
+  GroupService,
+} from "@/services/ServicesApiService";
 import { useNotify } from "@/hooks";
+import { LinearGradient } from "expo-linear-gradient";
+import { GroupService as GroupServiceAPI } from "@/services/GroupApiService";
 
 interface GroupServicesScreenProps {
   groupId: string;
   isGroupLeader?: boolean;
-  onServiceSelect?: (service: Service) => void;
 }
+
+const { width } = Dimensions.get("window");
+// Match GroupPurchaseScreen layout logic
+// Padding Horizontal: 16 (container) -> handled in contentContainerStyle or wrapper?
+// In GroupPurchaseScreen: ITEM_WIDTH = (width - 48) / 2.
+// 48 comes from: 16 (left padding) + 16 (right padding) + 16 (gap).
+const ITEM_WIDTH = (width - 48) / 2;
+
+type TabOption = "catalog" | "acquired";
 
 export const GroupServicesScreen: React.FC<GroupServicesScreenProps> = ({
   groupId,
   isGroupLeader = false,
-  onServiceSelect,
 }) => {
+  const [activeTab, setActiveTab] = useState<TabOption>("catalog");
   const [services, setServices] = useState<Service[]>([]);
+  const [acquiredServices, setAcquiredServices] = useState<GroupService[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Hiring Modal State
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [hiringModalVisible, setHiringModalVisible] = useState(false);
+  const [processingHiring, setProcessingHiring] = useState(false);
+
+  // Delete Modal State
+  const [serviceToDelete, setServiceToDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+
   const notifyContext = useNotify();
 
-  // Load services
-  const loadServices = useCallback(async () => {
+  // Load Data
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await ServicesApiService.getServices();
-      // Filter only active services
-      const activeServices = data.filter((service) => service.is_active);
+      const [availableData, acquiredData] = await Promise.all([
+        ServicesApiService.getServices(),
+        ServicesApiService.getGroupServices(groupId),
+      ]);
+
+      const activeServices = availableData.filter((s) => s.is_active);
       setServices(activeServices);
+      setAcquiredServices(acquiredData);
     } catch (error) {
       console.error("Error loading services:", error);
       notifyContext.error({
@@ -44,211 +79,453 @@ export const GroupServicesScreen: React.FC<GroupServicesScreenProps> = ({
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  // Refresh services
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      const data = await ServicesApiService.getServices();
-      const activeServices = data.filter((service) => service.is_active);
-      setServices(activeServices);
-    } catch (error) {
-      console.error("Error refreshing services:", error);
-      notifyContext.error({
-        message: "Error al actualizar servicios",
-      });
-    } finally {
-      setRefreshing(false);
-    }
-  }, []);
+  }, [groupId]);
 
   useEffect(() => {
-    loadServices();
-  }, [loadServices]);
+    loadData();
+  }, [loadData]);
 
-  // Service Card Component
-  const ServiceCard = ({ service }: { service: Service }) => {
-    const handlePress = () => {
-      if (isGroupLeader && onServiceSelect) {
-        onServiceSelect(service);
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  }, [loadData]);
+
+  // --- Actions ---
+
+  const handleHirePress = (service: Service) => {
+    // Check if already acquired
+    const isAcquired = acquiredServices.some(
+      (gs) => gs.service_id === service.id && !gs.is_completed,
+    );
+    if (isAcquired) {
+      notifyContext.info({ message: "Este servicio ya está activo." });
+      return;
+    }
+    setSelectedService(service);
+    setHiringModalVisible(true);
+  };
+
+  const handleDeletePress = (groupServiceId: string, serviceName: string) => {
+    setServiceToDelete({ id: groupServiceId, name: serviceName });
+    setDeleteModalVisible(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!serviceToDelete) return;
+    try {
+      setProcessingHiring(true);
+      await ServicesApiService.deleteGroupService(serviceToDelete.id);
+      notifyContext.success({
+        message: "Servicio cancelado exitosamente.",
+      });
+      setDeleteModalVisible(false);
+      setServiceToDelete(null);
+      await loadData();
+    } catch (error: any) {
+      console.error("Error deleting service:", error);
+      notifyContext.error({
+        message: error.message || "Error al cancelar el servicio.",
+      });
+    } finally {
+      setProcessingHiring(false);
+    }
+  };
+
+  const confirmHiring = async () => {
+    if (!selectedService) return;
+
+    try {
+      setProcessingHiring(true);
+
+      // Auto-select "FULL" payment type
+      const paymentTypes = await GroupServiceAPI.getPaymentTypes();
+      const fullPayment = paymentTypes.find((pt) => pt.code === "FULL");
+
+      if (!fullPayment) {
+        throw new Error(
+          "No se pudo configurar el método de pago automático (FULL).",
+        );
       }
-    };
 
-    const price = service.price || 0;
-    const priceLabel = "USD";
+      await ServicesApiService.createGroupService(
+        groupId,
+        selectedService.id,
+        fullPayment.id,
+      );
+
+      notifyContext.success({
+        message: "¡Servicio contratado exitosamente!",
+      });
+      setHiringModalVisible(false);
+      loadData();
+    } catch (error: any) {
+      console.error("Hiring error:", error);
+      notifyContext.error({
+        message: error.message || "Error al contratar el servicio.",
+      });
+    } finally {
+      setProcessingHiring(false);
+    }
+  };
+
+  // --- Renderers ---
+
+  const renderServiceCard = ({ item }: { item: Service }) => {
+    const priceDisplay = item.price
+      ? `$ ${Number(item.price).toFixed(2)} USD`
+      : "Consultar";
 
     return (
-      <TouchableOpacity
-        onPress={handlePress}
-        disabled={!isGroupLeader || !onServiceSelect}
-        className={`mx-4 mb-4 rounded-2xl overflow-hidden ${
-          isGroupLeader
-            ? "bg-white border-2 border-orange-400"
-            : "bg-white border border-gray-200"
-        }`}
-        style={{
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 3,
-          elevation: 3,
-        }}
+      <View
+        className="mb-4 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex-col"
+        style={{ width: ITEM_WIDTH }}
       >
-        {/* Image Section */}
-        <View className="relative h-48 bg-gray-100 overflow-hidden">
-          {service.image_url ? (
+        <View className="h-32 bg-gray-100 relative">
+          {item.image_url ? (
             <Image
-              source={{ uri: service.image_url }}
+              source={{ uri: item.image_url }}
               className="w-full h-full"
               resizeMode="cover"
             />
           ) : (
-            <View className="w-full h-full bg-gradient-to-br from-green-100 to-green-50 flex items-center justify-center">
+            <LinearGradient
+              colors={["#f3f4f6", "#e5e7eb"]}
+              className="w-full h-full items-center justify-center"
+            >
               <MaterialCommunityIcons
-                name="shopping-outline"
-                size={60}
-                color="#6BA43A"
+                name="room-service-outline"
+                size={32}
+                color="#9ca3af"
               />
-            </View>
+            </LinearGradient>
           )}
-
-          {/* Status Badge */}
-          <View className="absolute top-3 right-3 bg-green-500 rounded-full px-3 py-1 flex-row items-center gap-1">
-            <MaterialCommunityIcons
-              name="check-circle"
-              size={14}
-              color="white"
-            />
-            <Text className="text-white text-xs font-semibold">Disponible</Text>
-          </View>
         </View>
 
-        {/* Content Section */}
-        <View className="p-4">
-          {/* Service Name */}
-          <Text className="text-lg font-bold text-gray-900 mb-1 leading-tight">
-            {service.name}
-          </Text>
-
-          {/* Description */}
-          <Text
-            className="text-sm text-gray-600 mb-3 leading-5"
-            numberOfLines={2}
-          >
-            {service.description}
-          </Text>
-
-          {/* Price Section */}
-          <View className="bg-gradient-to-r from-green-50 to-orange-50 rounded-lg p-3 mb-3 flex-row items-center justify-between">
-            <View className="flex-row items-center gap-2">
-              <MaterialCommunityIcons
-                name="currency-usd"
-                size={20}
-                color="#F88D2A"
-              />
-              <View>
-                <Text className="text-xs text-gray-600 font-medium">
-                  Precio
-                </Text>
-                <Text className="text-lg font-bold text-gray-900">
-                  {typeof price === "number" ? price.toFixed(2) : price}
-                </Text>
-              </View>
-            </View>
-            <Text className="text-xs font-semibold text-gray-700">
-              {priceLabel}
+        <View className="p-3 flex-1 flex-col justify-between">
+          <View>
+            <Text
+              className="text-gray-900 font-bold text-sm mb-1 leading-4"
+              numberOfLines={2}
+            >
+              {item.name}
+            </Text>
+            <Text
+              className="text-xs leading-3 mb-3 text-gray-400"
+              numberOfLines={3}
+            >
+              {item.description}
             </Text>
           </View>
 
-          {/* CTA Button */}
-          {isGroupLeader && onServiceSelect && (
-            <TouchableOpacity
-              onPress={handlePress}
-              className="bg-green-500 rounded-lg py-2.5 flex-row items-center justify-center gap-2 active:bg-green-600"
-            >
-              <MaterialCommunityIcons
-                name="plus-circle"
-                size={18}
-                color="white"
-              />
-              <Text className="text-white font-semibold text-sm">
-                Contratar servicio
-              </Text>
-            </TouchableOpacity>
-          )}
+          <View>
+            <Text className="text-gray-900 font-extrabold text-base mb-2">
+              {priceDisplay}
+            </Text>
 
-          {/* View Only Mode */}
-          {!isGroupLeader && (
-            <View className="bg-gray-100 rounded-lg py-2.5 flex-row items-center justify-center gap-2 opacity-60">
-              <MaterialCommunityIcons name="lock" size={16} color="#666" />
-              <Text className="text-gray-600 font-medium text-xs">
-                Solo el líder puede contratar
-              </Text>
-            </View>
-          )}
+            {isGroupLeader ? (
+              <TouchableOpacity
+                onPress={() => handleHirePress(item)}
+                className="bg-orange-500 py-2.5 rounded-xl items-center active:bg-orange-600 shadow-sm shadow-orange-200"
+              >
+                <Text className="text-white text-xs font-bold uppercase tracking-wider">
+                  Contratar
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <View className="bg-gray-100 py-2 rounded-lg items-center">
+                <Text className="text-gray-400 text-xs font-bold uppercase">
+                  Disponible
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
-      </TouchableOpacity>
+      </View>
     );
   };
 
-  // Empty State
-  if (!loading && services.length === 0) {
+  const renderAcquiredCard = ({ item }: { item: GroupService }) => {
+    const isCompleted = item.is_completed;
     return (
-      <View className="flex-1 bg-white flex items-center justify-center px-4">
-        <View className="mb-6">
-          <MaterialCommunityIcons name="inbox-outline" size={80} color="#CCC" />
+      <View className="mb-3 bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex-row items-center">
+        <View
+          className={`w-12 h-12 rounded-full items-center justify-center mr-3 ${isCompleted ? "bg-green-100" : "bg-blue-100"}`}
+        >
+          <MaterialCommunityIcons
+            name={isCompleted ? "check-circle" : "clock-outline"}
+            size={24}
+            color={isCompleted ? "#16a34a" : "#2563eb"}
+          />
         </View>
-        <Text className="text-xl font-bold text-gray-900 mb-2">
-          Sin servicios disponibles
-        </Text>
-        <Text className="text-center text-gray-600 text-sm leading-5">
-          En este momento no hay servicios disponibles para contratar.
-        </Text>
+        <View className="flex-1">
+          <Text className="text-gray-900 font-bold text-base">
+            {item.service?.name || "Servicio"}
+          </Text>
+          <Text className="text-gray-500 text-xs mt-0.5">
+            {isCompleted
+              ? `Completado el ${new Date(item.completed_at!).toLocaleDateString()}`
+              : "En curso • Activo"}
+          </Text>
+          {item.service?.price && (
+            <Text className="text-gray-900 font-bold text-xs mt-1">
+              $ {item.service.price} USD
+            </Text>
+          )}
+        </View>
+        {isGroupLeader && !isCompleted && (
+          <View className="flex-row items-center">
+            <TouchableOpacity
+              className="bg-red-50 p-2 rounded-lg border border-red-100 ml-2 items-center justify-center"
+              onPress={() =>
+                handleDeletePress(item.id, item.service?.name || "Servicio")
+              }
+            >
+              <Feather name="x" size={20} color="#ef4444" />
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     );
-  }
+  };
 
-  // Loading State
+  // --- Hiring Modal (Confirm Only) ---
+  const renderHiringModal = () => (
+    <Modal
+      visible={hiringModalVisible}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setHiringModalVisible(false)}
+    >
+      <View className="flex-1 bg-black/60 justify-center items-center px-6">
+        <View className="bg-white w-full max-w-sm rounded-2xl p-6 shadow-xl">
+          <View className="items-center mb-4">
+            <View className="w-16 h-16 bg-orange-100 rounded-full items-center justify-center mb-3">
+              <MaterialCommunityIcons
+                name="star-check-outline"
+                size={32}
+                color="#f97316"
+              />
+            </View>
+            <Text className="text-xl font-bold text-gray-900 text-center">
+              Confirmar Contratación
+            </Text>
+          </View>
+
+          <Text className="text-gray-500 text-center mb-6 px-4">
+            ¿Deseas contratar el servicio{" "}
+            <Text className="font-bold text-gray-800">
+              "{selectedService?.name}"
+            </Text>
+            ?{"\n\n"}
+            Se descontará{" "}
+            <Text className="font-bold text-orange-600">
+              ${selectedService?.price} USD
+            </Text>{" "}
+            de tu saldo como líder.
+          </Text>
+
+          <View className="flex-row space-x-3">
+            <TouchableOpacity
+              className="flex-1 py-3.5 bg-gray-100 rounded-xl items-center border border-gray-200"
+              onPress={() => setHiringModalVisible(false)}
+              disabled={processingHiring}
+            >
+              <Text className="font-bold text-gray-600">Cancelar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="flex-1 py-3.5 bg-orange-500 rounded-xl items-center flex-row justify-center space-x-2 shadow-lg shadow-orange-200"
+              onPress={confirmHiring}
+              disabled={processingHiring}
+            >
+              {processingHiring && (
+                <ActivityIndicator color="white" size="small" />
+              )}
+              <Text className="font-bold text-white">Confirmar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+
+  // --- Delete Modal ---
+  const renderDeleteModal = () => (
+    <Modal
+      visible={deleteModalVisible}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setDeleteModalVisible(false)}
+    >
+      <View className="flex-1 bg-black/60 justify-center items-center px-6">
+        <View className="bg-white w-full max-w-sm rounded-2xl p-6 shadow-xl">
+          <View className="items-center mb-4">
+            <View className="w-16 h-16 bg-red-100 rounded-full items-center justify-center mb-3">
+              <Feather name="trash-2" size={32} color="#ef4444" />
+            </View>
+            <Text className="text-xl font-bold text-gray-900 text-center">
+              Cancelar Servicio
+            </Text>
+          </View>
+
+          <Text className="text-gray-500 text-center mb-6 px-4">
+            ¿Estás seguro de que deseas cancelar el servicio{" "}
+            <Text className="font-bold text-gray-800">
+              "{serviceToDelete?.name}"
+            </Text>
+            ?{"\n\n"}
+            Esta acción no se puede deshacer.
+          </Text>
+
+          <View className="flex-row space-x-3">
+            <TouchableOpacity
+              className="flex-1 py-3.5 bg-gray-100 rounded-xl items-center border border-gray-200"
+              onPress={() => setDeleteModalVisible(false)}
+              disabled={processingHiring}
+            >
+              <Text className="font-bold text-gray-600">No, volver</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="flex-1 py-3.5 bg-red-500 rounded-xl items-center flex-row justify-center space-x-2 shadow-lg shadow-red-200"
+              onPress={confirmDelete}
+              disabled={processingHiring}
+            >
+              {processingHiring && (
+                <ActivityIndicator color="white" size="small" />
+              )}
+              <Text className="font-bold text-white">Sí, cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+
   if (loading) {
     return (
-      <View className="flex-1 bg-white flex items-center justify-center">
-        <ActivityIndicator size="large" color="#6BA43A" />
-        <Text className="mt-4 text-gray-600 font-medium">
-          Cargando servicios...
-        </Text>
+      <View className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator size="large" color="#f97316" />
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-gray-50">
-      {/* Header */}
-      <View className="bg-white px-4 py-4 border-b border-gray-100">
-        <Text className="text-2xl font-bold text-gray-900">Servicios</Text>
-        <Text className="text-sm text-gray-600 mt-1">
-          {services.length} servicio{services.length !== 1 ? "s" : ""}{" "}
-          disponible
-          {services.length !== 1 ? "s" : ""}
-        </Text>
+    <View className="flex-1 bg-white">
+      {/* Header Tabs */}
+      <View className="flex-row border-b border-gray-100 pt-2 px-4 bg-white z-10">
+        <TouchableOpacity
+          onPress={() => setActiveTab("catalog")}
+          className={`mr-6 pb-3 ${activeTab === "catalog" ? "border-b-2 border-orange-500" : ""}`}
+        >
+          <Text
+            className={`font-bold text-base ${activeTab === "catalog" ? "text-orange-500" : "text-gray-400"}`}
+          >
+            Catálogo
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => setActiveTab("acquired")}
+          className={`mr-6 pb-3 ${activeTab === "acquired" ? "border-b-2 border-orange-500" : ""}`}
+        >
+          <Text
+            className={`font-bold text-base ${activeTab === "acquired" ? "text-orange-500" : "text-gray-400"}`}
+          >
+            Mis Servicios
+          </Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Services List */}
-      <FlatList
-        data={services}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <ServiceCard service={item} />}
-        contentContainerStyle={{ paddingVertical: 12 }}
-        scrollEventThrottle={16}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={["#6BA43A"]}
-            tintColor="#6BA43A"
+      <View className="flex-1 bg-gray-50/50">
+        {activeTab === "catalog" ? (
+          <FlatList
+            key="catalog-list"
+            data={services}
+            renderItem={renderServiceCard}
+            numColumns={2}
+            keyExtractor={(item) => item.id}
+            style={{ flex: 1 }}
+            columnWrapperStyle={{
+              justifyContent: "space-between",
+              paddingHorizontal: 16,
+            }}
+            contentContainerStyle={{ paddingTop: 16, paddingBottom: 100 }}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor="#f97316"
+              />
+            }
+            ListHeaderComponent={
+              <View className="mb-4 px-4 w-full">
+                <Text className="text-lg font-bold text-gray-900">
+                  Servicios Disponibles
+                </Text>
+                <Text className="text-gray-500 text-xs">
+                  Mejora la experiencia de tu grupo.
+                </Text>
+              </View>
+            }
+            ListHeaderComponentStyle={{ paddingHorizontal: 0 }} // Controlled manually
+            ListEmptyComponent={
+              <View className="py-20 items-center justify-center">
+                <MaterialCommunityIcons
+                  name="store-off-outline"
+                  size={48}
+                  color="#d1d5db"
+                />
+                <Text className="text-gray-400 mt-2 font-medium">
+                  No hay servicios disponibles.
+                </Text>
+              </View>
+            }
           />
-        }
-      />
+        ) : (
+          <FlatList
+            key="acquired-list"
+            data={acquiredServices}
+            renderItem={renderAcquiredCard}
+            keyExtractor={(item) => item.id}
+            style={{ flex: 1 }}
+            contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor="#f97316"
+              />
+            }
+            ListHeaderComponent={
+              <View className="mb-4">
+                <Text className="text-lg font-bold text-gray-900">
+                  Servicios Contratados
+                </Text>
+                <Text className="text-gray-500 text-xs">
+                  Historial de servicios activos y pasados.
+                </Text>
+              </View>
+            }
+            ListEmptyComponent={
+              <View className="py-20 items-center justify-center bg-white rounded-2xl border border-dashed border-gray-200 mt-4 mx-1">
+                <MaterialCommunityIcons
+                  name="playlist-remove"
+                  size={40}
+                  color="#d1d5db"
+                />
+                <Text className="text-gray-400 mt-2 font-medium">
+                  Aún no han contratado servicios.
+                </Text>
+              </View>
+            }
+          />
+        )}
+      </View>
+
+      {renderHiringModal()}
+      {renderDeleteModal()}
     </View>
   );
 };

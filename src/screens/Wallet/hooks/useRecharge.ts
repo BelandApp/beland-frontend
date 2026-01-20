@@ -177,16 +177,125 @@ export function useRecharge() {
       console.error("Error al cargar Payphone:", error);
       Alert.alert(
         "Error",
-        "No se pudo cargar el widget de Payphone. Por favor, intenta nuevamente."
+        "No se pudo cargar el widget de Payphone. Por favor, intenta nuevamente.",
       );
       setIsLoading(false);
     }
   };
 
-  const handleBankTransferPayment = () => {
-    notify.info({
-      message: "Función en desarrollo",
-    })
+  // Bank Transfer State
+  const [referenceId, setReferenceId] = useState("");
+  const [proofImage, setProofImage] = useState<any>(null);
+  const [showBankTransferModal, setShowBankTransferModal] = useState(false);
+  const [paymentAccounts, setPaymentAccounts] = useState<any[]>([]);
+  const [selectedPaymentAccountId, setSelectedPaymentAccountId] =
+    useState<string>("");
+
+  // Load Payment Accounts
+  useEffect(() => {
+    // Import dynamically to avoid circular dependencies if any, or just at top
+    // assuming PaymentAccountService is available
+    const loadPaymentAccounts = async () => {
+      try {
+        const {
+          PaymentAccountService,
+        } = require("src/services/PaymentAccountApiService");
+        const response = await PaymentAccountService.getPaymentAccounts();
+
+        // Handle response structure (it returns [data, count] based on controller analysis)
+        let accounts: any[] = [];
+        if (Array.isArray(response)) {
+          accounts = response[0] || [];
+        } else if (response && (response as any).data) {
+          // Standard PaginatedResponse
+          accounts = (response as any).data || [];
+        }
+
+        setPaymentAccounts(accounts);
+
+        // Try to find the one matching "Banco Guayaquil"
+        const guayaquilAccount = accounts.find(
+          (acc: any) =>
+            acc.bank_name?.toLowerCase().includes("guayaquil") ||
+            acc.alias?.toLowerCase().includes("guayaquil"),
+        );
+
+        if (guayaquilAccount) {
+          setSelectedPaymentAccountId(guayaquilAccount.id);
+        } else if (accounts.length > 0) {
+          setSelectedPaymentAccountId(accounts[0].id);
+        }
+      } catch (error) {
+        console.error("Error loading payment accounts:", error);
+      }
+    };
+
+    if (selectedPaymentMethod === "BANK_TRANSFER") {
+      loadPaymentAccounts();
+    }
+  }, [selectedPaymentMethod]);
+
+  const handleBankTransferPayment = async () => {
+    if (!referenceId) {
+      Alert.alert(
+        "Error",
+        "Por favor ingresa el número de referencia eferencia.",
+      );
+      return;
+    }
+
+    // Validate amount
+    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
+      Alert.alert("Error", "Monto inválido.");
+      return;
+    }
+
+    // Validate Payment Account
+    if (!selectedPaymentAccountId && paymentAccounts.length === 0) {
+      Alert.alert(
+        "Error",
+        "No hay cuentas bancarias disponibles para transferir.",
+      );
+      return;
+    }
+
+    // Use selected or first one
+    const accountId = selectedPaymentAccountId || paymentAccounts[0]?.id;
+
+    try {
+      setIsLoading(true);
+
+      const { WalletService } = require("src/services/WalletApiService");
+
+      // Note: Backend doesn't support image upload yet.
+      // We send the reference ID and we assume the user has transferred.
+
+      await WalletService.createRechargeTransfer({
+        payment_account_id: accountId,
+        amount_usd: Number(amount),
+        transfer_id: referenceId,
+      });
+
+      notify.success({
+        message:
+          "Solicitud de recarga enviada correctamente. Será procesada en 24-48 horas.",
+      });
+
+      // Reset logic
+      setReferenceId("");
+      setProofImage(null);
+      setAmount("");
+      setShowBankTransferModal(false);
+      setSelectedPaymentMethod("");
+    } catch (error: any) {
+      console.error("Error creating bank transfer recharge:", error);
+      Alert.alert(
+        "Error",
+        error.message || "No se pudo crear la solicitud de recarga.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleProceedToPayment = async () => {
@@ -195,7 +304,7 @@ export function useRecharge() {
     if (selectedPaymentMethod === "PAYPHONE") {
       await handlePayphonePayment();
     } else if (selectedPaymentMethod === "BANK_TRANSFER") {
-      handleBankTransferPayment();
+      setShowBankTransferModal(true);
     }
   };
 
@@ -214,6 +323,15 @@ export function useRecharge() {
     selectedPaymentMethod,
     isLoading,
 
+    // Bank Transfer State
+    referenceId,
+    setReferenceId,
+    proofImage,
+    setProofImage,
+    showBankTransferModal,
+    setShowBankTransferModal,
+    paymentAccounts,
+
     // Datos calculados
     beCoinsAmount,
     usdAmount,
@@ -226,6 +344,7 @@ export function useRecharge() {
     handlePresetAmount,
     handlePaymentMethodSelect,
     handleProceedToPayment,
+    handleBankTransferPayment, // Export handler to be used by modal
     setIsLoading,
   };
 }

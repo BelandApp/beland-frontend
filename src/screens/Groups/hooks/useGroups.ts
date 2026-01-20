@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { useFocusEffect } from "@react-navigation/native";
-import { Group } from "../../../types/Group";
+import { Group } from "@/services/GroupApiService";
 import { GroupService } from "@services/core";
 import { mapApiGroupToUi } from "src/utils/groupMapper";
 
@@ -44,7 +44,7 @@ export const useGroups = () => {
       const mapped = (Array.isArray(payload) ? payload : []).map((g) =>
         typeof g.group_type === "object"
           ? mapUserApiGroupToUi(g)
-          : mapApiGroupToUi(g)
+          : mapApiGroupToUi(g),
       );
 
       setGroups(mapped);
@@ -63,7 +63,7 @@ export const useGroups = () => {
   useFocusEffect(
     useCallback(() => {
       setRefreshKey((prev) => prev + 1);
-    }, [])
+    }, []),
   );
 
   // Ya no se retorna getAllGroups como función, sino el array directamente

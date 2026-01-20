@@ -21,6 +21,7 @@ import {
 import { GroupPrivacy } from "@/services/GroupApiService";
 import { useAuth } from "@/context/AuthContext";
 import { CustomLoader } from "@/components/shared/loader/Loader";
+import { GroupCard } from "./components/GroupCard";
 import { getGroupTypeFeatherIcon } from "./GroupsScreen";
 import { notify } from "@/hooks/notification/notify.external";
 import { useGroupPaymentTypes } from "@/hooks/useGroupPaymentTypes";
@@ -32,7 +33,6 @@ const getPrivacyIcon = (privacyCode: string) => {
   if (privacyCode === "public") return "globe";
   return "lock";
 };
-
 
 const GroupExploreScreen = () => {
   const { navigate, goBack } = useCustomNavigation();
@@ -96,7 +96,7 @@ const GroupExploreScreen = () => {
   useFocusEffect(
     React.useCallback(() => {
       reloadMyGroups();
-    }, [reloadMyGroups])
+    }, [reloadMyGroups]),
   );
 
   // Cargar los grupos a los que pertenece el usuario al montar
@@ -113,13 +113,13 @@ const GroupExploreScreen = () => {
           try {
             const members =
               await require("@/services/GroupApiService").GroupService.getGroupMembers(
-                group.id
+                group.id,
               );
             counts[group.id] = Array.isArray(members) ? members.length : 0;
           } catch {
             counts[group.id] = 0;
           }
-        })
+        }),
       );
       setGroupMembersCount(counts);
     };
@@ -127,90 +127,75 @@ const GroupExploreScreen = () => {
   }, [groups]);
 
   const filteredGroups = groups.filter((g) => {
+    const groupPrivacy = privacyOptions.find((p) => p.id === g.privacy_id);
+    const isPublic = groupPrivacy?.allow_free_join === true;
+    const isMember = myGroupIds.has(g.id);
+    const isOwner = user?.id === g.user_id;
+
+    // Filter out private groups that belong to others (not member/owner)
+    if (!isPublic && !isMember && !isOwner) return false;
+
     const matchesSearch =
       g.name.toLowerCase().includes(search.toLowerCase()) ||
-      (g.group_type?.name || "").toLowerCase().includes(search.toLowerCase());
+      (typeof g.group_type === "string"
+        ? g.group_type
+        : g.group_type?.name || ""
+      )
+        .toLowerCase()
+        .includes(search.toLowerCase());
+
     if (filter === "all") return matchesSearch;
-    const groupPrivacy = privacyOptions.find((p) => p.id === g.privacy_id);
     if (groupPrivacy && filter === groupPrivacy.code) return matchesSearch;
     return false;
   });
 
   const renderGroup = ({ item }: { item: Group }) => {
-    const groupPrivacy = privacyOptions.find((p) => p.id === item.privacy_id);
-    // Usar allow_free_join para determinar si es público (permite unirse libremente)
-    const isPublic = groupPrivacy?.allow_free_join === true;
-
     const membersCount = groupMembersCount[item.id] ?? 0;
     const isMember = myGroupIds.has(item.id);
     const isOwner = user && item.user_id === user.id;
 
-    let action = isPublic ? "Unirse" : "Privado";
-    let actionStyle = isPublic
-      ? "bg-primary text-[#0f2319]"
-      : "bg-gray-100 text-text-main-light";
-    let disabled = false;
-    if (isMember || isOwner) {
-      action = "Miembro";
-      actionStyle = "bg-gray-200 text-text-main-light";
-      disabled = true;
-    } else if (!isPublic) {
-      action = "Privado";
-      actionStyle = "bg-gray-100 text-text-main-light";
-      disabled = true; // Desabilitar porque no se puede unir desde aquí
-    }
+    // Action Logic
+    const isJoining = joiningGroupId === item.id;
+    // We need to re-derive groupPrivacy to check if we can join freely
+    const groupPrivacy = privacyOptions.find((p) => p.id === item.privacy_id);
+    const isPublic = groupPrivacy?.allow_free_join === true;
 
-    const handleJoin = async () => {
-      if (!user) {
+    // Determine button state
+    // If member/owner -> "Miembro" (disabled)
+    // If not public -> "Privado" (disabled)
+    // If public -> "Unirse" (enabled)
+    const canJoin = !isMember && !isOwner && isPublic;
+
+    // Label logic
+    let label = "Unirse";
+    if (isJoining) label = "Uniéndose...";
+    else if (isMember || isOwner) label = "Miembro";
+    else if (!isPublic) label = "Privado";
+
+    const handleAction = async () => {
+      if (!isPublic) {
         notify.error({
-          message: "Debes estar autenticado para unirte a un grupo.",
+          message: "Este grupo es privado. Contacta al creador.",
         });
+        return;
+      }
+      if (!user) {
+        notify.error({ message: "Debes estar autenticado para unirte." });
         return;
       }
 
       setJoiningGroupId(item.id);
       try {
-        // Obtener información de privacidad del grupo
-        const groupPrivacy = privacyOptions.find(
-          (p) => p.id === item.privacy_id
-        );
-        const isPublic = groupPrivacy?.allow_free_join === true;
-
-        // Si es privado, mostrar error
-        if (!isPublic) {
-          notify.error({
-            message:
-              "Este grupo es privado. Contacta al creador del grupo para solicitar acceso.",
-          });
-          return;
-        }
-
-        // Unirse a grupo público
         await GroupService.joinGroup(item.id, user.id);
-        notify.success({
-          message: "¡Te has unido al grupo exitosamente!",
-        });
+        notify.success({ message: "¡Te has unido al grupo exitosamente!" });
         navigate("Groups", {
           screen: "GroupDetailScreen",
           params: { groupId: item.id },
         });
-        // Recargar la lista de mis grupos desde el backend
         await reloadMyGroups();
       } catch (error: any) {
-        let errorMsg = "No se pudo unir al grupo. Intenta nuevamente.";
-
-        if (error?.response?.status === 403) {
-          errorMsg = "No tienes permiso para unirte a este grupo.";
-        } else if (error?.response?.status === 409) {
-          errorMsg = "Ya eres miembro de este grupo.";
-          // Recargar desde el backend para sincronizar
-          await reloadMyGroups();
-        } else if (error?.response?.data?.message) {
-          errorMsg = error.response.data.message;
-        } else if (error?.message) {
-          errorMsg = error.message;
-        }
-
+        const errorMsg =
+          error?.response?.data?.message || "No se pudo unir al grupo.";
         notify.error({ message: errorMsg });
       } finally {
         setJoiningGroupId(null);
@@ -218,105 +203,29 @@ const GroupExploreScreen = () => {
     };
 
     return (
-      <View className="flex-row items-center gap-4 bg-white p-3 pr-4 rounded-2xl shadow-sm border border-transparent mb-3">
-        <View className="relative shrink-0">
-          <Feather
-            name={
-              item.group_type
-                ? typeof item.group_type === "string"
-                  ? getGroupTypeFeatherIcon(item.group_type).name
-                  : "users"
-                : "users"
-            }
-            size={48}
-            color={
-              item.group_type
-                ? typeof item.group_type === "string"
-                  ? getGroupTypeFeatherIcon(item.group_type).color
-                  : "#5e8d76"
-                : "#5e8d76"
-            }
-            style={{ opacity: 0.7 }}
-          />
-        </View>
-        <View className="flex-1 min-w-0">
-          <Text className="text-base font-bold leading-tight truncate text-text-main-light">
-            {item.name}
-          </Text>
-          <View className="flex-row items-center gap-1 mt-1">
-            <Feather
-              name={getPrivacyIcon(groupPrivacy?.code || "lock")}
-              size={14}
-              color={isPublic ? "#00e074" : "#5e8d76"}
-            />
-            <Text className="text-xs font-medium text-text-sec-light truncate">
-              {groupPrivacy?.name || "Privado"} • {membersCount} miembros
-            </Text>
-          </View>
-          <View className="flex-row items-center gap-2 mt-1">
-            <Text className="text-xs text-gray-600">
-              {item.group_type && typeof item.group_type !== "string"
-                ? item.group_type.name
-                : "Otro"}
-            </Text>
-            <View className="w-1 h-1 bg-gray-400 rounded-full" />
-            <Text className="text-xs text-gray-600">
-              {(() => {
-                if (!item.payment_type_id) return "Sin especificar";
-                const paymentType = paymentTypesMap[item.payment_type_id];
-                if (!paymentType) return "Sin especificar";
-
-                switch (paymentType.code) {
-                  case "EQUAL_SPLIT":
-                    return "Dividida";
-                  case "SPLIT":
-                    return "Por Consumo";
-                  case "FULL":
-                    return "Completo";
-                  default:
-                    return paymentType.code || "Pago";
-                }
-              })()}
-            </Text>
-          </View>
-        </View>
-        <View className="shrink-0">
-          <TouchableOpacity
-            className={`min-w-[84px] h-9 px-4 rounded-xl items-center justify-center ${actionStyle} flex-row ${
-              joiningGroupId === item.id ? "opacity-70" : ""
-            }`}
-            onPress={
-              isMember || isOwner
-                ? () =>
-                    navigate("Groups", {
-                      screen: "GroupDetailScreen",
-                      params: { groupId: item.id },
-                    })
-                : !disabled && joiningGroupId !== item.id
-                ? handleJoin
-                : undefined
-            }
-            disabled={
-              (!isMember && !isOwner && disabled) || joiningGroupId === item.id
-            }
-          >
-            {joiningGroupId === item.id ? (
-              <ActivityIndicator size="small" color="#0f2319" />
-            ) : (
-              <Text className="text-sm font-bold">{action}</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-        {isMember && (
-          <TouchableOpacity
-            className="absolute inset-0"
-            style={{ zIndex: 1 }}
-            onPress={() =>
-              navigate("Groups",{ screen: "GroupDetailScreen", params: { groupId: item.id } })
-            }
-          />
-        )}
-      </View>
+      <GroupCard
+        group={item}
+        variant="explore"
+        onPress={() =>
+          navigate("Groups", {
+            screen: "GroupDetailScreen",
+            params: { groupId: item.id },
+          })
+        }
+        privacyOptions={privacyOptions}
+        membersCount={membersCount}
+        paymentType={
+          item.payment_type_id
+            ? paymentTypesMap[item.payment_type_id]
+            : undefined
+        }
+        isMember={isMember}
+        isOwner={isOwner || false}
+        onActionPress={handleAction}
+        actionDisabled={!canJoin || isJoining}
+        actionLabel={label}
+        compact={true}
+      />
     );
   };
 

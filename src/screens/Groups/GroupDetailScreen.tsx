@@ -8,6 +8,9 @@ import {
   Modal,
   Dimensions,
   Platform,
+  Image,
+  ImageBackground,
+  ActivityIndicator,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Feather from "react-native-vector-icons/Feather";
@@ -23,61 +26,64 @@ import { useNotify } from "src/hooks";
 import { CustomLoader } from "@/components/shared/loader/Loader";
 import { reverseGeocode } from "@/services/mapboxService";
 import * as Linking from "expo-linking";
-import { GroupMembersList, ThemedHeader } from "src/components";
+import { GroupMembersList } from "src/components";
 import { useAuth } from "src/context/AuthContext";
-import { GroupServicesScreen, GroupPurchaseScreen } from "src/screens/Groups";
-import { GroupOrdersHistoryScreen } from "src/screens/Groups";
+import { GroupServicesScreen } from "./GroupServicesScreen";
+import { GroupPurchaseScreen } from "./GroupPurchaseScreen";
+import { GroupOrdersHistoryScreen } from "./GroupOrdersHistoryScreen";
 import { Service } from "@/services/ServicesApiService";
 import { GroupServiceModal } from "@/components/modals/GroupServiceModal";
 import { ShareGroupModal } from "@/components/shared/ShareGroupModal";
+import * as ImagePicker from "expo-image-picker";
+import { LinearGradient } from "expo-linear-gradient";
 
 type GroupDetailParams = { groupId: string };
+
 export const GroupDetailScreen = () => {
   const { user } = useAuth();
   const navigation = useNavigation<StackNavigationProp<GroupsStackParamList>>();
   const route = useRoute<RouteProp<{ params: GroupDetailParams }, "params">>();
   const groupId = (route.params as any)?.groupId;
-  // Calcular altura para scroll en web/mobile
+
+  // Dimensions
   const windowHeight = Dimensions.get("window").height;
-  const listHeight = Math.max(420, windowHeight - 220);
+  const listHeight = Math.max(420, windowHeight - 350); // Ajustado para el nuevo header
+
+  // State
   const [group, setGroup] = useState<Group | null>(null);
   const [loading, setLoading] = useState(true);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [address, setAddress] = useState<UserAddress | null>(null);
-  // Edición por campo
   const [editingName, setEditingName] = useState(false);
   const [editingDescription, setEditingDescription] = useState(false);
-
-  // Tipos de privacidad
   const [privacyOptions, setPrivacyOptions] = useState<GroupPrivacy[]>([]);
+  const [inviteModal, setInviteModal] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [activeTab, setActiveTab] = useState<"info" | "servicios" | "compra">(
+    "info",
+  );
+  const [serviceModalVisible, setServiceModalVisible] = useState(false);
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [locationName, setLocationName] = useState<string>("");
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
+
+  const notify = useNotify();
+
+  // Load Component Data
   useEffect(() => {
     GroupService.getGroupPrivacies()
       .then(setPrivacyOptions)
       .catch(() => setPrivacyOptions([]));
   }, []);
 
-  const [inviteModal, setInviteModal] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [activeTab, setActiveTab] = useState<
-    "info" | "servicios" | "compra" | "historial"
-  >("info");
-  const [serviceModalVisible, setServiceModalVisible] = useState(false);
-  const [selectedService, setSelectedService] = useState<Service | null>(null);
-  // Ubicación legible por Mapbox
-  const [locationName, setLocationName] = useState<string>("");
-  // Modal de compartir
-  const [showShareModal, setShowShareModal] = useState(false);
-
-  const notify = useNotify();
-
   const fetchGroup = async () => {
-    setLoading(true);
     try {
       const data = await GroupService.getGroup(groupId);
       setGroup(data);
-      // Obtener miembros del grupo
       const membersData = await GroupService.getGroupMembers(groupId);
       setMembers(membersData);
     } catch (e) {
@@ -91,6 +97,7 @@ export const GroupDetailScreen = () => {
     fetchGroup();
   }, [groupId]);
 
+  // Address Logic
   useEffect(() => {
     if (group?.user_address_id) {
       addressService
@@ -103,7 +110,7 @@ export const GroupDetailScreen = () => {
       reverseGeocode(Number(group.latitude), Number(group.longitude)).then(
         (place) => {
           setLocationName(place?.full_address || "");
-        }
+        },
       );
     } else {
       setAddress(null);
@@ -111,6 +118,7 @@ export const GroupDetailScreen = () => {
     }
   }, [group?.user_address_id, group?.latitude, group?.longitude]);
 
+  // Actions
   const handleCopy = async () => {
     if (group?.message_invitation) {
       try {
@@ -122,6 +130,37 @@ export const GroupDetailScreen = () => {
     }
   };
 
+  const handlePickImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [16, 9],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setUploadingImage(true);
+        const imageUrl = await GroupService.uploadImage(result.assets[0]);
+        // Update local and backend
+        await GroupService.updateGroup(groupId, {
+          ...group,
+          description: group?.description || "",
+          name: group?.name,
+          image_url: imageUrl,
+        } as any);
+
+        setGroup((prev) => (prev ? { ...prev, image_url: imageUrl } : null));
+        notify.success({ message: "Imagen de portada actualizada" });
+      }
+    } catch (error) {
+      console.error(error);
+      notify.error({ message: "Error al subir la imagen" });
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   const handleEditName = () => {
     setEditName(group?.name || "");
     setEditingName(true);
@@ -130,14 +169,6 @@ export const GroupDetailScreen = () => {
     setEditDescription(group?.description || "");
     setEditingDescription(true);
   };
-  const cancelEditName = () => {
-    setEditName(group?.name || "");
-    setEditingName(false);
-  };
-  const cancelEditDescription = () => {
-    setEditDescription(group?.description || "");
-    setEditingDescription(false);
-  };
   const saveEditName = async () => {
     try {
       await GroupService.updateGroup(groupId, {
@@ -145,7 +176,6 @@ export const GroupDetailScreen = () => {
         description: group?.description || "",
       });
       notify.success({ message: "Nombre actualizado" });
-      setLocationName("");
       setEditingName(false);
       fetchGroup();
     } catch {
@@ -187,17 +217,13 @@ export const GroupDetailScreen = () => {
       message: "¿Estás seguro de que deseas salir de este grupo?",
       onConfirm: async () => {
         try {
-          if (!user?.id) {
-            throw new Error("Usuario no autenticado");
-          }
+          if (!user?.id) throw new Error("Usuario no autenticado");
           await GroupService.leaveGroup(groupId, user.id);
           notify.success({ message: "Has salido del grupo" });
           navigation.goBack();
         } catch (error: any) {
           const message =
-            error?.response?.data?.message ||
-            error?.message ||
-            "No se pudo salir del grupo";
+            error?.response?.data?.message || "No se pudo salir del grupo";
           notify.error({ message });
         }
       },
@@ -205,17 +231,21 @@ export const GroupDetailScreen = () => {
     });
   };
 
-  // Menú profesional desplegable
-  const [menuVisible, setMenuVisible] = useState(false);
-  const openMenu = () => setMenuVisible(true);
-  const closeMenu = () => setMenuVisible(false);
+  const submitInvite = async () => {
+    try {
+      await GroupService.inviteToGroup(groupId, { email: inviteEmail });
+      notify.success({ message: "Invitación enviada" });
+      setInviteModal(false);
+      setInviteEmail("");
+    } catch {
+      notify.error({ message: "No se pudo invitar" });
+    }
+  };
 
-  // Construir acciones dinámicamente según el rol del usuario
   const isMember = members.some((m) => m.user_id === user?.id);
-  const isOwner = user && group?.user_id === user.id;
+  const isOwner = !!(user && group?.user_id === user.id);
 
   const groupActions = [
-    // Acciones específicas según rol
     ...(isOwner
       ? [
           {
@@ -226,30 +256,23 @@ export const GroupDetailScreen = () => {
                 groupName: group?.name || "",
               }),
           },
+          {
+            label: "Cambiar Portada",
+            onPress: handlePickImage,
+            icon: "image",
+          },
           { label: "Eliminar grupo", onPress: handleDelete, destructive: true },
         ]
       : isMember
-      ? [
-          {
-            label: "Salir del grupo",
-            onPress: handleLeaveGroup,
-            destructive: true,
-          },
-        ]
-      : []),
+        ? [
+            {
+              label: "Salir del grupo",
+              onPress: handleLeaveGroup,
+              destructive: true,
+            },
+          ]
+        : []),
   ];
-
-  // Eliminar submitEdit, ahora es saveEdit
-
-  const submitInvite = async () => {
-    try {
-      await GroupService.inviteToGroup(groupId, { email: inviteEmail });
-      notify.success({ message: "Invitación enviada" });
-      setInviteModal(false);
-    } catch {
-      notify.error({ message: "No se pudo invitar" });
-    }
-  };
 
   if (loading || !group) {
     return (
@@ -259,478 +282,501 @@ export const GroupDetailScreen = () => {
     );
   }
 
+  // Helper to get privacy name
+  const currentPrivacy = privacyOptions.find((p) => p.id === group.privacy_id);
+
   return (
     <View className="flex-1 bg-background-light">
-      {/* Header */}
-      <ThemedHeader
-        canGoBack
-        title="Detalle de Grupo"
-        hideUserMenu={true}
-        onBackPress={() => navigation.navigate("GroupsList")}
-        buttons={
-          <>
-            <TouchableOpacity
-              className="p-2 mr-1"
-              onPress={() => setShowShareModal(true)}
-            >
-              <Feather name="share-2" size={22} color="#101815" />
-            </TouchableOpacity>
-            <TouchableOpacity className="p-2" onPress={openMenu}>
-              <Feather name="more-vertical" size={24} color="#101815" />
-            </TouchableOpacity>
+      {/* --- CONDITIONAL HEADER --- */}
+      {activeTab === "info" ? (
+        /* HERO HEADER (Info Tab Only) */
+        <View className="h-64 w-full relative">
+          <ImageBackground
+            source={
+              group.image_url
+                ? { uri: group.image_url }
+                : { uri: "https://via.placeholder.com/600x400?text=Grupo" }
+            }
+            className="w-full h-full"
+            resizeMode="cover"
+          >
+            {/* Gradient Overlay */}
+            <LinearGradient
+              colors={["transparent", "rgba(0,0,0,0.7)"]}
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: "60%",
+              }}
+            />
+
+            {/* Fallback pattern */}
+            {!group.image_url && !uploadingImage && (
+              <View className="absolute inset-0 items-center justify-center bg-gray-200 opacity-20">
+                <Feather name="users" size={60} color="#000" />
+              </View>
+            )}
+
+            {/* Loading Indicator */}
+            {uploadingImage && (
+              <View className="absolute inset-0 items-center justify-center bg-black/50">
+                <ActivityIndicator size="large" color="#fff" />
+              </View>
+            )}
+
+            {/* Navigation Bar (Transparent) */}
+            <View className="absolute top-0 left-0 right-0 flex-row justify-between items-center p-4 pt-10 z-10">
+              <TouchableOpacity
+                onPress={() => navigation.goBack()}
+                className="w-10 h-10 rounded-full bg-black/30 items-center justify-center backdrop-blur-sm"
+              >
+                <Feather name="arrow-left" size={24} color="#fff" />
+              </TouchableOpacity>
+
+              <View className="flex-row gap-2">
+                <TouchableOpacity
+                  onPress={() => setShowShareModal(true)}
+                  className="w-10 h-10 rounded-full bg-black/30 items-center justify-center backdrop-blur-sm"
+                >
+                  <Feather name="share-2" size={20} color="#fff" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setMenuVisible(true)}
+                  className="w-10 h-10 rounded-full bg-black/30 items-center justify-center backdrop-blur-sm"
+                >
+                  <Feather name="more-vertical" size={20} color="#fff" />
+                </TouchableOpacity>
+              </View>
+            </View>
+
             <ActionMenu
               visible={menuVisible}
-              onClose={closeMenu}
+              onClose={() => setMenuVisible(false)}
               actions={groupActions}
             />
-          </>
-        }
-      />
 
-      {/* Tabs */}
-      <View className="flex-row bg-white border-b border-gray-200">
+            {/* Group Info On Overlay */}
+            <View className="absolute bottom-4 left-4 right-4">
+              <View className="flex-row items-center mb-1 gap-2">
+                <View className="bg-primary/90 px-2 py-0.5 rounded text-xs">
+                  <Text className="text-white text-[10px] uppercase font-bold tracking-wider">
+                    {typeof group.group_type === "string"
+                      ? group.group_type
+                      : group.group_type?.name || "Grupo"}
+                  </Text>
+                </View>
+                {group.is_active && (
+                  <View className="bg-green-500/90 px-2 py-0.5 rounded text-xs flex-row items-center gap-1">
+                    <View className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                    <Text className="text-white text-[10px] uppercase font-bold">
+                      Activo
+                    </Text>
+                  </View>
+                )}
+              </View>
+
+              {editingName ? (
+                <View className="flex-row items-center gap-2">
+                  <TextInput
+                    value={editName}
+                    onChangeText={setEditName}
+                    className="bg-white/90 p-2 rounded-lg flex-1 text-lg font-bold"
+                    autoFocus
+                  />
+                  <TouchableOpacity
+                    onPress={saveEditName}
+                    className="bg-primary p-2 rounded-lg"
+                  >
+                    <Feather name="check" size={20} color="white" />
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  onLongPress={isOwner ? handleEditName : undefined}
+                  activeOpacity={isOwner ? 0.8 : 1}
+                >
+                  <Text className="text-white text-3xl font-bold no-underline">
+                    {group.name}
+                  </Text>
+                </TouchableOpacity>
+              )}
+
+              <View className="flex-row items-center mt-1">
+                <Feather
+                  name={currentPrivacy?.code === "public" ? "globe" : "lock"}
+                  size={12}
+                  color="#ddd"
+                />
+                <Text className="text-gray-200 text-xs ml-1 font-medium capitalize">
+                  {currentPrivacy?.name || "Privado"} • {members.length}{" "}
+                  miembros
+                </Text>
+              </View>
+            </View>
+
+            {/* Edit Cover Button (Owner only) */}
+            {isOwner && (
+              <TouchableOpacity
+                onPress={handlePickImage}
+                className="absolute bottom-4 right-4 bg-white/20 p-2 rounded-full backdrop-blur-md border border-white/30"
+              >
+                <Feather name="camera" size={20} color="#fff" />
+              </TouchableOpacity>
+            )}
+          </ImageBackground>
+        </View>
+      ) : (
+        /* SIMPLE HEADER (Other Tabs) */
+        <View className="bg-white pt-10 pb-2 px-4 flex-row items-center justify-between border-b border-gray-100 shadow-sm z-50">
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center"
+          >
+            <Feather name="arrow-left" size={24} color="#333" />
+          </TouchableOpacity>
+
+          <Text
+            className="text-lg font-bold text-gray-800 flex-1 ml-4"
+            numberOfLines={1}
+          >
+            {group.name}
+          </Text>
+
+          <View className="flex-row gap-2">
+            <TouchableOpacity
+              onPress={() => setShowShareModal(true)}
+              className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center"
+            >
+              <Feather name="share-2" size={20} color="#333" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setMenuVisible(true)}
+              className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center"
+            >
+              <Feather name="more-vertical" size={20} color="#333" />
+            </TouchableOpacity>
+          </View>
+
+          <ActionMenu
+            visible={menuVisible}
+            onClose={() => setMenuVisible(false)}
+            actions={groupActions}
+          />
+        </View>
+      )}
+
+      {/* --- TABS --- */}
+      <View className="flex-row bg-white border-b border-gray-100 shadow-sm z-10">
         <TouchableOpacity
           onPress={() => setActiveTab("info")}
-          className={`flex-1 py-3 px-4 flex-row items-center justify-center gap-2 ${
-            activeTab === "info"
-              ? "border-b-2 border-green-500 bg-green-50"
-              : ""
-          }`}
+          className={`flex-1 py-3 items-center border-b-2 ${activeTab === "info" ? "border-primary" : "border-transparent"}`}
         >
-          <MaterialCommunityIcons
-            name="information-outline"
-            size={20}
-            color={activeTab === "info" ? "#6BA43A" : "#666"}
-          />
           <Text
-            className={`font-semibold text-sm ${
-              activeTab === "info" ? "text-green-600" : "text-gray-600"
-            }`}
+            className={`font-bold text-sm ${activeTab === "info" ? "text-primary" : "text-gray-500"}`}
           >
             Información
           </Text>
         </TouchableOpacity>
-
         <TouchableOpacity
           onPress={() => setActiveTab("servicios")}
-          className={`flex-1 py-3 px-4 flex-row items-center justify-center gap-2 ${
-            activeTab === "servicios"
-              ? "border-b-2 border-orange-400 bg-orange-50"
-              : ""
-          }`}
+          className={`flex-1 py-3 items-center border-b-2 ${activeTab === "servicios" ? "border-primary" : "border-transparent"}`}
         >
-          <MaterialCommunityIcons
-            name="shopping-outline"
-            size={20}
-            color={activeTab === "servicios" ? "#F88D2A" : "#666"}
-          />
           <Text
-            className={`font-semibold text-sm ${
-              activeTab === "servicios" ? "text-orange-600" : "text-gray-600"
-            }`}
+            className={`font-bold text-sm ${activeTab === "servicios" ? "text-primary" : "text-gray-500"}`}
           >
             Servicios
           </Text>
         </TouchableOpacity>
-
         <TouchableOpacity
           onPress={() => setActiveTab("compra")}
-          className={`flex-1 py-3 px-4 flex-row items-center justify-center gap-2 ${
-            activeTab === "compra"
-              ? "border-b-2 border-purple-500 bg-purple-50"
-              : ""
-          }`}
+          className={`flex-1 py-3 items-center border-b-2 ${activeTab === "compra" ? "border-primary" : "border-transparent"}`}
         >
-          <MaterialCommunityIcons
-            name="cart-outline"
-            size={20}
-            color={activeTab === "compra" ? "#9333EA" : "#666"}
-          />
           <Text
-            className={`font-semibold text-sm ${
-              activeTab === "compra" ? "text-purple-600" : "text-gray-600"
-            }`}
+            className={`font-bold text-sm ${activeTab === "compra" ? "text-primary" : "text-gray-500"}`}
           >
-            Compra en Grupo
+            Compras
           </Text>
         </TouchableOpacity>
-        {/* 
-        <TouchableOpacity
-          onPress={() => setActiveTab("historial")}
-          className={`flex-1 py-3 px-4 flex-row items-center justify-center gap-2 ${
-            activeTab === "historial"
-              ? "border-b-2 border-blue-500 bg-blue-50"
-              : ""
-          }`}
-        >
-          <MaterialCommunityIcons
-            name="history"
-            size={20}
-            color={activeTab === "historial" ? "#0066CC" : "#666"}
-          />
-          <Text
-            className={`font-semibold text-sm ${
-              activeTab === "historial" ? "text-blue-600" : "text-gray-600"
-            }`}
-          >
-            Historial
-          </Text>
-        </TouchableOpacity> */}
       </View>
 
-      {/* Contenido */}
+      {/* --- CONTENT --- */}
       {activeTab === "info" ? (
         <ScrollView
-          // En web forzamos height + overflow para asegurar scrolling dentro del contenedor
           style={
             Platform.OS === "web"
               ? ({ height: listHeight, overflow: "auto" } as any)
               : { flex: 1 }
           }
-          contentContainerStyle={{ paddingBottom: 32, flexGrow: 1 }}
-          keyboardShouldPersistTaps="handled"
-          nestedScrollEnabled={true}
+          contentContainerStyle={{ paddingBottom: 100 }}
+          showsVerticalScrollIndicator={false}
         >
-          {/* Avatar y estado */}
-          <View className="items-center pt-6 pb-2">
-            <View
-              className="w-32 h-32 rounded-full bg-gray-200 items-center justify-center"
-              style={{ borderWidth: 4, borderColor: "#fff" }}
+          {/* Main Info Card */}
+          <View className="p-4 bg-white border-b border-gray-100 mb-2">
+            <Text className="text-gray-400 text-xs uppercase font-bold mb-2">
+              Descripción
+            </Text>
+            {editingDescription ? (
+              <View>
+                <TextInput
+                  value={editDescription}
+                  onChangeText={setEditDescription}
+                  multiline
+                  className="bg-gray-50 p-3 rounded-xl text-gray-700 leading-relaxed border border-primary"
+                />
+                <View className="flex-row gap-2 mt-2 justify-end">
+                  <TouchableOpacity
+                    onPress={() => setEditingDescription(false)}
+                    className="p-2 is"
+                  >
+                    <Text className="text-gray-500 font-bold">Cancelar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={saveEditDescription}
+                    className="bg-primary px-4 py-2 rounded-lg"
+                  >
+                    <Text className="text-white font-bold">Guardar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
+              <TouchableOpacity
+                onLongPress={isOwner ? handleEditDescription : undefined}
+              >
+                <Text className="text-gray-700 leading-relaxed text-sm">
+                  {group.description || "Sin descripción"}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Details Grid */}
+          <View className="p-4 grid gap-4">
+            {/* Location */}
+            <TouchableOpacity
+              onPress={() => {
+                const lat = address?.latitude || group?.latitude;
+                const lon = address?.longitude || group?.longitude;
+                if (lat && lon)
+                  Linking.openURL(
+                    `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`,
+                  );
+              }}
+              className="flex-row items-center bg-white p-3 rounded-2xl border border-gray-100"
             >
-              <Feather name="users" size={64} color="#5e8d76" />
-            </View>
-            <View className="flex-row items-center justify-center mt-4">
-              {editingName ? (
-                <View className="w-full items-center">
-                  <TextInput
-                    value={editName}
-                    onChangeText={setEditName}
-                    autoFocus
-                    className="text-2xl font-bold text-center min-w-[120px] border-b border-primary px-2 py-1"
-                  />
-                  <View className="flex-row justify-center gap-3 mt-3">
-                    <TouchableOpacity
-                      onPress={saveEditName}
-                      className="bg-primary rounded-lg px-5 py-2"
-                    >
-                      <Text className="text-white font-semibold">Guardar</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={cancelEditName}
-                      className="bg-gray-100 rounded-lg px-5 py-2"
-                    >
-                      <Text className="text-gray-700 font-semibold">
-                        Cancelar
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ) : (
-                <View className="flex-row items-center justify-center w-full">
-                  <TouchableOpacity
-                    activeOpacity={1}
-                    onPress={handleEditName}
-                    className="flex-1"
-                  >
-                    <Text className="text-2xl font-bold text-center select-none">
-                      {group.name}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
-            <View className="mt-2">
-              <Text className="px-3 py-1 rounded-full bg-primary/20 text-green-800 text-xs font-semibold uppercase">
-                {group.is_active === true ? "Activo" : group.is_active}
-              </Text>
-            </View>
-          </View>
-          {/* Descripción */}
-          <View className="px-6 py-4">
-            <View className="flex-row items-center justify-center">
-              {editingDescription ? (
-                <View className="w-full items-center">
-                  <TextInput
-                    value={editDescription}
-                    onChangeText={setEditDescription}
-                    autoFocus
-                    className="text-base text-center min-w-[600px] border-b border-primary px-2 py-1"
-                    multiline
-                  />
-                  <View className="flex-row justify-center gap-3 mt-3">
-                    <TouchableOpacity
-                      onPress={saveEditDescription}
-                      className="bg-primary rounded-lg px-5 py-2"
-                    >
-                      <Text className="text-white font-semibold">Guardar</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={cancelEditDescription}
-                      className="bg-gray-100 rounded-lg px-5 py-2"
-                    >
-                      <Text className="text-gray-700 font-semibold">
-                        Cancelar
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ) : (
-                <View className="flex-row items-center justify-center w-full">
-                  <TouchableOpacity
-                    activeOpacity={1}
-                    onPress={handleEditDescription}
-                    className="flex-1"
-                  >
-                    <Text className="text-center text-text-sec-light text-base leading-relaxed select-none">
-                      {group.description}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
-          </View>
-          {/* Detalles */}
-          <View className="px-4 py-2">
-            <View className="rounded-xl bg-white shadow-sm border border-gray-100 overflow-hidden">
-              {/* Privacidad */}
-              <View className="flex-row items-center justify-between p-4 border-b border-gray-100">
-                <View className="flex-row items-center gap-3">
-                  <View className="w-8 h-8 rounded-full bg-gray-100 items-center justify-center">
-                    <Feather name="lock" size={18} color="#5e8d76" />
-                  </View>
-                  <Text className="text-sm font-medium text-text-sec-light">
-                    Privacidad
-                  </Text>
-                </View>
-                <Text className="text-sm font-semibold text-text-main-light">
-                  {privacyOptions.find((p) => p.id === group.privacy_id)
-                    ?.name || "Privado"}
-                </Text>
+              <View className="w-10 h-10 rounded-full bg-blue-50 items-center justify-center mr-3">
+                <Feather name="map-pin" size={18} color="#3B82F6" />
               </View>
-              {/* Tipo */}
-              <View className="flex-row items-center justify-between p-4 border-b border-gray-100">
-                <View className="flex-row items-center gap-3">
-                  <View className="w-8 h-8 rounded-full bg-gray-100 items-center justify-center">
-                    <Feather name="tag" size={18} color="#5e8d76" />
-                  </View>
-                  <Text className="text-sm font-medium text-text-sec-light">
-                    Tipo
-                  </Text>
-                </View>
-                <Text className="text-sm font-semibold text-text-main-light">
-                  {group.group_type?.name || "Sin tipo"}
+              <View className="flex-1">
+                <Text className="text-xs text-gray-400 font-bold uppercase">
+                  Ubicación
                 </Text>
-              </View>
-              {/* Ubicación */}
-              <View className="flex-row items-center justify-between p-4">
-                <View className="flex-row items-center gap-3">
-                  <View className="w-8 h-8 rounded-full bg-gray-100 items-center justify-center">
-                    <Feather name="map-pin" size={18} color="#5e8d76" />
-                  </View>
-                  <Text className="text-sm font-medium text-text-sec-light">
-                    Ubicación
-                  </Text>
-                </View>
                 <Text
-                  className="text-sm font-semibold text-text-main-light text-right max-w-[50%]"
+                  className="text-sm font-semibold text-gray-800"
                   numberOfLines={1}
-                  ellipsizeMode="tail"
-                  onPress={() => {
-                    const lat = address?.latitude || group?.latitude;
-                    const lon = address?.longitude || group?.longitude;
-                    if (lat && lon) {
-                      const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`;
-                      Linking.openURL(url);
-                    }
-                  }}
                 >
-                  {address && address.addressLine1
-                    ? `${address.addressLine1}${
-                        address.city ? ", " + address.city : ""
-                      }${
-                        address.country ? ", " + address.country : ""
-                      }`.replace(/^, |, ,/g, "")
-                    : locationName
-                    ? locationName
-                    : "-"}
+                  {address?.addressLine1 ||
+                    locationName ||
+                    "Ubicación del mapa"}
                 </Text>
               </View>
-              {/* Fecha y Hora del Evento */}
-              {group.event_at && (
-                <View className="flex-row items-center justify-between p-4 border-t border-gray-100">
-                  <View className="flex-row items-center gap-3">
-                    <View className="w-8 h-8 rounded-full bg-gray-100 items-center justify-center">
-                      <Feather name="calendar" size={18} color="#5e8d76" />
-                    </View>
-                    <Text className="text-sm font-medium text-text-sec-light">
-                      Fecha y Hora
-                    </Text>
-                  </View>
-                  <View className="flex-col items-end">
-                    <Text className="text-sm font-semibold text-text-main-light">
-                      {new Date(group.event_at).toLocaleDateString("es-AR", {
-                        weekday: "short",
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </Text>
-                    <View className="flex-row items-center gap-1 mt-1">
-                      <Feather name="clock" size={14} color="#5e8d76" />
-                      <Text className="text-xs font-medium text-primary">
-                        {new Date(group.event_at).toLocaleTimeString("es-AR", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </Text>
-                    </View>
-                  </View>
+              <Feather name="chevron-right" size={20} color="#cbd5e1" />
+            </TouchableOpacity>
+
+            {/* Event Date */}
+            {group.event_at && (
+              <View className="flex-row items-center bg-white p-3 rounded-2xl border border-gray-100">
+                <View className="w-10 h-10 rounded-full bg-purple-50 items-center justify-center mr-3">
+                  <Feather name="calendar" size={18} color="#8B5CF6" />
                 </View>
-              )}
-            </View>
-          </View>
-          {/* Mensaje de invitación */}
-          {group.message_invitation ? (
-            <View className="px-4 py-4">
-              <View className="p-5 rounded-xl border border-primary/20 bg-primary/5 flex flex-col gap-4">
-                <View className="flex-row items-center gap-2">
-                  <Feather name="mail" size={18} color="#00E074" />
-                  <Text className="text-primary font-bold text-sm uppercase">
-                    Mensaje de Invitación
+                <View className="flex-1">
+                  <Text className="text-xs text-gray-400 font-bold uppercase">
+                    Fecha del Evento
+                  </Text>
+                  <Text className="text-sm font-semibold text-gray-800">
+                    {new Date(group.event_at).toLocaleDateString("es-AR", {
+                      weekday: "long",
+                      day: "numeric",
+                      month: "long",
+                    })}
+                    {" • "}
+                    {new Date(group.event_at).toLocaleTimeString("es-AR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </Text>
                 </View>
-                <Text className="text-base font-medium italic text-text-main-light">
+              </View>
+            )}
+          </View>
+
+          {/* Members Section */}
+          <View className="px-4 py-2">
+            <View className="flex-row justify-between items-end mb-3">
+              <Text className="text-base font-bold text-gray-800">
+                Miembros
+              </Text>
+              <TouchableOpacity
+                onPress={() =>
+                  navigation.navigate("GroupMembersScreen", {
+                    groupId,
+                    groupName: group.name,
+                  })
+                }
+              >
+                <Text className="text-primary font-bold text-sm">
+                  Ver todos
+                </Text>
+              </TouchableOpacity>
+            </View>
+            {/* Preview list or Horizontal Scroll */}
+            <GroupMembersList
+              members={members.slice(0, 5)}
+              currentUserId={user?.id}
+            />
+            {members.length > 5 && (
+              <TouchableOpacity
+                onPress={() =>
+                  navigation.navigate("GroupMembersScreen", {
+                    groupId,
+                    groupName: group.name,
+                  })
+                }
+                className="mt-2 items-center"
+              >
+                <Text className="text-gray-400 text-xs">
+                  +{members.length - 5} miembros más...
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Invitation Box */}
+          {group.message_invitation && isMember && (
+            <View className="px-4 py-4">
+              <LinearGradient
+                colors={["#f0fdf4", "#dcfce7"]}
+                className="p-4 rounded-2xl border border-primary/20 relative overflow-hidden"
+              >
+                <Feather
+                  name="mail"
+                  size={100}
+                  color="#00E074"
+                  style={{
+                    position: "absolute",
+                    right: -20,
+                    bottom: -20,
+                    opacity: 0.1,
+                  }}
+                />
+                <Text className="text-primary font-bold text-xs uppercase mb-1">
+                  Mensaje de Invitación
+                </Text>
+                <Text className="text-gray-800 font-medium italic mb-3">
                   "{group.message_invitation}"
                 </Text>
                 <TouchableOpacity
                   onPress={handleCopy}
-                  className="self-start flex-row items-center gap-2 px-4 py-2 bg-primary text-black text-sm font-bold rounded-lg mt-2"
+                  className="bg-white self-start px-3 py-1.5 rounded-lg shadow-sm flex-row items-center border border-gray-100"
                 >
-                  <Feather name="copy" size={18} color="#000" />
-                  <Text>Copiar</Text>
+                  <Feather name="copy" size={14} color="#000" />
+                  <Text className="font-bold text-xs ml-2">Copiar texto</Text>
                 </TouchableOpacity>
-              </View>
+              </LinearGradient>
             </View>
-          ) : null}
-
-          {/* Modal Invitar Miembro profesional */}
-          <Modal visible={inviteModal} transparent animationType="fade">
-            <View className="flex-1 bg-black/20 justify-center items-center">
-              <View className="bg-white rounded-2xl px-8 py-7 w-80 shadow-xl items-center border border-gray-100">
-                <Text className="text-2xl font-bold mb-4 text-center text-text-main-light">
-                  Invitar Miembro
-                </Text>
-                <TextInput
-                  className="border border-gray-200 rounded-lg px-4 py-2 text-base w-64 mb-4 bg-gray-50 focus:border-primary outline-none"
-                  placeholder="Correo electrónico"
-                  value={inviteEmail}
-                  onChangeText={setInviteEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoFocus
-                />
-                <View className="flex-row justify-end w-full gap-3">
-                  <TouchableOpacity
-                    onPress={() => setInviteModal(false)}
-                    className="bg-gray-100 rounded-lg px-5 py-2"
-                  >
-                    <Text className="text-gray-700 font-semibold">
-                      Cancelar
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={submitInvite}
-                    className="bg-primary rounded-lg px-5 py-2"
-                  >
-                    <Text className="text-white font-semibold">Invitar</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          </Modal>
-          {/* Accesos Rápidos */}
-          {/* <View className="px-4 py-4 gap-2">
-            <View className="flex-row gap-2">
-              <TouchableOpacity
-                onPress={() =>
-                  navigation.navigate("GroupServicesHistoryScreen" as any, {
-                    groupId,
-                    groupName: group?.name,
-                  })
-                }
-                className="flex-1 bg-purple-50 rounded-xl p-3 border border-purple-200 flex-row items-center gap-3"
-              >
-                <MaterialCommunityIcons
-                  name="history"
-                  size={20}
-                  color="#9333EA"
-                />
-                <View className="flex-1">
-                  <Text className="font-semibold text-sm text-purple-900">
-                    Servicios
-                  </Text>
-                  <Text className="text-xs text-purple-700">Historial</Text>
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() =>
-                  navigation.navigate("GroupFinancialPanelScreen" as any, {
-                    groupId,
-                    groupName: group?.name,
-                  })
-                }
-                className="flex-1 bg-blue-50 rounded-xl p-3 border border-blue-200 flex-row items-center gap-3"
-              >
-                <MaterialCommunityIcons
-                  name="chart-line"
-                  size={20}
-                  color="#0066CC"
-                />
-                <View className="flex-1">
-                  <Text className="font-semibold text-sm text-blue-900">
-                    Finanzas
-                  </Text>
-                  <Text className="text-xs text-blue-700">Panel</Text>
-                </View>
-              </TouchableOpacity>
-            </View>
-          </View> */}
-
-          {/* Lista de miembros */}
-          <View className="px-4 py-4">
-            <Text className="font-bold text-base mb-2">Miembros del grupo</Text>
-            <GroupMembersList members={members} currentUserId={user?.id} />
-          </View>
+          )}
         </ScrollView>
       ) : activeTab === "servicios" ? (
-        <View
-          style={Platform.OS === "web" ? { height: listHeight } : { flex: 1 }}
-        >
-          <GroupServicesScreen
-            groupId={groupId}
-            isGroupLeader={user?.id === group?.user_id}
-            onServiceSelect={(service: Service) => {
-              setSelectedService(service);
-              setServiceModalVisible(true);
-            }}
-          />
-        </View>
-      ) : activeTab === "compra" ? (
-        <View
-          style={Platform.OS === "web" ? { height: listHeight } : { flex: 1 }}
-        >
-          <GroupPurchaseScreen groupId={groupId} />
+        <View style={{ flex: 1 }}>
+          <GroupServicesScreen groupId={groupId} isGroupLeader={isOwner} />
         </View>
       ) : (
-        <View
-          style={Platform.OS === "web" ? { height: listHeight } : { flex: 1 }}
-        >
-          <GroupOrdersHistoryScreen />
+        <View style={{ flex: 1 }}>
+          <GroupPurchaseScreen groupId={groupId} />
         </View>
       )}
 
-      {/* Service Selection Modal */}
+      {/* --- FOOTER ACTION BAR (Floating) --- */}
+      {/* Only show if not in Tabs that have their own sub-navigation or actions, or keeps it consistent */}
+      {activeTab === "info" && (
+        <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 shadow-lg flex-row gap-3">
+          {isMember ? (
+            <TouchableOpacity
+              onPress={() => setInviteModal(true)}
+              className="flex-1 bg-primary h-12 rounded-xl flex-row items-center justify-center shadow-md shadow-primary/30"
+            >
+              <Feather name="user-plus" size={20} color="white" />
+              <Text className="text-white font-bold text-base ml-2">
+                Invitar Amigos
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            // Join Button logic controlled by Privacy usually, but assuming public/allowed here or 'Solicitar'
+            <TouchableOpacity className="flex-1 bg-primary h-12 rounded-xl flex-row items-center justify-center">
+              <Text className="text-white font-bold text-base">
+                Unirme al Grupo
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {isOwner && (
+            <TouchableOpacity
+              onPress={() => setActiveTab("servicios")}
+              className="w-12 h-12 bg-gray-100 rounded-xl items-center justify-center border border-gray-200"
+            >
+              <Feather name="shopping-bag" size={20} color="#374151" />
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+
+      {/* --- MODALS --- */}
+      {/* Invitación */}
+      <Modal visible={inviteModal} transparent animationType="fade">
+        <View className="flex-1 bg-black/40 justify-center items-center p-4">
+          <View className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl">
+            <View className="w-12 h-12 bg-primary/10 rounded-full items-center justify-center mb-4 self-center">
+              <Feather name="mail" size={24} color="#00E074" />
+            </View>
+            <Text className="text-xl font-bold text-center text-gray-800 mb-2">
+              Invitar al Grupo
+            </Text>
+            <Text className="text-center text-gray-500 text-sm mb-6">
+              Ingresa el correo electrónico de la persona que deseas invitar.
+            </Text>
+
+            <View className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 mb-6">
+              <TextInput
+                placeholder="ejemplo@email.com"
+                value={inviteEmail}
+                onChangeText={setInviteEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoFocus
+                className="text-base text-gray-800"
+              />
+            </View>
+
+            <View className="flex-row gap-3">
+              <TouchableOpacity
+                onPress={() => setInviteModal(false)}
+                className="flex-1 py-3 rounded-xl bg-gray-100 items-center"
+              >
+                <Text className="font-bold text-gray-600">Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={submitInvite}
+                className="flex-1 py-3 rounded-xl bg-primary items-center shadow-lg shadow-primary/20"
+              >
+                <Text className="font-bold text-white">Enviar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Service Selection */}
       <GroupServiceModal
         visible={serviceModalVisible}
         service={selectedService}
@@ -743,10 +789,7 @@ export const GroupDetailScreen = () => {
           setServiceModalVisible(false);
           setSelectedService(null);
         }}
-        onServiceCreated={() => {
-          // Refrescar miembros o hacer otra acción necesaria
-          fetchGroup();
-        }}
+        onServiceCreated={() => fetchGroup()}
       />
 
       {/* Share Group Modal */}
@@ -760,8 +803,6 @@ export const GroupDetailScreen = () => {
           memberCount: members.length,
           creatorName:
             members.find((m) => m.role === "LEADER")?.user?.full_name ||
-            members.find((m) => m.role === "LEADER")?.user?.name ||
-            members.find((m) => m.role === "LEADER")?.user?.email ||
             "Creador",
         }}
       />

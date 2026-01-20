@@ -128,11 +128,11 @@ class CartServiceClass extends CoreApiService {
    */
   async updateCartItem(
     itemId: string,
-    data: UpdateCartItemDto
+    data: UpdateCartItemDto,
   ): Promise<CartItem> {
     return this.put<CartItem>(
       `${this.ENDPOINTS.CART_ITEMS_QUANTITY}/${itemId}?quantity=${data.quantity}`,
-      {}
+      {},
     );
   }
 
@@ -141,7 +141,7 @@ class CartServiceClass extends CoreApiService {
    */
   async removeFromCart(itemId: string): Promise<{ success: boolean }> {
     return this.delete<{ success: boolean }>(
-      `${this.ENDPOINTS.CART_ITEMS}/${itemId}`
+      `${this.ENDPOINTS.CART_ITEMS}/${itemId}`,
     );
   }
 
@@ -152,7 +152,7 @@ class CartServiceClass extends CoreApiService {
     const cart = await this.getCart();
     // !NOT WORKING ON BACKEND
     return this.put<{ success: boolean }>(
-      `${this.ENDPOINTS.CLEAR_CART}/${cart.id}`
+      `${this.ENDPOINTS.CLEAR_CART}/${cart.id}`,
     );
   }
 
@@ -171,7 +171,7 @@ class CartServiceClass extends CoreApiService {
     const cart = await this.getCart();
     return this.put<Cart>(
       `carts/payment-type/${cart.id}?payment_type_id=${paymentTypeId}`,
-      {}
+      {},
     );
   }
 
@@ -182,7 +182,7 @@ class CartServiceClass extends CoreApiService {
     const cart = await this.getCart();
     return this.put<Cart>(
       `carts/address/${cart.id}?address_id=${addressId}`,
-      {}
+      {},
     );
   }
 
@@ -219,6 +219,13 @@ class CartServiceClass extends CoreApiService {
     cost: number;
   }> {
     return this.post(this.ENDPOINTS.DELIVERY_COST, data);
+  }
+
+  /**
+   * Remove group from cart (Workaround for backend bug)
+   */
+  async removeGroupFromCart(cartId: string): Promise<Cart> {
+    return this.put<Cart>(`carts/${cartId}`, { group_id: null });
   }
 }
 

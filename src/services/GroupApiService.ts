@@ -11,19 +11,22 @@ export interface GroupType {
 export interface Group {
   id: string;
   name: string;
+  image_url?: string;
   description: string;
   message_invitation: string;
   latitude: string;
   longitude: string;
   user_address_id: string;
   is_active: boolean;
+  status: string;
+  is_leader?: boolean;
   is_delete: boolean;
   created_at: Date;
   updated_at: Date;
   deleted_at: Date;
   event_at?: Date | string;
   user_id: string;
-  group_type: GroupType;
+  group_type: GroupType | string;
   group_type_id: string;
   privacy_id: string;
   payment_type_id?: string;
@@ -207,7 +210,7 @@ class GroupServiceClass extends CoreApiService {
    */
   async getGroupTypes(page = 1, limit = 20): Promise<GroupType[]> {
     const res = await this.get<any>(
-      `${this.ENDPOINTS.GROUP_TYPE}?page=${page}&limit=${limit}`
+      `${this.ENDPOINTS.GROUP_TYPE}?page=${page}&limit=${limit}`,
     );
     // Si la respuesta es { data: [...] }
     if (res && Array.isArray(res.data)) return res.data;
@@ -286,7 +289,7 @@ class GroupServiceClass extends CoreApiService {
       role?: "admin" | "member";
       page?: number;
       limit?: number;
-    } = {}
+    } = {},
   ): Promise<PaginatedResponse<Group>> {
     const queryString = this.buildQueryString(params);
     const endpoint = queryString
@@ -340,13 +343,13 @@ class GroupServiceClass extends CoreApiService {
    */
   async leaveGroup(
     groupId: string,
-    userId: string
+    userId: string,
   ): Promise<{
     message: string;
     success: boolean;
   }> {
     return this.delete(
-      `group-members/group-and-user?groupId=${groupId}&userId=${userId}`
+      `group-members/group-and-user?groupId=${groupId}&userId=${userId}`,
     );
   }
 
@@ -368,7 +371,7 @@ class GroupServiceClass extends CoreApiService {
    */
   async removeMember(
     groupId: string,
-    memberId: string
+    memberId: string,
   ): Promise<{ success: boolean }> {
     return this.delete(`group-members/${memberId}`);
   }
@@ -379,11 +382,11 @@ class GroupServiceClass extends CoreApiService {
   async updateMemberRole(
     groupId: string,
     memberId: string,
-    role: "LEADER" | "MEMBER"
+    role: "LEADER" | "MEMBER",
   ): Promise<GroupMember> {
     return this.patch<GroupMember>(
       `${this.ENDPOINTS.GROUPS}/${groupId}/members/${memberId}`,
-      { role }
+      { role },
     );
   }
 
@@ -421,19 +424,19 @@ class GroupServiceClass extends CoreApiService {
 
   async acceptInvitation(invitationId: string): Promise<any> {
     return this.patch(
-      `${this.ENDPOINTS.GROUP_INVITATIONS}/${invitationId}/accept`
+      `${this.ENDPOINTS.GROUP_INVITATIONS}/${invitationId}/accept`,
     );
   }
 
   async rejectInvitation(invitationId: string): Promise<any> {
     return this.patch(
-      `${this.ENDPOINTS.GROUP_INVITATIONS}/${invitationId}/reject`
+      `${this.ENDPOINTS.GROUP_INVITATIONS}/${invitationId}/reject`,
     );
   }
 
   async cancelInvitation(invitationId: string): Promise<any> {
     return this.patch(
-      `${this.ENDPOINTS.GROUP_INVITATIONS}/${invitationId}/cancel`
+      `${this.ENDPOINTS.GROUP_INVITATIONS}/${invitationId}/cancel`,
     );
   }
 
@@ -443,7 +446,7 @@ class GroupServiceClass extends CoreApiService {
 
   async hardDeleteInvitation(invitationId: string): Promise<void> {
     return this.delete(
-      `${this.ENDPOINTS.GROUP_INVITATIONS}/${invitationId}/hard`
+      `${this.ENDPOINTS.GROUP_INVITATIONS}/${invitationId}/hard`,
     );
   }
 
@@ -453,10 +456,10 @@ class GroupServiceClass extends CoreApiService {
    * Obtener las sugerencias del usuario actual en un grupo
    */
   async getUserConsumptions(
-    groupId: string
+    groupId: string,
   ): Promise<GroupMemberConsumption[]> {
     const res = await this.get<any>(
-      `group-member-consumptions/user-consumptions/${groupId}`
+      `group-member-consumptions/user-consumptions/${groupId}`,
     );
     if (Array.isArray(res?.data)) return res.data;
     if (Array.isArray(res)) return res;
@@ -468,7 +471,7 @@ class GroupServiceClass extends CoreApiService {
    */
   async getSummaryConsumptions(groupId: string): Promise<ConsumptionSummary[]> {
     const res = await this.get<any>(
-      `group-member-consumptions/summary-product/${groupId}`
+      `group-member-consumptions/summary-product/${groupId}`,
     );
     if (Array.isArray(res?.data)) return res.data;
     if (Array.isArray(res)) return res;
@@ -480,7 +483,7 @@ class GroupServiceClass extends CoreApiService {
    * Usado para obtener todos los consumos de un grupo y luego procesarlos en frontend
    */
   async getAllConsumptions(
-    filters: Record<string, any>
+    filters: Record<string, any>,
   ): Promise<GroupMemberConsumption[]> {
     const queryString = this.buildQueryString(filters);
     const endpoint = queryString
@@ -498,7 +501,7 @@ class GroupServiceClass extends CoreApiService {
    * Obtener todos los consumos de un grupo
    */
   async getGroupAllConsumptions(
-    groupId: string
+    groupId: string,
   ): Promise<GroupMemberConsumption[]> {
     // Pedimos un limite alto para traer todos
     return this.getAllConsumptions({ group_id: groupId, limit: 100 });
@@ -510,7 +513,7 @@ class GroupServiceClass extends CoreApiService {
   async createConsumption(
     groupId: string,
     productId: string,
-    notes?: string
+    notes?: string,
   ): Promise<GroupMemberConsumption> {
     return this.post<GroupMemberConsumption>("group-member-consumptions", {
       group_id: groupId,
@@ -562,7 +565,7 @@ class GroupServiceClass extends CoreApiService {
       description?: string;
     },
     quantity: number,
-    suggestedBy: string
+    suggestedBy: string,
   ): Promise<GroupPurchaseCart> {
     // Obtener carrito del usuario
     let cart = await this.getMyCart();
@@ -592,7 +595,7 @@ class GroupServiceClass extends CoreApiService {
    */
   async removeProductFromGroupCart(
     groupId: string,
-    cartItemId: string
+    cartItemId: string,
   ): Promise<GroupPurchaseCart> {
     await this.delete(`cart-items/${cartItemId}`);
     return this.getMyCart();
@@ -604,7 +607,7 @@ class GroupServiceClass extends CoreApiService {
   async updateProductQuantityInGroupCart(
     groupId: string,
     cartItemId: string,
-    newQuantity: number
+    newQuantity: number,
   ): Promise<GroupPurchaseCart> {
     await this.put(`cart-items/${cartItemId}?quantity=${newQuantity}`, {});
     return this.getMyCart();
@@ -619,8 +622,36 @@ class GroupServiceClass extends CoreApiService {
   }
 
   /**
+   * Get all info needed to create a group
+   */
+  async getInfoCreate(): Promise<{
+    user_address: any[];
+    group_types: GroupType[];
+    group_privacies: GroupPrivacy[];
+    payment_types: PaymentType[];
+  }> {
+    const res = await this.get<any>("groups/info-create");
+    return res;
+  }
+
+  /**
    * Get group privacy options
    */
+  async uploadImage(file: any): Promise<string> {
+    const formData = new FormData();
+    formData.append("file", {
+      uri: file.uri,
+      type: "image/jpeg", // Ajustar según el tipo real si es necesario
+      name: "upload.jpg",
+    } as any);
+
+    const response = await this.postFormData<string>(
+      "cloudinary/upload-image", // Endpoint relativo
+      formData,
+    );
+    return response;
+  }
+
   async getGroupPrivacies(): Promise<GroupPrivacy[]> {
     const res = await this.get<any>("groups/privacy-type");
     if (Array.isArray(res?.data)) return res.data;

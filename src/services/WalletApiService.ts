@@ -47,7 +47,7 @@ class WalletServiceClass extends CoreApiService {
    */
   protected async walletRequest<T = any>(
     endpoint: string,
-    options: any = {}
+    options: any = {},
   ): Promise<T> {
     const walletEndpoint = endpoint.startsWith("/")
       ? `/wallets${endpoint}`
@@ -68,7 +68,7 @@ class WalletServiceClass extends CoreApiService {
   public post<T = any>(
     endpoint: string,
     data?: any,
-    options: any = {}
+    options: any = {},
   ): Promise<T> {
     return this.walletRequest<T>(endpoint, {
       ...options,
@@ -83,7 +83,7 @@ class WalletServiceClass extends CoreApiService {
   public put<T = any>(
     endpoint: string,
     data?: any,
-    options: any = {}
+    options: any = {},
   ): Promise<T> {
     return this.walletRequest<T>(endpoint, {
       ...options,
@@ -119,7 +119,7 @@ class WalletServiceClass extends CoreApiService {
    */
   async updateWallet(
     walletId: string,
-    updateData: Partial<Wallet>
+    updateData: Partial<Wallet>,
   ): Promise<Wallet> {
     return this.put(walletId, updateData);
   }
@@ -129,7 +129,7 @@ class WalletServiceClass extends CoreApiService {
    */
   async getAllWallets(
     page: number = 1,
-    limit: number = 10
+    limit: number = 10,
   ): Promise<PaginatedResponse<Wallet>> {
     const queryString = this.buildQueryString({ page, limit });
     return this.get(`?${queryString}`);
@@ -201,7 +201,7 @@ class WalletServiceClass extends CoreApiService {
       clientTransactionId: string;
       wallet_id: string;
       amount_payment_id?: string;
-    }
+    },
   ): Promise<any> {
     return this.post(`purchase-recharge/${walletId}`, purchaseData);
   }
@@ -344,7 +344,7 @@ class WalletServiceClass extends CoreApiService {
    * Create amount to payment
    */
   async createAmountToPayment(
-    amountOrPayload: number | { amount: number; message?: string }
+    amountOrPayload: number | { amount: number; message?: string },
   ): Promise<any> {
     const payload =
       typeof amountOrPayload === "number"
@@ -388,7 +388,7 @@ class WalletServiceClass extends CoreApiService {
   async transferBetweenUsersLegacy(
     senderEmail: string,
     recipientIdentifier: string,
-    amount: number
+    amount: number,
   ): Promise<any> {
     const result = await this.transferToAlias(recipientIdentifier, amount);
     return { ...result, isPending: false };
@@ -405,7 +405,7 @@ class WalletServiceClass extends CoreApiService {
       | "CREDIT_CARD"
       | "DEBIT_CARD"
       | "PAYPHONE"
-      | "BANK_TRANSFER" = "CREDIT_CARD"
+      | "BANK_TRANSFER" = "CREDIT_CARD",
   ): Promise<{ wallet: Wallet }> {
     const wallet = await this.getCurrentUserWallet();
 
@@ -439,7 +439,7 @@ class WalletServiceClass extends CoreApiService {
     const amountNum = Number(data.amount);
     if (isNaN(amountNum) || amountNum <= 0) {
       throw new Error(
-        "El monto de recarga debe ser un número válido y mayor a cero."
+        "El monto de recarga debe ser un número válido y mayor a cero.",
       );
     }
 
@@ -448,8 +448,8 @@ class WalletServiceClass extends CoreApiService {
     const clientTransactionId = uuidRegex.test(data.userId)
       ? data.userId
       : typeof crypto !== "undefined" && crypto.randomUUID
-      ? crypto.randomUUID()
-      : `${Date.now()}-fake-uuid-frontend`;
+        ? crypto.randomUUID()
+        : `${Date.now()}-fake-uuid-frontend`;
 
     const payload: RechargeRequest = {
       amountUsd: amountNum,
@@ -462,12 +462,32 @@ class WalletServiceClass extends CoreApiService {
   }
 
   /**
+   * Create recharge via Bank Transfer
+   */
+  async createRechargeTransfer(data: {
+    payment_account_id: string;
+    amount_usd: number;
+    transfer_id: string;
+  }): Promise<any> {
+    // Note: Endpoint is /user-recharge, handled by UserRechargeController
+    // Since this service base path is /wallets, we need to use directApiCall or absolute path if request supports it.
+    // CoreApiService buildUrl handles absolute paths or paths pending base_url.
+    // If we pass /user-recharge, buildUrl might overwrite.
+    // Let's use directApiCall equivalent or override.
+    // Actually directApiCall is private but available.
+    return this.directApiCall("user-recharge", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  /**
    * Get wallet transactions (uses transactions endpoint, not wallets)
    */
   async getTransactions(
     page: number = 1,
     limit: number = 20,
-    walletId?: string
+    walletId?: string,
   ): Promise<any> {
     const params = new URLSearchParams({
       page: page.toString(),
@@ -485,18 +505,34 @@ class WalletServiceClass extends CoreApiService {
   /**
    * Direct API call without wallet prefix
    */
-  private async directApiCall(endpoint: string): Promise<any> {
+  private async directApiCall(
+    endpoint: string,
+    options: any = {},
+  ): Promise<any> {
     const token = await this.getAuthToken();
-    const response = await fetch(`${this.baseUrl}/${endpoint}`, {
-      method: "GET",
+    const url = `${this.baseUrl}/${endpoint}`;
+
+    console.log(`🌐 Direct API Request: ${options.method || "GET"} ${url}`);
+
+    const response = await fetch(url, {
+      method: options.method || "GET",
       headers: {
         "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
+      body: options.body,
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch (e) {
+        errorData = null;
+      }
+      throw new Error(
+        errorData?.message || `HTTP error! status: ${response.status}`,
+      );
     }
 
     return response.json();
