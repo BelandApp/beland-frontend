@@ -152,8 +152,6 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
             renderItem={renderItem}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
-            // Importante: esto permite que el modal no se cierre
-            // accidentalmente mientras scrolleas la lista
             bounces={true}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
@@ -164,23 +162,6 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
         }
         actions={
           <View>
-            <View style={styles.groupOrderButtonContainer}>
-              <GroupOrderButton
-                disabled={
-                  items.length === 0 ||
-                  (balance || 0) < totalBecoins() ||
-                  !isAuthenticated
-                }
-                onOrderCreated={(orderId) => {
-                  // Aquí puedes hacer lo que necesites después de crear la orden
-                  onClose();
-                  clearCart();
-                  notify.success({
-                    message: `Orden de grupo #${orderId} creada exitosamente`,
-                  });
-                }}
-              />
-            </View>
             <View style={styles.footer}>
               <View>
                 <Text style={styles.total}>
@@ -209,8 +190,8 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
                   }
                   onCheckout && onCheckout();
                 }}
-              />{" "}
-            </View>{" "}
+              />
+            </View>
           </View>
         }
       />

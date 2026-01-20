@@ -44,6 +44,7 @@ export interface RequestOptions extends RequestInit {
   timeout?: number;
   retries?: number;
   skipAuth?: boolean;
+  skipJsonContentType?: boolean;
 }
 
 export class CoreApiService {
@@ -73,17 +74,20 @@ export class CoreApiService {
    * Build request headers with authentication
    */
   protected async buildHeaders(
-    options: RequestOptions = {}
+    options: RequestOptions = {},
   ): Promise<HeadersInit> {
-    const headers: HeadersInit = {
-      "Content-Type": "application/json",
-      ...options.headers,
+    const headers: Record<string, string> = {
+      ...((options.headers as Record<string, string>) || {}),
     };
+
+    if (!options.skipJsonContentType) {
+      headers["Content-Type"] = "application/json";
+    }
 
     if (!options.skipAuth) {
       const token = await this.getAuthToken();
       if (token) {
-        (headers as Record<string, string>).Authorization = `Bearer ${token}`;
+        headers.Authorization = `Bearer ${token}`;
       }
     }
 
@@ -110,7 +114,7 @@ export class CoreApiService {
    */
   protected createApiError(response: Response, data: any): ApiError {
     const error = new Error(
-      data?.message || data?.error || `HTTP error! status: ${response.status}`
+      data?.message || data?.error || `HTTP error! status: ${response.status}`,
     ) as ApiError;
 
     error.status = response.status;
@@ -132,7 +136,7 @@ export class CoreApiService {
    */
   protected async request<T = any>(
     endpoint: string,
-    options: RequestOptions = {}
+    options: RequestOptions = {},
   ): Promise<T> {
     const {
       timeout = API_CONFIG.TIMEOUT,
@@ -170,7 +174,7 @@ export class CoreApiService {
           clearTimeout(timeoutId);
 
           console.log(
-            `📡 Response Status: ${response.status} ${response.statusText}`
+            `📡 Response Status: ${response.status} ${response.statusText}`,
           );
 
           let data;
@@ -193,7 +197,7 @@ export class CoreApiService {
             // Retry server errors (5xx) if we have attempts left
             if (attempt < retries) {
               console.log(
-                `🔄 Retrying request (attempt ${attempt + 1}/${retries})`
+                `🔄 Retrying request (attempt ${attempt + 1}/${retries})`,
               );
               await this.delay(API_CONFIG.RETRY_DELAY * (attempt + 1));
               continue;
@@ -209,14 +213,14 @@ export class CoreApiService {
 
             if (attempt < retries) {
               console.log(
-                `🔄 Retrying after timeout (attempt ${attempt + 1}/${retries})`
+                `🔄 Retrying after timeout (attempt ${attempt + 1}/${retries})`,
               );
               await this.delay(API_CONFIG.RETRY_DELAY * (attempt + 1));
               continue;
             }
 
             const timeoutError = new Error(
-              `Request timeout after ${timeout}ms`
+              `Request timeout after ${timeout}ms`,
             ) as ApiError;
             timeoutError.status = 408;
             throw timeoutError;
@@ -227,7 +231,7 @@ export class CoreApiService {
             console.log(
               `🔄 Retrying after network error (attempt ${
                 attempt + 1
-              }/${retries})`
+              }/${retries})`,
             );
             await this.delay(API_CONFIG.RETRY_DELAY * (attempt + 1));
             continue;
@@ -250,14 +254,14 @@ export class CoreApiService {
       const promise = executeRequest();
       (this.constructor as typeof CoreApiService)._inFlightRequests.set(
         key,
-        promise
+        promise,
       );
       try {
         const res = await promise;
         return res;
       } finally {
         (this.constructor as typeof CoreApiService)._inFlightRequests.delete(
-          key
+          key,
         );
       }
     }
@@ -271,7 +275,7 @@ export class CoreApiService {
    */
   public get<T = any>(
     endpoint: string,
-    options: RequestOptions = {}
+    options: RequestOptions = {},
   ): Promise<T> {
     return this.request<T>(endpoint, { ...options, method: "GET" });
   }
@@ -282,7 +286,7 @@ export class CoreApiService {
   public post<T = any>(
     endpoint: string,
     data?: any,
-    options: RequestOptions = {}
+    options: RequestOptions = {},
   ): Promise<T> {
     return this.request<T>(endpoint, {
       ...options,
@@ -297,7 +301,7 @@ export class CoreApiService {
   public put<T = any>(
     endpoint: string,
     data?: any,
-    options: RequestOptions = {}
+    options: RequestOptions = {},
   ): Promise<T> {
     return this.request<T>(endpoint, {
       ...options,
@@ -312,7 +316,7 @@ export class CoreApiService {
   public patch<T = any>(
     endpoint: string,
     data?: any,
-    options: RequestOptions = {}
+    options: RequestOptions = {},
   ): Promise<T> {
     return this.request<T>(endpoint, {
       ...options,
@@ -326,7 +330,7 @@ export class CoreApiService {
    */
   public delete<T = any>(
     endpoint: string,
-    options: RequestOptions = {}
+    options: RequestOptions = {},
   ): Promise<T> {
     return this.request<T>(endpoint, { ...options, method: "DELETE" });
   }
@@ -337,18 +341,13 @@ export class CoreApiService {
   public async postFormData<T = any>(
     endpoint: string,
     formData: FormData,
-    options: RequestOptions = {}
+    options: RequestOptions = {},
   ): Promise<T> {
-    // For FormData, we need to remove the Content-Type header
-    // to let the browser set it with the boundary
-    const headers = await this.buildHeaders(options);
-    delete (headers as any)["Content-Type"];
-
     return this.request<T>(endpoint, {
       ...options,
       method: "POST",
       body: formData,
-      headers,
+      skipJsonContentType: true,
     });
   }
 

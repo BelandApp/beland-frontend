@@ -69,9 +69,13 @@ export const authService = {
     return data.message;
   },
   async resendRegisterCode(email: string) {
-    const data = await _core.post(`/auth/resend-code`, email, {
-      skipAuth: true,
-    });
+    const data = await _core.post(
+      `/auth/resend-code?email=${email}`,
+      undefined,
+      {
+        skipAuth: true,
+      }
+    );
     return data.message;
   },
   async checkRegisterCode(FormData: { code: string; email: string }) {
@@ -95,16 +99,24 @@ export const authService = {
   },
   async checkCode(FormData: FormCodeCheck) {
     const data = await _core.post(
-      `/auth/forgot-password-verification-code`,
-      FormData,
+      `/auth/forgot-password-verification-code?email=${FormData.email}&code=${FormData.code}`,
+      undefined,
       { skipAuth: true }
     );
     return data.message;
   },
   async resetPassword(FormData: FormResetPassword) {
-    const data = await _core.post(`/auth/reset-password`, FormData, {
-      skipAuth: true,
-    });
+    const data = await _core.post(
+      `/auth/forgot-password-change`,
+      {
+        email: FormData.email,
+        password: FormData.password,
+        confirmPassword: FormData.confirmPassword,
+      },
+      {
+        skipAuth: true,
+      }
+    );
     return data.token;
   },
 };

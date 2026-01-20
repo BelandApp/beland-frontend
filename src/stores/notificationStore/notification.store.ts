@@ -1,4 +1,3 @@
-
 import { create } from "zustand";
 interface NotificationBase {
   message: string;
@@ -11,9 +10,15 @@ interface NotificationConfirm extends NotificationBase {
   onCancel?: () => void;
 }
 
+interface NotificationGroupCreated extends NotificationBase {
+  onShare: () => void;
+  onDismiss?: () => void;
+}
+
 export type Notification =
   | (NotificationBase & { type: "success" | "error" | "info" })
-  | (NotificationConfirm & { type: "confirm" | "cartItem" });
+  | (NotificationConfirm & { type: "confirm" | "cartItem" })
+  | (NotificationGroupCreated & { type: "groupCreated" });
 
 interface NotificationStore {
   current?: Notification;

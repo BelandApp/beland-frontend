@@ -175,7 +175,7 @@ class OrderServiceClass extends CoreApiService {
    * Get orders for the authenticated user
    */
   async getUserOrders(
-    query: OrderQuery = {}
+    query: OrderQuery = {},
   ): Promise<PaginatedResponse<Order>> {
     const queryString = this.buildQueryString(query);
     const endpoint = queryString
@@ -240,11 +240,14 @@ class OrderServiceClass extends CoreApiService {
    * Create a new order from current cart
    * Supports both individual and group orders with different payment types
    */
-  async createOrder(data: any): Promise<{
+  async createOrder(data: {
+    cart_id?: string;
+    payment_type_id?: string;
+  }): Promise<{
     order: Order;
     payment_intent?: any; // Payment processor specific data
   }> {
-    let cartId = (data as any).cart_id;
+    let cartId = data.cart_id;
     if (!cartId) {
       try {
         const cart = await CartService.getCart();
@@ -254,7 +257,13 @@ class OrderServiceClass extends CoreApiService {
       }
     }
 
-    return this.post(`${this.ENDPOINTS.CREATE_ORDER}?cart_id=${cartId}`, {});
+    let url = `${this.ENDPOINTS.CREATE_ORDER}?cart_id=${cartId}`;
+    // Force sending payment_type_id if available to ensure backend sees it
+    if (data.payment_type_id) {
+      url += `&payment_type_id=${data.payment_type_id}`;
+    }
+
+    return this.post(url, { payment_type_id: data.payment_type_id });
   }
 
   /**
@@ -285,14 +294,14 @@ class OrderServiceClass extends CoreApiService {
 
       // Buscar por código EQUAL_SPLIT
       let equalSplitPaymentType = paymentTypes.find(
-        (pt: any) => pt.code === "EQUAL_SPLIT"
+        (pt: any) => pt.code === "EQUAL_SPLIT",
       );
 
       if (!equalSplitPaymentType) {
         throw new Error(
           `Tipo de pago EQUAL_SPLIT no disponible. Disponibles: ${paymentTypes
             .map((pt: any) => pt.code)
-            .join(", ")}`
+            .join(", ")}`,
         );
       }
 
@@ -305,7 +314,7 @@ class OrderServiceClass extends CoreApiService {
       throw new Error(
         `Error creando orden de grupo: ${
           error instanceof Error ? error.message : String(error)
-        }`
+        }`,
       );
     }
   }
@@ -342,7 +351,7 @@ class OrderServiceClass extends CoreApiService {
         throw new Error(
           `Tipo de pago FULL no disponible. Disponibles: ${paymentTypes
             .map((pt: any) => pt.code)
-            .join(", ")}`
+            .join(", ")}`,
         );
       }
 
@@ -355,7 +364,7 @@ class OrderServiceClass extends CoreApiService {
       throw new Error(
         `Error creando orden de grupo: ${
           error instanceof Error ? error.message : String(error)
-        }`
+        }`,
       );
     }
   }
@@ -375,7 +384,7 @@ class OrderServiceClass extends CoreApiService {
    */
   async getOrderTracking(orderId: string): Promise<OrderTracking> {
     return this.get<OrderTracking>(
-      `${this.ENDPOINTS.ORDER_TRACKING}/${orderId}`
+      `${this.ENDPOINTS.ORDER_TRACKING}/${orderId}`,
     );
   }
 
@@ -405,7 +414,7 @@ class OrderServiceClass extends CoreApiService {
   async updateOrderStatus(
     orderId: string,
     status: Order["status"],
-    notes?: string
+    notes?: string,
   ): Promise<Order> {
     const params = new URLSearchParams();
     params.append("order_id", orderId);
@@ -423,13 +432,13 @@ class OrderServiceClass extends CoreApiService {
         // Note: In production, this should prompt for a delivery code
         // For now, we'll throw an error to prevent issues
         throw new Error(
-          "Para marcar como entregado, se requiere un código de verificación. Use el método deliverOrder() en su lugar."
+          "Para marcar como entregado, se requiere un código de verificación. Use el método deliverOrder() en su lugar.",
         );
       case "cancelled":
         return this.put(`orders/cancelled?${params.toString()}`);
       default:
         throw new Error(
-          `Status "${status}" no tiene un endpoint configurado en el backend`
+          `Status "${status}" no tiene un endpoint configurado en el backend`,
         );
     }
   }
@@ -439,7 +448,7 @@ class OrderServiceClass extends CoreApiService {
    */
   async deliverOrder(
     orderId: string,
-    verificationCode: number
+    verificationCode: number,
   ): Promise<Order> {
     const params = new URLSearchParams();
     params.append("order_id", orderId);
@@ -466,7 +475,7 @@ class OrderServiceClass extends CoreApiService {
       tracking_number: string;
       carrier: string;
       estimated_delivery?: string;
-    }
+    },
   ): Promise<Order> {
     return this.patch<Order>(`orders/${orderId}/tracking`, data);
   }
@@ -480,7 +489,7 @@ class OrderServiceClass extends CoreApiService {
       payment_method: string;
       payment_token?: string;
       use_balance?: boolean;
-    }
+    },
   ): Promise<{
     success: boolean;
     payment_status: string;
@@ -509,7 +518,7 @@ class OrderServiceClass extends CoreApiService {
       reason: string;
       items?: { item_id: string; quantity: number }[];
       amount?: number;
-    }
+    },
   ): Promise<{
     success: boolean;
     refund_request_id: string;
@@ -527,7 +536,7 @@ class OrderServiceClass extends CoreApiService {
       rating: number; // 1-5
       review?: string;
       item_ratings?: { item_id: string; rating: number }[];
-    }
+    },
   ): Promise<{
     success: boolean;
     review_id: string;
@@ -547,7 +556,7 @@ class OrderServiceClass extends CoreApiService {
    */
   async getGroupOrders(
     groupId: string,
-    query: OrderQuery = {}
+    query: OrderQuery = {},
   ): Promise<PaginatedResponse<Order>> {
     try {
       // Obtener todas las órdenes del usuario
@@ -555,7 +564,7 @@ class OrderServiceClass extends CoreApiService {
 
       // Filtrar solo las órdenes que pertenecen a este grupo
       const groupOrders = (userOrders.data || []).filter(
-        (order: any) => order.group_id === groupId
+        (order: any) => order.group_id === groupId,
       );
 
       console.log(
@@ -564,7 +573,7 @@ class OrderServiceClass extends CoreApiService {
           totalUserOrders: userOrders.data?.length || 0,
           groupOrders: groupOrders.length,
           sampleOrder: groupOrders[0] || "sin órdenes",
-        }
+        },
       );
 
       return {
@@ -574,7 +583,7 @@ class OrderServiceClass extends CoreApiService {
         limit: query.limit ?? 10,
         totalPages: Math.max(
           1,
-          Math.ceil(groupOrders.length / (query.limit ?? 10))
+          Math.ceil(groupOrders.length / (query.limit ?? 10)),
         ),
       } as PaginatedResponse<Order>;
     } catch (error) {

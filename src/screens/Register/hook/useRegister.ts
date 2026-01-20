@@ -4,14 +4,14 @@ import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { RegisterFormData } from "../RegisterScreen";
 import { authService, getBackendErrorMessage } from "src/services";
 import { notify } from "src/hooks/notification/notify.external";
-import {  useAuth } from "src/context";
+import { useAuth } from "src/context";
 
 export const useRegister = () => {
   const [step, setStep] = useState<"register" | "code">("register");
   const [isLoading, setIsLoading] = useState(false);
   const { navigate } = useCustomNavigation();
   const { validateForm, errors } = useUserValidation();
-  const {loginWithEmail} =useAuth()
+  const { loginWithEmail } = useAuth();
   const [FormData, setFormData] = useState<RegisterFormData>({
     full_name: "",
     username: "",
@@ -33,22 +33,40 @@ export const useRegister = () => {
     setStep("register");
   };
   const handleRegister = async () => {
-    FormData.username = FormData.full_name.split(" ").join("");
-    FormData.confirmPassword = FormData.password;
+    // Generate username from full_name if not provided
+    if (!FormData.username) {
+      FormData.username = FormData.full_name.split(" ").join("");
+    }
+
+    // Validate password confirmation
+    if (FormData.password !== FormData.confirmPassword) {
+      notify.error({ message: "Las contraseñas no coinciden" });
+      return;
+    }
+
+    // Validate password strength
+    if (FormData.password.length < 8) {
+      notify.error({
+        message: "La contraseña debe tener al menos 8 caracteres",
+      });
+      return;
+    }
+
     const isValid = validateForm(FormData);
     if (!isValid) {
       setIsLoading(false);
-      notify.error({message:"Debes completar todos los campos"});
+      notify.error({ message: "Debes completar todos los campos requeridos" });
       return;
     }
+
     try {
       setIsLoading(true);
       await authService.registerUser(FormData);
-      notify.info({ message: "Verifica tu correo" });
+      notify.info({ message: "Verifica tu correo electrónico" });
       setStep("code");
     } catch (error) {
       const message = getBackendErrorMessage(error);
-      notify.error({message});
+      notify.error({ message });
     } finally {
       setIsLoading(false);
     }
@@ -60,7 +78,7 @@ export const useRegister = () => {
       notify.info({ message: "Verifica tu correo" });
     } catch (error) {
       const message = getBackendErrorMessage(error);
-      notify.error({message});
+      notify.error({ message });
     }
   };
   const handleVerifyCode = async (code: string) => {
@@ -70,8 +88,8 @@ export const useRegister = () => {
       await loginWithEmail(FormData.email, FormData.password);
       navigate("MainTabs", { screen: "Home" });
     } catch (error) {
-       const message = getBackendErrorMessage(error);
-       notify.error({message});
+      const message = getBackendErrorMessage(error);
+      notify.error({ message });
     }
   };
   return {

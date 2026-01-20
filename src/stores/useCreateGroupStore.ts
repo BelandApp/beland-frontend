@@ -11,6 +11,7 @@ interface CreateGroupState {
   description: string;
   location: string;
   deliveryTime: string;
+  eventDate: string; // ISO string for event date/time
   participants: Participant[];
 
   // Estados auxiliares
@@ -22,6 +23,7 @@ interface CreateGroupState {
   setDescription: (description: string) => void;
   setLocation: (location: string) => void;
   setDeliveryTime: (time: string) => void;
+  setEventDate: (date: string) => void;
 
   // Acciones para participantes
   addParticipant: (participant: Participant) => void;
@@ -40,6 +42,7 @@ const initialState = {
   description: "",
   location: "",
   deliveryTime: "",
+  eventDate: "",
   participants: [],
   isCreatingGroup: false,
   consumo: "normal" as "mucho" | "poco" | "normal",
@@ -58,6 +61,7 @@ export const useCreateGroupStore = create<CreateGroupState>((set, get) => ({
   setDescription: (description: string) => set({ description }),
   setLocation: (location: string) => set({ location }),
   setDeliveryTime: (time: string) => set({ deliveryTime: time }),
+  setEventDate: (date: string) => set({ eventDate: date }),
 
   // Acciones para participantes
   addParticipant: (participant: Participant) =>

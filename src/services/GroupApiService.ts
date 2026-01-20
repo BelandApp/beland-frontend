@@ -11,18 +11,22 @@ export interface GroupType {
 export interface Group {
   id: string;
   name: string;
+  image_url?: string;
   description: string;
   message_invitation: string;
   latitude: string;
   longitude: string;
   user_address_id: string;
   is_active: boolean;
+  status: string;
+  is_leader?: boolean;
   is_delete: boolean;
   created_at: Date;
   updated_at: Date;
   deleted_at: Date;
+  event_at?: Date | string;
   user_id: string;
-  group_type: GroupType;
+  group_type: GroupType | string;
   group_type_id: string;
   privacy_id: string;
   payment_type_id?: string;
@@ -59,6 +63,64 @@ export interface GroupMember {
   joined_at?: string;
   created_at?: string;
   // backend does not include contribution/payment in DTO by default
+}
+
+export interface GroupMemberConsumption {
+  id: string;
+  group_id: string;
+  group_member_id: string;
+  product_id: string;
+  user_id: string;
+  groupMember?: {
+    user_id: string;
+  };
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ConsumptionSummary {
+  product_id: string;
+  product_name: string;
+  product_image_url?: string;
+  total_consumers: number;
+  users: string[];
+}
+
+// Group Purchase Cart Types
+export interface GroupPurchaseCartItem {
+  id: string;
+  product_id: string;
+  product?: {
+    id: string;
+    name: string;
+    price: number;
+    image_url?: string;
+    description?: string;
+  };
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  created_at: string;
+}
+
+export interface GroupPurchaseCart {
+  id: string;
+  user_id: string;
+  group_id?: string;
+  address_id?: string;
+  payment_type_id?: string;
+  total_amount: number;
+  total_becoin?: number;
+  total_weight?: number;
+  total_items: number;
+  delivery_cost?: number;
+  distance_km?: number;
+  duration_min?: number;
+  delivery_at?: Date;
+  items: GroupPurchaseCartItem[];
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface GroupOrder {
@@ -100,15 +162,11 @@ export interface CreateGroupDto {
   name: string;
   description?: string;
   message_invitation?: string;
-  location?: string;
-  location_url?: string;
-  date_time?: string | Date;
-  status?: "ACTIVE" | "PENDING" | "INACTIVE" | "DELETE";
-  latitude?: number;
-  longitude?: number;
+  user_address_id?: string;
   group_type_id?: string;
   privacy_id?: string;
   payment_type_id?: string;
+  event_at?: string | Date;
 }
 
 export interface UpdateGroupDto {
@@ -152,7 +210,7 @@ class GroupServiceClass extends CoreApiService {
    */
   async getGroupTypes(page = 1, limit = 20): Promise<GroupType[]> {
     const res = await this.get<any>(
-      `${this.ENDPOINTS.GROUP_TYPE}?page=${page}&limit=${limit}`
+      `${this.ENDPOINTS.GROUP_TYPE}?page=${page}&limit=${limit}`,
     );
     // Si la respuesta es { data: [...] }
     if (res && Array.isArray(res.data)) return res.data;
@@ -231,7 +289,7 @@ class GroupServiceClass extends CoreApiService {
       role?: "admin" | "member";
       page?: number;
       limit?: number;
-    } = {}
+    } = {},
   ): Promise<PaginatedResponse<Group>> {
     const queryString = this.buildQueryString(params);
     const endpoint = queryString
@@ -285,13 +343,13 @@ class GroupServiceClass extends CoreApiService {
    */
   async leaveGroup(
     groupId: string,
-    userId: string
+    userId: string,
   ): Promise<{
     message: string;
     success: boolean;
   }> {
     return this.delete(
-      `group-members/group-and-user?groupId=${groupId}&userId=${userId}`
+      `group-members/group-and-user?groupId=${groupId}&userId=${userId}`,
     );
   }
 
@@ -313,7 +371,7 @@ class GroupServiceClass extends CoreApiService {
    */
   async removeMember(
     groupId: string,
-    memberId: string
+    memberId: string,
   ): Promise<{ success: boolean }> {
     return this.delete(`group-members/${memberId}`);
   }
@@ -324,11 +382,11 @@ class GroupServiceClass extends CoreApiService {
   async updateMemberRole(
     groupId: string,
     memberId: string,
-    role: "LEADER" | "MEMBER"
+    role: "LEADER" | "MEMBER",
   ): Promise<GroupMember> {
     return this.patch<GroupMember>(
       `${this.ENDPOINTS.GROUPS}/${groupId}/members/${memberId}`,
-      { role }
+      { role },
     );
   }
 
@@ -366,19 +424,19 @@ class GroupServiceClass extends CoreApiService {
 
   async acceptInvitation(invitationId: string): Promise<any> {
     return this.patch(
-      `${this.ENDPOINTS.GROUP_INVITATIONS}/${invitationId}/accept`
+      `${this.ENDPOINTS.GROUP_INVITATIONS}/${invitationId}/accept`,
     );
   }
 
   async rejectInvitation(invitationId: string): Promise<any> {
     return this.patch(
-      `${this.ENDPOINTS.GROUP_INVITATIONS}/${invitationId}/reject`
+      `${this.ENDPOINTS.GROUP_INVITATIONS}/${invitationId}/reject`,
     );
   }
 
   async cancelInvitation(invitationId: string): Promise<any> {
     return this.patch(
-      `${this.ENDPOINTS.GROUP_INVITATIONS}/${invitationId}/cancel`
+      `${this.ENDPOINTS.GROUP_INVITATIONS}/${invitationId}/cancel`,
     );
   }
 
@@ -388,13 +446,212 @@ class GroupServiceClass extends CoreApiService {
 
   async hardDeleteInvitation(invitationId: string): Promise<void> {
     return this.delete(
-      `${this.ENDPOINTS.GROUP_INVITATIONS}/${invitationId}/hard`
+      `${this.ENDPOINTS.GROUP_INVITATIONS}/${invitationId}/hard`,
     );
+  }
+
+  // --- Group Member Consumptions endpoints ---
+
+  /**
+   * Obtener las sugerencias del usuario actual en un grupo
+   */
+  async getUserConsumptions(
+    groupId: string,
+  ): Promise<GroupMemberConsumption[]> {
+    const res = await this.get<any>(
+      `group-member-consumptions/user-consumptions/${groupId}`,
+    );
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res)) return res;
+    return [];
+  }
+
+  /**
+   * Obtener resumen de sugerencias por producto
+   */
+  async getSummaryConsumptions(groupId: string): Promise<ConsumptionSummary[]> {
+    const res = await this.get<any>(
+      `group-member-consumptions/summary-product/${groupId}`,
+    );
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res)) return res;
+    return [];
+  }
+
+  /**
+   * Obtener todos los consumos (filtrados)
+   * Usado para obtener todos los consumos de un grupo y luego procesarlos en frontend
+   */
+  async getAllConsumptions(
+    filters: Record<string, any>,
+  ): Promise<GroupMemberConsumption[]> {
+    const queryString = this.buildQueryString(filters);
+    const endpoint = queryString
+      ? `group-member-consumptions?${queryString}`
+      : "group-member-consumptions";
+    const res = await this.get<any>(endpoint);
+
+    // Manejar respuesta paginada { data, total, page, limit }
+    if (res?.data && Array.isArray(res.data)) return res.data;
+    if (Array.isArray(res)) return res;
+    return [];
+  }
+
+  /**
+   * Obtener todos los consumos de un grupo
+   */
+  async getGroupAllConsumptions(
+    groupId: string,
+  ): Promise<GroupMemberConsumption[]> {
+    // Pedimos un limite alto para traer todos
+    return this.getAllConsumptions({ group_id: groupId, limit: 100 });
+  }
+
+  /**
+   * Crear una sugerencia de consumo
+   */
+  async createConsumption(
+    groupId: string,
+    productId: string,
+    notes?: string,
+  ): Promise<GroupMemberConsumption> {
+    return this.post<GroupMemberConsumption>("group-member-consumptions", {
+      group_id: groupId,
+      product_id: productId,
+      notes,
+    });
+  }
+
+  /**
+   * Eliminar una sugerencia de consumo
+   */
+  async deleteConsumption(consumptionId: string): Promise<void> {
+    return this.delete(`group-member-consumptions/${consumptionId}`);
+  }
+
+  // --- Carts endpoints ---
+
+  /**
+   * Obtener el carrito del usuario autenticado
+   */
+  async getMyCart(): Promise<any> {
+    return this.get<any>("carts/user");
+  }
+
+  /**
+   * Crear un nuevo carrito
+   */
+  async createCart(userId: string): Promise<any> {
+    return this.post("carts", { user_id: userId });
+  }
+
+  /**
+   * Actualizar el grupo de un carrito
+   */
+  async updateCartGroup(cartId: string, groupId: string): Promise<any> {
+    return this.put(`carts/${cartId}?group_id=${groupId}`, {});
+  }
+
+  /**
+   * Agregar producto al carrito (simplificado para usar cart-items)
+   */
+  async addProductToGroupCart(
+    groupId: string,
+    product: {
+      id: string;
+      name: string;
+      price: number;
+      image_url?: string;
+      description?: string;
+    },
+    quantity: number,
+    suggestedBy: string,
+  ): Promise<GroupPurchaseCart> {
+    // Obtener carrito del usuario
+    let cart = await this.getMyCart();
+
+    // Si no tiene carrito, crear uno
+    if (!cart) {
+      cart = await this.post("carts", {});
+      if (cart && cart.id && groupId) {
+        cart = await this.updateCartGroup(cart.id, groupId);
+      }
+    }
+
+    // Agregar item usando el endpoint de cart-items
+    await this.post("cart-items", {
+      cart_id: cart.id,
+      product_id: product.id,
+      quantity,
+      unit_price: product.price,
+    });
+
+    // Recargar carrito actualizado
+    return this.getMyCart();
+  }
+
+  /**
+   * Remover producto del carrito
+   */
+  async removeProductFromGroupCart(
+    groupId: string,
+    cartItemId: string,
+  ): Promise<GroupPurchaseCart> {
+    await this.delete(`cart-items/${cartItemId}`);
+    return this.getMyCart();
+  }
+
+  /**
+   * Actualizar cantidad de producto en el carrito
+   */
+  async updateProductQuantityInGroupCart(
+    groupId: string,
+    cartItemId: string,
+    newQuantity: number,
+  ): Promise<GroupPurchaseCart> {
+    await this.put(`cart-items/${cartItemId}?quantity=${newQuantity}`, {});
+    return this.getMyCart();
+  }
+
+  /**
+   * Vaciar el carrito
+   */
+  async clearGroupCart(cartId: string): Promise<GroupPurchaseCart> {
+    await this.put(`carts/${cartId}/empty`, {});
+    return this.getMyCart();
+  }
+
+  /**
+   * Get all info needed to create a group
+   */
+  async getInfoCreate(): Promise<{
+    user_address: any[];
+    group_types: GroupType[];
+    group_privacies: GroupPrivacy[];
+    payment_types: PaymentType[];
+  }> {
+    const res = await this.get<any>("groups/info-create");
+    return res;
   }
 
   /**
    * Get group privacy options
    */
+  async uploadImage(file: any): Promise<string> {
+    const formData = new FormData();
+    formData.append("file", {
+      uri: file.uri,
+      type: "image/jpeg", // Ajustar según el tipo real si es necesario
+      name: "upload.jpg",
+    } as any);
+
+    const response = await this.postFormData<string>(
+      "cloudinary/upload-image", // Endpoint relativo
+      formData,
+    );
+    return response;
+  }
+
   async getGroupPrivacies(): Promise<GroupPrivacy[]> {
     const res = await this.get<any>("groups/privacy-type");
     if (Array.isArray(res?.data)) return res.data;

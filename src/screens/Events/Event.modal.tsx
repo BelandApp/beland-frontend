@@ -15,7 +15,7 @@ import {
   Ticket,
   DollarSign,
   RotateCcw,
-  SquareChevronDown,
+  ArrowDown,
 } from "lucide-react-native";
 import { eventStore } from "@/stores";
 import { colors } from "src/styles";
@@ -23,16 +23,28 @@ import { useAuth } from "src/context";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { useNotify } from "src/hooks";
 import { convertBeCoinsToUSD, formatUSDPrice } from "src/constants/currency";
+import { Button, WrapperModal } from "src/components";
 
 export const EventModal = ({ route }: { route: any }) => {
   const { id } = route.params;
   const notify = useNotify();
   const { getEvent } = eventStore();
   const event = getEvent(id);
-  const { navigate, goBack } = useCustomNavigation();
+  const { navigate } = useCustomNavigation();
   const { canPerformAction, handleAuth0Login } = useAuth();
   const [visibleImage, setVisibleImage] = useState(0);
+  const [isOpen, setIsOpen] = useState(true);
 
+  const handleClose = () => {
+    setIsOpen(false);
+    setTimeout(() => navigate("MainTabs", { screen: "Community" }), 300);
+  };
+  const allImages = useMemo(() => {
+    if (!event || !event.images_urls?.length) return [event?.image_url];
+    return [event.image_url, ...event.images_urls];
+  }, [event]);
+
+  const translateAnim = useRef(new Animated.Value(0)).current;
   if (!event) return null;
 
   const {
@@ -48,16 +60,9 @@ export const EventModal = ({ route }: { route: any }) => {
     is_refundable,
     refund_days_limit,
     image_url,
-    images_urls,
   } = event;
 
-  const allImages = useMemo(() => {
-    if (!images_urls?.length) return [image_url];
-    return [image_url, ...images_urls];
-  }, [image_url, images_urls]);
-
-  const translateAnim = useRef(new Animated.Value(0)).current;
-
+  
   const handleNextImage = () => {
     Animated.sequence([
       Animated.timing(translateAnim, {
@@ -106,21 +111,20 @@ export const EventModal = ({ route }: { route: any }) => {
   const ticketsLeft = limit_tickets - sold_tickets;
 
   return (
-    <View style={styles.overlay}>
-      {/* Backdrop */}
-      <Pressable style={styles.backdrop} onPress={goBack} />
-
-      {/* Sheet */}
-      <View style={styles.sheet}>
-        {/* Header */}
-        <Pressable onPress={goBack} style={styles.close}>
-          <SquareChevronDown size={26} color={colors.textSecondary} />
-        </Pressable>
-
+    <WrapperModal
+      isOpen={isOpen}
+      onClose={handleClose}
+      header={
+        <Text style={styles.headerTitle} numberOfLines={1}>
+          {event.name}
+        </Text>
+      }
+      content={
         <ScrollView showsVerticalScrollIndicator={false}>
           <View style={styles.imageContainer}>
             <Animated.Image
               source={{ uri: allImages[visibleImage] }}
+              resizeMode="cover"
               style={[
                 styles.image,
                 { transform: [{ translateX: translateAnim }] },
@@ -199,49 +203,33 @@ export const EventModal = ({ route }: { route: any }) => {
             )}
           </View>
         </ScrollView>
-
-        {/* Acciones */}
-        <View style={styles.footer}>
-          <Pressable
-            style={[styles.button, styles.buyButton]}
-            onPress={handleBuy}
-            disabled={eventStatus.label !== "Disponible"}
-          >
-            <Text style={styles.buttonText}>
-              {eventStatus.label === "Disponible"
-                ? "Adquirir"
-                : "No disponible"}
-            </Text>
-          </Pressable>
-        </View>
-      </View>
-    </View>
+      }
+      actions={
+        <Pressable
+          style={[styles.button, styles.buyButton]}
+          onPress={handleBuy}
+          disabled={eventStatus.label !== "Disponible"}
+        >
+          <Text style={styles.buttonText}>
+            {eventStatus.label === "Disponible" ? "Adquirir" : "No disponible"}
+          </Text>
+        </Pressable>
+      }
+    />
   );
 };
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: "flex-end",
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: colors.textPrimary,
   },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  sheet: {
-    backgroundColor: colors.background,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    height: Dimensions.get("window").height * 0.9,
-    paddingTop: 8,
-  },
-  close: {
-    alignSelf: "flex-end",
-    padding: 12,
-  },
-  footer: {
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(0,0,0,0.05)",
+  scrollViewContent: {
+    // @ts-ignore - Esta propiedad es específica para Web para evitar selecciones y tener desplazamiento fluido
+    userSelect: "none",
+    // @ts-ignore
+    WebkitUserSelect: "none",
   },
   imageContainer: {
     alignItems: "center",
@@ -250,7 +238,6 @@ const styles = StyleSheet.create({
     width: "90%",
     height: 220,
     borderRadius: 16,
-    resizeMode: "cover",
   },
   nextImageButton: {
     position: "absolute",

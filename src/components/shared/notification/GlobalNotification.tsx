@@ -16,6 +16,11 @@ interface ConfirmProps extends BaseToastProps {
   onCancel?: () => void;
 }
 
+interface GroupCreatedProps extends BaseToastProps {
+  onShare: () => void;
+  onDismiss?: () => void;
+}
+
 export const toastConfig = {
   success: (props: BaseToastProps) => (
     <BaseToast
@@ -60,7 +65,7 @@ export const toastConfig = {
       text1NumberOfLines={2}
     />
   ),
-  cartItem: ({ text1,text2, props }: ToastConfigParams<ConfirmProps>) => (
+  cartItem: ({ text1, text2, props }: ToastConfigParams<ConfirmProps>) => (
     <View
       style={{
         width: Dimensions.get("window").width > 600 ? 400 : "90%",
@@ -150,15 +155,95 @@ export const toastConfig = {
       </View>
     </View>
   ),
+  groupCreated: ({
+    text1,
+    text2,
+    props,
+  }: ToastConfigParams<GroupCreatedProps>) => (
+    <View
+      style={{
+        width: Dimensions.get("window").width > 600 ? 450 : "92%",
+        backgroundColor: "white",
+        borderRadius: 16,
+        padding: 20,
+        justifyContent: "center",
+        gap: 16,
+        shadowColor: "#000",
+        shadowOffset: {
+          width: 0,
+          height: 4,
+        },
+        shadowOpacity: 0.3,
+        shadowRadius: 4.65,
+        elevation: 8,
+        borderLeftWidth: 5,
+        borderLeftColor: colors.primary,
+      }}
+    >
+      {/* Icono y título */}
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+        <CheckCircle size={32} color={colors.primary} />
+        <View style={{ flex: 1 }}>
+          <Text
+            style={{
+              fontWeight: "700",
+              fontSize: 18,
+              color: "#1a1a1a",
+            }}
+          >
+            {text1}
+          </Text>
+          {text2 && (
+            <Text
+              style={{
+                fontSize: 14,
+                color: "#666",
+                marginTop: 4,
+              }}
+            >
+              {text2}
+            </Text>
+          )}
+        </View>
+      </View>
+
+      {/* Botones de acción */}
+      <View
+        style={{ flexDirection: "row", justifyContent: "flex-end", gap: 12 }}
+      >
+        <Button
+          title="Aceptar"
+          variant="ghost"
+          onPress={() => {
+            Toast.hide();
+            props?.onDismiss?.();
+          }}
+        />
+        <Button
+          title="Compartir 🔗"
+          variant="primary"
+          onPress={() => {
+            Toast.hide();
+            notificationAsync(NotificationFeedbackType.Success);
+            props?.onShare?.();
+          }}
+        />
+      </View>
+    </View>
+  ),
 };
 
 export const GlobalNotification = () => {
   const { current, clear } = useNotificationStore();
   const isConfirmAndRun =
     current?.type === "confirm" || current?.type === "cartItem";
+  const isGroupCreated = current?.type === "groupCreated";
+
   useEffect(() => {
     if (!current) return;
     if (isConfirmAndRun) notificationAsync(NotificationFeedbackType.Warning);
+    if (isGroupCreated) notificationAsync(NotificationFeedbackType.Success);
+
     Toast.show({
       type: current.type,
       text1: current.message,
@@ -166,9 +251,15 @@ export const GlobalNotification = () => {
       props: {
         onConfirm: isConfirmAndRun ? current.onConfirm : undefined,
         onCancel: isConfirmAndRun ? current.onCancel : undefined,
+        onShare: isGroupCreated ? current.onShare : undefined,
+        onDismiss: isGroupCreated ? current.onDismiss : undefined,
       },
-      autoHide: current.type !== "confirm",
-      visibilityTime: current.type !== "confirm" ? 3000 : undefined,
+      topOffset: 40,
+      autoHide: current.type !== "confirm" && current.type !== "groupCreated",
+      visibilityTime:
+        current.type !== "confirm" && current.type !== "groupCreated"
+          ? 3000
+          : undefined,
       position: "top",
       onPress() {
         Toast.hide();

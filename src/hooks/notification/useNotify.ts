@@ -6,6 +6,13 @@ type NotifyConfirm = {
   onConfirm: () => void;
   onCancel?: () => void;
 };
+type NotifyGroupCreated = {
+  message: string;
+  message2?: string;
+  onShare: () => void;
+  onDismiss?: () => void;
+  meta?: Record<string, any>;
+};
 
 // Hook para mostrar notificaciones dentro de un componente react
 export const useNotify = () => {
@@ -17,7 +24,8 @@ export const useNotify = () => {
     info: (data: NotifyBase) => show({ type: "info", ...data }),
     confirm: (data: NotifyConfirm) => show({ type: "confirm", ...data }),
     cartItem: (data: NotifyConfirm) => show({ type: "cartItem", ...data }),
+    groupCreated: (data: NotifyGroupCreated) =>
+      show({ type: "groupCreated", ...data }),
     clear,
   };
 };
-

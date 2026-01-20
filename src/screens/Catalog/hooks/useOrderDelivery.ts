@@ -196,7 +196,13 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
     });
     return result;
   }, [selectedAddress, selectedAddressId]);
-
+  /** ---------------- CANCEL PREORDER ---------------- */
+  const cancelPreOrder = () => {
+    setPreOrder(null);
+    console.log("Cancelling preorder...");
+    setSubmitStatus("idle");
+    setStep("select");
+  };
   /** ---------------- CANCEL BEHAVIOR ---------------- */
   const cancelAddressCreation = () => {
     notify.confirm({
@@ -216,13 +222,14 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
     setShowLocationModal,
 
     loadAddresses,
-
+    setSubmitStatus,
     createAddress,
     createAndContinue,
     selectAddress,
     submitOrder,
     submitStatus,
     cancelAddressCreation,
+    cancelPreOrder,
   };
 }
 
