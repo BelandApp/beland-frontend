@@ -17,6 +17,7 @@ export interface CartItem {
   total_price: number;
   created_at: string;
   updated_at: string;
+  user_id?: string | null;
 }
 
 export interface Cart {
@@ -31,6 +32,18 @@ export interface Cart {
   currency: string;
   created_at: string;
   updated_at: string;
+  group_id?: string;
+  payment_type_id?: string;
+  payment_type?: {
+    id: string;
+    code: string;
+    name: string;
+  };
+  delivery_cost?: number;
+  distance_km?: number;
+  duration_min?: number;
+  delivery_at?: string;
+  address_id?: string;
 }
 
 export interface AddToCartDto {
@@ -81,9 +94,35 @@ class CartServiceClass extends CoreApiService {
 
   /**
    * Get current user's cart with all items
+   * If cart doesn't exist in backend (500 error), create it
    */
   async getCart(): Promise<Cart> {
-    return this.get<Cart>(this.ENDPOINTS.CART);
+    try {
+      return await this.get<Cart>(this.ENDPOINTS.CART);
+    } catch (error: any) {
+      // If cart doesn't exist (500 error), create a new cart
+      if (error?.status === 500) {
+        console.log("[CartService] Cart not found, creating new cart");
+
+        try {
+          // Get current user ID
+          const userInfo = await this.get<{ id: string }>("auth/me");
+
+          // Create new cart by calling POST /carts with user_id
+          const newCart = await this.post<Cart>("carts", {
+            user_id: userInfo.id,
+          });
+          console.log("[CartService] Cart created successfully:", newCart.id);
+          return newCart;
+        } catch (createError) {
+          console.error("[CartService] Failed to create cart:", createError);
+          throw createError;
+        }
+      }
+
+      // Re-throw other errors
+      throw error;
+    }
   }
 
   /**
@@ -109,9 +148,13 @@ class CartServiceClass extends CoreApiService {
   async addToCart(data: {
     product_id: string;
     quantity: number;
+    is_general?: boolean;
   }): Promise<CartItem> {
     const cart = await this.getCart();
     const product = await this.getProduct(data.product_id);
+
+    // Get current user ID to explicitly assign ownership
+    const userInfo = await this.get<{ id: string }>("auth/me");
 
     const cartItemData: AddToCartDto = {
       cart_id: cart.id,
@@ -120,7 +163,24 @@ class CartServiceClass extends CoreApiService {
       unit_price: product.price,
     };
 
-    return this.post<CartItem>(this.ENDPOINTS.CART_ITEMS, cartItemData);
+    // Construct query params
+    const params = new URLSearchParams();
+
+    // Create params object
+    if (data.is_general) {
+      params.append("is_general", "true");
+    } else {
+      // For personal items, explicitly send the user_id as query param
+      // This is a common pattern in this API (seen in updateProductQuantity)
+      params.append("user_id", userInfo.id);
+    }
+
+    const queryString = params.toString() ? `?${params.toString()}` : "";
+
+    return this.post<CartItem>(
+      `${this.ENDPOINTS.CART_ITEMS}${queryString}`,
+      cartItemData,
+    );
   }
 
   /**
@@ -132,6 +192,23 @@ class CartServiceClass extends CoreApiService {
   ): Promise<CartItem> {
     return this.put<CartItem>(
       `${this.ENDPOINTS.CART_ITEMS_QUANTITY}/${itemId}?quantity=${data.quantity}`,
+      {},
+    );
+  }
+
+  /**
+   * Update quantity by product ID, optionally targeting a specific user's assignment
+   */
+  async updateProductQuantity(
+    productId: string,
+    quantity: number,
+    userId?: string,
+  ): Promise<CartItem> {
+    const userParam = userId ? `&user_id=${userId}` : "";
+    return this.put<CartItem>(
+      `${
+        this.ENDPOINTS.CART_ITEMS
+      }/quantity-by-product/${productId}?quantity=${quantity}${userParam}`,
       {},
     );
   }

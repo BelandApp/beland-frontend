@@ -14,9 +14,10 @@ import {
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Feather from "react-native-vector-icons/Feather";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
-import { Order, OrderService } from "@/services/OrderApiService";
-import { useNotify } from "@/hooks";
-import { CustomLoader } from "@/components/shared/loader/Loader";
+import { Order, OrderService } from "src/services/OrderApiService";
+import { useNotify } from "src/hooks/notification/useNotify";
+import { CustomLoader } from "src/components/shared/loader/Loader";
+import { Product } from "src/types";
 
 interface GroupOrder extends Order {
   group_id?: string;
@@ -483,7 +484,7 @@ export const GroupOrdersHistoryScreen = () => {
               {orders.length > 0
                 ? formatCurrency(
                     orders.reduce((sum, o) => sum + o.total_amount, 0),
-                    orders[0]?.currency || "USD"
+                    orders[0]?.currency || "USD",
                   )
                 : formatCurrency(0)}
             </Text>

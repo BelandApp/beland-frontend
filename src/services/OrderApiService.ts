@@ -57,6 +57,7 @@ export interface Order {
   updated_at: string;
   notes?: string;
   coupon_code?: string;
+  group_id?: string;
 }
 
 export interface CreateOrderDto {

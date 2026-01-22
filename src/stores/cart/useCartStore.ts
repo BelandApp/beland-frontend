@@ -37,7 +37,7 @@ export type CartStore = {
   setDeliveryType: (
     type: "group" | "home",
     groupId?: string,
-    address?: string
+    address?: string,
   ) => void;
 };
 
@@ -62,62 +62,66 @@ export const useCartStore = create<CartStore>((set, get) => ({
     set(() => ({ cartId: cart.id }));
     return cart.id;
   },
-    //  Agregar producto o sumar cantidad`
-    addProduct: async (product) => {
-      const { items } = get();
-      const exists = items.find((i) => i.id === product.id);
-      const newQuantity = exists ? exists.quantity + 1 : 1;
-      let updatedItems = exists
-        ? items.map((i) =>
-            i.id === product.id ? { ...i, quantity: newQuantity } : i
-          )
-        : [...items, { ...product, quantity: 1 }];
+  //  Agregar producto o sumar cantidad`
+  addProduct: async (product) => {
+    const { items } = get();
+    const exists = items.find((i) => i.id === product.id);
+    const newQuantity = exists ? exists.quantity + 1 : 1;
+    let updatedItems = exists
+      ? items.map((i) =>
+          i.id === product.id ? { ...i, quantity: newQuantity } : i,
+        )
+      : [...items, { ...product, quantity: 1 }];
 
-      set({ items: updatedItems });
-      storage.setItem(STORAGE_KEY, JSON.stringify(updatedItems));
-      const authToken = await TokenService.getToken();
-      if (!authToken) return false;
-      // El backend suma cantidades automáticamente, siempre enviar +1
-      await CartService.addToCart({ product_id: product.id, quantity: 1 });
-      
-    },
+    set({ items: updatedItems });
+    storage.setItem(STORAGE_KEY, JSON.stringify(updatedItems));
+    const authToken = await TokenService.getToken();
+    if (!authToken) return false;
+    // El backend suma cantidades automáticamente, siempre enviar +1
+    // is_general: false ensures the item is assigned to the current user
+    await CartService.addToCart({
+      product_id: product.id,
+      quantity: 1,
+      is_general: false,
+    });
+  },
 
-    // Remover producto
-    removeProduct: async (productId) => {
-      const item = get().items.find((i) => i.id === productId);
-      if (!item) return;
-      set({ items: get().items.filter((i) => i.id !== productId) });
-      storage.setItem(STORAGE_KEY, JSON.stringify(get().items));
+  // Remover producto
+  removeProduct: async (productId) => {
+    const item = get().items.find((i) => i.id === productId);
+    if (!item) return;
+    set({ items: get().items.filter((i) => i.id !== productId) });
+    storage.setItem(STORAGE_KEY, JSON.stringify(get().items));
 
-      const authToken = await TokenService.getToken();
-      if (!authToken) return;
-      console.log(item)
-      if (item.cartItemId) {
-        await CartService.removeFromCart(item.cartItemId);
-      }
-    },
+    const authToken = await TokenService.getToken();
+    if (!authToken) return;
+    console.log(item);
+    if (item.cartItemId) {
+      await CartService.removeFromCart(item.cartItemId);
+    }
+  },
 
-    // Actualizar cantidad (mínimo 1)
-    updateQuantity: async (productId, quantity) => {
-      if (quantity < 1) return;
+  // Actualizar cantidad (mínimo 1)
+  updateQuantity: async (productId, quantity) => {
+    if (quantity < 1) return;
 
-      const item = get().items.find((i) => i.id === productId);
-      if (!item) return;
+    const item = get().items.find((i) => i.id === productId);
+    if (!item) return;
 
-      const updated = get().items.map((i) =>
-        i.id === productId ? { ...i, quantity } : i
-      );
-      set({ items: updated });
-      storage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    const updated = get().items.map((i) =>
+      i.id === productId ? { ...i, quantity } : i,
+    );
+    set({ items: updated });
+    storage.setItem(STORAGE_KEY, JSON.stringify(updated));
 
-      const authToken = await TokenService.getToken();
-      if (!authToken) return false;
+    const authToken = await TokenService.getToken();
+    if (!authToken) return false;
 
-      // Usar updateCartItem para reemplazar la cantidad exacta
-      if (item.cartItemId) {
-        CartService.updateCartItem(item.cartItemId, { quantity });
-      }
-    },
+    // Usar updateCartItem para reemplazar la cantidad exacta
+    if (item.cartItemId) {
+      CartService.updateCartItem(item.cartItemId, { quantity });
+    }
+  },
 
   // Limpiar carrito
   clearCart: () => {
@@ -133,7 +137,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
   setDeliveryType: (
     type: "group" | "home",
     groupId?: string,
-    address?: string
+    address?: string,
   ) => {},
   // Sincronizar con el backend - El backend es la fuente de verdad
   syncCart: async () => {
@@ -145,9 +149,46 @@ export const useCartStore = create<CartStore>((set, get) => ({
     try {
       set({ loading: true });
 
-      const serverCart = await CartService.getCart();
-      console.log("serverCart", serverCart)
-      let serverItems = serverCart.items.map((item: any) => ({
+      let serverCart;
+      try {
+        serverCart = await CartService.getCart();
+      } catch (error: any) {
+        // If cart doesn't exist in backend (500 error), initialize empty cart
+        if (error?.response?.status === 500 || error?.statusCode === 500) {
+          console.log(
+            "[Cart] No cart found in backend, initializing empty cart",
+          );
+
+          // If we have local items, sync them to backend
+          if (localItems.length > 0) {
+            for (const item of localItems) {
+              for (let i = 0; i < item.quantity; i++) {
+                await CartService.addToCart({
+                  product_id: item.id,
+                  quantity: 1,
+                  is_general: false,
+                });
+              }
+            }
+
+            // Try to get cart again after adding items
+            serverCart = await CartService.getCart();
+          } else {
+            // No local items and no server cart, just initialize empty
+            set({ items: [], hasInitialized: true });
+            await storage.removeItem(STORAGE_KEY);
+            return true;
+          }
+        } else {
+          // Other errors, rethrow
+          throw error;
+        }
+      }
+
+      console.log("serverCart", serverCart);
+
+      // Handle case where cart has no items (newly created cart)
+      const serverItems = (serverCart.items || []).map((item: any) => ({
         id: item.product_id,
         name: item.product.name,
         price: item.product.price,
@@ -169,6 +210,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
             await CartService.addToCart({
               product_id: item.id,
               quantity: 1,
+              is_general: false,
             });
           }
         }
@@ -196,6 +238,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
           await CartService.addToCart({
             product_id: item.id,
             quantity: 1,
+            is_general: false,
           });
         }
       }
@@ -217,6 +260,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
 
       return true;
     } catch (err) {
+      console.error("[Cart] Error syncing cart:", err);
       notify.error({ message: getBackendErrorMessage(err) });
       return false;
     } finally {

@@ -17,8 +17,11 @@ export const useGroupMemberConsumptions = (groupId: string) => {
   const notify = useNotify();
 
   const [consumptions, setConsumptions] = useState<GroupMemberConsumption[]>(
-    []
+    [],
   );
+  const [allConsumptions, setAllConsumptions] = useState<
+    GroupMemberConsumption[]
+  >([]);
   const [summary, setSummary] = useState<ConsumptionSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,39 +54,41 @@ export const useGroupMemberConsumptions = (groupId: string) => {
     try {
       // Backend no devuelve usuarios en el endpoint de summary, así que los calculamos manualmente
       // Obtenemos TODOS los consumos del grupo
-      const allConsumptions = await GroupService.getGroupAllConsumptions(
-        groupId
-      );
+      const allData = await GroupService.getGroupAllConsumptions(groupId);
+      setAllConsumptions(allData);
 
       // Agrupamos por producto
-      const grouped = allConsumptions.reduce((acc, curr) => {
-        const prodId = curr.product_id;
-        if (!acc[prodId]) {
-          acc[prodId] = {
-            product_id: prodId,
-            product_name: "", // Se llenará si el objeto curr trae el producto, o se infiere de otra forma
-            total_consumers: 0,
-            users: [],
-            // Intenta obtener datos del producto de la respuesta si vienen populados
-            product_image_url: null,
-          } as any;
-          // check relations if feasible
-          if ((curr as any).product) {
-            acc[prodId].product_name = (curr as any).product.name;
-            acc[prodId].product_image_url = (curr as any).product.image_url;
+      const grouped = allData.reduce(
+        (acc, curr) => {
+          const prodId = curr.product_id;
+          if (!acc[prodId]) {
+            acc[prodId] = {
+              product_id: prodId,
+              product_name: "", // Se llenará si el objeto curr trae el producto, o se infiere de otra forma
+              total_consumers: 0,
+              users: [],
+              // Intenta obtener datos del producto de la respuesta si vienen populados
+              product_image_url: null,
+            } as any;
+            // check relations if feasible
+            if ((curr as any).product) {
+              acc[prodId].product_name = (curr as any).product.name;
+              acc[prodId].product_image_url = (curr as any).product.image_url;
+            }
           }
-        }
-        acc[prodId].total_consumers += 1;
+          acc[prodId].total_consumers += 1;
 
-        // Evitar duplicados en usuarios - usando el user_id del groupMember si está disponible
-        // El backend devuelve groupMember con la relación
-        const userId = (curr as any).groupMember?.user_id || curr.user_id;
+          // Evitar duplicados en usuarios - usando el user_id del groupMember si está disponible
+          // El backend devuelve groupMember con la relación
+          const userId = (curr as any).groupMember?.user_id || curr.user_id;
 
-        if (userId && !acc[prodId].users.includes(userId)) {
-          acc[prodId].users.push(userId);
-        }
-        return acc;
-      }, {} as Record<string, ConsumptionSummary>);
+          if (userId && !acc[prodId].users.includes(userId)) {
+            acc[prodId].users.push(userId);
+          }
+          return acc;
+        },
+        {} as Record<string, ConsumptionSummary>,
+      );
 
       setSummary(Object.values(grouped));
     } catch (err) {
@@ -103,7 +108,8 @@ export const useGroupMemberConsumptions = (groupId: string) => {
    */
   const suggestProduct = async (
     productId: string,
-    notes?: string
+    notes?: string,
+    userId?: string,
   ): Promise<boolean> => {
     try {
       if (!user?.id) {
@@ -111,7 +117,7 @@ export const useGroupMemberConsumptions = (groupId: string) => {
         return false;
       }
 
-      await GroupService.createConsumption(groupId, productId, notes);
+      await GroupService.createConsumption(groupId, productId, notes, userId);
 
       // Recargar datos
       await fetchConsumptions();
@@ -152,6 +158,7 @@ export const useGroupMemberConsumptions = (groupId: string) => {
 
   return {
     consumptions,
+    allConsumptions,
     summary,
     loading,
     error,
