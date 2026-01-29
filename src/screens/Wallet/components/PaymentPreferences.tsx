@@ -14,6 +14,8 @@ import {
   Building2,
   MoreVertical,
   Trash,
+  ClosedCaption,
+  ArrowDown,
 } from "lucide-react-native";
 import PayphoneIcon from "src/components/icons/PayphoneIcon";
 import {
@@ -24,6 +26,7 @@ import AddWithdrawAccountModal from "./AddWithdrawAccountModal";
 import useAddWithdrawAccount from "../hooks/useAddWithdrawAccount";
 import { useNotify } from "src/hooks";
 import { getBackendErrorMessage } from "src/services";
+import { colors } from "src/styles";
 
 export const PaymentPreferences: React.FC<{ onRefresh?: () => void }> = ({
   onRefresh,
@@ -56,10 +59,10 @@ export const PaymentPreferences: React.FC<{ onRefresh?: () => void }> = ({
       const items = Array.isArray((resp as any)?.data)
         ? (resp as any).data
         : Array.isArray(resp) && Array.isArray(resp[0])
-        ? resp[0]
-        : Array.isArray(resp)
-        ? resp
-        : [];
+          ? resp[0]
+          : Array.isArray(resp)
+            ? resp
+            : [];
       setAccounts(items || []);
     } catch (error: any) {
       console.error("Error cargando cuentas:", error);
@@ -310,12 +313,13 @@ export const PaymentPreferences: React.FC<{ onRefresh?: () => void }> = ({
         >
           <View className="flex-1 bg-black/60 justify-center items-center p-4">
             <View className="bg-white rounded-xl p-6 w-full max-w-md">
-              <View className="flex-row justify-between items-start">
+              <View className="flex-row justify-between items-baseline">
                 <Text className="text-lg font-bold">Detalle de cuenta</Text>
-                <TouchableOpacity onPress={() => setShowAccountDetails(false)}>
-                  <Text className="text-sm font-bold rounded-full p-2  bg-orange-500 text-black">
-                    Cerrar
-                  </Text>
+                <TouchableOpacity
+                  onPress={() => setShowAccountDetails(false)}
+                  className="border rounded-full border-[#F88D2A] p-1"
+                >
+                  <ArrowDown color={colors.belandOrange} />
                 </TouchableOpacity>
               </View>
 
@@ -339,10 +343,18 @@ export const PaymentPreferences: React.FC<{ onRefresh?: () => void }> = ({
                   {selectedAccount.alias || "-"}
                 </Text>
                 <Text className="text-sm text-gray-700">
-                  <Text className="font-semibold">Teléfono: </Text>
-                  {selectedAccount.phone || "-"}
+                  <Text className="font-semibold">Moneda: </Text>
+                  {selectedAccount.currency || "-"}
                 </Text>
               </View>
+              <TouchableOpacity
+                onPress={() => handleDeleteAccount(selectedAccount.id)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                className="p-2 bg-white rounded-full shadow flex flex-row items-center justify-center"
+              >
+                <Trash size={16} color="#e02424" strokeWidth={2} />
+                <Text className="text-red-500">Borrar</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </Modal>
@@ -360,7 +372,7 @@ export const PaymentPreferences: React.FC<{ onRefresh?: () => void }> = ({
             </Text>
             <Text className="text-base text-gray-600 mb-4">
               {accountToDelete
-                ? `¿Eliminar la cuenta de ${accountToDelete.name}?\n\nEsta acción no se puede deshacer.`
+                ? `¿Estás seguro de eliminarla?\n\nEsta acción no se puede deshacer.`
                 : "Confirmar eliminación"}
             </Text>
             <View className="flex-row space-x-3">
