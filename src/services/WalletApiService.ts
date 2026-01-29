@@ -10,6 +10,8 @@ export interface Wallet {
   id: string;
   user_id: string;
   becoin_balance: number;
+  becoin_green: number;
+  becoin_orange: number;
   locked_balance: number;
   address?: string;
   alias?: string;

@@ -28,6 +28,7 @@ export const useWallet = () => {
 
     try {
       const w = await PaymentService.getWallet();
+      console.log("Fetched wallet:", w);
       setWallet(w);
 
       // Evitar llamada duplicada: usar el id retornado por PaymentService.getWallet
@@ -95,6 +96,8 @@ export const useWallet = () => {
   return {
     walletData: {
       balance,
+      becoin_green: wallet?.becoin_green ?? 0,
+      becoin_orange: wallet?.becoin_orange ?? 0,
       locked_balance: wallet?.locked_balance ?? 0,
       alias: wallet?.alias,
       estimatedValue: (balance * 0.05).toFixed(2),

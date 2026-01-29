@@ -12,22 +12,17 @@ import { useWallet } from "../Wallet/hooks";
 import { useBeCoinsStore } from "@/stores";
 import { HomeWave } from "src/components/ui/waves/Home.wave";
 import { ThemedHeader } from "src/components/shared/headers/Header";
+import { convertBeCoinsToUSD } from "src/constants";
 
 export const HomeScreen = () => {
-  const {
-    navigateViewHistory,
-    navigateRecyclingMapPress,
-    navigateCommunity,
-    navigateDelivery,
-  } = useDashboardNavigation();
+  const { navigateRecyclingMapPress, navigateCommunity, navigateDelivery } =
+    useDashboardNavigation();
   const { userStats, activities } = useDashboardData();
   const { getBeCoinsInUSD } = useBeCoinsStore();
-  const { loadingWallet: loading, transactions } = useWallet();
-
+  const { loadingWallet: loading, transactions, walletData } = useWallet();
   // Usar la constante centralizada para el cálculo de USD
-  const balance = userStats?.coinsAmount ?? 0;
   const lockedBalance = useBeCoinsStore((state) => state.locked_balance) ?? 0;
-  const estimatedValue = getBeCoinsInUSD(balance);
+  const estimatedValue = getBeCoinsInUSD(walletData.balance);
 
   // Solo pasar locked_balance si es mayor a 0
   const shouldShowLockedBalance = lockedBalance > 0;
@@ -44,7 +39,7 @@ export const HomeScreen = () => {
       >
         <View style={styles.content}>
           <HeroSection
-            balance={balance}
+            balance={walletData.balance}
             locked_balance={lockedBalanceToPass}
             estimatedValue={estimatedValue.toFixed(2)}
             isLoading={loading}
@@ -62,9 +57,11 @@ export const HomeScreen = () => {
           </View>
 
           <StatsCard
-            becoins={balance}
+            becoins={walletData.becoin_green}
             bottlesRecycled={userStats?.bottlesRecycled ?? 0}
-            estimatedValue={estimatedValue.toFixed(2)}
+            estimatedValue={String(
+              convertBeCoinsToUSD(walletData.becoin_green),
+            )}
           />
 
           <RecentTransactions transactions={transactions ?? []} />

@@ -33,6 +33,7 @@ import {
 } from "src/components/shared/notification/GlobalNotification";
 import Toast from "react-native-toast-message";
 import { ErrorBoundary } from "src/components/layout/ErrorBoundary";
+import { TooltipProvider } from "src/components/shared/tooltip/Tooltip.portal";
 
 const AppContent = () => {
   const { user } = useAuth();
@@ -40,7 +41,7 @@ const AppContent = () => {
   const navigationRef =
     useRef<NavigationContainerRef<RootStackParamList>>(null);
   const [currentRoute, setCurrentRoute] = useState<string | undefined>(
-    undefined
+    undefined,
   );
   // Estado para saber si estamos en algún screen de grupos
   const [isInGroups, setIsInGroups] = useState(false);
@@ -100,7 +101,7 @@ const AppContent = () => {
 
   // Detectar la tab activa dentro de MainTabs
   const getActiveTab = (
-    state: NavigationState | undefined
+    state: NavigationState | undefined,
   ): string | undefined => {
     if (!state) return undefined;
     const route = state.routes[state.index];
@@ -178,7 +179,9 @@ const App = () => {
           {/* <SocketStatus /> */}
           <Toast config={toastConfig} />
           <ErrorBoundary>
-            <AppContent />
+            <TooltipProvider>
+              <AppContent />
+            </TooltipProvider>
           </ErrorBoundary>
           <GlobalNotification />
           <NotificationBanner />
