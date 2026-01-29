@@ -182,7 +182,7 @@ function useAddWithdrawAccount(opts: UseAddWithdrawAccountOpts = {}) {
         withdraw_account_type_id: selectedTypeVal,
         country: countryVal,
         currency: currencyVal,
-        bankCode: _bankCode,
+        // bankCode: _bankCode,
         bankName: _bankName,
         holderName: _holderName,
         holderDocument: _holderDocument,

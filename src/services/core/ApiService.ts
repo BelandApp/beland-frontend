@@ -47,6 +47,44 @@ export interface RequestOptions extends RequestInit {
   skipJsonContentType?: boolean;
 }
 
+// Helper Sequelize Pagination Adapter
+
+export function adaptSequelizePagination<T>(
+  resp: any,
+  page: number,
+  limit: number,
+): PaginatedResponse<T> {
+  const payload = resp?.data ?? resp;
+
+  // Caso Sequelize raw: [rows, count]
+  if (Array.isArray(payload) && Array.isArray(payload[0])) {
+    const rows = payload[0];
+    const total = Number(payload[1]) || rows.length;
+
+    return {
+      data: rows,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  // Caso API bien formada
+  if (payload?.data && Array.isArray(payload.data)) {
+    return payload;
+  }
+
+  // Fallback seguro
+  return {
+    data: [],
+    total: 0,
+    page,
+    limit,
+    totalPages: 0,
+  };
+}
+
 export class CoreApiService {
   protected baseUrl: string;
   private static _inFlightRequests: Map<string, Promise<any>> = new Map();
