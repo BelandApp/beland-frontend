@@ -40,16 +40,18 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         <View style={styles.decorativeCircle2} />
 
         <View style={styles.cardHeader}>
-          <View>
+          <View
+            style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}
+          >
             <Text style={styles.cardSubtitle}>Balance Total</Text>
             <TouchableOpacity
               onPress={() => setShowBalance(!showBalance)}
               style={styles.eyeButton}
             >
               {showBalance ? (
-                <Ionicons name="eye-outline" size={16} color="#94A3B8" />
+                <Ionicons name="eye-outline" size={20} color="#94A3B8" />
               ) : (
-                <Ionicons name="eye-off-outline" size={16} color="#94A3B8" />
+                <Ionicons name="eye-off-outline" size={20} color="#94A3B8" />
               )}
             </TouchableOpacity>
           </View>
@@ -87,11 +89,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <View>
               <Text style={styles.footerLabel}>Disponible</Text>
               <Text style={styles.footerValue}>
-                {isLoading
-                  ? "..."
-                  : showBalance
-                    ? balance.toLocaleString()
-                    : "***"}{" "}
+                {isLoading ? "..." : showBalance ? balance : "***"}{" "}
                 <Text style={styles.unit}>BC</Text>
               </Text>
             </View>
@@ -106,11 +104,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <View style={{ alignItems: "flex-end" }}>
                 <Text style={styles.footerLabel}>Bloqueado</Text>
                 <Text style={styles.footerLockedValue}>
-                  {isLoading
-                    ? "..."
-                    : showBalance
-                      ? locked_balance.toLocaleString()
-                      : "***"}{" "}
+                  {isLoading ? "..." : showBalance ? locked_balance : "***"}{" "}
                   <Text style={styles.unitLocked}>BC</Text>
                 </Text>
               </View>
