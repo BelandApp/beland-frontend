@@ -22,6 +22,7 @@ import * as ImagePicker from "expo-image-picker";
 import { Modal, Alert } from "react-native";
 import Toast from "react-native-toast-message";
 import { toastConfig } from "src/components";
+import { notify } from "src/hooks/notification/notify.external";
 
 // ... existing imports ...
 
@@ -310,7 +311,18 @@ export default function RechargeScreen() {
                     {/* Comisión */}
                     <View className="flex-row justify-between mb-3">
                       <Text className="text-sm text-gray-600 dark:text-gray-400">
-                        Comisión
+                        Comisión de terceros
+                      </Text>
+                      <View className="bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-md">
+                        <Text className="text-sm font-bold text-orange-600 dark:text-orange-400">
+                          Te lo devolvemos en Orange Becoins (6%)
+                        </Text>
+                      </View>
+                    </View>
+
+                    <View className="flex-row justify-between mb-3">
+                      <Text className="text-sm text-gray-600 dark:text-gray-400">
+                        Comisión Beland
                       </Text>
                       <View className="bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-md">
                         <Text className="text-sm font-bold text-green-600 dark:text-green-400">
@@ -334,12 +346,31 @@ export default function RechargeScreen() {
 
                     {/* BeCoins a recibir */}
                     <View className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/30 rounded-xl p-3">
-                      <Text className="text-sm text-gray-700 dark:text-gray-300 text-center">
-                        Recibirás{" "}
-                        <Text className="text-base font-bold text-green-600 dark:text-green-400">
-                          {beCoinsAmount.toLocaleString()} BeCoins
+                      <View className="flex flex-row w-full justify-center items-center">
+                        <Text className="text-sm text-gray-700 dark:text-gray-300 text-center">
+                          Recibirás
                         </Text>
-                      </Text>
+                        <Text className="text-base font-bold text-green-600 dark:text-green-400">
+                          {beCoinsAmount - beCoinsAmount * 0.06} BeCoins
+                        </Text>
+                        <Text className="px-1 text-sm text-gray-700 dark:text-gray-300">
+                          y
+                        </Text>
+                        <Text className="text-base font-bold text-orange-600 dark:text-orange-400">
+                          {beCoinsAmount * 0.06} Orange Becoins
+                        </Text>
+                        <Ionicons
+                          name="information-circle"
+                          size={20}
+                          color="gray"
+                          onPress={() =>
+                            notify.info({
+                              message:
+                                "Absorvemos la comision bancaria y te la devolvemos como Orange BeCoins",
+                            })
+                          }
+                        />
+                      </View>
                       <Text className="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
                         1 BeCoin = $0.05 USD
                       </Text>
