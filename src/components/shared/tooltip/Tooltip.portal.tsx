@@ -2,9 +2,12 @@ import React, { createContext, useContext, useState } from "react";
 import { View, StyleSheet, Text } from "react-native";
 
 type TooltipData = {
-  x: number;
-  y: number;
+  anchorX: number;
+  anchorY: number;
+  anchorWidth: number;
+  anchorHeight: number;
   text: string;
+  direction: "top" | "bottom" | "left" | "right";
   visible: boolean;
 };
 
@@ -14,19 +17,51 @@ export const TooltipProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
+  const [layout, setLayout] = useState({ width: 0, height: 0 });
+
+  if (!tooltip?.visible)
+    return (
+      <TooltipContext.Provider value={{ tooltip, setTooltip }}>
+        {children}
+      </TooltipContext.Provider>
+    );
+
+  const MARGIN = 10;
+  let left = 0;
+  let top = 0;
+
+  const { anchorX, anchorY, anchorWidth, anchorHeight, direction } = tooltip;
+
+  switch (direction) {
+    case "top":
+      left = anchorX + anchorWidth / 2 - layout.width / 2;
+      top = anchorY - layout.height - MARGIN;
+      break;
+    case "bottom":
+      left = anchorX + anchorWidth / 2 - layout.width / 2;
+      top = anchorY + anchorHeight + MARGIN;
+      break;
+    case "left":
+      left = anchorX - layout.width - MARGIN;
+      top = anchorY + anchorHeight / 2 - layout.height / 2;
+      break;
+    case "right":
+      left = anchorX + anchorWidth + MARGIN;
+      top = anchorY + anchorHeight / 2 - layout.height / 2;
+      break;
+  }
 
   return (
     <TooltipContext.Provider value={{ tooltip, setTooltip }}>
       {children}
 
-      {tooltip?.visible && (
-        <View
-          pointerEvents="none"
-          style={[styles.tooltip, { top: tooltip.y, left: tooltip.x }]}
-        >
-          <Text style={styles.text}>{tooltip.text}</Text>
-        </View>
-      )}
+      <View
+        pointerEvents="none"
+        style={[styles.tooltip, { position: "absolute", left, top }]}
+        onLayout={(e) => setLayout(e.nativeEvent.layout)}
+      >
+        <Text style={styles.text}>{tooltip.text}</Text>
+      </View>
     </TooltipContext.Provider>
   );
 };
