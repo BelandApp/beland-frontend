@@ -44,7 +44,6 @@ export const WrapperModal: React.FC<WrapperModalProps> = ({
       dragOnContent={false}
       height={SCREEN_HEIGHT * 0.9}
       onClose={onClose}
-      
       customStyles={{
         wrapper: { backgroundColor: "rgba(0,0,0,0.5)" },
         container: styles.sheetContainer,
@@ -53,14 +52,7 @@ export const WrapperModal: React.FC<WrapperModalProps> = ({
     >
       <View style={styles.mainContainer}>
         {/* HEADER */}
-        <View
-          style={[
-            styles.header,
-            headerBackgroundColor
-              ? { backgroundColor: headerBackgroundColor }
-              : null,
-          ]}
-        >
+        <View style={[styles.header]}>
           {header}
           <Button
             variant="onlyIcon"

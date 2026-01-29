@@ -27,53 +27,52 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
   const receiptRef = useRef<View>(null);
   if (!transaction) return null;
   const { info } = useTransactionInfo(transaction);
- const shareReceipt = async () => {
-   try {
-     const node = receiptRef.current;
-     if (!node) return;
+  const shareReceipt = async () => {
+    try {
+      const node = receiptRef.current;
+      if (!node) return;
 
-     if (Platform.OS === "web") {
-       // IMPORTACIÓN DINÁMICA PARA WEB
-       const html2canvas = (await import("html2canvas")).default;
+      if (Platform.OS === "web") {
+        // IMPORTACIÓN DINÁMICA PARA WEB
+        const html2canvas = (await import("html2canvas")).default;
 
-       // En Web, el ref de React Native suele ser el elemento DOM directo
-       // o contiene una propiedad 'element'
-       const element =
-         (node as any).className !== undefined ? node : (node as any).element;
+        // En Web, el ref de React Native suele ser el elemento DOM directo
+        // o contiene una propiedad 'element'
+        const element =
+          (node as any).className !== undefined ? node : (node as any).element;
 
-       const canvas = await html2canvas(element as HTMLElement, {
-         useCORS: true,
-         backgroundColor: null,
-         scale: 2, // Mejor calidad
-       });
+        const canvas = await html2canvas(element as HTMLElement, {
+          useCORS: true,
+          backgroundColor: null,
+          scale: 2, // Mejor calidad
+        });
 
-       const uri = canvas.toDataURL("image/png");
+        const uri = canvas.toDataURL("image/png");
 
-       const link = document.createElement("a");
-       link.href = uri;
-       link.download = `comprobante-${transaction.id}.png`;
-       link.click();
-     } else {
-       // LÓGICA PARA NATIVO (iOS/Android)
-       const uri = await captureRef(receiptRef, {
-         format: "png",
-         quality: 1,
-       });
+        const link = document.createElement("a");
+        link.href = uri;
+        link.download = `comprobante-${transaction.id}.png`;
+        link.click();
+      } else {
+        // LÓGICA PARA NATIVO (iOS/Android)
+        const uri = await captureRef(receiptRef, {
+          format: "png",
+          quality: 1,
+        });
 
-       if (await Sharing.isAvailableAsync()) {
-         await Sharing.shareAsync(uri);
-       }
-     }
-   } catch (error) {
-     console.error("Error al capturar recibo:", error);
-   }
- };
-
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(uri);
+        }
+      }
+    } catch (error) {
+      console.error("Error al capturar recibo:", error);
+    }
+  };
 
   return (
     <>
       <WrapperModal
-        visible={transaction !== null}
+        isOpen={transaction !== null}
         onClose={onClose}
         headerBackgroundColor={getTransactionColor(transaction?.type)}
         header={
@@ -86,11 +85,13 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                 <MaterialCommunityIcons
                   name={getTransactionIcon(transaction.type) as any}
                   size={22}
-                  color="white"
+                  color={getTransactionColor(transaction?.type)}
                 />
               </View>
-
-              <Text className="text-lg font-semibold text-white capitalize">
+              <Text
+                className="text-lg font-semibold capitalize"
+                style={{ color: getTransactionColor(transaction?.type) }}
+              >
                 {transaction.description}
               </Text>
             </View>
@@ -182,12 +183,16 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
       <View
         style={{
           position: "absolute",
-          left: -5000, 
+          left: -5000,
           top: 0,
-          zIndex: -1, 
+          zIndex: -1,
         }}
       >
-        <TransactionReceipt ref={receiptRef} transaction={transaction} info={info} />
+        <TransactionReceipt
+          ref={receiptRef}
+          transaction={transaction}
+          info={info}
+        />
       </View>
     </>
   );
