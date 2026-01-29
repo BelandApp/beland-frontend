@@ -3,7 +3,12 @@
  * Handles wallets, transfers, recharges, and payment amounts
  */
 
-import { CoreApiService, PaginatedResponse } from "./core/ApiService";
+import {
+  adaptSequelizePagination,
+  CoreApiService,
+  PaginatedResponse,
+} from "./core/ApiService";
+import { Transaction } from "./TransactionApiService";
 
 // Wallet Types
 export interface Wallet {
@@ -501,8 +506,9 @@ class WalletServiceClass extends CoreApiService {
       params.append("wallet_id", walletId);
     }
 
-    // Use direct API call since transactions endpoint is not under /wallets
-    return this.directApiCall(`transactions?${params.toString()}`);
+    const resp = await this.directApiCall(`transactions?${params.toString()}`);
+
+    return adaptSequelizePagination<Transaction>(resp, page, limit);
   }
 
   /**

@@ -7,7 +7,7 @@ import { notify } from "src/hooks/notification/notify.external";
 
 // Función para mapear transacciones del backend al formato del frontend
 export const mapBackendTransactionToFrontend = (
-  backendTransaction: any
+  backendTransaction: any,
 ): Transaction => {
   // Mapear tipo de transacción según el backend
 
@@ -111,7 +111,7 @@ export const mapBackendTransactionToFrontend = (
 // Función helper para generar descripción de transacción
 const getTransactionDescription = (
   type: Transaction["type"],
-  backendTransaction: any
+  backendTransaction: any,
 ): string => {
   switch (type) {
     case "recarga":
@@ -125,7 +125,7 @@ const getTransactionDescription = (
     case "collection":
       return "Cobro recibido";
     case "canje":
-      return "Canjeado por premio";
+      return "Retiro a cuenta bancaria";
     default:
       return backendTransaction.reference || "Transacción";
   }
@@ -168,7 +168,7 @@ export const useWalletTransactions = () => {
 
       // Mapear transacciones del backend al formato del frontend
       const mappedTransactions = transactionsData.map(
-        mapBackendTransactionToFrontend
+        mapBackendTransactionToFrontend,
       );
 
       setTransactions(mappedTransactions);

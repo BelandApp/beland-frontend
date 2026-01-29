@@ -128,7 +128,9 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                   <Text className="text-base">Hacia: {transaction.to}</Text>
                 </>
               )}
-              {transaction.type === "canje" && <Text>Canje</Text>}
+              {transaction.type === "canje" && (
+                <Text className="text-center">{transaction.description}</Text>
+              )}
               {transaction.type === "recarga" && (
                 <Text
                   className="text-center font-medium"
