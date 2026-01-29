@@ -20,10 +20,8 @@ export const getTransactionIcon = (type: Transaction["type"]) => {
 };
 export const getTransactionColor = (type: Transaction["type"]) => {
   // Si es transferencia recibida, mostrar verde
-  if (type === "receive" || type === "collection")
-    return "#4caf50";
-  if (type === "transferencia" || type === "pago")
-    return "#f44336";
+  if (type === "receive" || type === "collection") return "#4caf50";
+  if (type === "transferencia" || type === "pago") return "#f44336";
   if (type === "recarga") return "#2196f3";
   if (type === "canje") return "#ff9800";
   return "#666";
@@ -31,46 +29,34 @@ export const getTransactionColor = (type: Transaction["type"]) => {
 
 export const getAmountPrefix = (type: Transaction["type"]) => {
   // Si es transferencia recibida, mostrar '+'
-  if (
-    type === "receive" ||
-    type === "collection" ||
-    type === "recarga"
-  )
+  if (type === "receive" || type === "collection" || type === "recarga")
     return "+";
-  if (type === "transferencia" || type === "pago")
-    return "-";
+  if (type === "transferencia" || type === "pago") return "-";
   return "";
 };
 
- export const getStatusColor = (status: Transaction["status"]) => {
-   switch (status) {
-     case "exitoso":
-       return "#4caf50";
-     case "pendiente":
-       return "#ff9800";
-     case "error":
-       return "#f44336";
-     default:
-       return "#666";
-   }
- };
+export const getStatusColor = (status: Transaction["status"]) => {
+  switch (status) {
+    case "exitoso":
+      return "#4caf50";
+    case "pendiente":
+      return "#ff9800";
+    case "error":
+      return "#f44336";
+    default:
+      return "#666";
+  }
+};
 export const TransactionCard: React.FC<TransactionCardProps> = ({
   transaction,
 }) => {
-
-  
-
-  
-
- 
-
   // Forzar monto positivo para transferencias recibidas y usar el campo preferido
   const resolvedAmount =
     transaction.amount_becoin !== undefined
       ? Number(transaction.amount_becoin)
       : transaction.amount_beicon !== undefined
-      ? Number(transaction.amount_beicon)
-      : Number(transaction.amount || 0);
+        ? Number(transaction.amount_beicon)
+        : Number(transaction.amount || 0);
 
   const displayAmount =
     transaction.type === "receive" || transaction.type === "collection"

@@ -189,7 +189,7 @@ export function useRecharge() {
   const [showBankTransferModal, setShowBankTransferModal] = useState(false);
   const [paymentAccounts, setPaymentAccounts] = useState<any[]>([]);
   const [selectedPaymentAccountId, setSelectedPaymentAccountId] =
-    useState<string>("");
+    useState<string>("a3b7c1d2-9f12-4b0a-85d4-123456789abc");
 
   // Load Payment Accounts
   useEffect(() => {
@@ -210,7 +210,7 @@ export function useRecharge() {
           // Standard PaginatedResponse
           accounts = (response as any).data || [];
         }
-
+        console.log("Loaded payment accounts:", accounts);
         setPaymentAccounts(accounts);
 
         // Try to find the one matching "Banco Guayaquil"
@@ -237,30 +237,27 @@ export function useRecharge() {
 
   const handleBankTransferPayment = async () => {
     if (!referenceId) {
-      Alert.alert(
-        "Error",
-        "Por favor ingresa el número de referencia eferencia.",
-      );
+      notify.error({ message: "Por favor ingresa el número de referencia." });
       return;
     }
 
     // Validate amount
     if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
-      Alert.alert("Error", "Monto inválido.");
+      notify.error({ message: "Por favor ingresa un monto válido." });
       return;
     }
 
     // Validate Payment Account
     if (!selectedPaymentAccountId && paymentAccounts.length === 0) {
-      Alert.alert(
-        "Error",
-        "No hay cuentas bancarias disponibles para transferir.",
-      );
+      notify.error({ message: "No hay cuentas bancarias disponibles." });
       return;
     }
 
     // Use selected or first one
-    const accountId = selectedPaymentAccountId || paymentAccounts[0]?.id;
+    const accountId =
+      selectedPaymentAccountId ||
+      paymentAccounts[0]?.id ||
+      "a3b7c1d2-9f12-4b0a-85d4-123456789abc";
 
     try {
       setIsLoading(true);
@@ -274,6 +271,7 @@ export function useRecharge() {
         payment_account_id: accountId,
         amount_usd: Number(amount),
         transfer_id: referenceId,
+        ticket_image_url: proofImage.uri,
       });
 
       notify.success({

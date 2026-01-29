@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
+  Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -19,6 +20,8 @@ import { convertBeCoinsToUSD, formatUSDPrice } from "src/constants/currency";
 
 import * as ImagePicker from "expo-image-picker";
 import { Modal, Alert } from "react-native";
+import Toast from "react-native-toast-message";
+import { toastConfig } from "src/components";
 
 // ... existing imports ...
 
@@ -70,7 +73,7 @@ export default function RechargeScreen() {
   const pickImage = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ["images"],
         allowsEditing: true,
         aspect: [4, 6],
         quality: 0.8,
@@ -79,6 +82,7 @@ export default function RechargeScreen() {
       if (!result.canceled) {
         setProofImage(result.assets[0]);
       }
+      console.log(result);
     } catch (error) {
       Alert.alert("Error", "No se pudo abrir la galería.");
     }
@@ -404,7 +408,7 @@ export default function RechargeScreen() {
         onRequestClose={() => setShowBankTransferModal(false)}
       >
         <View className="flex-1 bg-black/60 justify-end">
-          <View className="bg-white dark:bg-gray-900 rounded-t-3xl h-[90%] w-full flex overflow-hidden">
+          <View className="bg-white dark:bg-gray-900 rounded-t-3xl h-[95%] w-full flex overflow-hidden">
             {/* Modal Header */}
             <View className="px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex-row justify-between items-center bg-gray-50 dark:bg-gray-800">
               <Text className="text-xl font-bold text-gray-900 dark:text-white">
@@ -486,8 +490,19 @@ export default function RechargeScreen() {
                       <Text className="text-green-600 font-bold mb-2">
                         ¡Imagen seleccionada!
                       </Text>
+                      <Image
+                        source={proofImage}
+                        width={100}
+                        height={100}
+                        style={{
+                          maxWidth: 100,
+                          maxHeight: 100,
+                          borderRadius: 8,
+                          objectFit: "cover",
+                        }}
+                      />
                       <Text className="text-xs text-center text-gray-500 mb-2">
-                        {proofImage.uri?.split("/").pop()}
+                        {proofImage.fileName}
                       </Text>
                       <Ionicons
                         name="checkmark-circle"
@@ -559,6 +574,8 @@ export default function RechargeScreen() {
             </View>
           </View>
         </View>
+
+        <Toast config={toastConfig} />
       </Modal>
     </>
   );

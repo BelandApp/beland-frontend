@@ -60,6 +60,7 @@ export const useWallet = () => {
 
     try {
       const resp = await WalletService.getTransactions(1, 20, walletId);
+      console.log("Fetched transactions:", resp);
       const arr = Array.isArray(resp[0]) ? resp[0] : resp;
       setTransactions(arr.map(mapBackendTransactionToFrontend));
     } catch (err) {

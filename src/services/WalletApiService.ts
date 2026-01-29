@@ -470,6 +470,7 @@ class WalletServiceClass extends CoreApiService {
     payment_account_id: string;
     amount_usd: number;
     transfer_id: string;
+    ticket_image_url: string;
   }): Promise<any> {
     // Note: Endpoint is /user-recharge, handled by UserRechargeController
     // Since this service base path is /wallets, we need to use directApiCall or absolute path if request supports it.
