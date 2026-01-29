@@ -5,12 +5,12 @@ import {
   StyleSheet,
   Platform,
   ActivityIndicator,
-  Dimensions,
   TouchableOpacity,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { BeCoinIcon } from "../../../components/icons/BeCoinIcon";
 import { Ionicons } from "@expo/vector-icons";
+import { useCustomNavigation } from "src/hooks";
 
 interface HeroSectionProps {
   balance: number;
@@ -26,7 +26,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   isLoading,
 }) => {
   const [showBalance, setShowBalance] = useState(true);
-
+  const { navigate } = useCustomNavigation();
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -53,10 +53,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               )}
             </TouchableOpacity>
           </View>
-          <View style={styles.logoContainer}>
+          <TouchableOpacity
+            onPress={() => navigate("Wallet")}
+            style={styles.logoContainer}
+          >
             <Ionicons name="wallet-outline" size={20} color="#F97316" />
             <Text style={styles.logoText}>Beland Wallet</Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.balanceContainer}>

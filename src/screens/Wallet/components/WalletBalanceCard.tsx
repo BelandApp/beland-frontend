@@ -30,22 +30,25 @@ export const WalletBalanceCard: React.FC<WalletBalanceCardProps> = ({
       <View style={walletCardStyles.walletContent}>
         <View style={walletCardStyles.walletLeft}>
           <Text style={walletCardStyles.availableLabel}>Disponible:</Text>
+          <Text
+            style={[
+              walletCardStyles.balanceAmount,
+              accentColor ? { color: accentColor } : {},
+            ]}
+          >
+            USD$ {walletData.estimatedValue}
+          </Text>
           <View style={walletCardStyles.balanceContainer}>
             <BeCoinIcon width={24} height={24} />
-            <Text
-              style={[
-                walletCardStyles.balanceAmount,
-                accentColor ? { color: accentColor } : {},
-              ]}
-            >
-              {isNaN(walletData.balance) ? "0" : Math.floor(walletData.balance)}
-            </Text>
+            {!hideEstimated && (
+              <Text style={walletCardStyles.estimatedValue}>
+                {isNaN(walletData.balance)
+                  ? "0"
+                  : Math.floor(walletData.balance)}{" "}
+                Becoins
+              </Text>
+            )}
           </View>
-          {!hideEstimated && (
-            <Text style={walletCardStyles.estimatedValue}>
-              Total estimado: ${walletData.estimatedValue} USD
-            </Text>
-          )}
         </View>
         <View style={walletCardStyles.avatarContainer}>
           {avatarUrl ? (
