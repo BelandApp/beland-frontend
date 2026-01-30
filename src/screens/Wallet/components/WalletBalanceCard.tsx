@@ -4,6 +4,7 @@ import { Card } from "../../../components/ui/Card";
 import { BeCoinIcon } from "../../../components/icons/BeCoinIcon";
 import { WalletData } from "../types";
 import { walletCardStyles } from "../styles";
+import { colors } from "src/design-system";
 
 interface WalletBalanceCardProps {
   walletData: WalletData;
@@ -40,6 +41,8 @@ export const WalletBalanceCard: React.FC<WalletBalanceCardProps> = ({
           </Text>
           <View style={walletCardStyles.balanceContainer}>
             <BeCoinIcon width={24} height={24} />
+            <BeCoinIcon width={24} height={24} color={"green"} />
+            <BeCoinIcon width={24} height={24} color={"orange"} />
             {!hideEstimated && (
               <Text style={walletCardStyles.estimatedValue}>
                 {isNaN(walletData.balance)
