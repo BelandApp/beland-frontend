@@ -5,6 +5,7 @@
   "scripts": {
     "build": "expo export -p web --output-dir dist",
     "start": "expo start",
+    "start:dev ": "APP_ENV=development expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web"

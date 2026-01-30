@@ -26,12 +26,9 @@ interface QuickAction {
   bgColor: string;
 }
 
-
-
-export const QuickActions = ({
-}) => {
+export const QuickActions = ({}) => {
   const { user } = useAuth();
-  const {navigate}=useCustomNavigation()
+  const { navigate } = useCustomNavigation();
   const { isMobile } = useResponsiveLayout();
 
   // Ocultar QuickActions si el usuario no está logueado
@@ -44,7 +41,7 @@ export const QuickActions = ({
       id: "recharge",
       label: "Recargar",
       icon: RechargeIcon,
-      onPress: ()=>navigate("RechargeScreen"),
+      onPress: () => navigate("RechargeScreen"),
       color: "#1E40AF",
       bgColor: "#DBEAFE",
     },
@@ -52,7 +49,7 @@ export const QuickActions = ({
       id: "send",
       label: "Enviar",
       icon: SendIcon,
-      onPress: ()=>navigate("SendScreen"),
+      onPress: () => navigate("SendScreen"),
       color: "#DC2626",
       bgColor: "#FEE2E2",
     },
@@ -60,7 +57,7 @@ export const QuickActions = ({
       id: "receive",
       label: "Recibir",
       icon: ReceiveIcon,
-      onPress: ()=>navigate("ReceiveScreen"),
+      onPress: () => navigate("ReceiveScreen"),
       color: "#059669",
       bgColor: "#D1FAE5",
     },
@@ -68,7 +65,7 @@ export const QuickActions = ({
       id: "exchange",
       label: "Canjear",
       icon: ExchangeIcon,
-      onPress: ()=>navigate("CanjearScreen"),
+      onPress: () => navigate("CanjearScreen"),
       color: "#EA580C",
       bgColor: "#FED7AA",
     },
@@ -80,7 +77,7 @@ export const QuickActions = ({
   const shouldShowCollect =
     (typeof user?.role_name === "string" &&
       ["COMMERCE", "ADMIN", "SUPERADMIN", "EMPRESA"].includes(
-        user.role_name.toUpperCase()
+        user.role_name.toUpperCase(),
       )) ||
     (user?.role &&
       typeof user.role === "object" &&
@@ -88,7 +85,7 @@ export const QuickActions = ({
       "name" in user.role &&
       typeof (user.role as any).name === "string" &&
       ["COMMERCE", "ADMIN", "SUPERADMIN", "EMPRESA"].includes(
-        (user.role as any).name.toUpperCase()
+        (user.role as any).name.toUpperCase(),
       ));
 
   if (shouldShowCollect) {
@@ -102,7 +99,6 @@ export const QuickActions = ({
       bgColor: "#EDE9FE",
     });
   }
-
 
   // Estilos dinámicos para centrar según el dispositivo
   const dynamicStyles = StyleSheet.create({
@@ -118,10 +114,10 @@ export const QuickActions = ({
     },
     actionsGrid: {
       ...styles.actionsGrid,
-      justifyContent: "center",
+      justifyContent: "space-around",
       alignItems: "center",
       width: "100%",
-      maxWidth: Platform.OS === "web" ? (isMobile ? 320 : 600) : "100%",
+      // maxWidth: Platform.OS === "web" ? (isMobile ? 320 : 600) : "100%",
     },
     actionButton: {
       ...styles.actionButton,
@@ -169,11 +165,10 @@ export const QuickActions = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginHorizontal: Platform.OS === "web" ? 0 : 16,
     marginVertical: 24,
     backgroundColor: "#FFFFFF",
     borderRadius: 20,
-    padding: Platform.OS === "web" ? 24 : 20,
+    paddingVertical: Platform.OS === "web" ? 24 : 20,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
