@@ -11,7 +11,7 @@ export type BecoinColorName = keyof typeof BecoinColors;
 export type BecoinColorTuple = (typeof BecoinColors)[BecoinColorName];
 
 export const BecoinColors = {
-  orange: ["#FFA500", "#FF9C0", "#FF7F50"],
+  orange: ["#FFA500", "#F0B74F", "#FF7F50"],
   green: ["#00FF00", "#32CD32", "#228B22"],
   yellow: ["#FAB400", "#F7CC00", "#D89005"],
 } as const;
