@@ -12,8 +12,8 @@ import {
 } from "react-native";
 import { useNotify } from "src/hooks";
 import { useOrderSocket } from "src/hooks/useOrderSocket";
-import { OrderService, DeliveryStatus } from "@services/core";
-import { Order as ApiOrder } from "@services/OrderApiService";
+import { OrderService } from "@services/core";
+import { Order as ApiOrder, DeliveryStatus } from "@services/OrderApiService";
 import { ThemedHeader } from "src/components/shared/headers/Header";
 import { useAuth } from "src/context";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
@@ -444,7 +444,7 @@ export const OrdersManagementScreen: React.FC = () => {
   const [dateTo, setDateTo] = useState<string>("");
   const [showFilters, setShowFilters] = useState<boolean>(false);
   const [deliveryStatuses, setDeliveryStatuses] = useState<DeliveryStatus[]>(
-    []
+    [],
   );
   const [statusCodeToIdMap, setStatusCodeToIdMap] = useState<
     Record<string, string>
@@ -467,7 +467,7 @@ export const OrdersManagementScreen: React.FC = () => {
       minTotal = "",
       maxTotal = "",
       fechaDesde = "",
-      fechaHasta = ""
+      fechaHasta = "",
     ) => {
       if (isRefresh) {
         setRefreshing(true);
@@ -500,7 +500,7 @@ export const OrdersManagementScreen: React.FC = () => {
           "📋 Cargando órdenes - Página:",
           pageNum,
           "Filtros:",
-          queryParams
+          queryParams,
         );
         const res = await OrderService.getOrders(queryParams);
 
@@ -551,7 +551,7 @@ export const OrdersManagementScreen: React.FC = () => {
           "- Total:",
           total,
           "- Páginas:",
-          calculatedTotalPages
+          calculatedTotalPages,
         );
         console.log("🔍 Primera orden tiene user?", !!data[0]?.user);
         console.log("🔍 Primera orden tiene address?", !!data[0]?.address);
@@ -566,7 +566,7 @@ export const OrdersManagementScreen: React.FC = () => {
         setRefreshing(false);
       }
     },
-    []
+    [],
   );
 
   const handlePageChange = useCallback(
@@ -576,7 +576,7 @@ export const OrdersManagementScreen: React.FC = () => {
         loadOrders(false, newPage, statusFilter);
       }
     },
-    [totalPages, page, loadOrders, statusFilter]
+    [totalPages, page, loadOrders, statusFilter],
   );
 
   // Cargar estados de delivery al montar el componente
@@ -624,7 +624,7 @@ export const OrdersManagementScreen: React.FC = () => {
 
   const handleChangeStatus = async (
     orderId: string,
-    status: ApiOrder["status"]
+    status: ApiOrder["status"],
   ) => {
     setLoading(true);
     try {
@@ -895,7 +895,7 @@ export const OrdersManagementScreen: React.FC = () => {
             {/* Only allow incremental status transition */}
             {(() => {
               const getNextStatus = (
-                s: string
+                s: string,
               ): { next?: string; label?: string; icon?: string } => {
                 // Define incremental flow
                 if (s === "pending" || s === "confirmed")
@@ -991,6 +991,7 @@ export const OrdersManagementScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <ThemedHeader
+        canGoBack
         title={
           user?.role === "SUPERADMIN"
             ? "Órdenes (Superadmin)"
@@ -1015,7 +1016,7 @@ export const OrdersManagementScreen: React.FC = () => {
               <Text style={styles.filterBadgeText}>
                 {
                   [statusFilter, minPrice, maxPrice, dateFrom, dateTo].filter(
-                    Boolean
+                    Boolean,
                   ).length
                 }
               </Text>
@@ -1243,7 +1244,7 @@ export const OrdersManagementScreen: React.FC = () => {
                     minPrice,
                     maxPrice,
                     dateFrom,
-                    dateTo
+                    dateTo,
                   )
                 }
                 colors={[colors.belandOrange]}
@@ -1297,7 +1298,7 @@ export const OrdersManagementScreen: React.FC = () => {
                           {pageNum}
                         </Text>
                       </TouchableOpacity>
-                    )
+                    ),
                   )}
                 </ScrollView>
 

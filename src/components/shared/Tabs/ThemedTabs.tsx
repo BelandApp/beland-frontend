@@ -1,7 +1,13 @@
 import { SetStateAction, useState } from "react";
-import { Pressable, StyleSheet, Text, TextStyle, View, ViewStyle } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  TextStyle,
+  View,
+  ViewStyle,
+} from "react-native";
 import { colors } from "src/styles";
-
 
 export type TabItem = {
   label: string;
@@ -28,7 +34,7 @@ const ThemedTabs: React.FC<ThemedTabsProps> = ({
   initalTab,
 }) => {
   const [activeTab, setActiveTab] = useState<string>(
-    initalTab ? initalTab : tabs[0].label
+    initalTab ? initalTab : tabs[0].label,
   );
 
   const handleTabChange = (tab: string) => {
