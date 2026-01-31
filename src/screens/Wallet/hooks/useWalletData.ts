@@ -99,7 +99,7 @@ export const useWallet = () => {
       becoin_green: wallet?.becoin_green ?? 0,
       becoin_orange: wallet?.becoin_orange ?? 0,
       locked_balance: wallet?.locked_balance ?? 0,
-      alias: wallet?.alias,
+      alias: wallet?.alias ?? "",
       estimatedValue: (balance * 0.05).toFixed(2),
     },
     wallet,
