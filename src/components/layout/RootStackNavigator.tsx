@@ -47,6 +47,7 @@ import {
 } from "@screens/DashboardUser";
 // TODO arreglar pantallas en carpeta raiz
 import { HistoryScreen, RecyclingMapScreen } from "../../screens";
+import FinancesManagement from "src/screens/DashboardUser/FinanceManagementScreen";
 
 export type RootStackParamList = {
   // Auth Screens
@@ -104,8 +105,8 @@ export type RootStackParamList = {
   OrderAdminDetail?: { orderId: string };
   UsersManagement: undefined;
   ProductsManagement: undefined;
-
-  MisEntradas: {tab: string|undefined};
+  FinancesManagement: undefined;
+  MisEntradas: { tab: string | undefined };
   // Events Screens
   EventModal: { id: string };
   AcquiredEventModal: { id_modal: string };
@@ -232,6 +233,11 @@ export const RootStackNavigator = () => {
         options={{ headerShown: false }}
       />
       <Stack.Screen
+        name="FinancesManagement"
+        component={FinancesManagement}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
         name="UseEventScreen"
         component={UseEventScreen}
         options={{ headerShown: false }}
@@ -269,7 +275,6 @@ export const RootStackNavigator = () => {
           animation: "slide_from_bottom",
           animationTypeForReplace: "pop",
         }}
-        
       />
       <Stack.Screen
         name="AcquiredEventModal"
