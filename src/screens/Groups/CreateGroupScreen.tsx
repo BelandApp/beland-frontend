@@ -19,6 +19,8 @@ import { ShareGroupModal } from "@/components/shared/ShareGroupModal";
 import { useAuth } from "@/context";
 import { useNotify } from "@/hooks";
 import { Group } from "@/services/GroupApiService";
+import { ThemedHeader } from "src/components";
+import { useResponsiveLayout } from "../Home";
 
 export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
   const notify = useNotify();
@@ -66,6 +68,7 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
   const [showDatePicker, setShowDatePicker] = React.useState(false);
   const [showShareModal, setShowShareModal] = React.useState(false);
   const [createdGroup, setCreatedGroup] = React.useState<Group | null>(null);
+  const { isWeb } = useResponsiveLayout();
 
   const handleCreate = async () => {
     try {
@@ -97,17 +100,7 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
   return (
     <View className="flex-1 bg-background-light">
       {/* Header */}
-      <View className="flex-row items-center px-4 py-4 bg-white shadow-sm z-10">
-        <TouchableOpacity
-          onPress={() => navigation?.goBack?.()}
-          className="mr-3 p-2 bg-gray-50 rounded-full"
-        >
-          <Feather name="arrow-left" size={24} color="#374151" />
-        </TouchableOpacity>
-        <Text className="text-xl font-bold text-gray-800">
-          Crear Nuevo Grupo
-        </Text>
-      </View>
+      <ThemedHeader canGoBack title="Crear Grupo" />
 
       <ScrollView
         className="flex-1"
@@ -218,8 +211,8 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
               </Text>
               <ScrollView
                 horizontal
-                showsHorizontalScrollIndicator={false}
-                className="mb-6"
+                showsHorizontalScrollIndicator={isWeb ? true : false}
+                className="mb-6 py-2"
               >
                 <View className="flex-row gap-2 pr-4">
                   {groupTypes.map((type) => (
