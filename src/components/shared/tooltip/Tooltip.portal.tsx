@@ -56,8 +56,10 @@ export const TooltipProvider: React.FC<{ children: React.ReactNode }> = ({
       {children}
 
       <View
-        pointerEvents="none"
-        style={[styles.tooltip, { position: "absolute", left, top }]}
+        style={[
+          styles.tooltip,
+          { position: "absolute", left, top, pointerEvents: "none" },
+        ]}
         onLayout={(e) => setLayout(e.nativeEvent.layout)}
       >
         <Text style={styles.text}>{tooltip.text}</Text>
