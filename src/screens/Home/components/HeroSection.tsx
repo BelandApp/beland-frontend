@@ -118,7 +118,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: Platform.OS === "web" ? 0 : 16,
     paddingVertical: 16,
     width: "100%",
     maxWidth: "100%", // Allow full width to match other cards

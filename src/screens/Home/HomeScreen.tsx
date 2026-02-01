@@ -1,18 +1,15 @@
 import React from "react";
 import { View, ScrollView, StyleSheet, Dimensions } from "react-native";
-import {
-  HeroSection,
-  QuickActions,
-  FeatureCard,
-  StatsCard,
-} from "./components";
+import { HeroSection, FeatureCard, StatsCard } from "./components";
 import { RecentTransactions } from "@/screens/Wallet/components/RecentTransactions";
 import { useDashboardNavigation, useDashboardData } from "./hooks";
-import { useWallet } from "../Wallet/hooks";
+import { useWallet, useWalletActions } from "../Wallet/hooks";
 import { useBeCoinsStore } from "@/stores";
 import { HomeWave } from "src/components/ui/waves/Home.wave";
 import { ThemedHeader } from "src/components/shared/headers/Header";
 import { convertBeCoinsToUSD } from "src/constants";
+import { WalletActions } from "../Wallet";
+import { colors } from "src/design-system";
 
 export const HomeScreen = () => {
   const { navigateRecyclingMapPress, navigateCommunity, navigateDelivery } =
@@ -29,7 +26,7 @@ export const HomeScreen = () => {
   const lockedBalanceToPass = shouldShowLockedBalance
     ? lockedBalance
     : undefined;
-
+  const { mainWalletActions } = useWalletActions();
   return (
     <View style={styles.container}>
       <ThemedHeader title="Inicio" logo />
@@ -44,7 +41,10 @@ export const HomeScreen = () => {
             estimatedValue={estimatedValue.toFixed(2)}
             isLoading={loading}
           />
-          <QuickActions />
+          <WalletActions
+            actions={mainWalletActions}
+            backgroundColor={colors.brand.orange[500]}
+          />
 
           <View style={styles.featuresGrid}>
             <FeatureCard
