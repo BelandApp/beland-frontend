@@ -9,11 +9,12 @@ import {
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors } from "src/styles";
 import { Button } from "src/components";
-import { useState } from "react";
+import { use, useState } from "react";
 import { preOrderType } from "../../hooks";
 import { UserAddress } from "src/services";
 import { convertUSDToBeCoins } from "src/constants";
 import { CartItem } from "src/stores";
+import { useResponsiveLayout } from "src/screens/Home";
 type ProcessingStepProps = {
   preOrder: preOrderType | null;
   onSubmit: (address: UserAddress, addressId: string) => void;
@@ -24,9 +25,8 @@ export const ConfirmOrder: React.FC<ProcessingStepProps> = ({
   preOrder,
   onSubmit,
   onCancel,
-  submitStatus
+  submitStatus,
 }) => {
-  
   if (!preOrder) {
     return (
       <View>
@@ -35,10 +35,10 @@ export const ConfirmOrder: React.FC<ProcessingStepProps> = ({
     );
   }
   const { products, address, addressId } = preOrder;
-  const SHIPPING_COST = preOrder.cost; 
+  const SHIPPING_COST = preOrder.cost;
   const subtotal = products.reduce(
     (s: any, p: CartItem) => s + p.price * p.quantity,
-    0
+    0,
   );
   const total = (subtotal + SHIPPING_COST).toFixed(2);
   const handleSubmit = () => {
@@ -77,7 +77,7 @@ export const ConfirmOrder: React.FC<ProcessingStepProps> = ({
       </View>
     );
   }
-  const isMobile = Dimensions.get("window").width <= 600;
+  const { isMobile } = useResponsiveLayout();
   return (
     <ScrollView
       contentContainerStyle={[
@@ -195,9 +195,7 @@ export const ConfirmOrder: React.FC<ProcessingStepProps> = ({
             </View>
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Envío</Text>
-              <Text style={styles.totalValue}>
-                Usd$ {SHIPPING_COST}
-              </Text>
+              <Text style={styles.totalValue}>Usd$ {SHIPPING_COST}</Text>
             </View>
             <View style={styles.divider} />
             <View style={styles.totalRow}>

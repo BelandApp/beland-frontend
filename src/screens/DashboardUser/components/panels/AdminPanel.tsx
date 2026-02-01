@@ -19,14 +19,12 @@ import {
   DashboardMetrics,
 } from "src/services/AdminApiService";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
+import { useResponsiveLayout } from "src/screens/Home";
 
 const { width } = Dimensions.get("window");
 
 // Responsive design utilities for all platforms
-const isWeb = Platform.OS === "web";
-const isMobile = width <= 768;
-const isWebDesktop = isWeb && width > 768;
-const isWebMobile = isWeb && width <= 768;
+const { isWebDesktop, isWebMobile } = useResponsiveLayout();
 
 const getResponsiveCardWidth = () => {
   if (isWebDesktop) {
@@ -333,7 +331,7 @@ const AdminPanel: React.FC = () => {
           "Funcionalidad en desarrollo",
           `La sección "${
             dashboardSections.find((s) => s.id === sectionId)?.title
-          }" estará disponible próximamente.`
+          }" estará disponible próximamente.`,
         );
     }
   };
@@ -420,8 +418,8 @@ const AdminPanel: React.FC = () => {
                 getResponsiveCardWidth() === "100%"
                   ? "center"
                   : isWebDesktop
-                  ? "space-around" // Better for 3 columns on desktop
-                  : "space-between", // Good for 2 columns on mobile
+                    ? "space-around" // Better for 3 columns on desktop
+                    : "space-between", // Good for 2 columns on mobile
             },
           ]}
         >
@@ -448,7 +446,7 @@ const AdminPanel: React.FC = () => {
       <View style={styles.sectionsGrid}>
         {dashboardSections.slice(1).map(
           (
-            section // Skip 'home' section
+            section, // Skip 'home' section
           ) => (
             <TouchableOpacity
               key={section.id}
@@ -465,7 +463,7 @@ const AdminPanel: React.FC = () => {
                 {section.description}
               </Text>
             </TouchableOpacity>
-          )
+          ),
         )}
       </View>
     </View>
