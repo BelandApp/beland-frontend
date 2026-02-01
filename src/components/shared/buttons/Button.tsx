@@ -18,6 +18,7 @@ interface CustomButtonProps extends ButtonProps {
   isLoading?: boolean;
   style?: any;
   textStyle?: any;
+  className?: string;
 }
 type Variant = "primary" | "secondary" | "ghost" | "inline" | "onlyIcon";
 type IconPosition = "left" | "right";
@@ -80,6 +81,7 @@ export const Button: React.FC<CustomButtonProps> = ({
   disabled = false,
   isLoading = false,
   style,
+  className,
   textStyle,
 }) => {
   const variantStyle = getVariantStyles(variant, disabled);
@@ -92,6 +94,7 @@ export const Button: React.FC<CustomButtonProps> = ({
         (disabled || isLoading) && { opacity: 0.6 },
         style,
       ]}
+      className={className}
       disabled={disabled || isLoading}
       accessible={true}
       accessibilityRole="button"
