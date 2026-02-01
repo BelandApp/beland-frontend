@@ -1,4 +1,4 @@
-import { ArrowDown } from "lucide-react-native";
+import { ArrowDown, ArrowDownCircle } from "lucide-react-native";
 import { Dimensions, StyleSheet, View } from "react-native";
 import Toast from "react-native-toast-message";
 import { colors } from "src/styles";
@@ -56,7 +56,7 @@ export const WrapperModal: React.FC<WrapperModalProps> = ({
           {header}
           <Button
             variant="onlyIcon"
-            icon={<ArrowDown color={colors.belandOrange} />}
+            icon={<ArrowDownCircle color={colors.belandOrange} size={32} />}
             onPress={() => refRBSheet.current?.close()}
             title="cerrar"
           />
