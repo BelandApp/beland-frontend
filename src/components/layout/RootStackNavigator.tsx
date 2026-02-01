@@ -48,6 +48,7 @@ import {
 // TODO arreglar pantallas en carpeta raiz
 import { HistoryScreen, RecyclingMapScreen } from "../../screens";
 import FinancesManagement from "src/screens/DashboardUser/FinanceManagementScreen";
+import { GroupsStackNavigator } from "./GroupsStackNavigator";
 
 export type RootStackParamList = {
   // Auth Screens
@@ -127,6 +128,7 @@ export const RootStackNavigator = () => {
       screenOptions={{ headerShown: false }}
     >
       <Stack.Screen name="MainTabs" component={MainTabNavigator} />
+      <Stack.Screen name="Groups" component={GroupsStackNavigator} />
       <Stack.Screen
         name="Orders"
         component={OrdersStackNavigator}
