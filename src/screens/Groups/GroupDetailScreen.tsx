@@ -22,11 +22,11 @@ import { GroupService, Group, GroupMember } from "@/services/GroupApiService";
 import { GroupPrivacy } from "@/services/GroupApiService";
 import { addressService, UserAddress } from "@/services/addressService";
 import * as Clipboard from "expo-clipboard";
-import { useNotify } from "src/hooks";
+import { useCustomNavigation, useNotify } from "src/hooks";
 import { CustomLoader } from "@/components/shared/loader/Loader";
 import { reverseGeocode } from "@/services/mapboxService";
 import * as Linking from "expo-linking";
-import { GroupMembersList } from "src/components";
+import { Button, GroupMembersList } from "src/components";
 import { useAuth } from "src/context/AuthContext";
 import { GroupServicesScreen } from "./GroupServicesScreen";
 import { GroupPurchaseScreen } from "./GroupPurchaseScreen";
@@ -36,12 +36,14 @@ import { GroupServiceModal } from "@/components/modals/GroupServiceModal";
 import { ShareGroupModal } from "@/components/shared/ShareGroupModal";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
+import { ArrowLeftIcon, CircleArrowLeftIcon } from "lucide-react-native";
+import { colors } from "src/design-system";
 
 type GroupDetailParams = { groupId: string };
 
 export const GroupDetailScreen = () => {
   const { user } = useAuth();
-  const navigation = useNavigation<StackNavigationProp<GroupsStackParamList>>();
+  const { navigate, goBack, reload } = useCustomNavigation();
   const route = useRoute<RouteProp<{ params: GroupDetailParams }, "params">>();
   const groupId = (route.params as any)?.groupId;
 
@@ -129,7 +131,18 @@ export const GroupDetailScreen = () => {
       }
     }
   };
-
+  const handleJoinGroup = async () => {
+    if (!user?.id) {
+      notify.confirm({
+        message: "Debes iniciar sesión para unirte al grupo",
+        onConfirm: () => navigate("Login"),
+      });
+      return;
+    }
+    await GroupService.joinGroup(groupId, user.id);
+    notify.success({ message: "¡Te has unido al grupo exitosamente!" });
+    reload({ name: "GroupDetailScreen", params: { groupId } });
+  };
   const handlePickImage = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -203,7 +216,7 @@ export const GroupDetailScreen = () => {
         try {
           await GroupService.deleteGroup(groupId);
           notify.success({ message: "Grupo eliminado" });
-          navigation.goBack();
+          goBack();
         } catch {
           notify.error({ message: "No se pudo eliminar el grupo" });
         }
@@ -220,7 +233,7 @@ export const GroupDetailScreen = () => {
           if (!user?.id) throw new Error("Usuario no autenticado");
           await GroupService.leaveGroup(groupId, user.id);
           notify.success({ message: "Has salido del grupo" });
-          navigation.goBack();
+          goBack();
         } catch (error: any) {
           const message =
             error?.response?.data?.message || "No se pudo salir del grupo";
@@ -251,9 +264,12 @@ export const GroupDetailScreen = () => {
           {
             label: "Gestión de miembros",
             onPress: () =>
-              navigation.navigate("GroupMembersScreen", {
-                groupId,
-                groupName: group?.name || "",
+              navigate("Groups", {
+                screen: "GroupMembersScreen",
+                params: {
+                  groupId,
+                  groupName: group?.name ?? "",
+                },
               }),
           },
           {
@@ -271,7 +287,12 @@ export const GroupDetailScreen = () => {
               destructive: true,
             },
           ]
-        : []),
+        : [
+            {
+              label: "Unirme al grupo",
+              onPress: handleJoinGroup,
+            },
+          ]),
   ];
 
   if (loading || !group) {
@@ -328,26 +349,34 @@ export const GroupDetailScreen = () => {
 
             {/* Navigation Bar (Transparent) */}
             <View className="absolute top-0 left-0 right-0 flex-row justify-between items-center p-4 pt-10 z-10">
-              <TouchableOpacity
-                onPress={() => navigation.goBack()}
-                className="w-10 h-10 rounded-full bg-black/30 items-center justify-center backdrop-blur-sm"
-              >
-                <Feather name="arrow-left" size={24} color="#fff" />
-              </TouchableOpacity>
+              <Button
+                variant="onlyIcon"
+                icon={<ArrowLeftIcon size={24} color="orange" />}
+                onPress={goBack}
+                title="back"
+              />
 
               <View className="flex-row gap-2">
-                <TouchableOpacity
+                <Button
+                  variant="onlyIcon"
+                  icon={<Feather name="share-2" size={20} color="orange" />}
                   onPress={() => setShowShareModal(true)}
-                  className="w-10 h-10 rounded-full bg-black/30 items-center justify-center backdrop-blur-sm"
-                >
-                  <Feather name="share-2" size={20} color="#fff" />
-                </TouchableOpacity>
-                <TouchableOpacity
+                  title="Share Group"
+                  style={{
+                    paddingHorizontal: 8,
+                  }}
+                />
+                <Button
+                  variant="onlyIcon"
+                  icon={
+                    <Feather name="more-vertical" size={20} color="orange" />
+                  }
                   onPress={() => setMenuVisible(true)}
-                  className="w-10 h-10 rounded-full bg-black/30 items-center justify-center backdrop-blur-sm"
-                >
-                  <Feather name="more-vertical" size={20} color="#fff" />
-                </TouchableOpacity>
+                  title="Share Group"
+                  style={{
+                    paddingHorizontal: 8,
+                  }}
+                />
               </View>
             </View>
 
@@ -431,7 +460,7 @@ export const GroupDetailScreen = () => {
         /* SIMPLE HEADER (Other Tabs) */
         <View className="bg-white pt-10 pb-2 px-4 flex-row items-center justify-between border-b border-gray-100 shadow-sm z-50">
           <TouchableOpacity
-            onPress={() => navigation.goBack()}
+            onPress={goBack}
             className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center"
           >
             <Feather name="arrow-left" size={24} color="#333" />
@@ -619,9 +648,12 @@ export const GroupDetailScreen = () => {
               </Text>
               <TouchableOpacity
                 onPress={() =>
-                  navigation.navigate("GroupMembersScreen", {
-                    groupId,
-                    groupName: group.name,
+                  navigate("Groups", {
+                    screen: "GroupMembersScreen",
+                    params: {
+                      groupId,
+                      groupName: group?.name ?? "",
+                    },
                   })
                 }
               >
@@ -638,9 +670,12 @@ export const GroupDetailScreen = () => {
             {members.length > 5 && (
               <TouchableOpacity
                 onPress={() =>
-                  navigation.navigate("GroupMembersScreen", {
-                    groupId,
-                    groupName: group.name,
+                  navigate("Groups", {
+                    screen: "GroupMembersScreen",
+                    params: {
+                      groupId,
+                      groupName: group?.name ?? "",
+                    },
                   })
                 }
                 className="mt-2 items-center"
@@ -712,12 +747,12 @@ export const GroupDetailScreen = () => {
               </Text>
             </TouchableOpacity>
           ) : (
-            // Join Button logic controlled by Privacy usually, but assuming public/allowed here or 'Solicitar'
-            <TouchableOpacity className="flex-1 bg-primary h-12 rounded-xl flex-row items-center justify-center">
-              <Text className="text-white font-bold text-base">
-                Unirme al Grupo
-              </Text>
-            </TouchableOpacity>
+            <Button
+              title="Unirme al grupo"
+              variant="secondary"
+              onPress={handleJoinGroup}
+              style={{ flex: 1 }}
+            />
           )}
 
           {isOwner && (
