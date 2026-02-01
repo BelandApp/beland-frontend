@@ -25,18 +25,19 @@ export const SocialButton: React.FC<SocialButtonsProps> = ({
         borderRadius: 24,
         padding: 10,
         width: "100%",
-        // height: 45,
-        marginHorizontal: "auto",
+        margin: "auto",
       }}
       onPress={onPress}
       disabled={disabled}
       aria-label="botón ingresar con redes sociales"
     >
-      <Text style={{ color: colors.belandOrange, fontWeight: "semibold" }}>Ingresar con redes sociales:</Text>
-      <View style={{ flexDirection: "row", gap: 12}}>
-      <GoogleIcon />
-      <AppleIcon />
-      <FacebookIcon />
+      <Text style={{ color: colors.belandOrange, fontWeight: "semibold" }}>
+        Ingresar con redes sociales:
+      </Text>
+      <View style={{ flexDirection: "row", gap: 12 }}>
+        <GoogleIcon />
+        <AppleIcon />
+        <FacebookIcon />
       </View>
     </TouchableOpacity>
   );
