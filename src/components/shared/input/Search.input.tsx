@@ -1,5 +1,5 @@
 import { CircleX } from "lucide-react-native";
-import { Pressable,View, StyleSheet, TextInput } from "react-native";
+import { Pressable, View, StyleSheet, TextInput } from "react-native";
 interface SearchBarProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
@@ -20,7 +20,7 @@ export const SearchBarInput: React.FC<SearchBarProps> = ({
         placeholderTextColor="#9CA3AF"
       />
       <Pressable style={{}} onPress={() => onSearchChange("")}>
-        <CircleX color="#9CA3AF" size={24}/>
+        <CircleX color="#9CA3AF" size={24} />
       </Pressable>
     </View>
   );

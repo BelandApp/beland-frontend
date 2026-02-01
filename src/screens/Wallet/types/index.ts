@@ -1,7 +1,9 @@
 export interface WalletData {
   balance: number;
-  locked_balance?: number;
-  alias?: string;
+  becoin_green: number;
+  becoin_orange: number;
+  locked_balance: number;
+  alias: string;
   estimatedValue: string;
 }
 

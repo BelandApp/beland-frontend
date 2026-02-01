@@ -359,12 +359,15 @@ const SuperAdminPanel: React.FC = () => {
       case "products":
         navigate("ProductsManagement");
         break;
+      case "finances":
+        navigate("FinancesManagement");
+        break;
       default:
         Alert.alert(
           "Funcionalidad en desarrollo",
           `La sección "${
             dashboardSections.find((s) => s.id === sectionId)?.title
-          }" estará disponible próximamente.`
+          }" estará disponible próximamente.`,
         );
     }
   };
@@ -469,8 +472,8 @@ const SuperAdminPanel: React.FC = () => {
                 getResponsiveCardWidth() === "100%"
                   ? "center"
                   : isWebDesktop
-                  ? "space-around" // Better for 3 columns on desktop
-                  : "space-between", // Good for 2 columns on mobile
+                    ? "space-around" // Better for 3 columns on desktop
+                    : "space-between", // Good for 2 columns on mobile
             },
           ]}
         >
@@ -497,7 +500,7 @@ const SuperAdminPanel: React.FC = () => {
       <View style={styles.sectionsGrid}>
         {dashboardSections.slice(1).map(
           (
-            section // Skip 'home' section
+            section, // Skip 'home' section
           ) => (
             <TouchableOpacity
               key={section.id}
@@ -514,7 +517,7 @@ const SuperAdminPanel: React.FC = () => {
                 {section.description}
               </Text>
             </TouchableOpacity>
-          )
+          ),
         )}
       </View>
     </View>
