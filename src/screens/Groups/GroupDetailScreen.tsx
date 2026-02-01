@@ -38,6 +38,7 @@ import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { ArrowLeftIcon, CircleArrowLeftIcon } from "lucide-react-native";
 import { colors } from "src/design-system";
+import { position } from "html2canvas/dist/types/css/property-descriptors/position";
 
 type GroupDetailParams = { groupId: string };
 
@@ -146,7 +147,7 @@ export const GroupDetailScreen = () => {
   const handlePickImage = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ["images"],
         allowsEditing: true,
         aspect: [16, 9],
         quality: 0.8,
@@ -447,12 +448,13 @@ export const GroupDetailScreen = () => {
 
             {/* Edit Cover Button (Owner only) */}
             {isOwner && (
-              <TouchableOpacity
+              <Button
+                title="Editar imagen"
                 onPress={handlePickImage}
-                className="absolute bottom-4 right-4 bg-white/20 p-2 rounded-full backdrop-blur-md border border-white/30"
-              >
-                <Feather name="camera" size={20} color="#fff" />
-              </TouchableOpacity>
+                icon={<Feather name="camera" size={20} color="orange" />}
+                variant="onlyIcon"
+                className="absolute bottom-4 right-4 backdrop-blur-md py-4"
+              />
             )}
           </ImageBackground>
         </View>
