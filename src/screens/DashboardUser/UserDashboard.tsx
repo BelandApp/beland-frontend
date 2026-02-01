@@ -51,7 +51,7 @@ export const UserDashboard: React.FC = () => {
     case "EMPRESA":
       return <EmpresaPanel />;
     case "USER":
-      return <UserPanel />;
+      return <SuperAdminPanel />;
     default:
       console.error("[UserDashboard] rol desconocido:", {
         role,
