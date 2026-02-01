@@ -15,7 +15,7 @@ type WrapperModalProps = {
   onClose: () => void;
   header?: React.ReactNode;
   content: React.ReactNode;
-  actions: React.ReactNode;
+  actions?: React.ReactNode;
   headerBackgroundColor?: string;
 };
 
@@ -66,7 +66,7 @@ export const WrapperModal: React.FC<WrapperModalProps> = ({
         <View style={styles.contentWrapper}>{content}</View>
 
         {/* FOOTER */}
-        <View style={styles.footer}>{actions}</View>
+        {actions && <View style={styles.footer}>{actions}</View>}
       </View>
 
       <Toast config={toastConfig} />
