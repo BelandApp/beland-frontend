@@ -3,8 +3,15 @@
 # dependencies
 node_modules/
 
+# Build
+android/.gradle
+android/app/build
+ios/build
+ios/Pods
+
 # Expo
 .expo/
+.expo-shared
 dist/
 web-build/
 expo-env.d.ts

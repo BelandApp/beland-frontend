@@ -1,3 +1,4 @@
+import "react-native-reanimated";
 import React, { useRef, useState, useEffect } from "react";
 import "./global.css";
 import { Platform } from "react-native";
