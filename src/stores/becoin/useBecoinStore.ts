@@ -34,7 +34,7 @@ interface BeCoinsActions {
   redeemReward: (
     rewardCost: number,
     rewardName: string,
-    rewardId: string
+    rewardId: string,
   ) => boolean;
 }
 
@@ -87,13 +87,13 @@ export const useBeCoinsStore = create<BeCoinsStore>()(
       redeemReward: (
         beCoinsCost: number,
         rewardName: string,
-        rewardId: string
+        rewardId: string,
       ) => {
         return get().spendBeCoins(
           beCoinsCost,
           `Canje de premio: ${rewardName}`,
           "reward",
-          rewardId
+          rewardId,
         );
       },
     }),
@@ -101,8 +101,8 @@ export const useBeCoinsStore = create<BeCoinsStore>()(
     {
       name: "becoins-storage",
       storage: createJSONStorage(() =>
-        Platform.OS === "web" ? localStorage : AsyncStorage
+        Platform.OS === "web" ? localStorage : AsyncStorage,
       ),
-    }
-  )
+    },
+  ),
 );

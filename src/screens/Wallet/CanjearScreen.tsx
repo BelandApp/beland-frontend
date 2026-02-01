@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  SafeAreaView,
   StatusBar,
   ActivityIndicator,
   Modal,
@@ -16,6 +15,8 @@ import { useCanjear } from "./hooks/useCanjear";
 import { ThemedHeader } from "src/components";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { BeCoinIcon } from "src/components/icons/BeCoinIcon";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { convertUSDToBeCoins } from "src/constants";
 
 interface CanjearScreenProps {
   navigation: any;
@@ -27,19 +28,20 @@ const CanjearScreen: React.FC<CanjearScreenProps> = ({ navigation }) => {
   const {
     // Estados
     amount,
+    amountUSD,
+    amountBC,
     isLoading,
     selectedWithdrawAccount,
     withdrawAccounts,
     loadingAccounts,
     showAccountSelector,
     balance,
+    balanceUSD,
     locked_balance,
 
     // Valores calculados
-    parsedAmount,
     isAmountValid,
     canContinue,
-    amounts,
 
     // Funciones de formato
     getAccountDisplayName,
@@ -77,6 +79,7 @@ const CanjearScreen: React.FC<CanjearScreenProps> = ({ navigation }) => {
   if (withdrawAccounts.length === 0) {
     return (
       <SafeAreaView className="flex-1 bg-gray-100 dark:bg-[#0B1120]">
+        <ThemedHeader title="Canjear" onBackPress={() => goBack()} canGoBack />
         <View className="flex-1 justify-center items-center px-8">
           <MaterialCommunityIcons
             name="bank-off"
@@ -143,7 +146,7 @@ const CanjearScreen: React.FC<CanjearScreenProps> = ({ navigation }) => {
                   />
 
                   <TouchableOpacity
-                    onPress={() => setPresetAmount(balance)}
+                    onPress={() => setPresetAmount(balanceUSD)}
                     className="ml-3"
                   >
                     <Text className="text-yellow-500 font-bold">MAX</Text>
@@ -152,17 +155,15 @@ const CanjearScreen: React.FC<CanjearScreenProps> = ({ navigation }) => {
 
                 {!isAmountValid && amount !== "" && (
                   <Text className="text-sm text-red-500 mt-2">
-                    {parsedAmount > balance
-                      ? "No tienes suficientes BeCoins"
+                    {isAmountValid
+                      ? "No tienes suficientes USD"
                       : "Ingresa un monto válido"}
                   </Text>
                 )}
 
                 {amount && isAmountValid && (
                   <Text className="text-sm text-green-600 font-medium mt-2">
-                    {`≈ $${formatUSDPrice(
-                      convertBeCoinsToUSD(parsedAmount)
-                    )} USD`}
+                    {amountBC} BeCoins
                   </Text>
                 )}
               </View>
@@ -170,16 +171,16 @@ const CanjearScreen: React.FC<CanjearScreenProps> = ({ navigation }) => {
               {/* Preset Amounts */}
               <View className="mb-6">
                 <Text className="text-base font-semibold text-gray-900 dark:text-white mb-3">
-                  Montos rápidos
+                  Montos rápidos en USD
                 </Text>
                 <View className="flex-row flex-wrap gap-2">
-                  {[100, 200, 500, 1000, balance].map(
+                  {[1, 2, 5, 10, balanceUSD].map(
                     (preset, index) =>
                       preset > 0 && (
                         <TouchableOpacity
                           key={index}
                           className={`px-4 py-2 rounded-full border ${
-                            parsedAmount === preset
+                            amountUSD === preset
                               ? "bg-[#F58220] border-[#F58220]"
                               : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                           }`}
@@ -187,17 +188,17 @@ const CanjearScreen: React.FC<CanjearScreenProps> = ({ navigation }) => {
                         >
                           <Text
                             className={`text-sm font-medium ${
-                              parsedAmount === preset
+                              amountUSD === preset
                                 ? "text-white"
                                 : "text-gray-700 dark:text-gray-300"
                             }`}
                           >
                             {preset === balance
                               ? "Todo"
-                              : preset.toLocaleString()}
+                              : `$ ${preset.toLocaleString()}`}
                           </Text>
                         </TouchableOpacity>
-                      )
+                      ),
                   )}
                 </View>
               </View>
@@ -318,19 +319,17 @@ const CanjearScreen: React.FC<CanjearScreenProps> = ({ navigation }) => {
                 <Text className="text-sm text-gray-500 dark:text-gray-400 uppercase mb-2">
                   Disponible
                 </Text>
+                <Text className="text-3xl font-bold text-gray-900 dark:text-white">
+                  {`$${formatUSDPrice(convertBeCoinsToUSD(balance))} USD`}
+                </Text>
                 <View className="flex-row items-baseline mb-2">
                   <View className="w-8 h-8 rounded-full bg-yellow-400 items-center justify-center mr-2">
                     <BeCoinIcon width={18} height={18} />
                   </View>
-                  <Text className="text-3xl font-bold text-gray-900 dark:text-white">
-                    {balance.toLocaleString()}
+                  <Text className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                    {balance.toLocaleString()} BeCoins
                   </Text>
                 </View>
-                <Text className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                  {`≈ $${formatUSDPrice(
-                    convertBeCoinsToUSD(balance)
-                  )} USD Total`}
-                </Text>
                 {locked_balance > 0 && (
                   <Text className="text-xs text-gray-400 dark:text-gray-500 italic">
                     {locked_balance.toLocaleString()} BC bloqueados
@@ -346,7 +345,7 @@ const CanjearScreen: React.FC<CanjearScreenProps> = ({ navigation }) => {
                       Monto a canjear
                     </Text>
                     <Text className="font-medium text-gray-900 dark:text-white">
-                      {parsedAmount.toLocaleString()} BC
+                      $ {amount.toLocaleString()} USD
                     </Text>
                   </View>
                   {/* tasa y comisión removidas según diseño */}
@@ -355,7 +354,7 @@ const CanjearScreen: React.FC<CanjearScreenProps> = ({ navigation }) => {
                       Total a recibir
                     </Text>
                     <Text className="font-bold text-green-600">
-                      ${amounts.net} USD
+                      {convertUSDToBeCoins(Number(amount))} BC
                     </Text>
                   </View>
                 </View>
@@ -374,7 +373,7 @@ const CanjearScreen: React.FC<CanjearScreenProps> = ({ navigation }) => {
                     <ActivityIndicator size="small" color="#FFFFFF" />
                   ) : (
                     <Text className="text-white font-bold text-base">
-                      Confirmar Canje{amount && ` ${amount} BeCoins`}
+                      Confirmar Canje{amount && ` ${amount} USD`}
                     </Text>
                   )}
                 </TouchableOpacity>

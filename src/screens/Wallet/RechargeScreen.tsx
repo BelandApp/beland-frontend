@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
+  Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -19,6 +20,9 @@ import { convertBeCoinsToUSD, formatUSDPrice } from "src/constants/currency";
 
 import * as ImagePicker from "expo-image-picker";
 import { Modal, Alert } from "react-native";
+import Toast from "react-native-toast-message";
+import { toastConfig } from "src/components";
+import { notify } from "src/hooks/notification/notify.external";
 
 // ... existing imports ...
 
@@ -70,7 +74,7 @@ export default function RechargeScreen() {
   const pickImage = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ["images"],
         allowsEditing: true,
         aspect: [4, 6],
         quality: 0.8,
@@ -79,6 +83,7 @@ export default function RechargeScreen() {
       if (!result.canceled) {
         setProofImage(result.assets[0]);
       }
+      console.log(result);
     } catch (error) {
       Alert.alert("Error", "No se pudo abrir la galería.");
     }
@@ -306,7 +311,18 @@ export default function RechargeScreen() {
                     {/* Comisión */}
                     <View className="flex-row justify-between mb-3">
                       <Text className="text-sm text-gray-600 dark:text-gray-400">
-                        Comisión
+                        Comisión de terceros
+                      </Text>
+                      <View className="bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-md">
+                        <Text className="text-sm font-bold text-orange-600 dark:text-orange-400">
+                          Te lo devolvemos en Orange Becoins (6%)
+                        </Text>
+                      </View>
+                    </View>
+
+                    <View className="flex-row justify-between mb-3">
+                      <Text className="text-sm text-gray-600 dark:text-gray-400">
+                        Comisión Beland
                       </Text>
                       <View className="bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-md">
                         <Text className="text-sm font-bold text-green-600 dark:text-green-400">
@@ -330,12 +346,31 @@ export default function RechargeScreen() {
 
                     {/* BeCoins a recibir */}
                     <View className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/30 rounded-xl p-3">
-                      <Text className="text-sm text-gray-700 dark:text-gray-300 text-center">
-                        Recibirás{" "}
-                        <Text className="text-base font-bold text-green-600 dark:text-green-400">
-                          {beCoinsAmount.toLocaleString()} BeCoins
+                      <View className="flex flex-row w-full justify-center items-center">
+                        <Text className="text-sm text-gray-700 dark:text-gray-300 text-center">
+                          Recibirás
                         </Text>
-                      </Text>
+                        <Text className="text-base font-bold text-green-600 dark:text-green-400">
+                          {beCoinsAmount - beCoinsAmount * 0.06} BeCoins
+                        </Text>
+                        <Text className="px-1 text-sm text-gray-700 dark:text-gray-300">
+                          y
+                        </Text>
+                        <Text className="text-base font-bold text-orange-600 dark:text-orange-400">
+                          {beCoinsAmount * 0.06} Orange Becoins
+                        </Text>
+                        <Ionicons
+                          name="information-circle"
+                          size={20}
+                          color="gray"
+                          onPress={() =>
+                            notify.info({
+                              message:
+                                "Absorvemos la comision bancaria y te la devolvemos como Orange BeCoins",
+                            })
+                          }
+                        />
+                      </View>
                       <Text className="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
                         1 BeCoin = $0.05 USD
                       </Text>
@@ -404,7 +439,7 @@ export default function RechargeScreen() {
         onRequestClose={() => setShowBankTransferModal(false)}
       >
         <View className="flex-1 bg-black/60 justify-end">
-          <View className="bg-white dark:bg-gray-900 rounded-t-3xl h-[90%] w-full flex overflow-hidden">
+          <View className="bg-white dark:bg-gray-900 rounded-t-3xl h-[95%] w-full flex overflow-hidden">
             {/* Modal Header */}
             <View className="px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex-row justify-between items-center bg-gray-50 dark:bg-gray-800">
               <Text className="text-xl font-bold text-gray-900 dark:text-white">
@@ -486,8 +521,19 @@ export default function RechargeScreen() {
                       <Text className="text-green-600 font-bold mb-2">
                         ¡Imagen seleccionada!
                       </Text>
+                      <Image
+                        source={proofImage}
+                        width={100}
+                        height={100}
+                        style={{
+                          maxWidth: 100,
+                          maxHeight: 100,
+                          borderRadius: 8,
+                          objectFit: "cover",
+                        }}
+                      />
                       <Text className="text-xs text-center text-gray-500 mb-2">
-                        {proofImage.uri?.split("/").pop()}
+                        {proofImage.fileName}
                       </Text>
                       <Ionicons
                         name="checkmark-circle"
@@ -559,6 +605,8 @@ export default function RechargeScreen() {
             </View>
           </View>
         </View>
+
+        <Toast config={toastConfig} />
       </Modal>
     </>
   );

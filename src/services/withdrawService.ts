@@ -3,7 +3,11 @@
  * Handles withdraw accounts, account types, and withdraw requests
  */
 
-import { CoreApiService, PaginatedResponse } from "./core/ApiService";
+import {
+  CoreApiService,
+  PaginatedResponse,
+  adaptSequelizePagination,
+} from "./core/ApiService";
 
 // Withdraw Types
 export interface WithdrawAccount {
@@ -88,10 +92,14 @@ class WithdrawServiceClass extends CoreApiService {
    */
   async getWithdrawAccounts(
     page: number = 1,
-    limit: number = 10
+    limit: number = 10,
   ): Promise<PaginatedResponse<WithdrawAccount>> {
     const queryString = this.buildQueryString({ page, limit });
-    return this.get(`${this.ENDPOINTS.WITHDRAW_ACCOUNTS}?${queryString}`);
+    const resp = await this.get(
+      `${this.ENDPOINTS.WITHDRAW_ACCOUNTS}?${queryString}`,
+    );
+
+    return adaptSequelizePagination<WithdrawAccount>(resp, page, limit);
   }
 
   /**
@@ -105,7 +113,7 @@ class WithdrawServiceClass extends CoreApiService {
    * Create new withdraw account
    */
   async createWithdrawAccount(
-    data: CreateWithdrawAccountRequest
+    data: CreateWithdrawAccountRequest,
   ): Promise<WithdrawAccount> {
     return this.post(this.ENDPOINTS.WITHDRAW_ACCOUNTS, data);
   }
@@ -115,7 +123,7 @@ class WithdrawServiceClass extends CoreApiService {
    */
   async updateWithdrawAccount(
     id: string,
-    data: UpdateWithdrawAccountRequest
+    data: UpdateWithdrawAccountRequest,
   ): Promise<WithdrawAccount> {
     return this.put(`${this.ENDPOINTS.WITHDRAW_ACCOUNTS}/${id}`, data);
   }
@@ -171,7 +179,7 @@ class WithdrawServiceClass extends CoreApiService {
    */
   async getWithdrawHistory(
     page: number = 1,
-    limit: number = 10
+    limit: number = 10,
   ): Promise<PaginatedResponse<UserWithdraw>> {
     const queryString = this.buildQueryString({ page, limit });
     return this.get(`${this.ENDPOINTS.USER_WITHDRAW}?${queryString}`);
@@ -182,7 +190,7 @@ class WithdrawServiceClass extends CoreApiService {
    * Validate account data
    */
   validateAccountData(
-    data: CreateWithdrawAccountRequest | UpdateWithdrawAccountRequest
+    data: CreateWithdrawAccountRequest | UpdateWithdrawAccountRequest,
   ): {
     isValid: boolean;
     errors: string[];

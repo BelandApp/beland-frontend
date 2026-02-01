@@ -28,7 +28,6 @@ export const useWallet = () => {
 
     try {
       const w = await PaymentService.getWallet();
-      console.log("Fetched wallet:", w);
       setWallet(w);
 
       // Evitar llamada duplicada: usar el id retornado por PaymentService.getWallet
@@ -59,9 +58,9 @@ export const useWallet = () => {
     setLoadingTransactions(true);
 
     try {
-      const resp = await WalletService.getTransactions(1, 20, walletId);
-      const arr = Array.isArray(resp[0]) ? resp[0] : resp;
-      setTransactions(arr.map(mapBackendTransactionToFrontend));
+      const { data } = await WalletService.getTransactions(1, 20, walletId);
+      console.log("Fetched transactions:", data);
+      setTransactions(data.map(mapBackendTransactionToFrontend));
     } catch (err) {
       notify.error({ message: getBackendErrorMessage(err) });
     } finally {

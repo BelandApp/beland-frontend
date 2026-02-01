@@ -11,8 +11,9 @@ interface Props {
 
 export const Tooltip: React.FC<Props> = ({
   text,
-  duration = 2000,
   children,
+  direction = "top",
+  duration = 2000,
 }) => {
   const ref = useRef<any>(null);
   const { setTooltip } = useTooltip();
@@ -20,28 +21,32 @@ export const Tooltip: React.FC<Props> = ({
   const show = () => {
     if (!ref.current) return;
 
-    /** ---------------- WEB ---------------- */
     if (Platform.OS === "web") {
       const rect = ref.current.getBoundingClientRect();
 
       setTooltip({
-        x: rect.left + rect.width / 2,
-        y: rect.top - 8,
+        anchorX: rect.left,
+        anchorY: rect.top,
+        anchorWidth: rect.width,
+        anchorHeight: rect.height,
         text,
+        direction,
         visible: true,
       });
       return;
     }
 
-    /** ---------------- NATIVE ---------------- */
     const node = findNodeHandle(ref.current);
     if (!node) return;
 
     UIManager.measureInWindow(node, (x, y, width, height) => {
       setTooltip({
-        x: x + width / 2,
-        y: y - 8,
+        anchorX: x,
+        anchorY: y,
+        anchorWidth: width,
+        anchorHeight: height,
         text,
+        direction,
         visible: true,
       });
 
@@ -49,9 +54,7 @@ export const Tooltip: React.FC<Props> = ({
     });
   };
 
-  const hide = () => {
-    if (Platform.OS === "web") setTooltip(null);
-  };
+  const hide = () => Platform.OS === "web" && setTooltip(null);
 
   return (
     <Pressable

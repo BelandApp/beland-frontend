@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Platform,
+  Dimensions,
 } from "react-native";
 import {
   SendIcon,
@@ -112,18 +113,10 @@ export const QuickActions = ({}) => {
       textAlign: "center",
       width: "100%",
     },
-    actionsGrid: {
-      ...styles.actionsGrid,
-      justifyContent: "space-around",
-      alignItems: "center",
-      width: "100%",
-      // maxWidth: Platform.OS === "web" ? (isMobile ? 320 : 600) : "100%",
-    },
     actionButton: {
       ...styles.actionButton,
-      width: Platform.OS === "web" ? (isMobile ? "45%" : "18%") : "22%",
       minWidth: Platform.OS === "web" ? (isMobile ? 100 : 120) : 100,
-      maxWidth: Platform.OS === "web" ? (isMobile ? 140 : 160) : 100,
+      flex: 1,
     },
   });
 
@@ -131,7 +124,7 @@ export const QuickActions = ({}) => {
     <>
       <View style={dynamicStyles.container}>
         <Text style={dynamicStyles.title}>Acciones Rápidas</Text>
-        <View style={dynamicStyles.actionsGrid}>
+        <View style={styles.actionsGrid}>
           {actions.map((action) => {
             const IconComponent = action.icon;
             return (
@@ -164,7 +157,6 @@ export const QuickActions = ({}) => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     marginVertical: 24,
     backgroundColor: "#FFFFFF",
     borderRadius: 20,
@@ -185,9 +177,11 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   actionsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: Platform.OS === "web" ? 16 : 8,
+    flexDirection: Dimensions.get("window").width > 600 ? "row" : "column",
+    gap: Platform.OS === "web" ? 24 : 16,
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    width: "100%",
   },
   actionButton: {
     alignItems: "center",

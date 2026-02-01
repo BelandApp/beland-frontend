@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  SafeAreaView,
   ActivityIndicator,
   Modal,
   Platform,
@@ -26,6 +25,7 @@ import { useNotify } from "src/hooks";
 import { WithdrawService } from "src/services/withdrawService";
 import Toast, { BaseToast } from "react-native-toast-message";
 import { toastConfig } from "src/components/shared/notification/GlobalNotification";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 // Helper to normalize document type by removing accents
 const normalizeDocType = (docType: string): string => {
@@ -103,7 +103,7 @@ export const AddWithdrawAccountModal: React.FC<
         position: "top",
         topOffset: 8,
         visibilityTime: 4000,
-      })
+      }),
     );
   }, [errors]);
   const [showCountryPicker, setShowCountryPicker] = useState(false);
@@ -144,19 +144,19 @@ export const AddWithdrawAccountModal: React.FC<
         if (!mounted) return;
         if (res?.countrys) {
           const vals = Object.values(res.countrys).filter(
-            (v) => typeof v === "string"
+            (v) => typeof v === "string",
           ) as string[];
           setCountries(vals.map((v) => ({ label: v, value: v })));
         }
         if (res?.currency) {
           const vals = Object.values(res.currency).filter(
-            (v) => typeof v === "string"
+            (v) => typeof v === "string",
           ) as string[];
           setCurrencies(vals.map((v) => ({ label: v, value: v })));
         }
         if (res?.documentType) {
           const vals = Object.values(res.documentType).filter(
-            (v) => typeof v === "string"
+            (v) => typeof v === "string",
           ) as string[];
           setDocTypes(vals);
         }
@@ -211,10 +211,10 @@ export const AddWithdrawAccountModal: React.FC<
                 : undefined,
             width: "100%",
           }}
-          className=" w-full max-w-xl bg-[#181411] rounded-2xl border border-[#28221c] overflow-hidden"
+          className=" w-full max-w-xl bg-[#1F2937] rounded-2xl border border-[#28221c] overflow-hidden"
         >
           <ScrollView
-            contentContainerStyle={{ padding: 24, paddingBottom: 140 }}
+            contentContainerStyle={{ padding: 24 }}
             keyboardShouldPersistTaps="handled"
             style={{
               maxHeight:
@@ -236,11 +236,11 @@ export const AddWithdrawAccountModal: React.FC<
             {/* Row: País / Moneda */}
             <View className="flex-row gap-3 mb-4">
               <View className="flex-1">
-                <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
+                <Text className="text-white text-xs font-semibold mb-2 uppercase tracking-wider">
                   País
                 </Text>
                 <TouchableOpacity
-                  className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 flex-row items-center"
+                  className="bg-[#1F2937] border border-[#3f3a36] rounded-lg px-3 h-12 flex-row items-center"
                   onPress={() => setShowCountryPicker(true)}
                 >
                   <Text
@@ -256,11 +256,11 @@ export const AddWithdrawAccountModal: React.FC<
               </View>
 
               <View className="flex-1">
-                <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
+                <Text className="text-white text-xs font-semibold mb-2 uppercase tracking-wider">
                   Moneda
                 </Text>
                 <TouchableOpacity
-                  className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 flex-row items-center"
+                  className="bg-[#1F2937] border border-[#3f3a36] rounded-lg px-3 h-12 flex-row items-center"
                   onPress={() => setShowCurrencyPicker(true)}
                 >
                   <Text
@@ -297,7 +297,7 @@ export const AddWithdrawAccountModal: React.FC<
                       bottom: 0,
                     }}
                   >
-                    <View className="bg-[#181411] p-4 rounded-t-2xl border-t border-[#28221c]">
+                    <View className="bg-[#1F2937] p-4 rounded-t-2xl border-t border-[#28221c]">
                       {countries.map((c: any) => (
                         <TouchableOpacity
                           key={c.value}
@@ -345,7 +345,7 @@ export const AddWithdrawAccountModal: React.FC<
                       bottom: 0,
                     }}
                   >
-                    <View className="bg-[#181411] p-4 rounded-t-2xl border-t border-[#28221c]">
+                    <View className="bg-[#1F2937] p-4 rounded-t-2xl border-t border-[#28221c]">
                       {currencies.map((c: any) => (
                         <TouchableOpacity
                           key={c.value}
@@ -370,28 +370,35 @@ export const AddWithdrawAccountModal: React.FC<
             {/* Row: Código banco / Nombre banco */}
             <View className="flex-row gap-3 mb-4">
               <View className="flex-1">
-                <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
-                  Código del banco
+                <Text className="text-white text-xs font-semibold mb-2 uppercase tracking-wider">
+                  Tipo de Cuenta
                 </Text>
-                <TextInput
-                  placeholder="Ej. 00123"
-                  placeholderTextColor="#57534e"
-                  className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 text-white"
-                  value={form.bankCode}
-                  onChangeText={(text) =>
-                    form.setBankCode(text.replace(/\n/g, "").trim())
-                  }
-                  multiline={false}
-                />
+                <TouchableOpacity
+                  className="bg-[#1F2937] border border-[#3f3a36] rounded-lg px-3 h-12 flex-row items-center"
+                  onPress={() => setShowAccountTypePicker(true)}
+                >
+                  <Text
+                    className={`flex-1 ${
+                      form.selectedType ? "text-white" : "text-[#57534e]"
+                    }`}
+                  >
+                    {form.accountTypes
+                      ?.flat?.()
+                      .find((t: any) => t.id === form.selectedType)?.name ||
+                      "Seleccionar tipo de cuenta"}
+                  </Text>
+                  <CreditCard size={16} color="#b9aa9d" />
+                  <Text className="text-[#57534e] ml-2">▼</Text>
+                </TouchableOpacity>
               </View>
               <View className="flex-1">
-                <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
+                <Text className="text-white text-xs font-semibold mb-2 uppercase tracking-wider">
                   Nombre del banco
                 </Text>
                 <TextInput
                   placeholder="Ej. Banco Nación"
                   placeholderTextColor="#57534e"
-                  className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 text-white"
+                  className="bg-[#1F2937] border border-[#3f3a36] rounded-lg px-3 h-12 text-white"
                   value={form.bankName}
                   onChangeText={(text) =>
                     form.setBankName(text.replace(/\n/g, "").trim())
@@ -402,28 +409,7 @@ export const AddWithdrawAccountModal: React.FC<
             </View>
 
             {/* Tipo de Cuenta */}
-            <View className="mb-4">
-              <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
-                Tipo de Cuenta
-              </Text>
-              <TouchableOpacity
-                className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 flex-row items-center"
-                onPress={() => setShowAccountTypePicker(true)}
-              >
-                <Text
-                  className={`flex-1 ${
-                    form.selectedType ? "text-white" : "text-[#57534e]"
-                  }`}
-                >
-                  {form.accountTypes
-                    ?.flat?.()
-                    .find((t: any) => t.id === form.selectedType)?.name ||
-                    "Seleccionar tipo de cuenta"}
-                </Text>
-                <CreditCard size={16} color="#b9aa9d" />
-                <Text className="text-[#57534e] ml-2">▼</Text>
-              </TouchableOpacity>
-            </View>
+            <View className="mb-4"></View>
 
             {/* Account type picker modal */}
             {showAccountTypePicker && (
@@ -446,12 +432,12 @@ export const AddWithdrawAccountModal: React.FC<
                       bottom: 0,
                     }}
                   >
-                    <View className="bg-[#181411] p-4 rounded-t-2xl border-t border-[#28221c]">
+                    <View className="bg-[#1F2937] p-4 rounded-t-2xl border-t border-[#28221c]">
                       {(
                         form.accountTypes
                           ?.flat?.()
                           .filter(
-                            (t: any) => t?.name && String(t.name).trim()
+                            (t: any) => t?.name && String(t.name).trim(),
                           ) || []
                       ).map((type: any) => (
                         <TouchableOpacity
@@ -483,13 +469,13 @@ export const AddWithdrawAccountModal: React.FC<
             {/* Campos condicionales según tipo de cuenta (mantener como antes) */}
             {(form.country === "ECUADOR" || form.country === "COLOMBIA") && (
               <View className="mb-4">
-                <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
+                <Text className="text-white text-xs font-semibold mb-2 uppercase tracking-wider">
                   Número de cuenta bancaria
                 </Text>
                 <TextInput
                   placeholder="Número de cuenta"
                   placeholderTextColor="#57534e"
-                  className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 text-white"
+                  className="bg-[#1F2937] border border-[#3f3a36] rounded-lg px-3 h-12 text-white"
                   value={form.accountNumber}
                   onChangeText={(text) =>
                     form.setAccountNumber(text.replace(/\n/g, "").trim())
@@ -501,13 +487,13 @@ export const AddWithdrawAccountModal: React.FC<
 
             {/* Datos del titular */}
             <View className="mb-4">
-              <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
+              <Text className="text-white text-xs font-semibold mb-2 uppercase tracking-wider">
                 Nombre del titular
               </Text>
               <TextInput
                 placeholder="Nombre completo como figura en el banco"
                 placeholderTextColor="#57534e"
-                className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 text-white"
+                className="bg-[#1F2937] border border-[#3f3a36] rounded-lg px-3 h-12 text-white"
                 value={form.holderName}
                 onChangeText={(text) =>
                   form.setHolderName(text.replace(/\n/g, "").trim())
@@ -519,11 +505,11 @@ export const AddWithdrawAccountModal: React.FC<
             {/* Documento: tipo + número en una fila */}
             <View className="flex-row gap-3 mb-4">
               <View className="flex-1">
-                <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
+                <Text className="text-white text-xs font-semibold mb-2 uppercase tracking-wider">
                   Tipo de documento
                 </Text>
                 <TouchableOpacity
-                  className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 flex-row items-center"
+                  className="bg-[#1F2937] border border-[#3f3a36] rounded-lg px-3 h-12 flex-row items-center"
                   onPress={() => setShowDocTypePicker(true)}
                 >
                   <Text
@@ -538,20 +524,20 @@ export const AddWithdrawAccountModal: React.FC<
                 </TouchableOpacity>
               </View>
               <View className="flex-1">
-                <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
+                <Text className="text-white text-xs font-semibold mb-2 uppercase tracking-wider">
                   Documento del titular
                 </Text>
                 <TextInput
                   placeholder="Número de documento"
                   placeholderTextColor="#57534e"
-                  className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 text-white"
+                  className="bg-[#1F2937] border border-[#3f3a36] rounded-lg px-3 h-12 text-white"
                   value={form.holderDocument}
                   onChangeText={(text) =>
                     form.setHolderDocument(
                       text
                         .replace(/[^0-9]/g, "")
                         .replace(/\n/g, "")
-                        .trim()
+                        .trim(),
                     )
                   }
                   keyboardType="numeric"
@@ -582,7 +568,7 @@ export const AddWithdrawAccountModal: React.FC<
                       bottom: 0,
                     }}
                   >
-                    <View className="bg-[#181411] p-4 rounded-t-2xl border-t border-[#28221c]">
+                    <View className="bg-[#1F2937] p-4 rounded-t-2xl border-t border-[#28221c]">
                       {docTypes.map((type) => (
                         <TouchableOpacity
                           key={type}
@@ -609,24 +595,24 @@ export const AddWithdrawAccountModal: React.FC<
               ["BANK", "CORRIENTE", "AHORRO"].includes(
                 form.accountTypes
                   ?.flat?.()
-                  .find((t: any) => t.id === form.selectedType)?.code || ""
+                  .find((t: any) => t.id === form.selectedType)?.code || "",
               ) && (
                 <>
                   {/* Only show CBU/Alias for Argentina (backend requires CBU for AR) */}
                   {form.country === "ARGENTINA" && (
                     <>
                       <View className="mb-4">
-                        <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
+                        <Text className="text-white text-xs font-semibold mb-2 uppercase tracking-wider">
                           CBU
                         </Text>
                         <TextInput
                           placeholder="CBU (22 dígitos)"
                           placeholderTextColor="#57534e"
-                          className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 text-white"
+                          className="bg-[#1F2937] border border-[#3f3a36] rounded-lg px-3 h-12 text-white"
                           value={form.cbu}
                           onChangeText={(text) =>
                             form.setCbu(
-                              text.replace(/[^0-9]/g, "").slice(0, 22)
+                              text.replace(/[^0-9]/g, "").slice(0, 22),
                             )
                           }
                           keyboardType="numeric"
@@ -635,13 +621,13 @@ export const AddWithdrawAccountModal: React.FC<
                         />
                       </View>
                       <View className="mb-4">
-                        <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
+                        <Text className="text-white text-xs font-semibold mb-2 uppercase tracking-wider">
                           Alias (opcional)
                         </Text>
                         <TextInput
                           placeholder="Alias bancario"
                           placeholderTextColor="#57534e"
-                          className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 text-white"
+                          className="bg-[#1F2937] border border-[#3f3a36] rounded-lg px-3 h-12 text-white"
                           value={form.alias}
                           onChangeText={(text) =>
                             form.setAlias(text.replace(/\n/g, "").trim())
@@ -658,13 +644,13 @@ export const AddWithdrawAccountModal: React.FC<
                 ?.code === "WALLET" && (
                 <>
                   <View className="mb-4">
-                    <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
+                    <Text className="text-white text-xs font-semibold mb-2 uppercase tracking-wider">
                       Proveedor
                     </Text>
                     <TextInput
                       placeholder="Proveedor (ej: MercadoPago, Payphone)"
                       placeholderTextColor="#57534e"
-                      className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 text-white"
+                      className="bg-[#1F2937] border border-[#3f3a36] rounded-lg px-3 h-12 text-white"
                       value={form.provider}
                       onChangeText={(text) =>
                         form.setProvider(text.replace(/\n/g, "").trim())
@@ -673,13 +659,13 @@ export const AddWithdrawAccountModal: React.FC<
                     />
                   </View>
                   <View className="mb-4">
-                    <Text className="text-[#b9aa9d] text-xs font-semibold mb-2 uppercase tracking-wider">
+                    <Text className="text-white text-xs font-semibold mb-2 uppercase tracking-wider">
                       Teléfono
                     </Text>
                     <TextInput
                       placeholder="Número de teléfono"
                       placeholderTextColor="#57534e"
-                      className="bg-[#181411] border border-[#3f3a36] rounded-lg px-3 h-12 text-white"
+                      className="bg-[#1F2937] border border-[#3f3a36] rounded-lg px-3 h-12 text-white"
                       value={form.phone}
                       onChangeText={(text) =>
                         form.setPhone(text.replace(/\n/g, "").trim())
@@ -699,15 +685,15 @@ export const AddWithdrawAccountModal: React.FC<
               borderTopWidth: 1,
               borderTopColor: "#28221c",
               padding: 16,
-              backgroundColor: "#181411",
+              backgroundColor: "#1F2937",
             }}
           >
             <View className="flex-row justify-center gap-3">
               <TouchableOpacity
-                className="px-6 py-2.5 rounded-lg border border-[#3f3a36] bg-[#181411]"
+                className="px-6 py-2.5 rounded-lg border border-[#3f3a36] bg-[#1F2937]"
                 onPress={onClose}
               >
-                <Text className="text-[#b9aa9d] font-medium">Cancelar</Text>
+                <Text className="text-white font-medium">Cancelar</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 className="px-6 py-2.5 rounded-lg bg-[#f97316] flex-row items-center"
