@@ -19,12 +19,12 @@ import {
   DashboardMetrics,
 } from "src/services/AdminApiService";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
-import { useResponsiveLayout } from "src/screens/Home";
 
 const { width } = Dimensions.get("window");
 
 // Responsive design utilities for all platforms
-const { isWebDesktop, isWebMobile } = useResponsiveLayout();
+const isWebDesktop = Platform.OS === "web" && width > 768;
+const isWebMobile = Platform.OS === "web" && width <= 768;
 
 const getResponsiveCardWidth = () => {
   if (isWebDesktop) {
