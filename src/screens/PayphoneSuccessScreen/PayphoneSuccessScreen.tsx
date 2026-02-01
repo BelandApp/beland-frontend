@@ -16,6 +16,7 @@ import {
   RedirectMessage,
 } from "./components";
 import { styles } from "./styles";
+import { ThemedHeader } from "src/components";
 
 export default function PayphoneSuccessScreen() {
   const { id, clientTxId, status, loading, walletBalance } =
@@ -23,6 +24,7 @@ export default function PayphoneSuccessScreen() {
 
   return (
     <div style={styles.container}>
+      <ThemedHeader canGoBack />
       <div style={styles.card}>
         {/* Título */}
         <StatusTitle status={status} loading={loading} />
