@@ -106,11 +106,10 @@ export const OnboardingOverlay: React.FC<OnboardingOverlayProps> = ({
 
   return (
     <Animated.View
-      style={[styles.overlay, { opacity: fadeAnim }]}
-      pointerEvents="box-none"
+      style={[styles.overlay, { opacity: fadeAnim, pointerEvents: "box-none" }]}
     >
       {/* Dark background with hole for the active tab */}
-      <View style={styles.darkOverlay} pointerEvents="none">
+      <View style={[styles.darkOverlay, { pointerEvents: "none" }]}>
         {/* Highlight circle for active tab */}
         <View
           style={[

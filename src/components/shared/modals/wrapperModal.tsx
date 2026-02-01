@@ -1,4 +1,4 @@
-import { ArrowDown } from "lucide-react-native";
+import { ArrowDown, ArrowDownCircle } from "lucide-react-native";
 import { Dimensions, StyleSheet, View } from "react-native";
 import Toast from "react-native-toast-message";
 import { colors } from "src/styles";
@@ -15,7 +15,7 @@ type WrapperModalProps = {
   onClose: () => void;
   header?: React.ReactNode;
   content: React.ReactNode;
-  actions: React.ReactNode;
+  actions?: React.ReactNode;
   headerBackgroundColor?: string;
 };
 
@@ -56,7 +56,7 @@ export const WrapperModal: React.FC<WrapperModalProps> = ({
           {header}
           <Button
             variant="onlyIcon"
-            icon={<ArrowDown color={colors.belandOrange} />}
+            icon={<ArrowDown color={colors.belandOrange} size={24} />}
             onPress={() => refRBSheet.current?.close()}
             title="cerrar"
           />
@@ -66,7 +66,7 @@ export const WrapperModal: React.FC<WrapperModalProps> = ({
         <View style={styles.contentWrapper}>{content}</View>
 
         {/* FOOTER */}
-        <View style={styles.footer}>{actions}</View>
+        {actions && <View style={styles.footer}>{actions}</View>}
       </View>
 
       <Toast config={toastConfig} />

@@ -7,6 +7,7 @@ import {
   ScrollView,
   useWindowDimensions,
 } from "react-native";
+import { useResponsiveLayout } from "src/screens/Home";
 
 export interface Tab {
   id: string;
@@ -27,8 +28,7 @@ export const Tabs: React.FC<TabsProps> = ({
   onTabChange,
   children,
 }) => {
-  const { width } = useWindowDimensions();
-  const isMobile = width < 768;
+  const { isMobile } = useResponsiveLayout();
 
   return (
     <View style={styles.container}>

@@ -11,6 +11,7 @@ import { DeliveryAddress } from "src/types";
 import { userService } from "src/services/user/user.service";
 import { notify } from "src/hooks/notification/notify.external";
 import { useState } from "react";
+import { useResponsiveLayout } from "src/screens/Home";
 type AddressSelectorProps = {
   addresses: any[];
   loadingAddresses: boolean;
@@ -28,15 +29,14 @@ export const SelectAddress: React.FC<AddressSelectorProps> = ({
   if (loadingAddresses) {
     return <CustomLoader />;
   }
-  const [displayAddress, setDisplayAddress] =
-    useState<any[]>(addresses);
-  const isMobile = Dimensions.get("window").width <= 600;
+  const [displayAddress, setDisplayAddress] = useState<any[]>(addresses);
+  const { isMobile } = useResponsiveLayout();
   const Wrapper = isMobile ? ScrollView : View;
-  const handleDeleteAddress=(addressId: string) => {
+  const handleDeleteAddress = (addressId: string) => {
     const res = userService.deleteAddressUser(addressId);
     setDisplayAddress(displayAddress.filter((a) => a.id !== addressId));
     notify.success({ message: "Dirección eliminada" });
-  }
+  };
   return (
     <View style={styles.selectContainer}>
       <Wrapper style={isMobile ? null : styles.selectWrapper}>

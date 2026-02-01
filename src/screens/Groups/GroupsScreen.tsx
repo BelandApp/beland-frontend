@@ -17,6 +17,7 @@ import { ThemedHeader } from "src/components";
 import { CustomLoader } from "@/components/shared/loader/Loader";
 import { GroupService, GroupPrivacy } from "@/services/GroupApiService";
 import { GroupCard } from "./components/GroupCard";
+import { point } from "leaflet";
 // Ícono según código de privacidad
 const getPrivacyIcon = (privacyCode: string) => {
   if (privacyCode === "public") return "globe";
@@ -267,7 +268,6 @@ export const GroupsScreen: React.FC = () => {
       </View>
       {/* Botón flotante para crear grupo */}
       <View
-        pointerEvents="auto"
         style={
           (Platform.OS === "web"
             ? {
@@ -275,12 +275,14 @@ export const GroupsScreen: React.FC = () => {
                 right: 10,
                 bottom: 100,
                 zIndex: 9999,
+                pointerEvents: "auto",
               }
             : {
                 position: "absolute" as any,
                 right: 24,
                 bottom: 32,
                 zIndex: 9999,
+                pointerEvents: "auto",
               }) as any
         }
       >

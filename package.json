@@ -31,7 +31,6 @@
     "expo-constants": "~18.0.10",
     "expo-crypto": "~15.0.7",
     "expo-dev-client": "~6.0.20",
-    "expo-face-detector": "^13.0.2",
     "expo-file-system": "19.0.19",
     "expo-haptics": "~15.0.7",
     "expo-image-manipulator": "^14.0.7",

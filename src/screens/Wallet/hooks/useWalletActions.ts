@@ -26,12 +26,12 @@ export const useWalletActions = () => {
       onPress: () => navigate("RechargeScreen"),
     },
     {
-      id: "send",
-      label: "Enviar",
-      icon: SendIcon,
-      color: "#DC2626",
-      bgColor: "#FEE2E2",
-      onPress: () => navigate("SendScreen"),
+      id: "exchange",
+      label: "Canjear",
+      icon: ExchangeIcon,
+      color: "#EA580C",
+      bgColor: "#FED7AA",
+      onPress: () => navigate("CanjearScreen"),
     },
     {
       id: "receive",
@@ -45,17 +45,10 @@ export const useWalletActions = () => {
 
   // TODO CHEQUEAR botón Cobrar solo para roles permitidos
   if (
-    (typeof user?.role_name === "string" &&
-      ["COMMERCE", "ADMIN", "SUPERADMIN", "EMPRESA"].includes(
-        user.role_name.toUpperCase()
-      )) ||
-    (user?.role &&
-      typeof user.role === "object" &&
-      user.role &&
-      typeof user.role === "string" &&
-      ["COMMERCE", "ADMIN", "SUPERADMIN", "EMPRESA"].includes(
-        user.role.toUpperCase()
-      ))
+    typeof user?.role_name === "string" &&
+    ["COMMERCE", "ADMIN", "SUPERADMIN", "EMPRESA"].includes(
+      user.role_name.toUpperCase(),
+    )
   ) {
     mainWalletActions.push({
       id: "cobrar",
@@ -69,12 +62,12 @@ export const useWalletActions = () => {
 
   // Acción final
   mainWalletActions.push({
-    id: "exchange",
-    label: "Canjear",
-    icon: ExchangeIcon,
-    color: "#EA580C",
-    bgColor: "#FED7AA",
-    onPress: () => navigate("CanjearScreen"),
+    id: "send",
+    label: "Enviar",
+    icon: SendIcon,
+    color: "#DC2626",
+    bgColor: "#FEE2E2",
+    onPress: () => navigate("SendScreen"),
   });
 
   // Acciones secundarias - sin historial ya que está integrado en la vista principal

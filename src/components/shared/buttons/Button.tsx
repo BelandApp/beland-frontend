@@ -18,6 +18,7 @@ interface CustomButtonProps extends ButtonProps {
   isLoading?: boolean;
   style?: any;
   textStyle?: any;
+  className?: string;
 }
 type Variant = "primary" | "secondary" | "ghost" | "inline" | "onlyIcon";
 type IconPosition = "left" | "right";
@@ -53,11 +54,12 @@ const VARIANT_STYLES = {
   onlyIcon: {
     container: {
       backgroundColor: "transparent",
-      borderWidth: 1,
+      borderWidth: 2,
       borderColor: colors.belandOrange,
       paddingVertical: 6,
       paddingHorizontal: 6,
-    },text:{color:"transparent"}
+    },
+    text: { color: "transparent" },
   },
 } as const;
 const getVariantStyles = (variant: Variant, disabled?: boolean) => {
@@ -79,6 +81,7 @@ export const Button: React.FC<CustomButtonProps> = ({
   disabled = false,
   isLoading = false,
   style,
+  className,
   textStyle,
 }) => {
   const variantStyle = getVariantStyles(variant, disabled);
@@ -91,6 +94,7 @@ export const Button: React.FC<CustomButtonProps> = ({
         (disabled || isLoading) && { opacity: 0.6 },
         style,
       ]}
+      className={className}
       disabled={disabled || isLoading}
       accessible={true}
       accessibilityRole="button"
@@ -100,8 +104,8 @@ export const Button: React.FC<CustomButtonProps> = ({
         disabled
           ? "Este botón está deshabilitado"
           : isLoading
-          ? "Acción en curso"
-          : undefined
+            ? "Acción en curso"
+            : undefined
       }
       activeOpacity={0.8}
     >
@@ -109,7 +113,11 @@ export const Button: React.FC<CustomButtonProps> = ({
       {isLoading ? (
         <ActivityIndicator color={variantStyle.text.color} />
       ) : (
-        variant !== "onlyIcon" && <Text style={[styles.text, variantStyle.text, textStyle]}>{title}</Text>
+        variant !== "onlyIcon" && (
+          <Text style={[styles.text, variantStyle.text, textStyle]}>
+            {title}
+          </Text>
+        )
       )}
       {icon && iconPosition === "right" && icon}
     </TouchableOpacity>
@@ -129,7 +137,6 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     fontWeight: "600",
-   
   },
 });
 export default Button;

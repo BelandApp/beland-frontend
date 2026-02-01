@@ -26,6 +26,7 @@ import { getGroupTypeFeatherIcon } from "./GroupsScreen";
 import { notify } from "@/hooks/notification/notify.external";
 import { useGroupPaymentTypes } from "@/hooks/useGroupPaymentTypes";
 import { useCustomNavigation } from "src/hooks";
+import { SearchBarInput, ThemedHeader } from "src/components";
 
 // Los filtros se generan dinámicamente según los tipos de privacidad
 
@@ -230,33 +231,16 @@ const GroupExploreScreen = () => {
   };
 
   return (
-    <View className="flex-1 bg-background-light">
+    <View className="flex-1 bg-background-light gap-2">
       {/* Header */}
-      <View className="sticky top-0 z-10 bg-background-light/95 flex-row items-center justify-between p-4 pb-2">
-        <TouchableOpacity
-          onPress={() => goBack()}
-          className="mr-4 p-2 border-2 border-green-500 rounded-full"
-        >
-          <Feather name="arrow-left" size={24} color="#00E074" />
-        </TouchableOpacity>
-        <Text className="flex-1 text-center text-lg font-bold">
-          Explorar Grupos
-        </Text>
-      </View>
+      <ThemedHeader canGoBack title="Explorar Grupos" />
 
       {/* Search Bar */}
-      <View className="px-4 py-2">
-        <View className="flex-row items-center bg-white rounded-xl shadow-sm px-4">
-          <Feather name="search" size={22} color="#5e8d76" />
-          <TextInput
-            className="flex-1 h-12 px-2 text-base"
-            placeholder="Buscar por nombre o categoría..."
-            value={search}
-            onChangeText={setSearch}
-            placeholderTextColor="#8caea0"
-          />
-        </View>
-      </View>
+      <SearchBarInput
+        onSearchChange={setSearch}
+        searchQuery={search}
+        placeholder="Buscar por nombre o categoría..."
+      />
 
       {/* Filter Chips (sticky, scrollable horizontally, compact spacing) */}
       <View className="sticky top-16 z-10 bg-background-light/95">

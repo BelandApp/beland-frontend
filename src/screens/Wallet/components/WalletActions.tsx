@@ -5,9 +5,13 @@ import { actionsStyles } from "../styles";
 
 interface WalletActionsProps {
   actions: WalletAction[];
+  backgroundColor?: string;
 }
 
-export const WalletActions: React.FC<WalletActionsProps> = ({ actions }) => {
+export const WalletActions: React.FC<WalletActionsProps> = ({
+  actions,
+  backgroundColor,
+}) => {
   const handlePress = (action: WalletAction) => {
     if (action.onPress) {
       action.onPress();
@@ -16,7 +20,12 @@ export const WalletActions: React.FC<WalletActionsProps> = ({ actions }) => {
 
   return (
     <>
-      <View style={actionsStyles.actionsContainer}>
+      <View
+        style={[
+          actionsStyles.actionsContainer,
+          backgroundColor ? { backgroundColor } : {},
+        ]}
+      >
         {actions.map((action) => {
           const IconComponent = action.icon as
             | React.ComponentType<any>
@@ -24,7 +33,7 @@ export const WalletActions: React.FC<WalletActionsProps> = ({ actions }) => {
 
           if (!IconComponent) {
             console.warn(
-              `WalletActions: icon for action "${action.id}" is undefined`
+              `WalletActions: icon for action "${action.id}" is undefined`,
             );
           }
 

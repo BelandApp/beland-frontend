@@ -55,7 +55,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
       <Text style={styles.title}>Tu Impacto</Text>
       <View style={styles.statsGrid}>
         {stats.map((stat) => (
-          <StatCard stat={stat} />
+          <StatCard stat={stat} key={stat.label} />
         ))}
       </View>
     </View>

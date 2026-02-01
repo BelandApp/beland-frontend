@@ -21,6 +21,7 @@ import { ProductsTable } from "./components/products/ProductsTable";
 import { ProductFormModal } from "./components/products/ProductFormModal";
 import { ProductFilters } from "./components/products/ProductFilters";
 import { useNotify } from "@/hooks";
+import { useResponsiveLayout } from "../Home";
 
 export const ProductsManagementScreen: React.FC = () => {
   const notify = useNotify();
@@ -54,8 +55,7 @@ export const ProductsManagementScreen: React.FC = () => {
   // Flag para evitar cargar categorías múltiples veces
   const categoriesLoaded = useRef(false);
 
-  const { width } = useWindowDimensions();
-  const isMobile = width < 768;
+  const { isMobile } = useResponsiveLayout();
 
   // Cargar categorías solo una vez
   useEffect(() => {
@@ -85,7 +85,7 @@ export const ProductsManagementScreen: React.FC = () => {
         const productsWithCategories = response.data.map((product) => {
           if (!product.category && product.category_id) {
             const category = categories.find(
-              (cat) => cat.id === product.category_id
+              (cat) => cat.id === product.category_id,
             );
             return { ...product, category };
           }
@@ -168,7 +168,7 @@ export const ProductsManagementScreen: React.FC = () => {
 
   const handleSortChange = (
     newSortBy: "name" | "price" | "date",
-    newSortOrder: "asc" | "desc"
+    newSortOrder: "asc" | "desc",
   ) => {
     setSortBy(newSortBy);
     setSortOrder(newSortOrder);

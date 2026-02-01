@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import type { Category } from "@/services/ProductApiService";
+import { useResponsiveLayout } from "src/screens/Home";
 
 export interface ProductFiltersProps {
   categories: Category[];
@@ -19,7 +20,7 @@ export interface ProductFiltersProps {
   onCategoryChange: (categoryId: string) => void;
   onSortChange: (
     sortBy: "name" | "price" | "date",
-    sortOrder: "asc" | "desc"
+    sortOrder: "asc" | "desc",
   ) => void;
   onReset: () => void;
 }
@@ -34,8 +35,7 @@ export const ProductFilters: React.FC<ProductFiltersProps> = ({
   onReset,
 }) => {
   const hasActiveFilters = selectedCategory;
-  const { width } = useWindowDimensions();
-  const isMobile = width < 768;
+  const { isMobile } = useResponsiveLayout();
 
   return (
     <View style={[styles.container, isMobile && styles.containerMobile]}>
@@ -163,7 +163,7 @@ export const ProductFilters: React.FC<ProductFiltersProps> = ({
             onPress={() =>
               onSortChange(
                 "name",
-                sortBy === "name" && sortOrder === "asc" ? "desc" : "asc"
+                sortBy === "name" && sortOrder === "asc" ? "desc" : "asc",
               )
             }
           >
@@ -195,7 +195,7 @@ export const ProductFilters: React.FC<ProductFiltersProps> = ({
             onPress={() =>
               onSortChange(
                 "price",
-                sortBy === "price" && sortOrder === "asc" ? "desc" : "asc"
+                sortBy === "price" && sortOrder === "asc" ? "desc" : "asc",
               )
             }
           >
@@ -227,7 +227,7 @@ export const ProductFilters: React.FC<ProductFiltersProps> = ({
             onPress={() =>
               onSortChange(
                 "date",
-                sortBy === "date" && sortOrder === "asc" ? "desc" : "asc"
+                sortBy === "date" && sortOrder === "asc" ? "desc" : "asc",
               )
             }
           >

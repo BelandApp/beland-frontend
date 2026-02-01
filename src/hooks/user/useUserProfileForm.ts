@@ -7,7 +7,7 @@ import { getBackendErrorMessage } from "src/services";
 
 export const useUserProfileForm = (
   user: User | null,
-  setUser: (u: User) => void
+  setUser: (u: User) => void,
 ) => {
   const [editing, setEditing] = useState(false);
   const [fullName, setFullName] = useState(user?.full_name || "");
@@ -40,12 +40,12 @@ export const useUserProfileForm = (
       if (permission.status !== "granted") {
         notify.error({
           message: "Necesitamos permisos para acceder a tu galería de fotos",
-        })
+        });
         return;
       }
 
       const result: any = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ["images"],
         allowsEditing: true,
         quality: 0.8,
       });
@@ -87,11 +87,11 @@ export const useUserProfileForm = (
   const onSave = async () => {
     if (!user) return;
     if (fullName.trim().length < 2) {
-      notify.error({message: "Nombre requerido, al menos 3 caracteres"})
+      notify.error({ message: "Nombre requerido, al menos 3 caracteres" });
       return;
     }
     if (address.trim().length < 5) {
-      notify.error({message: "Dirección requerida, al menos 5 caracteres"})
+      notify.error({ message: "Dirección requerida, al menos 5 caracteres" });
       return;
     }
     setSaving(true);
@@ -110,7 +110,7 @@ export const useUserProfileForm = (
       setEditing(false);
       notify.success({
         message: "Perfil actualizado",
-      })
+      });
     } catch (err) {
       const message = getBackendErrorMessage(err);
       notify.error({ message });

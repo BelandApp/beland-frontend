@@ -34,7 +34,7 @@ export const FeatureCard: React.FC<FeatureCardProps> = ({
           icon: <RecycleIcon width={48} height={48} color="#10B981" />,
           title: "Reciclaje",
           subtitle: `${((data?.bottlesRecycled || 0) * 0.025).toFixed(
-            1
+            1,
           )} kg reciclados`,
           description:
             "Encuentra puntos de reciclaje cerca de ti y suma BeCoins",
@@ -140,6 +140,7 @@ export const FeatureCard: React.FC<FeatureCardProps> = ({
       style={[dynamicStyles.container, { borderColor: content.color }]}
       onPress={onPress}
       activeOpacity={0.8}
+      key={content.title}
     >
       <View
         style={[

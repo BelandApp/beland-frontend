@@ -3,38 +3,25 @@
  */
 
 import { colors } from "@/styles/colors";
+import { textAlign } from "html2canvas/dist/types/css/property-descriptors/text-align";
 
 export const styles = {
-  container: {
-    minHeight: "100vh",
-    display: "flex",
-    flexDirection: "column" as const,
-    alignItems: "center",
-    justifyContent: "center",
-    background: `linear-gradient(135deg, ${colors.belandOrange} 0%, ${colors.primary} 100%)`,
-    color: colors.textPrimary,
-    fontFamily: "Montserrat, Arial, sans-serif",
-  },
-
   card: {
-    background: colors.cardBackground,
-    borderRadius: 32,
+    marginTop: 40,
     boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.12)",
-    padding: 48,
-    maxWidth: 420,
-    width: "100%",
-    textAlign: "center" as const,
     border: `2px solid ${colors.belandGreen}`,
   },
 
   title: {
     success: {
+      textAlign: "center",
       fontWeight: 800,
       marginBottom: 18,
       fontSize: 28,
       color: colors.primary,
     },
     error: {
+      textAlign: "center",
       fontWeight: 800,
       marginBottom: 18,
       fontSize: 28,
@@ -57,10 +44,10 @@ export const styles = {
     color: isLoading
       ? colors.textSecondary
       : isSuccess
-      ? colors.success
-      : isError
-      ? colors.error
-      : colors.textSecondary,
+        ? colors.success
+        : isError
+          ? colors.error
+          : colors.textSecondary,
   }),
 
   infoSection: {

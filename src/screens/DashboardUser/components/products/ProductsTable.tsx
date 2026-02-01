@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import type { Product } from "@/services/ProductApiService";
+import { useResponsiveLayout } from "src/screens/Home";
 
 interface ProductsTableProps {
   products: Product[];
@@ -44,8 +45,7 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
     });
   };
 
-  const { width } = useWindowDimensions();
-  const isMobile = width < 768;
+  const { isMobile } = useResponsiveLayout();
 
   // Vista tipo Card para móvil
   const MobileCard = ({ product }: { product: Product }) => (

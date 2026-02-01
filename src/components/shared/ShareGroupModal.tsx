@@ -14,9 +14,12 @@ import {
   shareNative,
   captureAndShareGroupCard,
   ShareGroupData,
+  shareOnWhatsApp,
 } from "@/utils/shareHelper";
 import Feather from "react-native-vector-icons/Feather";
 import { colors } from "@/styles";
+import { Button } from "./buttons";
+import { WrapperModal } from "./modals";
 
 interface ShareGroupModalProps {
   visible: boolean;
@@ -31,6 +34,7 @@ export const ShareGroupModal: React.FC<ShareGroupModalProps> = ({
 }) => {
   const cardRef = useRef<View>(null);
   const [isSharing, setIsSharing] = useState(false);
+  const [previewImageVisible, showPreviewImage] = useState<boolean>(false);
 
   const handleShare = async (platform: "native" | "whatsapp" | "image") => {
     setIsSharing(true);
@@ -38,7 +42,7 @@ export const ShareGroupModal: React.FC<ShareGroupModalProps> = ({
       switch (platform) {
         case "whatsapp":
           // Usamos la misma lógica de imagen para WhatsApp ya que el usuario prefiere compartir la visual
-          await captureAndShareGroupCard(cardRef, groupData);
+          await shareOnWhatsApp(groupData);
           break;
         case "image":
           await captureAndShareGroupCard(cardRef, groupData);
@@ -53,7 +57,7 @@ export const ShareGroupModal: React.FC<ShareGroupModalProps> = ({
       console.error("Error al compartir:", error);
       Alert.alert(
         "Error",
-        "No se pudo compartir. Por favor, intenta de nuevo."
+        "No se pudo compartir. Por favor, intenta de nuevo.",
       );
     } finally {
       setIsSharing(false);
@@ -61,126 +65,107 @@ export const ShareGroupModal: React.FC<ShareGroupModalProps> = ({
   };
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      transparent={true}
-      onRequestClose={onClose}
-    >
-      <View style={styles.overlay}>
-        <View style={styles.container}>
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.title}>Compartir Grupo</Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Feather name="x" size={24} color="#666" />
+    <WrapperModal
+      isOpen={visible}
+      onClose={onClose}
+      header={<Text style={styles.title}>Compartir Grupo</Text>}
+      content={
+        <ScrollView
+          style={styles.content}
+          contentContainerStyle={styles.contentContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Share Options */}
+          <View style={styles.optionsSection}>
+            <Text style={styles.sectionTitle}>¿Dónde compartir?</Text>
+
+            {/* Share as Image (Stories) */}
+            <TouchableOpacity
+              style={styles.optionButton}
+              onPress={() => handleShare("image")}
+              disabled={isSharing}
+            >
+              <View style={[styles.optionIcon, { backgroundColor: "#E4405F" }]}>
+                <Feather name="instagram" size={24} color="#fff" />
+              </View>
+              <View style={styles.optionContent}>
+                <Text style={styles.optionTitle}>
+                  Stories de Instagram/TikTok
+                </Text>
+                <Text style={styles.optionDescription}>
+                  Comparte la imagen en tus historias
+                </Text>
+              </View>
+              <Feather name="chevron-right" size={20} color="#999" />
+            </TouchableOpacity>
+
+            {/* WhatsApp */}
+            <TouchableOpacity
+              style={styles.optionButton}
+              onPress={() => handleShare("whatsapp")}
+              disabled={isSharing}
+            >
+              <View style={[styles.optionIcon, { backgroundColor: "#25D366" }]}>
+                <Feather name="message-circle" size={24} color="#fff" />
+              </View>
+              <View style={styles.optionContent}>
+                <Text style={styles.optionTitle}>WhatsApp</Text>
+                <Text style={styles.optionDescription}>
+                  Envía el enlace por WhatsApp
+                </Text>
+              </View>
+              <Feather name="chevron-right" size={20} color="#999" />
+            </TouchableOpacity>
+
+            {/* More Options */}
+            <TouchableOpacity
+              style={styles.optionButton}
+              onPress={() => handleShare("native")}
+              disabled={isSharing}
+            >
+              <View
+                style={[styles.optionIcon, { backgroundColor: colors.primary }]}
+              >
+                <Feather name="share-2" size={24} color="#fff" />
+              </View>
+              <View style={styles.optionContent}>
+                <Text style={styles.optionTitle}>Más opciones</Text>
+                <Text style={styles.optionDescription}>
+                  SMS, Email, Telegram, etc.
+                </Text>
+              </View>
+              <Feather name="chevron-right" size={20} color="#999" />
             </TouchableOpacity>
           </View>
 
-          <ScrollView
-            style={styles.content}
-            contentContainerStyle={styles.contentContainer}
-            showsVerticalScrollIndicator={false}
-          >
-            {/* Preview Card */}
-            <View style={styles.previewSection}>
-              <Text style={styles.sectionTitle}>Vista Previa</Text>
-              <View style={styles.cardWrapper}>
-                <ShareGroupCard
-                  ref={cardRef}
-                  groupName={groupData.groupName}
-                  description={groupData.description}
-                  memberCount={groupData.memberCount}
-                  creatorName={groupData.creatorName}
-                />
-              </View>
+          {isSharing && (
+            <View style={styles.loadingOverlay}>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={styles.loadingText}>
+                Preparando para compartir...
+              </Text>
+            </View>
+          )}
+          {/* Preview Card */}
+          <View style={styles.previewSection}>
+            <Text style={styles.sectionTitle}>Vista Previa</Text>
+
+            <View style={[styles.cardWrapper]}>
+              <ShareGroupCard
+                ref={cardRef}
+                groupName={groupData.groupName}
+                description={groupData.description}
+                memberCount={groupData.memberCount}
+                creatorName={groupData.creatorName}
+              />
               <Text style={styles.previewHint}>
                 💡 Esta imagen se generará al compartir en Stories
               </Text>
             </View>
-
-            {/* Share Options */}
-            <View style={styles.optionsSection}>
-              <Text style={styles.sectionTitle}>¿Dónde compartir?</Text>
-
-              {/* Share as Image (Stories) */}
-              <TouchableOpacity
-                style={styles.optionButton}
-                onPress={() => handleShare("image")}
-                disabled={isSharing}
-              >
-                <View
-                  style={[styles.optionIcon, { backgroundColor: "#E4405F" }]}
-                >
-                  <Feather name="instagram" size={24} color="#fff" />
-                </View>
-                <View style={styles.optionContent}>
-                  <Text style={styles.optionTitle}>
-                    Stories de Instagram/TikTok
-                  </Text>
-                  <Text style={styles.optionDescription}>
-                    Comparte la imagen en tus historias
-                  </Text>
-                </View>
-                <Feather name="chevron-right" size={20} color="#999" />
-              </TouchableOpacity>
-
-              {/* WhatsApp */}
-              <TouchableOpacity
-                style={styles.optionButton}
-                onPress={() => handleShare("whatsapp")}
-                disabled={isSharing}
-              >
-                <View
-                  style={[styles.optionIcon, { backgroundColor: "#25D366" }]}
-                >
-                  <Feather name="message-circle" size={24} color="#fff" />
-                </View>
-                <View style={styles.optionContent}>
-                  <Text style={styles.optionTitle}>WhatsApp</Text>
-                  <Text style={styles.optionDescription}>
-                    Envía el enlace por WhatsApp
-                  </Text>
-                </View>
-                <Feather name="chevron-right" size={20} color="#999" />
-              </TouchableOpacity>
-
-              {/* More Options */}
-              <TouchableOpacity
-                style={styles.optionButton}
-                onPress={() => handleShare("native")}
-                disabled={isSharing}
-              >
-                <View
-                  style={[
-                    styles.optionIcon,
-                    { backgroundColor: colors.primary },
-                  ]}
-                >
-                  <Feather name="share-2" size={24} color="#fff" />
-                </View>
-                <View style={styles.optionContent}>
-                  <Text style={styles.optionTitle}>Más opciones</Text>
-                  <Text style={styles.optionDescription}>
-                    SMS, Email, Telegram, etc.
-                  </Text>
-                </View>
-                <Feather name="chevron-right" size={20} color="#999" />
-              </TouchableOpacity>
-            </View>
-
-            {isSharing && (
-              <View style={styles.loadingOverlay}>
-                <ActivityIndicator size="large" color={colors.primary} />
-                <Text style={styles.loadingText}>
-                  Preparando para compartir...
-                </Text>
-              </View>
-            )}
-          </ScrollView>
-        </View>
-      </View>
-    </Modal>
+          </View>
+        </ScrollView>
+      }
+    />
   );
 };
 
@@ -191,6 +176,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   container: {
+    flex: 1,
     backgroundColor: "#fff",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
