@@ -9,7 +9,10 @@ export interface ShareGroupData {
   memberCount?: number;
   creatorName?: string;
 }
-
+const generateLinks = (groupId: string) => ({
+  deepLink: `beland://groups/${groupId}`, // abre la app
+  webLink: `https://beland.app/groups/${groupId}`, // fallback universal
+});
 /**
  * Genera el deep link de Expo para el grupo
  */
@@ -22,9 +25,12 @@ const generateDeepLink = (groupId: string): string => {
 /**
  * Genera el mensaje de invitación para compartir un grupo
  */
-const generateShareMessage = (data: ShareGroupData): string => {
+const generateShareMessage = (
+  data: ShareGroupData,
+  isMobile: boolean,
+): string => {
   const { groupName, groupId, description } = data;
-  const deepLink = generateDeepLink(groupId);
+  const { deepLink, webLink } = generateLinks(groupId);
 
   let message = `🎉 ¡Te invito a unirte a mi grupo en Beland!\n\n`;
   message += `📌 *${groupName}*\n`;
@@ -33,8 +39,11 @@ const generateShareMessage = (data: ShareGroupData): string => {
     message += `\n${description}\n`;
   }
 
-  // Por el momento solo compartimos la URL genérica
-  message += `\n🔗 Descarga la app: https://beland.app`;
+  if (isMobile) {
+    message += `\n📲 En la app: ${deepLink}`;
+  } else {
+    message += `\n🔗 Abrir grupo: ${webLink}`;
+  }
 
   return message;
 };
@@ -43,15 +52,25 @@ const generateShareMessage = (data: ShareGroupData): string => {
  * Comparte el grupo en WhatsApp
  */
 export const shareOnWhatsApp = async (data: ShareGroupData): Promise<void> => {
-  const message = generateShareMessage(data);
-  const url = `whatsapp://send?text=${encodeURIComponent(message)}`;
-
   try {
-    const canOpen = await Linking.canOpenURL(url);
+    if (Platform.OS === "web") {
+      const message = generateShareMessage(data, false);
+      const encoded = encodeURIComponent(message);
+      const webUrl = `https://wa.me/?text=${encoded}`;
+      window.open(webUrl, "_blank");
+      return;
+    }
+
+    const message = generateShareMessage(data, true);
+    // 👉 Mobile
+    const encoded = encodeURIComponent(message);
+    const appUrl = `whatsapp://send?text=${encoded}`;
+    const canOpen = await Linking.canOpenURL(appUrl);
+
     if (canOpen) {
-      await Linking.openURL(url);
+      await Linking.openURL(appUrl);
     } else {
-      // Fallback al share nativo si WhatsApp no está instalado
+      // fallback
       await Share.share({ message });
     }
   } catch (error) {
@@ -64,7 +83,7 @@ export const shareOnWhatsApp = async (data: ShareGroupData): Promise<void> => {
  * Comparte el grupo usando el share nativo del dispositivo
  */
 export const shareNative = async (data: ShareGroupData): Promise<void> => {
-  const message = generateShareMessage(data);
+  const message = generateShareMessage(data, true);
 
   try {
     const result = await Share.share({
@@ -95,14 +114,14 @@ export const shareNative = async (data: ShareGroupData): Promise<void> => {
  */
 export const shareGroupImage = async (
   imageUri: string,
-  data: ShareGroupData
+  data: ShareGroupData,
 ): Promise<void> => {
   try {
     if (!(await Sharing.isAvailableAsync())) {
       throw new Error("Sharing no está disponible en este dispositivo");
     }
 
-    const message = generateShareMessage(data);
+    const message = generateShareMessage(data, true);
 
     await Sharing.shareAsync(imageUri, {
       mimeType: "image/png",
@@ -120,7 +139,7 @@ export const shareGroupImage = async (
  */
 export const captureAndShareGroupCard = async (
   viewRef: any,
-  data: ShareGroupData
+  data: ShareGroupData,
 ): Promise<void> => {
   try {
     if (!viewRef || !viewRef.current) {
@@ -138,7 +157,7 @@ export const captureAndShareGroupCard = async (
 
       if (!domNode) {
         throw new Error(
-          "No se pudo obtener el nodo DOM para la captura en web"
+          "No se pudo obtener el nodo DOM para la captura en web",
         );
       }
 
@@ -183,7 +202,7 @@ export const captureAndShareGroupCard = async (
  */
 export const shareToInstagramStory = async (
   imageUri: string,
-  data: ShareGroupData
+  data: ShareGroupData,
 ): Promise<void> => {
   try {
     // Instagram Stories requiere una imagen
@@ -207,7 +226,7 @@ export const shareToInstagramStory = async (
  */
 export const shareToTikTok = async (
   imageUri: string,
-  data: ShareGroupData
+  data: ShareGroupData,
 ): Promise<void> => {
   try {
     if (!(await Sharing.isAvailableAsync())) {
@@ -230,7 +249,7 @@ export const shareToTikTok = async (
  */
 export const showShareOptions = async (
   data: ShareGroupData,
-  onOptionSelected?: (option: string) => void
+  onOptionSelected?: (option: string) => void,
 ): Promise<void> => {
   try {
     // Por ahora usamos el share nativo que muestra todas las opciones disponibles

@@ -14,9 +14,11 @@ import {
   shareNative,
   captureAndShareGroupCard,
   ShareGroupData,
+  shareOnWhatsApp,
 } from "@/utils/shareHelper";
 import Feather from "react-native-vector-icons/Feather";
 import { colors } from "@/styles";
+import { Button } from "./buttons";
 
 interface ShareGroupModalProps {
   visible: boolean;
@@ -31,6 +33,7 @@ export const ShareGroupModal: React.FC<ShareGroupModalProps> = ({
 }) => {
   const cardRef = useRef<View>(null);
   const [isSharing, setIsSharing] = useState(false);
+  const [previewImageVisible, showPreviewImage] = useState<boolean>(false);
 
   const handleShare = async (platform: "native" | "whatsapp" | "image") => {
     setIsSharing(true);
@@ -38,7 +41,7 @@ export const ShareGroupModal: React.FC<ShareGroupModalProps> = ({
       switch (platform) {
         case "whatsapp":
           // Usamos la misma lógica de imagen para WhatsApp ya que el usuario prefiere compartir la visual
-          await captureAndShareGroupCard(cardRef, groupData);
+          await shareOnWhatsApp(groupData);
           break;
         case "image":
           await captureAndShareGroupCard(cardRef, groupData);
@@ -53,7 +56,7 @@ export const ShareGroupModal: React.FC<ShareGroupModalProps> = ({
       console.error("Error al compartir:", error);
       Alert.alert(
         "Error",
-        "No se pudo compartir. Por favor, intenta de nuevo."
+        "No se pudo compartir. Por favor, intenta de nuevo.",
       );
     } finally {
       setIsSharing(false);
@@ -82,23 +85,6 @@ export const ShareGroupModal: React.FC<ShareGroupModalProps> = ({
             contentContainerStyle={styles.contentContainer}
             showsVerticalScrollIndicator={false}
           >
-            {/* Preview Card */}
-            <View style={styles.previewSection}>
-              <Text style={styles.sectionTitle}>Vista Previa</Text>
-              <View style={styles.cardWrapper}>
-                <ShareGroupCard
-                  ref={cardRef}
-                  groupName={groupData.groupName}
-                  description={groupData.description}
-                  memberCount={groupData.memberCount}
-                  creatorName={groupData.creatorName}
-                />
-              </View>
-              <Text style={styles.previewHint}>
-                💡 Esta imagen se generará al compartir en Stories
-              </Text>
-            </View>
-
             {/* Share Options */}
             <View style={styles.optionsSection}>
               <Text style={styles.sectionTitle}>¿Dónde compartir?</Text>
@@ -177,6 +163,23 @@ export const ShareGroupModal: React.FC<ShareGroupModalProps> = ({
                 </Text>
               </View>
             )}
+            {/* Preview Card */}
+            <View style={styles.previewSection}>
+              <Text style={styles.sectionTitle}>Vista Previa</Text>
+
+              <View style={[styles.cardWrapper]}>
+                <ShareGroupCard
+                  ref={cardRef}
+                  groupName={groupData.groupName}
+                  description={groupData.description}
+                  memberCount={groupData.memberCount}
+                  creatorName={groupData.creatorName}
+                />
+                <Text style={styles.previewHint}>
+                  💡 Esta imagen se generará al compartir en Stories
+                </Text>
+              </View>
+            </View>
           </ScrollView>
         </View>
       </View>
