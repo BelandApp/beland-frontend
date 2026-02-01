@@ -56,7 +56,7 @@ export const WrapperModal: React.FC<WrapperModalProps> = ({
           {header}
           <Button
             variant="onlyIcon"
-            icon={<ArrowDownCircle color={colors.belandOrange} size={32} />}
+            icon={<ArrowDown color={colors.belandOrange} size={24} />}
             onPress={() => refRBSheet.current?.close()}
             title="cerrar"
           />

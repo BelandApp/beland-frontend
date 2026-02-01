@@ -53,8 +53,8 @@ const VARIANT_STYLES = {
   onlyIcon: {
     container: {
       backgroundColor: "transparent",
-      // borderWidth: 1,
-      // borderColor: colors.belandOrange,
+      borderWidth: 2,
+      borderColor: colors.belandOrange,
       paddingVertical: 6,
       paddingHorizontal: 6,
     },
