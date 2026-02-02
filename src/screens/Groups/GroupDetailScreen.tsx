@@ -155,16 +155,17 @@ export const GroupDetailScreen = () => {
 
       if (!result.canceled && result.assets[0]) {
         setUploadingImage(true);
-        const imageUrl = await GroupService.uploadImage(result.assets[0]);
-        // Update local and backend
-        await GroupService.updateGroup(groupId, {
-          ...group,
-          description: group?.description || "",
-          name: group?.name,
-          image_url: imageUrl,
+        const formData = new FormData();
+        formData.append("file", {
+          uri: result.assets[0].uri,
+          name: `group_${groupId}_cover.jpg`,
+          type: "image/jpeg",
         } as any);
+        await GroupService.updateGroup(groupId, formData as any);
 
-        setGroup((prev) => (prev ? { ...prev, image_url: imageUrl } : null));
+        setGroup((prev) =>
+          prev ? { ...prev, image_url: result.assets[0].uri } : null,
+        );
         notify.success({ message: "Imagen de portada actualizada" });
       }
     } catch (error) {
