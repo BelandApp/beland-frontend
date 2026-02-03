@@ -3,6 +3,7 @@
  * Handles withdraw accounts, account types, and withdraw requests
  */
 
+import { User } from "src/context";
 import {
   CoreApiService,
   PaginatedResponse,
@@ -25,6 +26,10 @@ export interface WithdrawAccount {
   currency?: number;
   withdraw_account_type: WithdrawAccountType;
   type?: WithdrawAccountType; // For backward compatibility
+  bankName: string;
+  holderDocument: string;
+  accountNumber: string;
+  country: string;
 }
 
 export interface WithdrawAccountType {
@@ -61,10 +66,15 @@ export interface WithdrawRequest {
 export interface UserWithdraw {
   id: string;
   user_id: string;
+  user: User;
   withdraw_account_id: string;
   amount_becoin: number;
   amount_usd: number;
-  status: "pending" | "completed" | "failed";
+  status: {
+    code: string;
+    description: string;
+    name: string;
+  };
   reference?: string;
   observation?: string;
   created_at: string;
@@ -182,7 +192,10 @@ class WithdrawServiceClass extends CoreApiService {
     limit: number = 10,
   ): Promise<PaginatedResponse<UserWithdraw>> {
     const queryString = this.buildQueryString({ page, limit });
-    return this.get(`${this.ENDPOINTS.USER_WITHDRAW}?${queryString}`);
+    const res = await this.get(
+      `${this.ENDPOINTS.USER_WITHDRAW}?${queryString}`,
+    );
+    return adaptSequelizePagination<UserWithdraw>(res, page, limit);
   }
 
   // Utility Methods
