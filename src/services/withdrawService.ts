@@ -74,12 +74,15 @@ export interface UserWithdraw {
     code: string;
     description: string;
     name: string;
+    created_at: string;
+    updated_at: string;
   };
   reference?: string;
   observation?: string;
   created_at: string;
   updated_at: string;
   withdraw_account: WithdrawAccount;
+  transaction_banck_id: string;
 }
 
 class WithdrawServiceClass extends CoreApiService {
@@ -87,6 +90,7 @@ class WithdrawServiceClass extends CoreApiService {
     WITHDRAW_ACCOUNTS: "withdraw-account",
     WITHDRAW_ACCOUNT_TYPES: "withdraw-account-type",
     USER_WITHDRAW: "user-withdraw",
+    USER_WITHDRAW_FINISH: "user-withdraw/withdraw-",
   } as const;
 
   /**
@@ -196,6 +200,34 @@ class WithdrawServiceClass extends CoreApiService {
       `${this.ENDPOINTS.USER_WITHDRAW}?${queryString}`,
     );
     return adaptSequelizePagination<UserWithdraw>(res, page, limit);
+  }
+  /**
+   * Aprove user withdraw ID
+   */
+  async approveWithdraw(data: {
+    user_withdraw_id: string;
+    observation?: string;
+    reference?: string;
+  }): Promise<UserWithdraw> {
+    const res = await this.post(
+      `${this.ENDPOINTS.USER_WITHDRAW_FINISH}completed`,
+      data,
+    );
+    return res;
+  }
+  /**
+   * Edit user withdraw ID
+   */
+  async rejectWithdraw(data: {
+    user_withdraw_id: string;
+    observation?: string;
+    reference?: string;
+  }): Promise<UserWithdraw> {
+    const res = await this.post(
+      `${this.ENDPOINTS.USER_WITHDRAW_FINISH}failed`,
+      data,
+    );
+    return res;
   }
 
   // Utility Methods
