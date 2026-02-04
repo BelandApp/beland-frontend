@@ -13,7 +13,7 @@ import {
   NavigationContainerRef,
   NavigationState,
 } from "@react-navigation/native";
-import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import {
   RootStackNavigator,
   RootStackParamList,
@@ -23,7 +23,7 @@ import { useAuth, AuthProvider } from "src/context";
 import { TokenService } from "src/services/auth/token.service";
 import { SocketService } from "src/services/SocketService";
 import { NotificationProvider } from "./src/hooks/NotificationContext";
-import { NotificationBanner } from "./src/components/ui/NotificationBanner";
+import { NotificationBanner } from "./src/components/shared/notification";
 import { usePaymentSocket } from "src/hooks/usePaymentSocket";
 import { useOrderSocket } from "src/hooks/useOrderSocket";
 import { colors } from "src/styles";
@@ -164,7 +164,7 @@ const AppContent = () => {
         linking={linking}
       >
         <RootStackNavigator />
-
+        <NotificationBanner />
         <Toast config={toastConfig} />
         {shouldShowQRButton && <FloatingQRButton onPress={handleQRPress} />}
       </NavigationContainer>
@@ -185,7 +185,6 @@ const App = () => {
             </TooltipProvider>
           </ErrorBoundary>
           <GlobalNotification />
-          <NotificationBanner />
         </NotificationProvider>
       </AuthProvider>
     </SafeAreaProvider>
