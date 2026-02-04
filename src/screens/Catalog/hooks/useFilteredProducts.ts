@@ -1,4 +1,4 @@
-import { useMemo, useEffect, useRef } from "react";
+import { useMemo, useEffect, useRef, useState } from "react";
 import { useProducts } from "src/hooks";
 
 export const useFilteredProducts = ({
@@ -10,29 +10,20 @@ export const useFilteredProducts = ({
   filters: any;
   categories: { id: string; name: string }[];
 }) => {
-  const { products, loading, updateQuery, refresh, error } = useProducts();
-
-  const lastQueryRef = useRef<string>("");
+  const { products, loading, pagination, updateQuery, error, refresh } =
+    useProducts();
 
   /* ---------------- BACKEND QUERY ---------------- */
 
-  const query = useMemo(
-    () => ({
-      page: 1,
-      category_id: filters.categories?.length
+  useEffect(() => {
+    updateQuery({
+      category_id: filters.categories?.[0]
         ? categories.find((c) => c.name === filters.categories[0])?.id
         : undefined,
-    }),
-    [filters.categories, categories]
-  );
-
-  useEffect(() => {
-    const serialized = JSON.stringify(query);
-    if (serialized !== lastQueryRef.current) {
-      lastQueryRef.current = serialized;
-      updateQuery(query);
-    }
-  }, [query]);
+      sortBy: filters.sortBy,
+      order: filters.order,
+    });
+  }, [filters]);
 
   /* ---------------- FRONTEND FILTERING ---------------- */
 
@@ -92,6 +83,7 @@ export const useFilteredProducts = ({
   return {
     loading,
     products: filteredProducts,
+    pagination,
     refresh,
     error,
   };

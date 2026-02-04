@@ -23,18 +23,18 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
       </View>
     );
   }
+  console.log("Rendering ProductGrid with products:", products);
 
   return (
     <View style={productStyles.productGrid}>
-        {products.map((product) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            onAddToCart={onAddToCart}
-            isAdding={addingProductId === product.id}
-          />
-        ))}
-
+      {products.map((product) => (
+        <ProductCard
+          key={product.id}
+          product={product}
+          onAddToCart={onAddToCart}
+          isAdding={addingProductId === product.id}
+        />
+      ))}
     </View>
   );
 };
