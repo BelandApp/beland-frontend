@@ -311,8 +311,17 @@ class GroupServiceClass extends CoreApiService {
   /**
    * Update a group
    */
-  async updateGroup(id: string, data: UpdateGroupDto): Promise<Group> {
+  async updateGroup(
+    id: string,
+    data: UpdateGroupDto | FormData,
+  ): Promise<Group> {
     return this.put<Group>(`${this.ENDPOINTS.GROUPS}/${id}`, data);
+  }
+  /**
+   * Update a image of a group
+   */
+  async uploadImage(id: string, image: FormData): Promise<string> {
+    return this.patch(`${this.ENDPOINTS.GROUPS}/image/${id}`, image);
   }
 
   /**
@@ -659,20 +668,6 @@ class GroupServiceClass extends CoreApiService {
   /**
    * Get group privacy options
    */
-  async uploadImage(file: any): Promise<string> {
-    const formData = new FormData();
-    formData.append("file", {
-      uri: file.uri,
-      type: "image/jpeg", // Ajustar según el tipo real si es necesario
-      name: "upload.jpg",
-    } as any);
-
-    const response = await this.postFormData<string>(
-      "cloudinary/upload-image", // Endpoint relativo
-      formData,
-    );
-    return response;
-  }
 
   async getGroupPrivacies(): Promise<GroupPrivacy[]> {
     const res = await this.get<any>("groups/privacy-type");
