@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Alert } from "react-native";
 import {
   GroupService,
@@ -7,7 +7,9 @@ import {
   PaymentType,
 } from "@/services/GroupApiService";
 import { UserAddress } from "@/services/addressService";
-
+import { CloudinaryService } from "src/services/cloudinary/cloudinary.service";
+import { notify } from "src/hooks/notification/notify.external";
+import * as ImagePicker from "expo-image-picker";
 export type Participant = {
   id: string;
   name: string;
@@ -19,15 +21,15 @@ export type ProductItem = { id: string; name: string; price: number };
 
 export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
   // Form State
-  const [groupName, setGroupName] = React.useState("");
-  const [groupType, setGroupType] = React.useState("");
-  const [description, setDescription] = React.useState("");
-  const [privacy, setPrivacy] = React.useState<string>("");
-  const [invitationMsg, setInvitationMsg] = React.useState<string>("");
-  const [paymentTypeId, setPaymentTypeId] = React.useState<string>("");
-  const [userAddressId, setUserAddressId] = React.useState<string>("");
-  const [eventDate, setEventDate] = React.useState<string>("");
-
+  const [groupName, setGroupName] = useState("");
+  const [groupType, setGroupType] = useState("");
+  const [description, setDescription] = useState("");
+  const [privacy, setPrivacy] = useState<string>("");
+  const [invitationMsg, setInvitationMsg] = useState<string>("");
+  const [paymentTypeId, setPaymentTypeId] = useState<string>("");
+  const [userAddressId, setUserAddressId] = useState<string>("");
+  const [eventDate, setEventDate] = useState<string>("");
+  const [imageFile, setImageFile] = useState<any | null>(null);
   // Data Options State
   const [groupTypes, setGroupTypes] = React.useState<GroupType[]>([]);
   const [privacyOptions, setPrivacyOptions] = React.useState<GroupPrivacy[]>(
@@ -41,7 +43,7 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
   const [isCreating, setIsCreating] = React.useState(false);
 
   // Load all required data on mount
-  React.useEffect(() => {
+  useEffect(() => {
     let mounted = true;
     const loadData = async () => {
       try {
@@ -85,28 +87,63 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
 
   const validate = () => {
     if (!groupName || groupName.trim() === "") {
-      Alert.alert("Validación", "El nombre del grupo es requerido");
+      notify.error({ message: "El nombre del grupo es requerido" });
       return false;
     }
     if (!groupType) {
-      Alert.alert("Validación", "Debes seleccionar un tipo de grupo");
+      notify.error({ message: "Debes seleccionar un tipo de grupo" });
       return false;
     }
     if (!paymentTypeId) {
-      Alert.alert("Validación", "Debes seleccionar un método de pago");
+      notify.error({ message: "Debes seleccionar un método de pago" });
       return false;
     }
     if (!eventDate) {
-      Alert.alert("Validación", "Debes seleccionar una fecha para el evento");
+      notify.error({ message: "Debes seleccionar una fecha para el evento" });
       return false;
     }
     return true;
   };
+  const handlePickImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect: [16, 9],
+        quality: 0.8,
+      });
 
+      if (!result.canceled && result.assets[0]) {
+        setIsLoadingData(true);
+        setImageFile(result.assets[0]);
+      }
+    } catch (error) {
+      console.error(error);
+      notify.error({ message: "Error al subir la imagen" });
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
   const createGroup = async () => {
     if (!validate()) return null;
+    console.log("pase");
     setIsCreating(true);
     try {
+      // ===============================
+      // 🖼️ CREAMOS CLOUDINARY URL
+      // ===============================
+      // const imageUrl = imageFile
+      //   ? await GroupService.uploadImage(imageFile)
+      //   : "";
+
+      // if (!imageUrl)
+      //   notify.error({
+      //     message: "No pudimos guardar tu imagen",
+      //     message2: "No te preocupes puedes editar dentro del grupo",
+      //   });
+      // ===============================
+      // CREAMOS GRUPO
+      // ===============================
       const payload: any = {
         name: groupName,
         group_type_id: groupType,
@@ -114,6 +151,7 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
         payment_type_id: paymentTypeId,
         user_address_id: userAddressId,
         event_at: eventDate,
+        // image: imageUrl ? imageUrl : "",
       };
 
       const desc = description?.trim();
@@ -141,6 +179,7 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
     paymentTypeId,
     userAddressId,
     eventDate,
+    imageFile,
 
     // Setters
     setGroupName,
@@ -165,6 +204,7 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
 
     // Actions
     createGroup,
+    handlePickImage,
   } as const;
 };
 

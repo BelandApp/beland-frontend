@@ -1,3 +1,4 @@
+import { CloudinaryService } from "./cloudinary/cloudinary.service";
 import { CoreApiService, PaginatedResponse } from "./core/ApiService";
 
 // Group Types
@@ -667,10 +668,7 @@ class GroupServiceClass extends CoreApiService {
       name: "upload.jpg",
     } as any);
 
-    const response = await this.postFormData<string>(
-      "cloudinary/upload-image", // Endpoint relativo
-      formData,
-    );
+    const response = await CloudinaryService.uploadImage(formData);
     return response;
   }
 

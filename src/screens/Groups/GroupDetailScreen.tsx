@@ -39,6 +39,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { ArrowLeftIcon, CircleArrowLeftIcon } from "lucide-react-native";
 import { colors } from "src/design-system";
 import { position } from "html2canvas/dist/types/css/property-descriptors/position";
+import { CloudinaryService } from "src/services/cloudinary/cloudinary.service";
 
 type GroupDetailParams = { groupId: string };
 

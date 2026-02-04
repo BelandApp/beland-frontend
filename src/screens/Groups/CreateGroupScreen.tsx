@@ -19,8 +19,9 @@ import { ShareGroupModal } from "@/components/shared/ShareGroupModal";
 import { useAuth } from "@/context";
 import { useNotify } from "@/hooks";
 import { Group } from "@/services/GroupApiService";
-import { ThemedHeader } from "src/components";
+import { Button, ThemedHeader } from "src/components";
 import { useResponsiveLayout } from "../Home";
+import { colors } from "src/styles";
 
 export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
   const notify = useNotify();
@@ -37,6 +38,7 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
     paymentTypeId,
     userAddressId,
     eventDate,
+    imageFile,
 
     // Setters
     setGroupName,
@@ -61,6 +63,7 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
 
     // Actions
     createGroup,
+    handlePickImage,
   } = useCreateGroupLogic({ navigation });
 
   // Local UI State
@@ -187,15 +190,33 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
                   </TouchableOpacity>
                 )}
               </View>
-
-              <Field
-                label="Descripción"
-                value={description}
-                onChangeText={setDescription}
-                placeholder="¿De qué trata este evento?"
-                multiline
-                className="mt-4"
-              />
+              <View className="flex flex-row justify-between items-end gap-2">
+                <Field
+                  label="Descripción"
+                  value={description}
+                  onChangeText={setDescription}
+                  placeholder="¿De qué trata este evento?"
+                  multiline
+                  className="mt-4"
+                />
+                <Button
+                  title="Cargar imagen"
+                  onPress={handlePickImage}
+                  icon={
+                    <Feather
+                      name={imageFile ? "check" : "camera"}
+                      size={20}
+                      color={imageFile ? "green" : "#f97316"}
+                    />
+                  }
+                  variant="onlyIcon"
+                  style={{
+                    borderColor: imageFile ? "#00e074" : "#f97316",
+                    paddingVertical: 13,
+                    borderRadius: 16,
+                  }}
+                />
+              </View>
             </Card>
           </View>
 
@@ -351,7 +372,7 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
             <Text className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3 ml-1">
               Ubicación y Mensaje
             </Text>
-            <Card>
+            <Card className="min-h-[350px]">
               <Text className="text-base font-medium mb-3 text-gray-700">
                 Dirección
               </Text>
@@ -359,8 +380,8 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
               {userAddresses.length > 0 ? (
                 <ScrollView
                   horizontal
-                  showsHorizontalScrollIndicator={false}
-                  className="mb-3"
+                  showsHorizontalScrollIndicator={isWeb ? true : false}
+                  className="mb-3 pb-3"
                 >
                   <View className="flex-row gap-3 pr-4">
                     {userAddresses.map((addr) => (
@@ -430,7 +451,6 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
                 onChangeText={setInvitationMsg}
                 placeholder="Escribe un mensaje para tus invitados..."
                 multiline
-                className="mt-2"
               />
             </Card>
           </View>
