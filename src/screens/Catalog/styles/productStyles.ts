@@ -53,10 +53,13 @@ export const productStyles = StyleSheet.create({
           minHeight: 260,
         }),
   },
+  noStock: {
+    opacity: 0.5,
+  },
   productImageContainer: {
     width: "100%",
     height: isWeb ? 140 : 120,
-    backgroundColor: "#F8F9FA",
+    backgroundColor: "transparent",
     borderRadius: 12,
     overflow: "hidden",
     marginBottom: 8,
@@ -74,6 +77,7 @@ export const productStyles = StyleSheet.create({
     width: "100%",
     height: "100%",
     borderRadius: 12,
+    backgroundColor: "transparent",
   },
   productBrand: {
     fontSize: 11,

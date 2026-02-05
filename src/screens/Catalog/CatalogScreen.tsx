@@ -45,6 +45,7 @@ export const CatalogScreen = () => {
     showCart,
     addingProductId,
   } = useCatalogCart();
+  const notify = useNotify();
   const { searchText, setSearchText, filters, setFilters } =
     useCatalogFilters();
   const { categories } = useCategories();
@@ -66,7 +67,7 @@ export const CatalogScreen = () => {
   useEffect(() => {
     scrollRef.current?.scrollTo({ y: 0, animated: true });
   }, [pagination.page]);
-  const notify = useNotify();
+
   return (
     <>
       {/* Header */}

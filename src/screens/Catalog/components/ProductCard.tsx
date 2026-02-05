@@ -9,7 +9,7 @@ import {
 } from "../../../constants/currency";
 import { CartItem } from "src/stores";
 
-export type ProductCardType = Product | CartItem;
+export type ProductCardType = Product;
 
 export interface ProductCardProps {
   product: ProductCardType;
@@ -30,7 +30,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const price = (product as any).price;
 
   return (
-    <View style={productStyles.productCard}>
+    <View
+      style={[
+        productStyles.productCard,
+        product.stock < 1 && productStyles.noStock,
+      ]}
+      className="cursor-default"
+    >
       <View style={productStyles.productImageContainer}>
         {image ? (
           <Image
@@ -69,18 +75,24 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               {formatBeCoins(convertUSDToBeCoins(price))}
             </Text>
           </View>
-          <TouchableOpacity
-            style={[
-              productStyles.addToCartButton,
-              isAdding && productStyles.addToCartButtonLoading,
-            ]}
-            onPress={() => onAddToCart(product)}
-            disabled={isAdding}
-          >
-            <Text style={productStyles.addToCartText}>
-              {isAdding ? "⟳" : "+"}
+          {product.stock > 0 ? (
+            <TouchableOpacity
+              style={[
+                productStyles.addToCartButton,
+                isAdding && productStyles.addToCartButtonLoading,
+              ]}
+              onPress={() => onAddToCart(product)}
+              disabled={isAdding}
+            >
+              <Text style={productStyles.addToCartText}>
+                {isAdding ? "⟳" : "+"}
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <Text className="text-red-500 font-semibold text-sm">
+              Sin stock
             </Text>
-          </TouchableOpacity>
+          )}
         </View>
       </View>
     </View>

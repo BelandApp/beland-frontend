@@ -12,6 +12,7 @@ export interface Product {
   inventory_count?: number;
   created_at: string;
   updated_at: string;
+  stock: number;
 }
 
 export interface Category {

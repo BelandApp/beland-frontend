@@ -30,52 +30,59 @@ export const useFilteredProducts = ({
   const filteredProducts = useMemo(() => {
     let result = [...products];
 
-    // 🔎 búsqueda por texto
+    /* filtros */
     if (searchText.trim()) {
       const q = searchText.toLowerCase();
-
-      result = result.filter((p) => {
-        const nameMatch = p.name.toLowerCase().includes(q);
-        const categoryMatch = p.category?.name?.toLowerCase().includes(q);
-
-        return nameMatch || categoryMatch;
-      });
+      result = result.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.category?.name?.toLowerCase().includes(q),
+      );
     }
 
-    // 💲 precio mínimo
     if (filters.minPrice) {
       result = result.filter((p) => p.price >= Number(filters.minPrice));
     }
-    if (filters.categories?.length) {
-      result = result.filter((p) => p.category?.name === filters.categories[0]);
-    }
-    // 💲 precio máximo
+
     if (filters.maxPrice) {
       result = result.filter((p) => p.price <= Number(filters.maxPrice));
     }
 
-    // 🔁 ordenamiento
-    if (filters.sortBy) {
-      result.sort((a, b) => {
-        const dir = filters.order === "DESC" ? -1 : 1;
-
-        switch (filters.sortBy) {
-          case "price":
-            return (a.price - b.price) * dir;
-
-          case "created_at":
-            return (
-              (new Date(a.created_at).getTime() -
-                new Date(b.created_at).getTime()) *
-              dir
-            );
-
-          case "name":
-          default:
-            return a.name.localeCompare(b.name) * dir;
-        }
-      });
+    if (filters.categories?.length) {
+      result = result.filter((p) => p.category?.name === filters.categories[0]);
     }
+
+    /* 🔁 SORT FINAL (stock SIEMPRE primero) */
+    result.sort((a, b) => {
+      const aHasStock = a.stock > 0;
+      const bHasStock = b.stock > 0;
+
+      // 1️⃣ prioridad: stock
+      if (aHasStock !== bHasStock) {
+        return aHasStock ? -1 : 1;
+      }
+
+      // 2️⃣ luego criterio elegido
+      if (!filters.sortBy) return 0;
+
+      const dir = filters.order === "DESC" ? -1 : 1;
+
+      switch (filters.sortBy) {
+        case "price":
+          return (a.price - b.price) * dir;
+
+        case "created_at":
+          return (
+            (new Date(a.created_at).getTime() -
+              new Date(b.created_at).getTime()) *
+            dir
+          );
+
+        case "name":
+        default:
+          return a.name.localeCompare(b.name) * dir;
+      }
+    });
 
     return result;
   }, [products, searchText, filters]);

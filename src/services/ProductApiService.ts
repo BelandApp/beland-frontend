@@ -36,7 +36,7 @@ class ProductServiceClass extends CoreApiService {
    * Get products with optional filtering and pagination
    */
   async getProducts(
-    query: ProductQuery = {}
+    query: ProductQuery = {},
   ): Promise<PaginatedResponse<Product>> {
     const queryString = this.buildQueryString(query);
     const endpoint = queryString
@@ -51,6 +51,7 @@ class ProductServiceClass extends CoreApiService {
         name: string;
         description?: string;
         cost: string;
+        quantity: number;
         price: string;
         price_becoin: string;
         image_url?: string;
@@ -68,7 +69,6 @@ class ProductServiceClass extends CoreApiService {
       page: number;
       limit: number;
     }>(endpoint);
-
     // Map backend products to frontend Product interface
     const mappedProducts: Product[] = response.products.map(
       (backendProduct) => ({
@@ -77,6 +77,7 @@ class ProductServiceClass extends CoreApiService {
         description: backendProduct.description,
         price: parseFloat(backendProduct.price),
         cost: parseFloat(backendProduct.cost),
+        stock: backendProduct.quantity,
         price_becoin: backendProduct.price_becoin
           ? parseFloat(backendProduct.price_becoin)
           : undefined,
@@ -94,7 +95,7 @@ class ProductServiceClass extends CoreApiService {
         is_active: !backendProduct.deleted_at, // If deleted_at is null, product is active
         created_at: backendProduct.created_at,
         updated_at: backendProduct.created_at, // Backend doesn't have updated_at, use created_at
-      })
+      }),
     );
 
     return {
@@ -115,6 +116,7 @@ class ProductServiceClass extends CoreApiService {
       name: string;
       description?: string;
       cost: string;
+      quantity: number;
       price: string;
       price_becoin: string;
       image_url?: string;
@@ -136,6 +138,7 @@ class ProductServiceClass extends CoreApiService {
       description: backendProduct.description,
       price: parseFloat(backendProduct.price),
       cost: parseFloat(backendProduct.cost),
+      stock: backendProduct.quantity,
       price_becoin: backendProduct.price_becoin
         ? parseFloat(backendProduct.price_becoin)
         : undefined,
@@ -244,7 +247,7 @@ class ProductServiceClass extends CoreApiService {
    */
   async getProductsByCategory(
     categoryId: string,
-    query: Omit<ProductQuery, "category_id"> = {}
+    query: Omit<ProductQuery, "category_id"> = {},
   ): Promise<PaginatedResponse<Product>> {
     return this.getProducts({ ...query, category_id: categoryId });
   }
@@ -279,7 +282,7 @@ class ProductServiceClass extends CoreApiService {
    * Check if products are available for purchase
    */
   async checkAvailability(
-    items: { product_id: string; quantity: number }[]
+    items: { product_id: string; quantity: number }[],
   ): Promise<{
     available: boolean;
     unavailable_items: string[];
@@ -309,7 +312,7 @@ class ProductServiceClass extends CoreApiService {
    */
   async deleteProduct(id: string): Promise<{ success: boolean }> {
     return this.delete<{ success: boolean }>(
-      `${this.ENDPOINTS.PRODUCTS}/${id}`
+      `${this.ENDPOINTS.PRODUCTS}/${id}`,
     );
   }
 
@@ -318,7 +321,7 @@ class ProductServiceClass extends CoreApiService {
    */
   async uploadProductImage(
     productId: string,
-    imageFile: FormData
+    imageFile: FormData,
   ): Promise<{ image_url: string }> {
     return this.request<{ image_url: string }>(`products/${productId}/image`, {
       method: "POST",
@@ -336,11 +339,11 @@ class ProductServiceClass extends CoreApiService {
       quantity_change: number;
       operation: "add" | "subtract" | "set";
       reason?: string;
-    }
+    },
   ): Promise<ProductInventory> {
     return this.patch<ProductInventory>(
       `products/${productId}/inventory`,
-      data
+      data,
     );
   }
 }
