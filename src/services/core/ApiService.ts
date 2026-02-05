@@ -341,10 +341,17 @@ export class CoreApiService {
     data?: any,
     options: RequestOptions = {},
   ): Promise<T> {
+    const isFormData =
+      typeof FormData !== "undefined" && data instanceof FormData;
+
     return this.request<T>(endpoint, {
       ...options,
       method: "PUT",
-      body: data ? JSON.stringify(data) : undefined,
+      body: isFormData ? data : data ? JSON.stringify(data) : undefined,
+      headers: {
+        ...(options.headers || {}),
+        ...(isFormData ? {} : { "Content-Type": "application/json" }),
+      },
     });
   }
 
@@ -356,10 +363,17 @@ export class CoreApiService {
     data?: any,
     options: RequestOptions = {},
   ): Promise<T> {
+    const isFormData =
+      typeof FormData !== "undefined" && data instanceof FormData;
+
     return this.request<T>(endpoint, {
       ...options,
       method: "PATCH",
-      body: data ? JSON.stringify(data) : undefined,
+      body: isFormData ? data : data ? JSON.stringify(data) : undefined,
+      headers: {
+        ...(options.headers || {}),
+        ...(isFormData ? {} : { "Content-Type": "application/json" }),
+      },
     });
   }
 
