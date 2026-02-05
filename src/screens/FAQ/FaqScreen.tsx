@@ -24,12 +24,12 @@ const FAQScreen: React.FC = () => {
   );
 };
 const renderItem = ({ item }: { item: FAQreturn }) => (
-  <View className="flex flex-col bg-beland-border rounded-lg mt-1 p-2">
+  <View className="flex flex-col bg-[#FFFFFF] rounded-lg mt-1 p-2 gap-1">
     <View className="flex flex-row items-center gap-2">
       <Text className="text-orange-500 text-lg font-semibold">{item.id}</Text>
       <Text className="font-bold italic text-lg">{item.question}</Text>
     </View>
-    <View className="flex flex-row items-center gap-2">
+    <View className="flex md:flex-row items-center gap-2">
       <Text className="pl-6">{item.answer}</Text>
       {item.link && (
         <Button
@@ -58,16 +58,18 @@ const renderItem = ({ item }: { item: FAQreturn }) => (
           <Text className=" px-2">{sub.message}</Text>
           {sub.list &&
             sub.list.map((article) => (
-              <View className="flex flex-row gap-1 items-center">
-                <Text className="capitalize underline">
-                  {article.split(":")[0]}:
-                </Text>
-                <Text>{article.split(":")[1]}</Text>
-              </View>
+              <Text className="capitalize px-2">{article}</Text>
             ))}
         </View>
       ))}
-    {item.messageBeland && <Text>👉 Mensaje Beland: {item.messageBeland}</Text>}
+    {item.messageBeland && (
+      <View className="flex flex-row gap-1 line-clamp-1">
+        <Text className="text-beland-orange-500 font-semibold text-end">
+          👉 Mensaje Beland:
+        </Text>
+        <Text>{item.messageBeland}</Text>
+      </View>
+    )}
   </View>
 );
 export default FAQScreen;
