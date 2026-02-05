@@ -29,7 +29,7 @@ const OrdersScreen: React.FC = () => {
     orderCounts,
   } = useOrdersStoreAPI();
   const [selectedFilter, setSelectedFilter] = useState<OrderStatus | "all">(
-    "all"
+    "all",
   );
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -53,7 +53,7 @@ const OrdersScreen: React.FC = () => {
         await requireAuth(async () => {
           // Si hay un filtro activo (no "all"), cargar todas las órdenes para filtrar correctamente
           // Si no hay filtro, usar paginación normal
-          const limit = selectedFilter === "all" ? ordersPerPage : 1000;
+          const limit = selectedFilter === "all" ? ordersPerPage : 100;
           const page = selectedFilter === "all" ? currentPage : 1;
 
           const result = await loadUserOrders(page, limit);
@@ -90,7 +90,7 @@ const OrdersScreen: React.FC = () => {
   const displayedOrders = useMemo(() => {
     const sorted = [...orders].sort(
       (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
 
     // Aplicar filtro local
@@ -438,12 +438,12 @@ const OrdersScreen: React.FC = () => {
                     order.status === "recycled"
                       ? "100%"
                       : order.status === "shipped"
-                      ? "75%"
-                      : order.status === "preparing"
-                      ? "50%"
-                      : order.status === "confirmed"
-                      ? "25%"
-                      : "10%",
+                        ? "75%"
+                        : order.status === "preparing"
+                          ? "50%"
+                          : order.status === "confirmed"
+                            ? "25%"
+                            : "10%",
                 },
               ]}
             />

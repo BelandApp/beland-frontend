@@ -14,6 +14,7 @@ import { CoreApiService } from "src/services/core/ApiService";
 const core = new CoreApiService();
 import { CartService } from "@/services";
 import { CreateOrderRequest, DeliveryAddress } from "src/types";
+import { COORDINATES_HAMONI } from "src/constants/deliveryCoordinats";
 
 export type DeliveryStep = "select" | "form" | "processing";
 type OrderSubmitStatus = "idle" | "loading" | "success" | "error";
@@ -23,13 +24,14 @@ export type preOrderType = {
   addressId: string;
   cost: number;
 };
+
 export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
   const [step, setStep] = useState<DeliveryStep>("select");
   const [submitStatus, setSubmitStatus] = useState<OrderSubmitStatus>("idle");
   const [addresses, setAddresses] = useState<UserAddress[]>([]);
   const [loadingAddresses, setLoadingAddresses] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
-    null
+    null,
   );
   const [selectedAddress, setSelectedAddress] = useState<any>(null);
   const [preOrder, setPreOrder] = useState<preOrderType | null>(null);
@@ -63,7 +65,7 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
 
   /** ---------------- CREATE ADDRESS ---------------- */
   const createAddress = async (
-    address: DeliveryAddress
+    address: DeliveryAddress,
   ): Promise<string | null> => {
     const payload: CreateAddressRequest = {
       addressLine1: address.street,
@@ -116,8 +118,8 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
       const deliveryCost = await CartService.estimateShipping({
         customerLat: address.latitude,
         customerLon: address.longitude,
-        driverLat: -0.171539,
-        driverLon: -78.480174,
+        driverLat: COORDINATES_HAMONI[0],
+        driverLon: COORDINATES_HAMONI[1],
       });
       setSelectedAddress(address);
       setSelectedAddressId(id);
@@ -162,7 +164,7 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
 
         // Actualizar dirección del carrito
         await core.put(
-          `/carts/address/${cart.id}?address_id=${selectedAddressId}`
+          `/carts/address/${cart.id}?address_id=${selectedAddressId}`,
         );
 
         // Usar items del backend, no del store local

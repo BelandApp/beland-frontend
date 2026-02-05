@@ -1,69 +1,49 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { ProductQuery, Product } from "@/types";
 import { ProductService } from "src/services";
 import { useCache } from "../cache/useCache";
+import { usePagination } from "../pagination/usePagination";
+export function useProducts(initialQuery: ProductQuery = {}) {
+  const limit = initialQuery.limit ?? 100;
 
-export function useProducts(
-  initialQuery: ProductQuery = { page: 1, sortBy: "name", order: "ASC" }
-) {
-  const [query, setQuery] = useState<ProductQuery>(initialQuery);
-  const { data, loading, refresh, error } = useCache({
-    key: "products_cache",
-    duration: 3 * 60 * 60 * 1000, // 3 horas
+  const [query, setQuery] = useState<ProductQuery>({
+    ...initialQuery,
+    page: 1,
+    limit,
+  });
+  const cacheKey = useMemo(() => {
+    return `products:${JSON.stringify(query)}`;
+  }, [query]);
+  const { data, loading, error, refresh } = useCache({
+    key: cacheKey,
+    duration: 3 * 60 * 60 * 1000,
     fetcher: () => ProductService.getProducts(query),
   });
-  const [page, setPage] = useState(initialQuery.page || 1);
-  const [limit, setLimit] = useState(initialQuery.limit || 10);
-  const [total, setTotal] = useState(0);
-  const [products, setProducts] = useState<Product[]>([]);
 
-  const queryKey = JSON.stringify(query);
-  const setProductsFromCache = async () => {
-    if (!data) {
-      refresh();
-      return;
-    }
-    setProducts(data?.data)
-    setLimit(data.limit)
-    setPage(data.page)
-    setTotal(data.total)
-  }
- 
+  const pagination = usePagination({
+    limit,
+    total: data?.total ?? 0,
+  });
+
+  // sincronizar page -> query
   useEffect(() => {
-    setProductsFromCache();
-  }, [data,query]);
-  const updateQuery = useCallback((newQuery: Partial<ProductQuery>) => {
-    setQuery((prev) => {
-      const next = { ...prev, ...newQuery, page: 1 };
+    setQuery((q) => ({ ...q, page: pagination.page }));
+  }, [pagination.page]);
 
-      if (JSON.stringify(prev) === JSON.stringify(next)) return prev;
-      return next;
-    });
+  const updateQuery = useCallback((partial: Partial<ProductQuery>) => {
+    setQuery((prev) => ({
+      ...prev,
+      ...partial,
+      page: 1, // reset page al filtrar
+    }));
   }, []);
 
-  const goToNextPage = useCallback(() => {
-    if (page * limit < total) {
-      setQuery((prev) => ({ ...prev, page: prev.page ? prev.page + 1 : 2 }));
-    }
-  }, [page, limit, total]);
-
-  const goToPreviousPage = useCallback(() => {
-    if (page > 1) {
-      setQuery((prev) => ({ ...prev, page: prev.page ? prev.page - 1 : 1 }));
-    }
-  }, [page]);
-
   return {
-    products,
-    total,
-    page,
-    limit,
+    products: data?.data ?? [],
     loading,
-    query,
-    updateQuery,
+    error,
     refresh,
-    goToNextPage,
-    goToPreviousPage,
-    error
+    pagination,
+    updateQuery,
   };
 }

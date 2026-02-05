@@ -3,6 +3,7 @@
  * Handles withdraw accounts, account types, and withdraw requests
  */
 
+import { User } from "src/context";
 import {
   CoreApiService,
   PaginatedResponse,
@@ -25,6 +26,10 @@ export interface WithdrawAccount {
   currency?: number;
   withdraw_account_type: WithdrawAccountType;
   type?: WithdrawAccountType; // For backward compatibility
+  bankName: string;
+  holderDocument: string;
+  accountNumber: string;
+  country: string;
 }
 
 export interface WithdrawAccountType {
@@ -61,15 +66,23 @@ export interface WithdrawRequest {
 export interface UserWithdraw {
   id: string;
   user_id: string;
+  user: User;
   withdraw_account_id: string;
   amount_becoin: number;
   amount_usd: number;
-  status: "pending" | "completed" | "failed";
+  status: {
+    code: string;
+    description: string;
+    name: string;
+    created_at: string;
+    updated_at: string;
+  };
   reference?: string;
   observation?: string;
   created_at: string;
   updated_at: string;
   withdraw_account: WithdrawAccount;
+  transaction_banck_id: string;
 }
 
 class WithdrawServiceClass extends CoreApiService {
@@ -77,6 +90,7 @@ class WithdrawServiceClass extends CoreApiService {
     WITHDRAW_ACCOUNTS: "withdraw-account",
     WITHDRAW_ACCOUNT_TYPES: "withdraw-account-type",
     USER_WITHDRAW: "user-withdraw",
+    USER_WITHDRAW_FINISH: "user-withdraw/withdraw-",
   } as const;
 
   /**
@@ -182,7 +196,38 @@ class WithdrawServiceClass extends CoreApiService {
     limit: number = 10,
   ): Promise<PaginatedResponse<UserWithdraw>> {
     const queryString = this.buildQueryString({ page, limit });
-    return this.get(`${this.ENDPOINTS.USER_WITHDRAW}?${queryString}`);
+    const res = await this.get(
+      `${this.ENDPOINTS.USER_WITHDRAW}?${queryString}`,
+    );
+    return adaptSequelizePagination<UserWithdraw>(res, page, limit);
+  }
+  /**
+   * Aprove user withdraw ID
+   */
+  async approveWithdraw(data: {
+    user_withdraw_id: string;
+    observation?: string;
+    reference?: string;
+  }): Promise<UserWithdraw> {
+    const res = await this.post(
+      `${this.ENDPOINTS.USER_WITHDRAW_FINISH}completed`,
+      data,
+    );
+    return res;
+  }
+  /**
+   * Edit user withdraw ID
+   */
+  async rejectWithdraw(data: {
+    user_withdraw_id: string;
+    observation?: string;
+    reference?: string;
+  }): Promise<UserWithdraw> {
+    const res = await this.post(
+      `${this.ENDPOINTS.USER_WITHDRAW_FINISH}failed`,
+      data,
+    );
+    return res;
   }
 
   // Utility Methods

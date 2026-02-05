@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
 
-interface NotificationData {
+export interface NotificationData {
   title: string;
   message: string;
   amount?: number;
@@ -8,6 +8,7 @@ interface NotificationData {
   persistent?: boolean; // Nueva propiedad para notificaciones persistentes
   // Meta opcional para renderizado enriquecido (ej: event-pass)
   meta?: Record<string, any> | null;
+  type?: "order" | "finance" | "event" | "generic";
 }
 
 interface NotificationContextType {
@@ -17,14 +18,14 @@ interface NotificationContextType {
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(
-  undefined
+  undefined,
 );
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [notification, setNotification] = useState<NotificationData | null>(
-    null
+    null,
   );
 
   const showNotification = useCallback(
@@ -35,12 +36,12 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
       if (!data.persistent) {
         setTimeout(() => {
           setNotification((prev) =>
-            prev ? { ...prev, visible: false } : null
+            prev ? { ...prev, visible: false } : null,
           );
         }, 4000); // Oculta después de 4 segundos solo para notificaciones normales
       }
     },
-    []
+    [],
   );
 
   const hideNotification = useCallback(() => {
@@ -60,7 +61,7 @@ export const useNotification = () => {
   const context = useContext(NotificationContext);
   if (!context)
     throw new Error(
-      "useNotification debe usarse dentro de NotificationProvider"
+      "useNotification debe usarse dentro de NotificationProvider",
     );
   return context;
 };

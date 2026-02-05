@@ -14,9 +14,9 @@ import {
   DeliveryIcon,
 } from "../../../components/icons";
 import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
-
+import { FileQuestionMark } from "lucide-react-native";
 interface FeatureCardProps {
-  type: "recycling" | "community" | "delivery";
+  type: "recycling" | "community" | "delivery" | "faq";
   onPress?: () => void;
   data?: any;
 }
@@ -58,6 +58,16 @@ export const FeatureCard: React.FC<FeatureCardProps> = ({
           subtitle: "Explora, compra y recibe a domicilio",
           description:
             "Entréganos tus residuos, apoya a recicladores y gana monedas por cuidar el planeta.",
+          color: "#0F766E",
+          bgColor: "#CCFBF1",
+        };
+      case "faq":
+        return {
+          icon: <FileQuestionMark width={48} height={48} color="#0F766E" />,
+          title: "Preguntas Frecuentes",
+          subtitle: "Descubrí Beland",
+          description:
+            "Enterate como sacar beneficio a la App y todas sus ventajas.",
           color: "#0F766E",
           bgColor: "#CCFBF1",
         };

@@ -1,3 +1,4 @@
+import { CloudinaryService } from "./cloudinary/cloudinary.service";
 import { CoreApiService, PaginatedResponse } from "./core/ApiService";
 
 // Group Types
@@ -668,6 +669,17 @@ class GroupServiceClass extends CoreApiService {
   /**
    * Get group privacy options
    */
+  async uploadImage(file: any): Promise<string> {
+    const formData = new FormData();
+    formData.append("file", {
+      uri: file.uri,
+      type: "image/jpeg", // Ajustar según el tipo real si es necesario
+      name: "upload.jpg",
+    } as any);
+
+    const response = await CloudinaryService.uploadImage(formData);
+    return response;
+  }
 
   async getGroupPrivacies(): Promise<GroupPrivacy[]> {
     const res = await this.get<any>("groups/privacy-type");

@@ -1,0 +1,1 @@
+export const COORDINATES_HAMONI = [-0.216332, -78.417362];

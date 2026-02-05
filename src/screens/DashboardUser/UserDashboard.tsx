@@ -6,9 +6,12 @@ import LeaderPanel from "./components/panels/LeaderPanel";
 import EmpresaPanel from "./components/panels/EmpresaPanel";
 import { UserPanel } from "./components/panels";
 import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import { Button } from "src/components";
+import { useCustomNavigation } from "src/hooks";
 
 export const UserDashboard: React.FC = () => {
   const { user, isLoading } = useAuth();
+  const { navigate } = useCustomNavigation();
 
   if (isLoading) {
     return (
@@ -26,6 +29,7 @@ export const UserDashboard: React.FC = () => {
           No se pudo cargar la información del usuario. Intente iniciar sesión
           nuevamente.
         </Text>
+        <Button title="Loguearte" onPress={() => navigate("Login")} />
       </View>
     );
   }

@@ -49,6 +49,7 @@ import {
 import { HistoryScreen, RecyclingMapScreen } from "../../screens";
 import FinancesManagement from "src/screens/DashboardUser/FinanceManagementScreen";
 import { GroupsStackNavigator } from "./GroupsStackNavigator";
+import FAQScreen from "src/screens/FAQ/FaqScreen";
 
 export type RootStackParamList = {
   // Auth Screens
@@ -60,6 +61,8 @@ export type RootStackParamList = {
   Orders: NavigatorScreenParams<OrdersStackParamList>;
   Groups: NavigatorScreenParams<GroupsStackParamList>;
   CreateGroup: undefined;
+  // FAQ
+  FAQ: undefined;
   // Payments
   CobrarScreen: undefined;
   SendScreen: undefined;
@@ -264,6 +267,11 @@ export const RootStackNavigator = () => {
       <Stack.Screen
         name="NewPaymentScreen"
         component={NewPaymentScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="FAQ"
+        component={FAQScreen}
         options={{ headerShown: false }}
       />
       {/* Modales */}

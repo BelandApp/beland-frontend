@@ -12,8 +12,12 @@ import { WalletActions } from "../Wallet";
 import { colors } from "src/design-system";
 
 export const HomeScreen = () => {
-  const { navigateRecyclingMapPress, navigateCommunity, navigateDelivery } =
-    useDashboardNavigation();
+  const {
+    navigateRecyclingMapPress,
+    navigateCommunity,
+    navigateDelivery,
+    navigateFaq,
+  } = useDashboardNavigation();
   const { userStats, activities } = useDashboardData();
   const { getBeCoinsInUSD } = useBeCoinsStore();
   const { loadingWallet: loading, transactions, walletData } = useWallet();
@@ -54,6 +58,7 @@ export const HomeScreen = () => {
             />
             <FeatureCard type="delivery" onPress={navigateDelivery} />
             <FeatureCard type="community" onPress={navigateCommunity} />
+            <FeatureCard type="faq" onPress={navigateFaq} />
           </View>
 
           <StatsCard

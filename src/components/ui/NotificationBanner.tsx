@@ -1,5 +1,5 @@
-// TODO REFACTORIZAR PARA REACT NATIVE
-
+// USAR SocketNotificationBanner
+// @deprecated
 import React from "react";
 import "../../styles/notificationBanner.css";
 import { useNotification } from "../../hooks/NotificationContext";
