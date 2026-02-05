@@ -258,7 +258,7 @@ const GroupExploreScreen = () => {
             key="all"
             className={`h-8 flex-row items-center gap-x-2 rounded-xl px-3 mr-2 ${
               filter === "all"
-                ? "bg-primary shadow-md"
+                ? "bg-[#F88D2A] shadow-md"
                 : "bg-white border border-gray-200"
             }`}
             onPress={() => setFilter("all")}

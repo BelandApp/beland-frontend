@@ -58,7 +58,7 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
     // Status
     isLoading,
     isLoadingData,
-
+    isValid,
     // Actions
     createGroup,
   } = useCreateGroupLogic({ navigation });
@@ -126,7 +126,18 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
                 </Text>
                 {Platform.OS === "web" ? (
                   <View className="flex-row gap-3">
-                    <View className="flex-1 border-2 border-gray-100 rounded-xl bg-gray-50 overflow-hidden flex-row items-center">
+                    <View
+                      className="  flex-1
+      border-2 border-gray-100
+      rounded-xl
+      bg-gray-50
+      overflow-hidden
+      flex-row
+      items-center
+      group
+      group-focus-within:border-[#f88e2ab7]
+      group-focus-within:bg-[#efcbaa2c]"
+                    >
                       <View className="pl-3">
                         <Feather name="calendar" size={18} color="#9CA3AF" />
                       </View>
@@ -148,14 +159,16 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
                             setEventDate(d.toISOString());
                           }
                         }}
+                        className="
+        flex-1
+        p-3
+        bg-transparent
+        outline-none
+        text-sm
+        text-gray-700
+      "
                         style={{
-                          flex: 1,
-                          padding: "12px",
-                          background: "transparent",
                           border: "none",
-                          outline: "none",
-                          fontSize: "14px",
-                          color: "#374151",
                           fontFamily: "inherit",
                         }}
                       />
@@ -189,7 +202,7 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
               </View>
 
               <Field
-                label="Descripción"
+                label="Descripción *"
                 value={description}
                 onChangeText={setDescription}
                 placeholder="¿De qué trata este evento?"
@@ -221,7 +234,7 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
                       onPress={() => setGroupType(type.id)}
                       className={`px-4 py-2 rounded-full border ${
                         groupType === type.id
-                          ? "bg-primary border-primary"
+                          ? "bg-[#F88D2A] border-[#F88D2A]"
                           : "bg-white border-gray-200"
                       }`}
                     >
@@ -248,19 +261,19 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
                     onPress={() => setPrivacy(opt.id)}
                     className={`flex-1 p-3 rounded-xl border flex-row items-center gap-3 ${
                       privacy === opt.id
-                        ? "border-primary bg-primary/5"
+                        ? "border-[#F88D2A] bg-primary/5"
                         : "border-gray-200 bg-white"
                     }`}
                   >
                     <View
                       className={`w-10 h-10 rounded-full items-center justify-center ${
-                        privacy === opt.id ? "bg-primary/20" : "bg-gray-100"
+                        privacy === opt.id ? "bg-[#f88e2ab7]" : "bg-gray-100"
                       }`}
                     >
                       <Feather
                         name={opt.code === "PUBLIC" ? "globe" : "lock"}
                         size={18}
-                        color={privacy === opt.id ? "#00E074" : "#6B7280"}
+                        color={privacy === opt.id ? "#F88D2A" : "#6B7280"}
                       />
                     </View>
                     <View className="flex-1">
@@ -301,17 +314,17 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
                       onPress={() => setPaymentTypeId(pt.id)}
                       className={`p-4 rounded-xl border flex-row items-center ${
                         isSelected
-                          ? "border-primary bg-primary/5"
+                          ? "border-[#F88D2A] bg-primary/5"
                           : "border-gray-200 bg-white"
                       }`}
                     >
                       <View
-                        className={`p-2 rounded-lg mr-3 ${isSelected ? "bg-primary/20" : "bg-gray-100"}`}
+                        className={`p-2 rounded-lg mr-3 ${isSelected ? "bg-[#f88e2ab7]" : "bg-gray-100"}`}
                       >
                         <Feather
                           name={iconName}
                           size={20}
-                          color={isSelected ? "#00E074" : "#6B7280"}
+                          color={isSelected ? "#f88e2ab7" : "#6B7280"}
                         />
                       </View>
                       <View className="flex-1">
@@ -331,7 +344,7 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
                       <View
                         className={`w-5 h-5 rounded-full border items-center justify-center ${
                           isSelected
-                            ? "border-primary bg-primary"
+                            ? "border-[#F88D2A] bg-[#F88D2A]"
                             : "border-gray-300"
                         }`}
                       >
@@ -359,7 +372,7 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
               {userAddresses.length > 0 ? (
                 <ScrollView
                   horizontal
-                  showsHorizontalScrollIndicator={false}
+                  showsHorizontalScrollIndicator={isWeb ? true : false}
                   className="mb-3"
                 >
                   <View className="flex-row gap-3 pr-4">
@@ -369,7 +382,7 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
                         onPress={() => setUserAddressId(addr.id)}
                         className={`w-64 p-3 rounded-xl border-2 ${
                           userAddressId === addr.id
-                            ? "border-primary bg-primary/5"
+                            ? "border-[#F88D2A] bg-primary/5"
                             : "border-gray-100 bg-white"
                         }`}
                       >
@@ -378,7 +391,7 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
                             name="map-pin"
                             size={16}
                             color={
-                              userAddressId === addr.id ? "#00E074" : "#9CA3AF"
+                              userAddressId === addr.id ? "#F88D2A" : "#9CA3AF"
                             }
                             className="mt-0.5"
                           />
@@ -441,9 +454,9 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
       <View className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 shadow-lg pb-8">
         <TouchableOpacity
           onPress={handleCreate}
-          disabled={isLoading}
+          disabled={isLoading || !isValid}
           className={`w-full py-4 rounded-2xl flex-row items-center justify-center shadow-lg transform active:scale-95 transition-all ${
-            isLoading ? "bg-primary/70" : "bg-primary"
+            isLoading ? "bg-[#f88e2a2c]" : "bg-[#F88D2A]"
           }`}
         >
           {isLoading ? (
@@ -501,7 +514,7 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
               />
               <TouchableOpacity
                 onPress={() => setShowDatePicker(false)}
-                className="mt-6 bg-primary py-4 rounded-2xl shadow-sm"
+                className="mt-6 bg-[#F88D2A] py-4 rounded-2xl shadow-sm"
               >
                 <Text className="text-white text-center font-bold text-lg">
                   Confirmar Fecha

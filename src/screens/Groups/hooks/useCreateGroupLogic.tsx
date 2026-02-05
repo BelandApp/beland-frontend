@@ -7,6 +7,7 @@ import {
   PaymentType,
 } from "@/services/GroupApiService";
 import { UserAddress } from "@/services/addressService";
+import { notify } from "src/hooks/notification/notify.external";
 
 export type Participant = {
   id: string;
@@ -85,24 +86,24 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
 
   const validate = () => {
     if (!groupName || groupName.trim() === "") {
-      Alert.alert("Validación", "El nombre del grupo es requerido");
+      notify.error({ message: "El nombre del grupo es requerido" });
       return false;
     }
     if (!groupType) {
-      Alert.alert("Validación", "Debes seleccionar un tipo de grupo");
+      notify.error({ message: "Debes seleccionar un tipo de grupo" });
       return false;
     }
     if (!paymentTypeId) {
-      Alert.alert("Validación", "Debes seleccionar un método de pago");
+      notify.error({ message: "Debes seleccionar un método de pago" });
       return false;
     }
     if (!eventDate) {
-      Alert.alert("Validación", "Debes seleccionar una fecha para el evento");
+      notify.error({ message: "Debes seleccionar una fecha para el evento" });
       return false;
     }
     return true;
   };
-
+  const isValid = groupName && groupType && paymentTypeId && eventDate;
   const createGroup = async () => {
     if (!validate()) return null;
     setIsCreating(true);
@@ -141,6 +142,7 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
     paymentTypeId,
     userAddressId,
     eventDate,
+    isValid,
 
     // Setters
     setGroupName,
