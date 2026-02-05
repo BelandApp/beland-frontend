@@ -19,7 +19,12 @@ export const useFinanceAdmin = () => {
       const res = await WithdrawService.getWithdrawHistory();
       console.log("retiros pendientes", res);
       const data = res.data;
-      setWithDraw(Array.isArray(data) ? (data as any) : []);
+      // Ordenamos primero los pendientes
+      const pending = data.filter((i) => i?.status?.name === "Pendiente");
+
+      const rest = data.filter((i) => i?.status?.name !== "Pendiente");
+
+      setWithDraw([...pending, ...rest]);
     } catch (err) {
       console.error(err);
       notify.error({ message: "No se pudieron cargar los tipos de cuenta" });

@@ -9,7 +9,8 @@ import {
 import { useFinanceAdmin } from "./hooks/useFinanceAdmin";
 import { View, Text } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
-import { UserWithdraw, WithdrawAccount } from "src/services/withdrawService";
+import { UserWithdraw } from "src/services/withdrawService";
+import { contactUser, openWhatsapp } from "src/utils/contactLink";
 const getStatusColor = (status: string) => {
   switch (status) {
     case "Completada":
@@ -41,7 +42,7 @@ const FinancesManagement: React.FC = () => {
       key={item.id}
       children={
         <View className="px-2">
-          <View className="grid grid-cols-2 items-center mb-2">
+          <View className="grid md:grid-cols-2 items-center mb-2">
             <Text className="text-lg font-semibold">
               Retiro a cuenta bancaria
             </Text>
@@ -64,7 +65,8 @@ const FinancesManagement: React.FC = () => {
               )}
             </View>
           </View>
-          <View className="grid md:grid-cols-2 grid-cols-1">
+          <View className="grid md:grid-cols-2 grid-cols-1 border-t border-t-slate-400 pt-2">
+            <Text>Fecha de solicitud: {item.created_at}</Text>
             <Text>Usuario: {item.user.full_name}</Text>
             <Text>DNI: {item.withdraw_account.holderDocument}</Text>
             <Text>Monto: USD$ {item.amount_usd}</Text>
@@ -79,19 +81,34 @@ const FinancesManagement: React.FC = () => {
               <Text>Referencia Bancaria: {item.transaction_banck_id}</Text>
             )}
           </View>
-          {item.status.name === "Pendiente" && (
-            <View className="flex flex-row justify-center gap-8 mt-2 pt-2 border-t border-t-slate-400">
-              <Button
-                title="Rechazar"
-                variant="secondary"
-                onPress={() => handleOpen(item.id, "reject")}
-              />
-              <Button
-                title="Aprobar"
-                onPress={() => handleOpen(item.id, "approve")}
-              />
-            </View>
-          )}
+          <View className="flex flex-row justify-center gap-8">
+            {item.status.name === "Pendiente" && (
+              <View className="flex flex-row justify-center gap-8 mt-2 pt-2 border-t border-t-slate-400 w-full">
+                <Button
+                  title="Rechazar"
+                  variant="secondary"
+                  onPress={() => handleOpen(item.id, "reject")}
+                />
+                <Button
+                  title="Aprobar"
+                  onPress={() => handleOpen(item.id, "approve")}
+                />
+              </View>
+            )}
+            {item.status.name === "Fallida" && (
+              <View className="flex flex-row justify-center gap-8 mt-2 pt-2 border-t border-t-slate-400 w-full">
+                <Button
+                  title="Contactar"
+                  onPress={() =>
+                    contactUser({
+                      phone: item.user.phone,
+                      mail: item.user.email,
+                    })
+                  }
+                />
+              </View>
+            )}
+          </View>
         </View>
       }
     />
