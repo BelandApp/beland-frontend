@@ -5,10 +5,11 @@ import {
   Text,
   StyleSheet,
   ButtonProps,
+  PressableProps,
 } from "react-native";
 import { colors } from "src/styles";
 
-interface CustomButtonProps extends ButtonProps {
+interface CustomButtonProps extends PressableProps {
   title: string;
   onPress: () => void;
   variant?: Variant;

@@ -11,8 +11,9 @@ export type FAQreturn = {
   answer: string;
   list?: string[];
   messageBeland?: string;
+  link?: string;
   subAnswer?: {
-    icon: string;
+    icon: "orange" | "green" | "yellow";
     title: string;
     message: string;
     list: string[];
@@ -131,7 +132,7 @@ export const useFAQs = () => {
           "Las Becoins son las monedas de Beland. Existen para premiar las acciones que generan valor y facilitar el consumo dentro de la comunidad. Hay tres tipos, cada una con un rol claro:",
         subAnswer: [
           {
-            icon: "",
+            icon: "green",
             title: "Becoins Verdes",
             message: "Son la recompensa por hacer lo correcto.",
             list: [
@@ -142,7 +143,7 @@ export const useFAQs = () => {
               "Mensaje Beland: si aportás valor, el sistema te paga.",
           },
           {
-            icon: "",
+            icon: "orange",
             title: "Becoins Naranjas",
             message:
               "Son créditos de incentivo para el consumo dentro de la app.",
@@ -152,7 +153,7 @@ export const useFAQs = () => {
             ],
           },
           {
-            icon: "",
+            icon: "yellow",
             title: "Becoins Doradas",
             message: "Son dinero digital dentro del ecosistema Beland.",
             list: [
@@ -175,12 +176,20 @@ export const useFAQs = () => {
         answer:
           "Beland permite comprar en grupo y resolver el pago de forma simple o Podés dividir el pago entre los integrantes del grupo y confirmar todo en pocos pasos, sin transferencias ni complicaciones.",
       },
+      {
+        id: "18",
+        question: "¿Aún tenes dudas?",
+        answer:
+          "Podes comunicarte por whatsapp a +593 99 526 9974 o haciendo click aqui:",
+        link: "https:wa.me/+593995269974",
+      },
     ];
     return hardCodeFAQ;
   };
   const { data, loading: isLoading } = useCache({
     key: "faqs-cache",
-    duration: 6 * 60 * 60 * 1000,
+    // TODO CAMBIAR CUANDO TENGAMOS DESDE EL BACKEND
+    duration: 0,
     fetcher: () => FAQFetch(),
   });
   return { data, isLoading };
