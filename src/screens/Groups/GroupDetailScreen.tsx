@@ -39,6 +39,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { ArrowLeftIcon, CircleArrowLeftIcon } from "lucide-react-native";
 import { colors } from "src/design-system";
 import { position } from "html2canvas/dist/types/css/property-descriptors/position";
+import { CloudinaryService } from "src/services/cloudinary/cloudinary.service";
 
 type GroupDetailParams = { groupId: string };
 
@@ -86,6 +87,7 @@ export const GroupDetailScreen = () => {
   const fetchGroup = async () => {
     try {
       const data = await GroupService.getGroup(groupId);
+      console.log("Fetched group data:", data);
       setGroup(data);
       const membersData = await GroupService.getGroupMembers(groupId);
       setMembers(membersData);
@@ -152,19 +154,27 @@ export const GroupDetailScreen = () => {
         aspect: [16, 9],
         quality: 0.8,
       });
-
       if (!result.canceled && result.assets[0]) {
         setUploadingImage(true);
-        const imageUrl = await GroupService.uploadImage(result.assets[0]);
-        // Update local and backend
-        await GroupService.updateGroup(groupId, {
-          ...group,
-          description: group?.description || "",
-          name: group?.name,
-          image_url: imageUrl,
-        } as any);
+        const asset = result.assets[0];
+        const formData = new FormData();
+        if (Platform.OS === "web") {
+          const response = await fetch(asset.uri);
+          const blob = await response.blob();
 
-        setGroup((prev) => (prev ? { ...prev, image_url: imageUrl } : null));
+          formData.append("image_url", blob, `group_${groupId}_cover.jpg`);
+        } else {
+          formData.append("image_url", {
+            uri: asset.uri,
+            name: `group_${groupId}_cover.jpg`,
+            type: "image/jpeg",
+          } as any);
+        }
+        await GroupService.uploadImage(groupId, formData);
+
+        setGroup((prev) =>
+          prev ? { ...prev, image_url: result.assets[0].uri } : null,
+        );
         notify.success({ message: "Imagen de portada actualizada" });
       }
     } catch (error) {

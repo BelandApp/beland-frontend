@@ -1,3 +1,4 @@
+import { CloudinaryService } from "./cloudinary/cloudinary.service";
 import { CoreApiService, PaginatedResponse } from "./core/ApiService";
 
 // Group Types
@@ -311,8 +312,17 @@ class GroupServiceClass extends CoreApiService {
   /**
    * Update a group
    */
-  async updateGroup(id: string, data: UpdateGroupDto): Promise<Group> {
+  async updateGroup(
+    id: string,
+    data: UpdateGroupDto | FormData,
+  ): Promise<Group> {
     return this.put<Group>(`${this.ENDPOINTS.GROUPS}/${id}`, data);
+  }
+  /**
+   * Update a image of a group
+   */
+  async uploadImage(id: string, image: FormData): Promise<string> {
+    return this.patch(`${this.ENDPOINTS.GROUPS}/image/${id}`, image);
   }
 
   /**
@@ -667,10 +677,7 @@ class GroupServiceClass extends CoreApiService {
       name: "upload.jpg",
     } as any);
 
-    const response = await this.postFormData<string>(
-      "cloudinary/upload-image", // Endpoint relativo
-      formData,
-    );
+    const response = await CloudinaryService.uploadImage(formData);
     return response;
   }
 
