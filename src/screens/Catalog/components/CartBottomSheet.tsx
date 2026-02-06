@@ -72,7 +72,7 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
 
   const handleUpdateQuantity = async (
     productId: string,
-    newQuantity: number
+    newQuantity: number,
   ) => {
     try {
       updateQuantity(productId, newQuantity);
@@ -165,7 +165,7 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
             <View style={styles.footer}>
               <View>
                 <Text style={styles.total}>
-                  Total: {CURRENCY_CONFIG.CURRENCY_DISPLAY_SYMBOL}
+                  Total: USD {CURRENCY_CONFIG.CURRENCY_DISPLAY_SYMBOL}
                   {formatUSDPrice(totalUSD())}
                 </Text>
                 <Text style={styles.totalBecoins}>
