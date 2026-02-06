@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
 import { Alert } from "react-native";
-import {
-  WithdrawService,
-  WithdrawAccountType,
-} from "../../../services/withdrawService";
+import { WithdrawService, WithdrawAccountType } from "services";
 
 type UseAddWithdrawAccountOpts = {
   visible?: boolean;

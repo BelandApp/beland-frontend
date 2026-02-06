@@ -8,7 +8,7 @@ import {
   CoreApiService,
   PaginatedResponse,
   adaptSequelizePagination,
-} from "./core/ApiService";
+} from "../core/ApiService";
 
 // Withdraw Types
 export interface WithdrawAccount {

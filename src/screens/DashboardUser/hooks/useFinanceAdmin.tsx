@@ -1,10 +1,17 @@
 import { useEffect, useState } from "react";
 import { notify } from "src/hooks/notification/notify.external";
 import { getBackendErrorMessage, WithdrawService } from "src/services";
-import { UserWithdraw } from "src/services/withdrawService";
+import {
+  UserRecharge,
+  UserRechargeService,
+  UserWithdraw,
+} from "src/services/financial";
 
 export const useFinanceAdmin = () => {
   const [withDraw, setWithDraw] = useState<UserWithdraw[] | []>([]);
+  const [paymentsTransfer, setPaymentsTransfer] = useState<UserRecharge[] | []>(
+    [],
+  );
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [reference, setReference] = useState<string>("");
@@ -16,15 +23,18 @@ export const useFinanceAdmin = () => {
   const loadAccountTypes = async () => {
     try {
       setLoading(true);
-      const res = await WithdrawService.getWithdrawHistory();
-      console.log("retiros pendientes", res);
-      const data = res.data;
+      const resRetiros = await WithdrawService.getWithdrawHistory(1, 0);
+      console.log("retiros pendientes", resRetiros);
+      const data = resRetiros.data;
       // Ordenamos primero los pendientes
       const pending = data.filter((i) => i?.status?.name === "Pendiente");
 
       const rest = data.filter((i) => i?.status?.name !== "Pendiente");
 
       setWithDraw([...pending, ...rest]);
+      const resIngresos = await UserRechargeService.getAll();
+      console.log("Ingresos por Transferencia:", resIngresos);
+      setPaymentsTransfer(resIngresos.data);
     } catch (err) {
       console.error(err);
       notify.error({ message: "No se pudieron cargar los tipos de cuenta" });
@@ -79,6 +89,7 @@ export const useFinanceAdmin = () => {
 
   return {
     withDraw,
+    paymentsTransfer,
     loading,
     modalOpen,
     handleOpen,

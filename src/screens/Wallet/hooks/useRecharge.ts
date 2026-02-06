@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Platform, Alert } from "react-native";
 import { notify } from "src/hooks/notification/notify.external";
+import { getBackendErrorMessage } from "src/services";
+import { CloudinaryService } from "src/services/cloudinary/cloudinary.service";
 
 // Tipos
 export interface PaymentMethod {
@@ -263,7 +265,17 @@ export function useRecharge() {
       setIsLoading(true);
 
       const { WalletService } = require("src/services/WalletApiService");
-
+      const formData = new FormData();
+      formData.append("file", proofImage);
+      console.log(accountId);
+      const imageUrl = await CloudinaryService.uploadImage(formData);
+      if (!imageUrl) {
+        notify.error({
+          message: "No pudimos procesar correctamente la imagen",
+          message2: "Intenta nuevamente",
+        });
+        return;
+      }
       // Note: Backend doesn't support image upload yet.
       // We send the reference ID and we assume the user has transferred.
 
@@ -271,7 +283,7 @@ export function useRecharge() {
         payment_account_id: accountId,
         amount_usd: Number(amount),
         transfer_id: referenceId,
-        ticket_image_url: proofImage.uri,
+        ticket_image_url: "https://image.url",
       });
 
       notify.success({
@@ -287,10 +299,11 @@ export function useRecharge() {
       setSelectedPaymentMethod("");
     } catch (error: any) {
       console.error("Error creating bank transfer recharge:", error);
-      Alert.alert(
-        "Error",
-        error.message || "No se pudo crear la solicitud de recarga.",
-      );
+      const res = getBackendErrorMessage(error);
+      notify.error({
+        message:
+          res || "Error creando la transferencia Bancaria, corrobora los datos",
+      });
     } finally {
       setIsLoading(false);
     }

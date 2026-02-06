@@ -18,10 +18,7 @@ import {
   ArrowDown,
 } from "lucide-react-native";
 import PayphoneIcon from "src/components/icons/PayphoneIcon";
-import {
-  WithdrawService,
-  WithdrawAccount,
-} from "../../../services/withdrawService";
+import { WithdrawService, WithdrawAccount } from "services";
 import AddWithdrawAccountModal from "./AddWithdrawAccountModal";
 import useAddWithdrawAccount from "../hooks/useAddWithdrawAccount";
 import { useNotify } from "src/hooks";

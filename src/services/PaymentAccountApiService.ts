@@ -33,7 +33,7 @@ class PaymentAccountServiceClass extends CoreApiService {
     // However, looking at other services, let's assume standard response or we handle it.
     // Actually, most NestJS standard is just returning the value.
     // If it returns [items, count], we should probably wrap it or type it as any first to be safe.
-    return this.get<any>(`${this.ENDPOINT}?${queryString}`);
+    return this.get<any>(`${this.ENDPOINT}/user?${queryString}`);
   }
 
   /**

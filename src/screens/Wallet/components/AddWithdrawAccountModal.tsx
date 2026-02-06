@@ -22,7 +22,7 @@ import {
   CircleAlert,
 } from "lucide-react-native";
 import { useNotify } from "src/hooks";
-import { WithdrawService } from "src/services/withdrawService";
+import { WithdrawService } from "@/services";
 import Toast, { BaseToast } from "react-native-toast-message";
 import { toastConfig } from "src/components/shared/notification/GlobalNotification";
 import { SafeAreaView } from "react-native-safe-area-context";

@@ -8,9 +8,9 @@ import {
 import {
   WithdrawService,
   WithdrawAccount,
-} from "../../../services/withdrawService";
+  getBackendErrorMessage,
+} from "@/services";
 import { useWallet } from "./useWalletData";
-import { getBackendErrorMessage } from "src/services";
 import { useCustomNavigation, useNotify } from "src/hooks";
 import { useBeCoinsStore } from "src/stores";
 
