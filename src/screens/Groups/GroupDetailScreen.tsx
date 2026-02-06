@@ -170,7 +170,7 @@ export const GroupDetailScreen = () => {
             type: "image/jpeg",
           } as any);
         }
-        await GroupService.uploadImage(groupId, formData);
+        await GroupService.uploadGroupImage(groupId, formData);
 
         setGroup((prev) =>
           prev ? { ...prev, image_url: result.assets[0].uri } : null,

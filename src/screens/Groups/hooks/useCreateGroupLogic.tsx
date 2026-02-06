@@ -9,6 +9,7 @@ import {
 import { UserAddress } from "@/services/addressService";
 import { notify } from "src/hooks/notification/notify.external";
 import * as ImagePicker from "expo-image-picker";
+import { CloudinaryService } from "@/services";
 export type Participant = {
   id: string;
   name: string;
@@ -106,6 +107,7 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
   const isValid = groupName && groupType && paymentTypeId && eventDate;
   const handlePickImage = async () => {
     try {
+      setIsLoadingData(true);
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
         allowsEditing: true,
@@ -114,7 +116,6 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
       });
 
       if (!result.canceled && result.assets[0]) {
-        setIsLoadingData(true);
         setImageFile(result.assets[0]);
       }
     } catch (error) {
@@ -132,15 +133,16 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
       // ===============================
       // 🖼️ CREAMOS CLOUDINARY URL
       // ===============================
-      // const imageUrl = imageFile
-      //   ? await GroupService.uploadImage(imageFile)
-      //   : "";
+      const formData = new FormData();
+      formData.append("file", imageFile);
+      const imageUrl = await CloudinaryService.uploadImage(formData);
+      if (!imageUrl) {
+        notify.info({
+          message: "No pudimos procesar correctamente la imagen",
+          message2: "No te preocupes puedes editar dentro del grupo",
+        });
+      }
 
-      // if (!imageUrl)
-      //   notify.error({
-      //     message: "No pudimos guardar tu imagen",
-      //     message2: "No te preocupes puedes editar dentro del grupo",
-      //   });
       // ===============================
       // CREAMOS GRUPO
       // ===============================
@@ -151,7 +153,7 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
         payment_type_id: paymentTypeId,
         user_address_id: userAddressId,
         event_at: eventDate,
-        // image: imageUrl ? imageUrl : "",
+        image: imageUrl ?? "",
       };
 
       const desc = description?.trim();

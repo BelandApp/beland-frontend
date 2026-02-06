@@ -321,7 +321,7 @@ class GroupServiceClass extends CoreApiService {
   /**
    * Update a image of a group
    */
-  async uploadImage(id: string, image: FormData): Promise<string> {
+  async uploadGroupImage(id: string, image: FormData): Promise<string> {
     return this.patch(`${this.ENDPOINTS.GROUPS}/image/${id}`, image);
   }
 
