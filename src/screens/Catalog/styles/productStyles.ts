@@ -1,5 +1,6 @@
 import { StyleSheet, Platform, Dimensions } from "react-native";
 import { colors } from "../../../styles/colors";
+import { color } from "html2canvas/dist/types/css/types/color";
 
 const { width: screenWidth } = Dimensions.get("window");
 const isWeb = Platform.OS === "web";
@@ -30,6 +31,7 @@ export const productStyles = StyleSheet.create({
   },
   // Product card
   productCard: {
+    position: "relative",
     backgroundColor: "white",
     borderRadius: 16,
     padding: 12,
@@ -96,10 +98,22 @@ export const productStyles = StyleSheet.create({
     minHeight: 32, // Altura mínima para mantener alineación
   },
   productCategory: {
-    fontSize: 11,
-    color: colors.textSecondary,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    fontSize: 10,
+    color: "white",
     marginBottom: 12,
     textAlign: "center" as const,
+    backgroundColor: "#FF6b35",
+    borderRadius: 12,
+    borderTopLeftRadius: 16,
+    borderBottomLeftRadius: 0,
+    opacity: 0.9,
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+    marginHorizontal: "auto",
+    zIndex: 2,
   },
   productPriceRow: {
     flexDirection: "row" as const,

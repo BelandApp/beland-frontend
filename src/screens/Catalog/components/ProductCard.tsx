@@ -7,7 +7,10 @@ import {
   formatBeCoins,
   CURRENCY_CONFIG,
 } from "../../../constants/currency";
-import { CartItem } from "src/stores";
+import { Button } from "src/components";
+import { CirclePlus } from "lucide-react-native";
+import { colors } from "src/design-system";
+import { borderTopWidth } from "html2canvas/dist/types/css/property-descriptors/border-width";
 
 export type ProductCardType = Product;
 
@@ -37,6 +40,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       ]}
       className="cursor-default"
     >
+      <Text style={productStyles.productCategory}>{category}</Text>
       <View style={productStyles.productImageContainer}>
         {image ? (
           <Image
@@ -63,37 +67,33 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         <Text style={productStyles.productName} numberOfLines={2}>
           {product.name}
         </Text>
-        <Text style={productStyles.productCategory}>{category}</Text>
 
-        <View style={productStyles.productPriceRow}>
-          <View style={{ flex: 1 }}>
-            <Text style={productStyles.productPrice}>
-              {CURRENCY_CONFIG.CURRENCY_DISPLAY_SYMBOL}
-              {price}
-            </Text>
-            <Text style={productStyles.becoinsReference}>
-              {formatBeCoins(convertUSDToBeCoins(price))}
-            </Text>
-          </View>
-          {product.stock > 0 ? (
-            <TouchableOpacity
-              style={[
-                productStyles.addToCartButton,
-                isAdding && productStyles.addToCartButtonLoading,
-              ]}
+        {product.stock > 0 ? (
+          <View style={productStyles.productPriceRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={productStyles.productPrice}>
+                {CURRENCY_CONFIG.CURRENCY_DISPLAY_SYMBOL}
+                {price}
+              </Text>
+              <Text style={productStyles.becoinsReference}>
+                {formatBeCoins(convertUSDToBeCoins(price))}
+              </Text>
+            </View>
+
+            <Button
+              title="Añadir producto"
               onPress={() => onAddToCart(product)}
               disabled={isAdding}
-            >
-              <Text style={productStyles.addToCartText}>
-                {isAdding ? "⟳" : "+"}
-              </Text>
-            </TouchableOpacity>
-          ) : (
-            <Text className="text-red-500 font-semibold text-sm">
-              Sin stock
-            </Text>
-          )}
-        </View>
+              variant="onlyIcon"
+              icon={<CirclePlus color={colors.brand.orange[500]} size={32} />}
+              style={{ borderWidth: 0 }}
+            />
+          </View>
+        ) : (
+          <Text className="text-red-500 font-semibold text-sm text-center">
+            Sin stock
+          </Text>
+        )}
       </View>
     </View>
   );
