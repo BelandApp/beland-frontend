@@ -21,8 +21,9 @@ import { convertBeCoinsToUSD, formatUSDPrice } from "src/constants/currency";
 import * as ImagePicker from "expo-image-picker";
 import { Modal, Alert } from "react-native";
 import Toast from "react-native-toast-message";
-import { toastConfig } from "src/components";
+import { Button, toastConfig, WrapperModal } from "src/components";
 import { notify } from "src/hooks/notification/notify.external";
+import { CopyToClipboard } from "src/utils/shareHelper";
 
 // ... existing imports ...
 
@@ -31,11 +32,11 @@ const BankDetailRow = ({ label, value, isCopyable = false }: any) => (
   <View className="flex-row justify-between py-2 border-b border-gray-100 dark:border-gray-800">
     <Text className="text-gray-500 dark:text-gray-400 text-sm">{label}</Text>
     <View className="flex-row items-center gap-2">
-      <Text className="text-gray-900 dark:text-white font-medium text-right text-sm max-w-[200px]">
+      <Text className="text-gray-900 dark:text-white font-medium text-right text-xs md:text-sm max-w-[200px]">
         {value}
       </Text>
       {isCopyable && (
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => CopyToClipboard(value)}>
           <Ionicons name="copy-outline" size={14} color="#F97316" />
         </TouchableOpacity>
       )}
@@ -309,7 +310,7 @@ export default function RechargeScreen() {
                     </View>
 
                     {/* Comisión */}
-                    <View className="flex-row justify-between mb-3">
+                    <View className="flex-col md:flex-row justify-between mb-3">
                       <Text className="text-sm text-gray-600 dark:text-gray-400">
                         Comisión de terceros
                       </Text>
@@ -345,12 +346,12 @@ export default function RechargeScreen() {
                     </View>
 
                     {/* BeCoins a recibir */}
-                    <View className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/30 rounded-xl p-3">
-                      <View className="flex flex-row w-full justify-center items-center">
+                    <View className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/30 rounded-xl p-3 ">
+                      <View className="flex flex-col md:flex-row w-full justify-center items-center gap-1">
                         <Text className="text-sm text-gray-700 dark:text-gray-300 text-center">
                           Recibirás
                         </Text>
-                        <Text className="text-base font-bold text-green-600 dark:text-green-400">
+                        <Text className="text-base font-bold text-yellow-600 dark:text-yellow-400">
                           {beCoinsAmount - beCoinsAmount * 0.06} BeCoins
                         </Text>
                         <Text className="px-1 text-sm text-gray-700 dark:text-gray-300">
@@ -432,182 +433,145 @@ export default function RechargeScreen() {
       </ScrollView>
 
       {/* MODAL DE TRANSFERENCIA BANCARIA */}
-      <Modal
-        visible={showBankTransferModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowBankTransferModal(false)}
-      >
-        <View className="flex-1 bg-black/60 justify-end">
-          <View className="bg-white dark:bg-gray-900 rounded-t-3xl h-[95%] w-full flex overflow-hidden">
-            {/* Modal Header */}
-            <View className="px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex-row justify-between items-center bg-gray-50 dark:bg-gray-800">
-              <Text className="text-xl font-bold text-gray-900 dark:text-white">
-                Transferencia Bancaria
+      <WrapperModal
+        content={
+          <ScrollView className="flex-1 px-6 pt-6">
+            {/* Instrucciones */}
+            <View className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800 mb-6">
+              <View className="flex-row gap-2 mb-2">
+                <Ionicons name="information-circle" size={20} color="#3B82F6" />
+                <Text className="  font-bold flex-1">Pasos para recargar:</Text>
+              </View>
+              <Text className=" text-sm ml-7">
+                1. Realiza la transferencia por el monto exacto de{" "}
+                <Text className="font-bold">${usdAmount.toFixed(2)}</Text>.
               </Text>
-              <TouchableOpacity
-                onPress={() => setShowBankTransferModal(false)}
-                className="bg-gray-200 dark:bg-gray-700 p-2 rounded-full"
-              >
-                <Ionicons name="close" size={20} color="gray" />
-              </TouchableOpacity>
+              <Text className=" text-sm ml-7 mt-1">
+                2. Toma una captura o foto del comprobante.
+              </Text>
+              <Text className=" text-sm ml-7 mt-1">
+                3. Sube la foto y escribe el número de referencia abajo.
+              </Text>
             </View>
 
-            <ScrollView className="flex-1 px-6 pt-6">
-              {/* Instrucciones */}
-              <View className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800 mb-6">
-                <View className="flex-row gap-2 mb-2">
-                  <Ionicons
-                    name="information-circle"
-                    size={20}
-                    color="#3B82F6"
-                  />
-                  <Text className="text-blue-800 dark:text-blue-300 font-bold flex-1">
-                    Pasos para recargar:
-                  </Text>
-                </View>
-                <Text className="text-blue-700 dark:text-blue-200 text-sm ml-7">
-                  1. Realiza la transferencia por el monto exacto de{" "}
-                  <Text className="font-bold">${usdAmount.toFixed(2)}</Text>.
-                </Text>
-                <Text className="text-blue-700 dark:text-blue-200 text-sm ml-7 mt-1">
-                  2. Toma una captura o foto del comprobante.
-                </Text>
-                <Text className="text-blue-700 dark:text-blue-200 text-sm ml-7 mt-1">
-                  3. Sube la foto y escribe el número de referencia abajo.
-                </Text>
-              </View>
+            {/* Datos de la Cuenta */}
+            <View className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 mb-6 shadow-sm">
+              <Text className="text-sm font-semibold text-white uppercase tracking-wider mb-4">
+                Datos Bancarios
+              </Text>
 
-              {/* Datos de la Cuenta */}
-              <View className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 mb-6 shadow-sm">
-                <Text className="text-sm font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-4">
-                  Datos Bancarios
-                </Text>
+              <BankDetailRow label="Banco" value={displayAccount.bankName} />
+              <BankDetailRow
+                label="Tipo de Cuenta"
+                value={displayAccount.accountType}
+              />
+              <BankDetailRow
+                label="Número de Cuenta"
+                value={displayAccount.accountNumber}
+                isCopyable
+              />
+              <BankDetailRow
+                label="Beneficiario"
+                value={displayAccount.beneficiary}
+              />
+              <BankDetailRow
+                label="C.I. / RUC"
+                value={displayAccount.identification}
+                isCopyable
+              />
+              <BankDetailRow label="Correo" value={displayAccount.email} />
+            </View>
 
-                <BankDetailRow label="Banco" value={displayAccount.bankName} />
-                <BankDetailRow
-                  label="Tipo de Cuenta"
-                  value={displayAccount.accountType}
-                />
-                <BankDetailRow
-                  label="Número de Cuenta"
-                  value={displayAccount.accountNumber}
-                  isCopyable
-                />
-                <BankDetailRow
-                  label="Beneficiario"
-                  value={displayAccount.beneficiary}
-                />
-                <BankDetailRow
-                  label="C.I. / RUC"
-                  value={displayAccount.identification}
-                />
-                <BankDetailRow label="Correo" value={displayAccount.email} />
-              </View>
-
-              {/* Subir Comprobante */}
-              <View className="mb-6">
-                <Text className="text-base font-bold text-gray-900 dark:text-white mb-3">
-                  Subir Comprobante
-                </Text>
-                <TouchableOpacity
-                  onPress={pickImage}
-                  className="bg-gray-100 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 items-center justify-center min-h-[150px]"
-                >
-                  {proofImage ? (
-                    <View className="items-center">
-                      {/* Note: Image requires uri */}
-                      {/* In Expo ImagePicker result structure: result.assets[0].uri */}
-                      <Text className="text-green-600 font-bold mb-2">
-                        ¡Imagen seleccionada!
-                      </Text>
-                      <Image
-                        source={proofImage}
-                        width={100}
-                        height={100}
-                        style={{
-                          maxWidth: 100,
-                          maxHeight: 100,
-                          borderRadius: 8,
-                          objectFit: "cover",
-                        }}
-                      />
-                      <Text className="text-xs text-center text-gray-500 mb-2">
-                        {proofImage.fileName}
-                      </Text>
-                      <Ionicons
-                        name="checkmark-circle"
-                        size={40}
-                        color="#22C55E"
-                      />
-                      <Text className="text-xs text-blue-500 mt-2">
-                        Toque para cambiar
-                      </Text>
-                    </View>
-                  ) : (
-                    <>
-                      <View className="bg-white dark:bg-gray-700 p-3 rounded-full mb-2 shadow-sm">
-                        <Ionicons
-                          name="cloud-upload-outline"
-                          size={24}
-                          color="#F97316"
-                        />
-                      </View>
-                      <Text className="text-gray-600 dark:text-gray-300 font-medium">
-                        Subir foto del comprobante
-                      </Text>
-                      <Text className="text-xs text-gray-400 mt-1">
-                        JPG, PNG o PDF
-                      </Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-              </View>
-
-              {/* Número de Referencia */}
-              <View className="mb-20">
-                <Text className="text-base font-bold text-gray-900 dark:text-white mb-3">
-                  Número de Referencia
-                </Text>
-                <TextInput
-                  value={referenceId}
-                  onChangeText={setReferenceId}
-                  placeholder="Ej: 12345678"
-                  placeholderTextColor="#9CA3AF"
-                  className="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-base"
-                />
-                <Text className="text-xs text-gray-500 mt-2 ml-1">
-                  Ingresa el número de confirmación que aparece en tu
-                  comprobante.
-                </Text>
-              </View>
-            </ScrollView>
-
-            {/* Footer Button */}
-            <View className="p-6 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 absolute bottom-0 w-full">
+            {/* Subir Comprobante */}
+            <View className="mb-6">
+              <Text className="text-base font-bold  mb-3">
+                Subir Comprobante
+              </Text>
               <TouchableOpacity
-                onPress={handleBankTransferPayment}
-                disabled={isLoading || !referenceId}
-                className={`nav-button w-full py-4 rounded-xl items-center shadow-lg ${
-                  isLoading || !referenceId
-                    ? "bg-gray-300 dark:bg-gray-700"
-                    : "bg-orange-500 active:bg-orange-600"
-                }`}
+                onPress={pickImage}
+                className="bg-gray-100 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 items-center justify-center min-h-[150px]"
               >
-                {isLoading ? (
-                  <Text className="text-white font-bold">Procesando...</Text>
+                {proofImage ? (
+                  <View className="items-center">
+                    {/* Note: Image requires uri */}
+                    {/* In Expo ImagePicker result structure: result.assets[0].uri */}
+                    <Text className="text-green-600 font-bold mb-2">
+                      ¡Imagen seleccionada!
+                    </Text>
+                    <Image
+                      source={proofImage}
+                      width={100}
+                      height={100}
+                      style={{
+                        maxWidth: 100,
+                        maxHeight: 100,
+                        borderRadius: 8,
+                        objectFit: "cover",
+                      }}
+                    />
+                    <Text className="text-xs text-center text-gray-500 mb-2">
+                      {proofImage.fileName}
+                    </Text>
+                    <Ionicons
+                      name="checkmark-circle"
+                      size={40}
+                      color="#22C55E"
+                    />
+                    <Text className="text-xs text-blue-500 mt-2">
+                      Toque para cambiar
+                    </Text>
+                  </View>
                 ) : (
-                  <Text className="text-white font-bold text-lg">
-                    Confirmar Transferencia
-                  </Text>
+                  <>
+                    <View className="bg-white dark:bg-gray-700 p-3 rounded-full mb-2 shadow-sm">
+                      <Ionicons
+                        name="cloud-upload-outline"
+                        size={24}
+                        color="#F97316"
+                      />
+                    </View>
+                    <Text className="text-gray-600 dark:text-gray-300 font-medium">
+                      Subir foto del comprobante
+                    </Text>
+                    <Text className="text-xs text-gray-400 mt-1">
+                      JPG, PNG o PDF
+                    </Text>
+                  </>
                 )}
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
 
-        <Toast config={toastConfig} />
-      </Modal>
+            {/* Número de Referencia */}
+            <View className="mb-20">
+              <Text className="text-base font-bold mb-3">
+                Número de Referencia
+              </Text>
+              <TextInput
+                value={referenceId}
+                onChangeText={setReferenceId}
+                placeholder="Ej: 12345678"
+                placeholderTextColor="#9CA3AF"
+                className="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-base"
+              />
+              <Text className="text-xs text-gray-500 mt-2 ml-1">
+                Ingresa el número de confirmación que aparece en tu comprobante.
+              </Text>
+            </View>
+          </ScrollView>
+        }
+        actions={
+          <Button
+            title={isLoading ? "Procesando..." : "Confirmar Transferencia"}
+            onPress={handleBankTransferPayment}
+            disabled={isLoading || !referenceId}
+          />
+        }
+        isOpen={showBankTransferModal}
+        header={
+          <Text className="text-xl font-bold">Transferencia Bancaria</Text>
+        }
+        onClose={() => setShowBankTransferModal(false)}
+      />
     </>
   );
 }

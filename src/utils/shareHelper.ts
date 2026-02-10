@@ -1,6 +1,8 @@
 import { Share, Platform, Linking } from "react-native";
 import * as Sharing from "expo-sharing";
+import * as Clipboard from "expo-clipboard";
 import { captureRef } from "react-native-view-shot";
+import { notify } from "src/hooks/notification/notify.external";
 
 export interface ShareGroupData {
   groupName: string;
@@ -9,6 +11,19 @@ export interface ShareGroupData {
   memberCount?: number;
   creatorName?: string;
 }
+
+export const CopyToClipboard = async (text: string) => {
+  if (!text) return false;
+
+  try {
+    await Clipboard.setStringAsync(text);
+    notify.info({ message: `Texto Copiado: ${text}` });
+    return true;
+  } catch (error) {
+    notify.error({ message: "No pudimos copiar el texto" });
+    return false;
+  }
+};
 const generateLinks = (groupId: string) => ({
   deepLink: `beland://groups/${groupId}`, // abre la app
   webLink: `https://beland.app/groups/${groupId}`, // fallback universal

@@ -59,7 +59,6 @@ export type {
 } from "../OrderApiService";
 
 // Group service
-export { GroupService } from "../GroupApiService";
 export type {
   Group,
   GroupMember,
