@@ -119,7 +119,11 @@ export const useCartStore = create<CartStore>((set, get) => ({
 
     // Usar updateCartItem para reemplazar la cantidad exacta
     if (item.cartItemId) {
-      CartService.updateCartItem(item.cartItemId, { quantity });
+      const update = await CartService.updateCartItem(item.cartItemId, {
+        quantity,
+      });
+      if (!update)
+        notify.error({ message: "No pudimos actualizar tu carrito" });
     }
   },
 
