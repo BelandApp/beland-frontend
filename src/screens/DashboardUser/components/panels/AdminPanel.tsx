@@ -470,10 +470,7 @@ const AdminPanel: React.FC = () => {
   );
 
   return (
-    <DashboardWrapper
-      title={`Panel Admin - ${user?.full_name || "Administrador"}`}
-      isLoading={isLoading}
-    >
+    <DashboardWrapper title={`Panel ${user?.role_name}`} isLoading={isLoading}>
       <View style={styles.container}>
         {/* Welcome Section */}
         <View style={styles.welcomeCard}>

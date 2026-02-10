@@ -19,6 +19,7 @@ import {
 } from "src/services/AdminApiService";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { useResponsiveLayout } from "src/screens/Home";
+import { Button, RechargeIcon } from "src/components";
 
 const { width } = Dimensions.get("window");
 // Responsive design utilities for all platforms
@@ -452,14 +453,14 @@ const SuperAdminPanel: React.FC = () => {
 
     return (
       <View style={styles.metricsContainer}>
-        <View style={styles.metricsHeader}>
+        <View className="flex flex-row justify-around items-baseline">
           <Text style={styles.sectionTitle}>📊 Métricas Principales</Text>
-          <TouchableOpacity
+          <Button
+            icon={<RechargeIcon color="orange" />}
+            title="recargar"
+            variant="onlyIcon"
             onPress={loadDashboardMetrics}
-            style={styles.refreshButton}
-          >
-            <Text style={styles.refreshButtonText}>🔄</Text>
-          </TouchableOpacity>
+          />
         </View>
         <View
           style={[
@@ -522,57 +523,9 @@ const SuperAdminPanel: React.FC = () => {
   );
 
   return (
-    <DashboardWrapper
-      title={`Panel SuperAdmin - ${user?.full_name || "Administrador"}`}
-      isLoading={isLoading}
-    >
+    <DashboardWrapper title={`Panel ${user?.role_name}`} isLoading={isLoading}>
       <View style={styles.container}>
         {/* Welcome Section */}
-        <View style={styles.welcomeCard}>
-          <View style={styles.welcomeHeader}>
-            <View>
-              <Text style={styles.welcomeTitle}>
-                Bienvenido, {user?.full_name || user?.email?.split("@")[0]}
-              </Text>
-              <Text style={styles.welcomeSubtitle}>
-                Dashboard de Administración Beland
-              </Text>
-              <Text style={styles.welcomeDate}>
-                {new Date().toLocaleDateString("es-ES", {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </Text>
-            </View>
-            <View style={styles.systemStatus}>
-              <View
-                style={[styles.statusIndicator, { backgroundColor: "#34C759" }]}
-              />
-              <Text style={styles.statusText}>Sistema Operativo</Text>
-            </View>
-          </View>
-
-          <View style={styles.quickStatsRow}>
-            <View style={styles.quickStat}>
-              <Text style={styles.quickStatValue}>
-                {metrics ? `+${(Math.random() * 50 + 10).toFixed(0)}%` : "..."}
-              </Text>
-              <Text style={styles.quickStatLabel}>Crecimiento</Text>
-            </View>
-            <View style={styles.quickStat}>
-              <Text style={styles.quickStatValue}>
-                {metrics ? `${(Math.random() * 100).toFixed(0)}%` : "..."}
-              </Text>
-              <Text style={styles.quickStatLabel}>Uptime</Text>
-            </View>
-            <View style={styles.quickStat}>
-              <Text style={styles.quickStatValue}>24/7</Text>
-              <Text style={styles.quickStatLabel}>Soporte</Text>
-            </View>
-          </View>
-        </View>
 
         {/* Dashboard Metrics */}
         {renderMetricsCards()}
@@ -581,33 +534,29 @@ const SuperAdminPanel: React.FC = () => {
         {renderDashboardSections()}
 
         {/* Quick Actions */}
-        <View style={styles.quickActionsContainer}>
+        <View className="flex flex-col px-4">
           <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
-          <View style={styles.quickActionsGrid}>
-            <TouchableOpacity
-              style={styles.quickActionButton}
+          <View className="flex flex-wrap md:flex-row gap-2 justify-center">
+            <Button
+              title="Actualizar Métricas"
+              className="flex-grow w-full md:w-fit"
               onPress={() => loadDashboardMetrics()}
-            >
-              <Text style={styles.quickActionText}>Actualizar Métricas</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.quickActionButton}
+            />
+            <Button
+              title="Gestionar Usuarios"
+              className="flex-grow w-full md:w-fit"
               onPress={() => navigate("UsersManagement")}
-            >
-              <Text style={styles.quickActionText}>Gestionar Usuarios</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.quickActionButton}
+            />
+            <Button
+              title="Crear Evento"
+              className="flex-grow w-full md:w-fit"
               onPress={() => handleSectionPress("events")}
-            >
-              <Text style={styles.quickActionText}>Crear Evento</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.quickActionButton}
+            />
+            <Button
+              title="Revisar Solicitudes"
+              className="flex-grow w-full md:w-fit"
               onPress={() => handleSectionPress("organizations")}
-            >
-              <Text style={styles.quickActionText}>Revisar Solicitudes</Text>
-            </TouchableOpacity>
+            />
           </View>
         </View>
       </View>
@@ -831,6 +780,7 @@ const styles = StyleSheet.create({
   },
   sectionsContainer: {
     marginBottom: 25,
+    paddingHorizontal: 16,
   },
   sectionsGrid: {
     flexDirection: "row",

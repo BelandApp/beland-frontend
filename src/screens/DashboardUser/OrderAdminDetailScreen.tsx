@@ -224,8 +224,9 @@ export const OrderAdminDetailScreen: React.FC = () => {
       setLoading(true);
       try {
         const res = await OrderService.getOrder(orderId);
+        console.log("Respuesta de orden", res);
         if (mounted) {
-          setOrder(res as ApiOrder);
+          setOrder(res);
 
           // Cargar detalles de productos
           const items = (res as any)?.items || [];
@@ -233,13 +234,13 @@ export const OrderAdminDetailScreen: React.FC = () => {
             const productPromises = items.map(async (item: any) => {
               try {
                 const product = await ProductService.getProduct(
-                  item.product_id
+                  item.product_id,
                 );
                 return { id: item.product_id, product };
               } catch (err) {
                 console.error(
                   `Failed to load product ${item.product_id}:`,
-                  err
+                  err,
                 );
                 return { id: item.product_id, product: null };
               }
@@ -274,7 +275,7 @@ export const OrderAdminDetailScreen: React.FC = () => {
     try {
       await OrderService.updateOrderStatus(
         orderId,
-        status as ApiOrder["status"]
+        status as ApiOrder["status"],
       );
       const refreshed = await OrderService.getOrder(orderId);
       setOrder(refreshed as ApiOrder);
@@ -413,8 +414,8 @@ export const OrderAdminDetailScreen: React.FC = () => {
   const orderNumber = order?.order_number
     ? `BL-${String(order.order_number).padStart(6, "0")}`
     : orderId
-    ? `#${String(orderId).substring(0, 8).toUpperCase()}`
-    : "---";
+      ? `#${String(orderId).substring(0, 8).toUpperCase()}`
+      : "---";
   const createdAt = order?.created_at ? new Date(order.created_at) : null;
 
   // Usuario - mapear desde order.user
@@ -561,7 +562,7 @@ export const OrderAdminDetailScreen: React.FC = () => {
                     day: "numeric",
                     month: "long",
                     year: "numeric",
-                  }
+                  },
                 )}
               </Text>
             </View>
@@ -700,6 +701,12 @@ export const OrderAdminDetailScreen: React.FC = () => {
             <Text style={styles.sectionTitle}>Resumen de Pago</Text>
           </View>
 
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Envio</Text>
+            <Text style={styles.summaryValue}>
+              ${order?.delivery_cost ?? "0"}
+            </Text>
+          </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Subtotal</Text>
             <Text style={styles.summaryValue}>${subtotal.toFixed(2)}</Text>

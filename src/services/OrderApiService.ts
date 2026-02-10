@@ -44,6 +44,7 @@ export interface Order {
   tax_amount: number;
   discount_amount: number;
   shipping_amount: number;
+  delivery_cost: string;
   total_amount: number;
   currency: string;
   payment_status: "pending" | "paid" | "failed" | "refunded";
