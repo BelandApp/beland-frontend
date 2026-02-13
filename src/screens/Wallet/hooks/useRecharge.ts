@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Platform, Alert } from "react-native";
+import { useThemedTabs } from "src/components";
 import { notify } from "src/hooks/notification/notify.external";
 import { getBackendErrorMessage } from "src/services";
 import { CloudinaryService } from "src/services/cloudinary/cloudinary.service";
@@ -20,6 +21,22 @@ export interface RechargeState {
   isLoading: boolean;
 }
 
+export interface PaymentAccount {
+  accountHolder: string;
+  alias?: string | null;
+  bank: string;
+  cbu?: string | null;
+  created_at: string;
+  email: string;
+  id: string;
+  is_active: boolean;
+  name: string;
+  nro_account: string;
+  ruc: string;
+  type_account: string;
+  updated_at: string;
+  user_id: string;
+}
 // Constantes
 export const PRESET_AMOUNTS = [1, 2, 5, 10, 20];
 
@@ -189,9 +206,21 @@ export function useRecharge() {
   const [referenceId, setReferenceId] = useState("");
   const [imageFile, setImageFile] = useState<any>(null);
   const [showBankTransferModal, setShowBankTransferModal] = useState(false);
-  const [paymentAccounts, setPaymentAccounts] = useState<any[]>([]);
-  const [selectedPaymentAccountId, setSelectedPaymentAccountId] =
-    useState<string>("a3b7c1d2-9f12-4b0a-85d4-123456789abc");
+  const [paymentAccounts, setPaymentAccounts] = useState<PaymentAccount[]>([]);
+  const [selectedPaymentAccount, setSelectedPaymentAccount] =
+    useState<PaymentAccount>();
+  const { tabs, onTabChange, activeTab } = useThemedTabs(
+    paymentAccounts.map((tab) => tab.bank),
+  );
+
+  // Change account with tab
+  useEffect(() => {
+    if (!activeTab || paymentAccounts.length === 0) return;
+
+    const selected = paymentAccounts.find((acc) => acc.bank === activeTab);
+
+    setSelectedPaymentAccount(selected);
+  }, [activeTab, paymentAccounts]);
 
   // Load Payment Accounts
   useEffect(() => {
@@ -199,11 +228,9 @@ export function useRecharge() {
     // assuming PaymentAccountService is available
     const loadPaymentAccounts = async () => {
       try {
-        const {
-          PaymentAccountService,
-        } = require("src/services/PaymentAccountApiService");
+        const { PaymentAccountService } = require("src/services");
         const response = await PaymentAccountService.getPaymentAccounts();
-
+        console.log("Respuesta de cuentas", response);
         // Handle response structure (it returns [data, count] based on controller analysis)
         let accounts: any[] = [];
         if (Array.isArray(response)) {
@@ -214,21 +241,10 @@ export function useRecharge() {
         }
         console.log("Loaded payment accounts:", accounts);
         setPaymentAccounts(accounts);
-
-        // Try to find the one matching "Banco Guayaquil"
-        const guayaquilAccount = accounts.find(
-          (acc: any) =>
-            acc.bank_name?.toLowerCase().includes("guayaquil") ||
-            acc.alias?.toLowerCase().includes("guayaquil"),
-        );
-
-        if (guayaquilAccount) {
-          setSelectedPaymentAccountId(guayaquilAccount.id);
-        } else if (accounts.length > 0) {
-          setSelectedPaymentAccountId(accounts[0].id);
-        }
+        setSelectedPaymentAccount(accounts[0]);
       } catch (error) {
-        console.error("Error loading payment accounts:", error);
+        const message = getBackendErrorMessage(error);
+        notify.error({ message });
       }
     };
 
@@ -250,14 +266,14 @@ export function useRecharge() {
     }
 
     // Validate Payment Account
-    if (!selectedPaymentAccountId && paymentAccounts.length === 0) {
+    if (!selectedPaymentAccount?.id && paymentAccounts.length === 0) {
       notify.error({ message: "No hay cuentas bancarias disponibles." });
       return;
     }
 
     // Use selected or first one
     const accountId =
-      selectedPaymentAccountId ||
+      selectedPaymentAccount?.id ||
       paymentAccounts[0]?.id ||
       "a3b7c1d2-9f12-4b0a-85d4-123456789abc";
 
@@ -343,7 +359,7 @@ export function useRecharge() {
     amount,
     selectedPaymentMethod,
     isLoading,
-
+    tabs,
     // Bank Transfer State
     referenceId,
     setReferenceId,
@@ -352,6 +368,7 @@ export function useRecharge() {
     showBankTransferModal,
     setShowBankTransferModal,
     paymentAccounts,
+    selectedPaymentAccount,
 
     // Datos calculados
     beCoinsAmount,
@@ -367,5 +384,6 @@ export function useRecharge() {
     handleProceedToPayment,
     handleBankTransferPayment, // Export handler to be used by modal
     setIsLoading,
+    onTabChange,
   };
 }

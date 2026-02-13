@@ -24,6 +24,7 @@ import { Button, toastConfig, WrapperModal } from "src/components";
 import { notify } from "src/hooks/notification/notify.external";
 import { CopyToClipboard } from "src/utils/shareHelper";
 import { File } from "expo-file-system";
+import ThemedTabs from "src/components/shared/Tabs/ThemedTabs";
 
 // ... existing imports ...
 
@@ -66,9 +67,10 @@ export default function RechargeScreen() {
     setImageFile,
     showBankTransferModal,
     setShowBankTransferModal,
-    paymentAccounts,
+    selectedPaymentAccount,
+    tabs,
+    onTabChange,
   } = useRecharge();
-
   const { balance: beCoinsBalance, loading: balanceLoading } = useUserBalance();
   const usdBalance = convertBeCoinsToUSD(beCoinsBalance || 0);
 
@@ -112,23 +114,6 @@ export default function RechargeScreen() {
     } catch (error) {
       Alert.alert("Error", "No se pudo abrir la galería.");
     }
-  };
-
-  // Find the account to display (e.g. Banco Guayaquil or first available)
-  // Hardcoding fallback as requested by user if API returns nothing or specific account overrides
-  const selectedAccount =
-    paymentAccounts.find((acc) =>
-      acc.bank_name?.toLowerCase().includes("guayaquil"),
-    ) || paymentAccounts[0];
-
-  // Use user provided hardcoded details if API is empty or as default display
-  const displayAccount = {
-    bankName: selectedAccount?.bank_name || "Banco Guayaquil",
-    accountNumber: selectedAccount?.account_number || "0005889133",
-    accountType: selectedAccount?.account_type || "Ahorro",
-    beneficiary: selectedAccount?.alias || "Vargas Reyes Diego Vicente",
-    email: selectedAccount?.email || "DIEGOVARGASREYES@GMAIL.COM",
-    identification: selectedAccount?.identification || "1705919668",
   };
 
   return (
@@ -479,33 +464,43 @@ export default function RechargeScreen() {
                 abajo.
               </Text>
             </View>
-
-            {/* Datos de la Cuenta */}
             <View className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800">
-              <Text className="text-sm font-semibold  uppercase tracking-wider mb-4">
-                Datos Bancarios
-              </Text>
+              <ThemedTabs tabs={tabs} onTabChange={onTabChange} />
+              {/* Datos de la Cuenta */}
+              {selectedPaymentAccount && (
+                <View>
+                  <Text className="text-sm font-semibold  uppercase tracking-wider mb-4">
+                    Datos Bancarios
+                  </Text>
 
-              <BankDetailRow label="Banco" value={displayAccount.bankName} />
-              <BankDetailRow
-                label="Tipo de Cuenta"
-                value={displayAccount.accountType}
-              />
-              <BankDetailRow
-                label="Número de Cuenta"
-                value={displayAccount.accountNumber}
-                isCopyable
-              />
-              <BankDetailRow
-                label="Beneficiario"
-                value={displayAccount.beneficiary}
-              />
-              <BankDetailRow
-                label="C.I. / RUC"
-                value={displayAccount.identification}
-                isCopyable
-              />
-              <BankDetailRow label="Correo" value={displayAccount.email} />
+                  <BankDetailRow
+                    label="Banco"
+                    value={selectedPaymentAccount.bank}
+                  />
+                  <BankDetailRow
+                    label="Tipo de Cuenta"
+                    value={selectedPaymentAccount.type_account}
+                  />
+                  <BankDetailRow
+                    label="Número de Cuenta"
+                    value={selectedPaymentAccount.nro_account}
+                    isCopyable
+                  />
+                  <BankDetailRow
+                    label="Beneficiario"
+                    value={selectedPaymentAccount.accountHolder}
+                  />
+                  <BankDetailRow
+                    label="C.I. / RUC"
+                    value={selectedPaymentAccount.ruc}
+                    isCopyable
+                  />
+                  <BankDetailRow
+                    label="Correo"
+                    value={selectedPaymentAccount.email}
+                  />
+                </View>
+              )}
             </View>
 
             {/* Subir Comprobante */}
