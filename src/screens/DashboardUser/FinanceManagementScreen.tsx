@@ -7,10 +7,11 @@ import {
   WrapperModal,
 } from "src/components";
 import { useFinanceAdmin } from "./hooks/useFinanceAdmin";
-import { View, Text } from "react-native";
+import { View, Text, Dimensions } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
 import { UserRecharge, UserWithdraw } from "@/services";
-import { contactUser, openWhatsapp } from "src/utils/contactLink";
+import { contactUser } from "src/utils/contactLink";
+import { Image } from "react-native";
 const getStatusColor = (status: string) => {
   switch (status) {
     case "Completada":
@@ -35,7 +36,11 @@ const FinancesManagement: React.FC = () => {
     setObservation,
     observation,
     handleCancel,
-    PutWithdraw,
+    handleConfirm,
+    imageModal,
+    closeImage,
+    image,
+    openImage,
   } = useFinanceAdmin();
 
   const WithDrawItem = ({ item }: { item: UserWithdraw }) => (
@@ -88,11 +93,11 @@ const FinancesManagement: React.FC = () => {
                 <Button
                   title="Rechazar"
                   variant="secondary"
-                  onPress={() => handleOpen(item.id, "reject")}
+                  onPress={() => handleOpen(item.id, "reject", "withdraw")}
                 />
                 <Button
                   title="Aprobar"
-                  onPress={() => handleOpen(item.id, "approve")}
+                  onPress={() => handleOpen(item.id, "approve", "withdraw")}
                 />
               </View>
             )}
@@ -147,13 +152,22 @@ const FinancesManagement: React.FC = () => {
             <Text>Usuario: {item.user.full_name}</Text>
 
             <Text>Monto: USD$ {item.amount_usd}</Text>
-            <Text>País: </Text>
-            <Text>Banco: </Text>
-            <Text>Cuenta Nro: </Text>
-            <Text>Cuenta tipo:</Text>
+            <Text>País: {item.user.country ?? "Sin datos"}</Text>
+            <Text>Banco receptor: {item.paymentAccount.bank} </Text>
+            <Text>Cuenta Receptora Nro:{item.paymentAccount.nro_account} </Text>
+            <Text>
+              Cuenta Receptora tipo: {item.paymentAccount.type_account}
+            </Text>
             <Text>Observación: {item.observation}</Text>
-            {item.status.name === "Completada" && (
-              <Text>Referencia Bancaria: {item.reference}</Text>
+            <Text>Referencia Bancaria: {item.transfer_id}</Text>
+            {item.ticket_image_url && (
+              <Button
+                title="Ver comprobante"
+                variant="inline"
+                onPress={() => {
+                  openImage(item.ticket_image_url);
+                }}
+              />
             )}
           </View>
           <View className="flex flex-row justify-center gap-8">
@@ -162,11 +176,11 @@ const FinancesManagement: React.FC = () => {
                 <Button
                   title="Rechazar"
                   variant="secondary"
-                  onPress={() => handleOpen(item.id, "reject")}
+                  onPress={() => handleOpen(item.id, "reject", "recharge")}
                 />
                 <Button
-                  title="Aprobar"
-                  onPress={() => handleOpen(item.id, "approve")}
+                  title="Acreditar Becoins"
+                  onPress={() => handleOpen(item.id, "approve", "recharge")}
                 />
               </View>
             )}
@@ -201,7 +215,7 @@ const FinancesManagement: React.FC = () => {
   return (
     <>
       <ThemedHeader canGoBack title="Finanzas" />
-      <Text>Ingresos Bancarios</Text>
+      <Text className="text-xl mx-auto mt-1">Ingresos Bancarios</Text>
       <FlatList
         data={paymentsTransfer}
         keyExtractor={(item) => item.id}
@@ -214,7 +228,7 @@ const FinancesManagement: React.FC = () => {
           </View>
         }
       />
-      <Text>Retiros Bancarios</Text>
+      <Text className="text-xl mx-auto ">Retiros Bancarios</Text>
       <FlatList
         data={withDraw}
         keyExtractor={(item) => item.id}
@@ -228,13 +242,30 @@ const FinancesManagement: React.FC = () => {
         }
       />
       <WrapperModal
+        key="modal2"
+        header={<Text className="text-lg font-semibold">Comprobante</Text>}
+        isOpen={imageModal}
+        onClose={closeImage}
+        content={
+          <Image
+            style={{
+              width: Dimensions.get("window").width,
+              height: Dimensions.get("window").height * 0.7,
+              resizeMode: "contain",
+            }}
+            source={{ uri: image }}
+          />
+        }
+      />
+      <WrapperModal
+        key="modal1"
         isOpen={modalOpen}
         onClose={handleCancel}
         header={<Text className="text-lg font-semibold">Confirmar acción</Text>}
         actions={
           <View className="flex flex-row justify-center gap-6">
             <Button title="Cancelar" onPress={handleCancel} />
-            <Button title="Confirmar" onPress={PutWithdraw} />
+            <Button title="Confirmar" onPress={handleConfirm} />
           </View>
         }
         content={
