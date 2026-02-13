@@ -19,11 +19,11 @@ import { useUserBalance } from "src/hooks/useUserBalance";
 import { convertBeCoinsToUSD, formatUSDPrice } from "src/constants/currency";
 
 import * as ImagePicker from "expo-image-picker";
-import { Modal, Alert } from "react-native";
-import Toast from "react-native-toast-message";
+import { Alert } from "react-native";
 import { Button, toastConfig, WrapperModal } from "src/components";
 import { notify } from "src/hooks/notification/notify.external";
 import { CopyToClipboard } from "src/utils/shareHelper";
+import { File } from "expo-file-system";
 
 // ... existing imports ...
 
@@ -62,8 +62,8 @@ export default function RechargeScreen() {
     // Bank Transfer Props
     referenceId,
     setReferenceId,
-    proofImage,
-    setProofImage,
+    imageFile,
+    setImageFile,
     showBankTransferModal,
     setShowBankTransferModal,
     paymentAccounts,
@@ -73,6 +73,7 @@ export default function RechargeScreen() {
   const usdBalance = convertBeCoinsToUSD(beCoinsBalance || 0);
 
   const pickImage = async () => {
+    const MAX_SIZE_BYTES = 10 * 1024 * 1024;
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ["images"],
@@ -81,10 +82,33 @@ export default function RechargeScreen() {
         quality: 0.8,
       });
 
-      if (!result.canceled) {
-        setProofImage(result.assets[0]);
+      if (result.canceled) return;
+
+      const asset = result.assets[0];
+
+      let fileSize = asset.fileSize;
+
+      if (!fileSize && asset.uri) {
+        const file = new File(asset.uri, asset.fileName ?? "image");
+        const info = file.info();
+        fileSize = info.size;
       }
-      console.log(result);
+
+      if (!fileSize) {
+        notify.error({
+          message: "No se pudo determinar el tamaño de la imagen",
+        });
+        return;
+      }
+
+      if (fileSize > MAX_SIZE_BYTES) {
+        notify.error({
+          message: "La imagen debe ser inferior a 10 MB",
+        });
+        return;
+      }
+
+      setImageFile(asset);
     } catch (error) {
       Alert.alert("Error", "No se pudo abrir la galería.");
     }
@@ -491,7 +515,7 @@ export default function RechargeScreen() {
                 onPress={pickImage}
                 className="bg-gray-100 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 items-center justify-center min-h-[150px]"
               >
-                {proofImage ? (
+                {imageFile ? (
                   <View className="items-center">
                     {/* Note: Image requires uri */}
                     {/* In Expo ImagePicker result structure: result.assets[0].uri */}
@@ -499,7 +523,7 @@ export default function RechargeScreen() {
                       ¡Imagen seleccionada!
                     </Text>
                     <Image
-                      source={proofImage}
+                      source={imageFile}
                       width={100}
                       height={100}
                       style={{
@@ -510,7 +534,7 @@ export default function RechargeScreen() {
                       }}
                     />
                     <Text className="text-xs text-center text-gray-500 mb-2">
-                      {proofImage.fileName}
+                      {imageFile.fileName}
                     </Text>
                     <Ionicons
                       name="checkmark-circle"

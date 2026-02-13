@@ -187,7 +187,7 @@ export function useRecharge() {
 
   // Bank Transfer State
   const [referenceId, setReferenceId] = useState("");
-  const [proofImage, setProofImage] = useState<any>(null);
+  const [imageFile, setImageFile] = useState<any>(null);
   const [showBankTransferModal, setShowBankTransferModal] = useState(false);
   const [paymentAccounts, setPaymentAccounts] = useState<any[]>([]);
   const [selectedPaymentAccountId, setSelectedPaymentAccountId] =
@@ -265,16 +265,26 @@ export function useRecharge() {
       setIsLoading(true);
 
       const { WalletService } = require("src/services/WalletApiService");
+      // ===============================
+      // 🖼️ CREAMOS CLOUDINARY URL
+      // ===============================
       const formData = new FormData();
-      formData.append("file", proofImage);
-      console.log(accountId);
+      if (imageFile.file instanceof File) {
+        // ✅ WEB
+        formData.append("file", imageFile.file);
+      }
+      // ✅ NATIVE
+      formData.append("file", {
+        uri: imageFile.uri,
+        name: imageFile.fileName ?? "comprobante",
+        type: imageFile.mimeType ?? "image/jpeg",
+      } as any);
       const imageUrl = await CloudinaryService.uploadImage(formData);
       if (!imageUrl) {
-        notify.error({
+        notify.info({
           message: "No pudimos procesar correctamente la imagen",
-          message2: "Intenta nuevamente",
+          message2: "No te preocupes puedes editar dentro del grupo",
         });
-        return;
       }
       // Note: Backend doesn't support image upload yet.
       // We send the reference ID and we assume the user has transferred.
@@ -283,7 +293,7 @@ export function useRecharge() {
         payment_account_id: accountId,
         amount_usd: Number(amount),
         transfer_id: referenceId,
-        ticket_image_url: "https://image.url",
+        ticket_image_url: imageUrl,
       });
 
       notify.success({
@@ -293,7 +303,7 @@ export function useRecharge() {
 
       // Reset logic
       setReferenceId("");
-      setProofImage(null);
+      setImageFile(null);
       setAmount("");
       setShowBankTransferModal(false);
       setSelectedPaymentMethod("");
@@ -337,8 +347,8 @@ export function useRecharge() {
     // Bank Transfer State
     referenceId,
     setReferenceId,
-    proofImage,
-    setProofImage,
+    imageFile,
+    setImageFile,
     showBankTransferModal,
     setShowBankTransferModal,
     paymentAccounts,

@@ -215,15 +215,15 @@ export class CoreApiService {
             `📡 Response Status: ${response.status} ${response.statusText}`,
           );
 
-          let data;
-          try {
-            data = await response.json();
-            console.log(`📦 Response Data:`, data);
-          } catch (jsonError) {
-            console.log(`⚠️ No JSON response or empty body`);
-            data = null;
-          }
+          let data: any = null;
 
+          const contentType = response.headers.get("content-type");
+
+          if (contentType?.includes("application/json")) {
+            data = await response.json();
+          } else {
+            data = await response.text();
+          }
           if (!response.ok) {
             console.error(`❌ API Error: ${response.status}`, data);
 

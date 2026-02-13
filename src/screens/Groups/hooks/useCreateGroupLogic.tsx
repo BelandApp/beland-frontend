@@ -10,6 +10,7 @@ import { UserAddress } from "@/services/addressService";
 import { notify } from "src/hooks/notification/notify.external";
 import * as ImagePicker from "expo-image-picker";
 import { CloudinaryService } from "@/services";
+import { File } from "expo-file-system";
 export type Participant = {
   id: string;
   name: string;
@@ -106,6 +107,7 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
   };
   const isValid = groupName && groupType && paymentTypeId && eventDate;
   const handlePickImage = async () => {
+    const MAX_SIZE_BYTES = 10 * 1024 * 1024;
     try {
       setIsLoadingData(true);
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -115,12 +117,35 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
         quality: 0.8,
       });
 
-      if (!result.canceled && result.assets[0]) {
-        setImageFile(result.assets[0]);
+      if (result.canceled) return;
+
+      const asset = result.assets[0];
+
+      let fileSize = asset.fileSize;
+
+      if (!fileSize && asset.uri) {
+        const file = new File(asset.uri, asset.fileName ?? "image");
+        const info = file.info();
+        fileSize = info.size;
       }
+
+      if (!fileSize) {
+        notify.error({
+          message: "No se pudo determinar el tamaño de la imagen",
+        });
+        return;
+      }
+
+      if (fileSize > MAX_SIZE_BYTES) {
+        notify.error({
+          message: "La imagen debe ser inferior a 10 MB",
+        });
+        return;
+      }
+
+      setImageFile(asset);
     } catch (error) {
-      console.error(error);
-      notify.error({ message: "Error al subir la imagen" });
+      Alert.alert("Error", "No se pudo abrir la galería.");
     } finally {
       setIsLoadingData(false);
     }
@@ -134,7 +159,16 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
       // 🖼️ CREAMOS CLOUDINARY URL
       // ===============================
       const formData = new FormData();
-      formData.append("file", imageFile);
+      if (imageFile.file instanceof File) {
+        // ✅ WEB
+        formData.append("file", imageFile.file);
+      }
+      // ✅ NATIVE
+      formData.append("file", {
+        uri: imageFile.uri,
+        name: imageFile.fileName ?? "comprobante",
+        type: imageFile.mimeType ?? "image/jpeg",
+      } as any);
       const imageUrl = await CloudinaryService.uploadImage(formData);
       if (!imageUrl) {
         notify.info({
@@ -142,7 +176,6 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
           message2: "No te preocupes puedes editar dentro del grupo",
         });
       }
-
       // ===============================
       // CREAMOS GRUPO
       // ===============================
