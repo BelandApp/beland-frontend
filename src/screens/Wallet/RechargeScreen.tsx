@@ -29,10 +29,10 @@ import { File } from "expo-file-system";
 
 // Helper component for Bank Details row
 const BankDetailRow = ({ label, value, isCopyable = false }: any) => (
-  <View className="flex-row justify-between py-2 border-b border-gray-100 dark:border-gray-800">
-    <Text className="text-gray-500 dark:text-gray-400 text-sm">{label}</Text>
+  <View className="flex-col sm:flex-row justify-between py-2 border-b border-gray-100 dark:border-gray-800">
+    <Text className="text-gray-900 text-sm">{label}</Text>
     <View className="flex-row items-center gap-2">
-      <Text className="text-gray-900 dark:text-white font-medium text-right text-xs md:text-sm max-w-[200px]">
+      <Text className="text-gray-700 font-medium text-right text-xs md:text-sm  line-clamp-1">
         {value}
       </Text>
       {isCopyable && (
@@ -468,19 +468,21 @@ export default function RechargeScreen() {
               </View>
               <Text className=" text-sm ml-7">
                 1. Realiza la transferencia por el monto exacto de{" "}
-                <Text className="font-bold">${usdAmount.toFixed(2)}</Text>.
+                <Text className="font-bold">${usdAmount.toFixed(2)}</Text>. El
+                exceso no sera tenido en cuenta por el sistema.
               </Text>
               <Text className=" text-sm ml-7 mt-1">
                 2. Toma una captura o foto del comprobante.
               </Text>
               <Text className=" text-sm ml-7 mt-1">
-                3. Sube la foto y escribe el número de referencia abajo.
+                3. Sube la foto y escribe el número de referencia bancaria
+                abajo.
               </Text>
             </View>
 
             {/* Datos de la Cuenta */}
-            <View className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 mb-6 shadow-sm">
-              <Text className="text-sm font-semibold text-white uppercase tracking-wider mb-4">
+            <View className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800">
+              <Text className="text-sm font-semibold  uppercase tracking-wider mb-4">
                 Datos Bancarios
               </Text>
 
@@ -508,12 +510,12 @@ export default function RechargeScreen() {
 
             {/* Subir Comprobante */}
             <View className="mb-6">
-              <Text className="text-base font-bold  mb-3">
+              <Text className="text-base font-bold  my-3">
                 Subir Comprobante
               </Text>
               <TouchableOpacity
                 onPress={pickImage}
-                className="bg-gray-100 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 items-center justify-center min-h-[150px]"
+                className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800 items-center justify-center min-h-[150px]"
               >
                 {imageFile ? (
                   <View className="items-center">
@@ -541,20 +543,20 @@ export default function RechargeScreen() {
                       size={40}
                       color="#22C55E"
                     />
-                    <Text className="text-xs text-blue-500 mt-2">
+                    <Text className="text-xs text-gray-900 mt-2">
                       Toque para cambiar
                     </Text>
                   </View>
                 ) : (
                   <>
-                    <View className="bg-white dark:bg-gray-700 p-3 rounded-full mb-2 shadow-sm">
+                    <View className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl  border-blue-100 dark:border-blue-800 mb-2 ">
                       <Ionicons
                         name="cloud-upload-outline"
                         size={24}
                         color="#F97316"
                       />
                     </View>
-                    <Text className="text-gray-600 dark:text-gray-300 font-medium">
+                    <Text className="text-gray-600 dark:text-gray-900 font-medium">
                       Subir foto del comprobante
                     </Text>
                     <Text className="text-xs text-gray-400 mt-1">
@@ -568,14 +570,14 @@ export default function RechargeScreen() {
             {/* Número de Referencia */}
             <View className="mb-20">
               <Text className="text-base font-bold mb-3">
-                Número de Referencia
+                Número de Referencia / Transacción Bancaria
               </Text>
               <TextInput
                 value={referenceId}
                 onChangeText={setReferenceId}
                 placeholder="Ej: 12345678"
                 placeholderTextColor="#9CA3AF"
-                className="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-3 text-gray-900 dark:text-white text-base"
+                className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800 py-3 text-gray-900 text-base"
               />
               <Text className="text-xs text-gray-500 mt-2 ml-1">
                 Ingresa el número de confirmación que aparece en tu comprobante.
