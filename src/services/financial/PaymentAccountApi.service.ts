@@ -1,4 +1,8 @@
-import { CoreApiService, PaginatedResponse } from "./core/ApiService";
+import {
+  adaptSequelizePagination,
+  CoreApiService,
+  PaginatedResponse,
+} from "../core/ApiService";
 
 export interface PaymentAccount {
   id: string;
@@ -15,7 +19,7 @@ export interface PaymentAccount {
 }
 
 class PaymentAccountServiceClass extends CoreApiService {
-  private readonly ENDPOINT = "payment-account";
+  private readonly ENDPOINT = "payment-account/at-recharge";
 
   /**
    * Get all payment accounts
@@ -33,7 +37,7 @@ class PaymentAccountServiceClass extends CoreApiService {
     // However, looking at other services, let's assume standard response or we handle it.
     // Actually, most NestJS standard is just returning the value.
     // If it returns [items, count], we should probably wrap it or type it as any first to be safe.
-    return this.get<any>(`${this.ENDPOINT}/user?${queryString}`);
+    return this.get<any>(`${this.ENDPOINT}`);
   }
 
   /**

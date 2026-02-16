@@ -20,10 +20,11 @@ import { convertBeCoinsToUSD, formatUSDPrice } from "src/constants/currency";
 
 import * as ImagePicker from "expo-image-picker";
 import { Alert } from "react-native";
-import { Button, toastConfig, WrapperModal } from "src/components";
+import { BeCoinsBalance, Button, toastConfig, WrapperModal } from "src/components";
 import { notify } from "src/hooks/notification/notify.external";
 import { CopyToClipboard } from "src/utils/shareHelper";
 import { File } from "expo-file-system";
+import ThemedTabs from "src/components/shared/Tabs/ThemedTabs";
 
 // ... existing imports ...
 
@@ -60,34 +61,18 @@ export default function RechargeScreen() {
     handlePaymentMethodSelect,
     handleProceedToPayment,
     handleBankTransferPayment,
-    // Bank Transfer Props
     referenceId,
     setReferenceId,
     image,
     pickImage,
     showBankTransferModal,
     setShowBankTransferModal,
-    paymentAccounts,
+    selectedPaymentAccount,
+    tabs,
+    onTabChange,
   } = useRecharge();
-
   const { balance: beCoinsBalance, loading: balanceLoading } = useUserBalance();
   const usdBalance = convertBeCoinsToUSD(beCoinsBalance || 0);
-
-  // Find the account to display (e.g. Banco Guayaquil or first available)
-  // Hardcoding fallback as requested by user if API returns nothing or specific account overrides
-  const selectedAccount =
-    paymentAccounts.find((acc) =>
-      acc.bank_name?.toLowerCase().includes("guayaquil"),
-    ) || paymentAccounts[0];
-
-  // Use user provided hardcoded details if API is empty or as default display
-  const displayAccount = {
-    bankName: selectedAccount?.bank_name || "Banco Guayaquil",
-    accountNumber: selectedAccount?.account_number || "0005889133",
-    accountType: selectedAccount?.account_type || "Ahorro",
-    beneficiary: selectedAccount?.alias || "Vargas Reyes Diego Vicente",
-    email: selectedAccount?.email || "DIEGOVARGASREYES@GMAIL.COM",
-    identification: selectedAccount?.identification || "1705919668",
   };
 
   return (
@@ -103,41 +88,10 @@ export default function RechargeScreen() {
               style={{ position: "relative" }}
             >
               {/* Header con Saldo: pill centrado encima en móvil, alineado a la derecha en escritorio */}
-              <View className="mb-6 relative">
-                {/* Pill: absolute centered on small screens, static on md */}
-                <View className="absolute left-1/2 -translate-x-1/2 -top-2 md:static md:left-auto md:translate-x-0 md:top-0 md:self-end">
-                  <View className="bg-orange-50 dark:bg-orange-900/20 px-2 py-1 rounded-xl flex-row items-center gap-2 border border-orange-100 dark:border-orange-800/30 max-w-[170px] shadow-sm">
-                    <View className="w-8 h-8 rounded-full bg-orange-500 items-center justify-center flex-shrink-0">
-                      <Ionicons name="wallet" size={16} color="white" />
-                    </View>
-                    <View className="flex-shrink flex-wrap items-center md:items-start text-center md:text-left">
-                      <Text className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">
-                        Saldo actual
-                      </Text>
-                      <Text className="text-xs font-bold text-gray-900 dark:text-white">
-                        {balanceLoading
-                          ? "—"
-                          : `$${formatUSDPrice(usdBalance)}`}
-                      </Text>
-                      {!balanceLoading && (
-                        <Text className="text-[10px] text-gray-500 dark:text-gray-400">
-                          {Math.floor(beCoinsBalance || 0)} BeCoins
-                        </Text>
-                      )}
-                    </View>
-                  </View>
-                </View>
-
-                {/* Título y subtítulo: padding top to avoid overlap on small screens */}
-                <View className="pt-12 md:pt-0">
-                  <Text className="text-2xl font-bold text-gray-900 dark:text-white mb-2 text-center md:text-left">
-                    Ingresa el monto
-                  </Text>
-                  <Text className="text-sm text-gray-500 dark:text-gray-400 text-center md:text-left">
-                    Selecciona o escribe la cantidad a recargar
-                  </Text>
-                </View>
-              </View>
+              <BeCoinsBalance
+                            size="medium"
+                            variant="header"
+                            />
 
               {/* Input de Monto */}
               <View className="mb-12">
@@ -447,33 +401,43 @@ export default function RechargeScreen() {
                 abajo.
               </Text>
             </View>
-
-            {/* Datos de la Cuenta */}
             <View className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800">
-              <Text className="text-sm font-semibold  uppercase tracking-wider mb-4">
-                Datos Bancarios
-              </Text>
+              <ThemedTabs tabs={tabs} onTabChange={onTabChange} />
+              {/* Datos de la Cuenta */}
+              {selectedPaymentAccount && (
+                <View>
+                  <Text className="text-sm font-semibold  uppercase tracking-wider mb-4">
+                    Datos Bancarios
+                  </Text>
 
-              <BankDetailRow label="Banco" value={displayAccount.bankName} />
-              <BankDetailRow
-                label="Tipo de Cuenta"
-                value={displayAccount.accountType}
-              />
-              <BankDetailRow
-                label="Número de Cuenta"
-                value={displayAccount.accountNumber}
-                isCopyable
-              />
-              <BankDetailRow
-                label="Beneficiario"
-                value={displayAccount.beneficiary}
-              />
-              <BankDetailRow
-                label="C.I. / RUC"
-                value={displayAccount.identification}
-                isCopyable
-              />
-              <BankDetailRow label="Correo" value={displayAccount.email} />
+                  <BankDetailRow
+                    label="Banco"
+                    value={selectedPaymentAccount.bank}
+                  />
+                  <BankDetailRow
+                    label="Tipo de Cuenta"
+                    value={selectedPaymentAccount.type_account}
+                  />
+                  <BankDetailRow
+                    label="Número de Cuenta"
+                    value={selectedPaymentAccount.nro_account}
+                    isCopyable
+                  />
+                  <BankDetailRow
+                    label="Beneficiario"
+                    value={selectedPaymentAccount.accountHolder}
+                  />
+                  <BankDetailRow
+                    label="C.I. / RUC"
+                    value={selectedPaymentAccount.ruc}
+                    isCopyable
+                  />
+                  <BankDetailRow
+                    label="Correo"
+                    value={selectedPaymentAccount.email}
+                  />
+                </View>
+              )}
             </View>
 
             {/* Subir Comprobante */}

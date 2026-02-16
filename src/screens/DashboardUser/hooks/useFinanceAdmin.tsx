@@ -7,82 +7,114 @@ import {
   UserWithdraw,
 } from "src/services/financial";
 
+type ActionType = "approve" | "reject";
+type EntityType = "withdraw" | "recharge";
+
 export const useFinanceAdmin = () => {
-  const [withDraw, setWithDraw] = useState<UserWithdraw[] | []>([]);
-  const [paymentsTransfer, setPaymentsTransfer] = useState<UserRecharge[] | []>(
-    [],
-  );
+  const [withDraw, setWithDraw] = useState<UserWithdraw[]>([]);
+  const [paymentsTransfer, setPaymentsTransfer] = useState<UserRecharge[]>([]);
   const [loading, setLoading] = useState(false);
-  const [modalOpen, setModalOpen] = useState<boolean>(false);
-  const [reference, setReference] = useState<string>("");
-  const [observation, setObservation] = useState<string>("");
-  const [user_withdraw_id, setUser_withdraw_id] = useState<string>("");
-  const [typeAction, setTypeAction] = useState<"approve" | "reject" | null>(
-    null,
-  );
-  const loadAccountTypes = async () => {
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [imageModal, setImageModal] = useState(false);
+
+  const [image, setImage] = useState("");
+  const [reference, setReference] = useState("");
+  const [observation, setObservation] = useState("");
+
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [typeAction, setTypeAction] = useState<ActionType | null>(null);
+  const [entityType, setEntityType] = useState<EntityType | null>(null);
+
+  const loadData = async () => {
     try {
       setLoading(true);
-      const resRetiros = await WithdrawService.getWithdrawHistory(1, 0);
-      console.log("retiros pendientes", resRetiros);
-      const data = resRetiros.data;
-      // Ordenamos primero los pendientes
-      const pending = data.filter((i) => i?.status?.name === "Pendiente");
 
+      const resRetiros = await WithdrawService.getWithdrawHistory(1, 0);
+      const data = resRetiros.data;
+
+      const pending = data.filter((i) => i?.status?.name === "Pendiente");
       const rest = data.filter((i) => i?.status?.name !== "Pendiente");
 
       setWithDraw([...pending, ...rest]);
+
       const resIngresos = await UserRechargeService.getAll();
-      console.log("Ingresos por Transferencia:", resIngresos);
-      setPaymentsTransfer(resIngresos.data);
+      setPaymentsTransfer(resIngresos);
     } catch (err) {
-      console.error(err);
-      notify.error({ message: "No se pudieron cargar los tipos de cuenta" });
+      notify.error({ message: "No se pudieron cargar los datos" });
     } finally {
       setLoading(false);
     }
   };
+
   useEffect(() => {
-    loadAccountTypes();
+    loadData();
   }, []);
-  const handleOpen = (
-    user_withdraw_id: string,
-    type: "approve" | "reject" | null,
-  ) => {
+
+  const handleOpen = (id: string, action: ActionType, entity: EntityType) => {
+    setSelectedId(id);
+    setTypeAction(action);
+    setEntityType(entity);
     setModalOpen(true);
-    setUser_withdraw_id(user_withdraw_id);
-    setTypeAction(type);
   };
+
   const handleCancel = () => {
     setModalOpen(false);
     setReference("");
     setObservation("");
     setTypeAction(null);
+    setEntityType(null);
+    setSelectedId(null);
   };
 
-  const PutWithdraw = async () => {
+  const openImage = (uri: string) => {
+    setImage(uri);
+    setImageModal(true);
+  };
+
+  const closeImage = () => {
+    setImageModal(false);
+    setImage("");
+  };
+
+  const handleConfirm = async () => {
+    if (!selectedId || !typeAction || !entityType) return;
+
     try {
-      const data = {
-        user_withdraw_id,
-        observation,
-        reference,
-      };
-      if (typeAction === "approve") {
-        await WithdrawService.approveWithdraw(data);
+      if (entityType === "withdraw") {
+        const data = {
+          user_withdraw_id: selectedId,
+          observation,
+          reference,
+        };
+
+        if (typeAction === "approve") {
+          await WithdrawService.approveWithdraw(data);
+        } else {
+          await WithdrawService.rejectWithdraw(data);
+        }
       }
-      if (typeAction === "reject") {
-        await WithdrawService.rejectWithdraw(data);
-      } else {
-        notify.error({ message: "Error al seleccionar tipo" });
+
+      if (entityType === "recharge") {
+        if (typeAction === "approve") {
+          await UserRechargeService.aprove(selectedId);
+        } else {
+          await UserRechargeService.reject(selectedId);
+        }
       }
-      notify.success({ message: "Acción completada" });
-      setTimeout(handleCancel, 3000);
+
+      notify.success({ message: "Acción completada correctamente" });
+
+      await loadData();
+      handleCancel();
     } catch (error) {
-      const res = getBackendErrorMessage(error);
+      const msg = getBackendErrorMessage(error);
       notify.error({
         message:
-          res ||
-          `Error al ${typeAction === "approve" ? "Aprobar" : "Rechazar"} el retiro`,
+          msg ||
+          `Error al ${
+            typeAction === "approve" ? "aprobar" : "rechazar"
+          } la operación`,
       });
     }
   };
@@ -91,13 +123,20 @@ export const useFinanceAdmin = () => {
     withDraw,
     paymentsTransfer,
     loading,
+
     modalOpen,
     handleOpen,
+    handleCancel,
+    handleConfirm,
+
     reference,
     setReference,
     observation,
     setObservation,
-    handleCancel,
-    PutWithdraw,
+
+    imageModal,
+    openImage,
+    closeImage,
+    image,
   };
 };
