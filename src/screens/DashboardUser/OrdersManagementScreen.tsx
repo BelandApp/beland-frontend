@@ -674,11 +674,11 @@ export const OrdersManagementScreen: React.FC = () => {
     setVerificationModalVisible(true);
   };
 
-  const handleConfirmDelivery = async (code: number) => {
+  const handleConfirmDelivery = async (code: number, weigth?: number) => {
     if (!pendingDeliveryOrderId) return;
 
     try {
-      await OrderService.deliverOrder(pendingDeliveryOrderId, code);
+      await OrderService.deliverOrder(pendingDeliveryOrderId, code, weigth);
       await loadOrders();
       notify.success({ message: "Orden marcada como entregada" });
     } catch (err) {

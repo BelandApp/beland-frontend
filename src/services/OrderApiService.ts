@@ -451,10 +451,12 @@ class OrderServiceClass extends CoreApiService {
   async deliverOrder(
     orderId: string,
     verificationCode: number,
+    weigth?: number,
   ): Promise<Order> {
     const params = new URLSearchParams();
     params.append("order_id", orderId);
     params.append("code", verificationCode.toString());
+    if (weigth) params.append("weigth", weigth.toString());
     return this.put(`orders/delivered?${params.toString()}`);
   }
 
