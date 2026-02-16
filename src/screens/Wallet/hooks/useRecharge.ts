@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Platform, Alert } from "react-native";
+import { useUploadImage } from "src/hooks";
 import { notify } from "src/hooks/notification/notify.external";
 import { getBackendErrorMessage } from "src/services";
 import { CloudinaryService } from "src/services/cloudinary/cloudinary.service";
@@ -41,6 +42,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     description: "Sin comisiones",
   },
 ];
+type PaymentMethodId = PaymentMethod["id"];
 
 // Función para cargar el script Payphone en web
 function loadPayphoneScript(): Promise<void> {
@@ -91,7 +93,8 @@ function loadPayphoneScript(): Promise<void> {
 // Hook personalizado
 export function useRecharge() {
   const [amount, setAmount] = useState("");
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] =
+    useState<PaymentMethodId | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   // Cálculos derivados
@@ -114,7 +117,7 @@ export function useRecharge() {
     setAmount(presetAmount.toString());
   };
 
-  const handlePaymentMethodSelect = (methodId: string) => {
+  const handlePaymentMethodSelect = (methodId: PaymentMethodId) => {
     setSelectedPaymentMethod(methodId);
   };
 
@@ -187,7 +190,14 @@ export function useRecharge() {
 
   // Bank Transfer State
   const [referenceId, setReferenceId] = useState("");
-  const [imageFile, setImageFile] = useState<any>(null);
+  const {
+    image,
+    pickImage,
+    appendToFormData,
+    clearImage,
+    previewUri,
+    imageName,
+  } = useUploadImage();
   const [showBankTransferModal, setShowBankTransferModal] = useState(false);
   const [paymentAccounts, setPaymentAccounts] = useState<any[]>([]);
   const [selectedPaymentAccountId, setSelectedPaymentAccountId] =
@@ -268,26 +278,16 @@ export function useRecharge() {
       // ===============================
       // 🖼️ CREAMOS CLOUDINARY URL
       // ===============================
+
       const formData = new FormData();
-      if (imageFile.file instanceof File) {
-        // ✅ WEB
-        formData.append("file", imageFile.file);
-      }
-      // ✅ NATIVE
-      formData.append("file", {
-        uri: imageFile.uri,
-        name: imageFile.fileName ?? "comprobante",
-        type: imageFile.mimeType ?? "image/jpeg",
-      } as any);
+      appendToFormData(formData);
+
       const imageUrl = await CloudinaryService.uploadImage(formData);
       if (!imageUrl) {
         notify.info({
           message: "No pudimos procesar correctamente la imagen",
-          message2: "No te preocupes puedes editar dentro del grupo",
         });
       }
-      // Note: Backend doesn't support image upload yet.
-      // We send the reference ID and we assume the user has transferred.
 
       await WalletService.createRechargeTransfer({
         payment_account_id: accountId,
@@ -303,10 +303,10 @@ export function useRecharge() {
 
       // Reset logic
       setReferenceId("");
-      setImageFile(null);
+      clearImage();
       setAmount("");
       setShowBankTransferModal(false);
-      setSelectedPaymentMethod("");
+      setSelectedPaymentMethod(null);
     } catch (error: any) {
       console.error("Error creating bank transfer recharge:", error);
       const res = getBackendErrorMessage(error);
@@ -343,12 +343,13 @@ export function useRecharge() {
     amount,
     selectedPaymentMethod,
     isLoading,
-
+    previewUri,
+    imageName,
     // Bank Transfer State
     referenceId,
     setReferenceId,
-    imageFile,
-    setImageFile,
+    image,
+    pickImage,
     showBankTransferModal,
     setShowBankTransferModal,
     paymentAccounts,

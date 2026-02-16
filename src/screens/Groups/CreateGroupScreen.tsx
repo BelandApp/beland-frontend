@@ -7,10 +7,11 @@ import {
   Platform,
   ActivityIndicator,
   Modal,
+  Alert,
 } from "react-native";
 import Feather from "react-native-vector-icons/Feather";
 import DateTimePicker from "@react-native-community/datetimepicker";
-
+import * as ImagePicker from "expo-image-picker";
 import useCreateGroupLogic from "./hooks/useCreateGroupLogic";
 import Card from "./components/Card";
 import Field from "./components/Field";
@@ -21,7 +22,7 @@ import { useNotify } from "@/hooks";
 import { Group } from "@/services/GroupApiService";
 import { Button, ThemedHeader } from "src/components";
 import { useResponsiveLayout } from "../Home";
-import { colors } from "src/styles";
+import { File } from "expo-file-system";
 
 export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
   const notify = useNotify();
@@ -38,7 +39,8 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
     paymentTypeId,
     userAddressId,
     eventDate,
-    imageFile,
+    image,
+    pickImage,
 
     // Setters
     setGroupName,
@@ -63,8 +65,7 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
     isValid,
     // Actions
     createGroup,
-    handlePickImage,
-  } = useCreateGroupLogic({ navigation });
+  } = useCreateGroupLogic();
 
   // Local UI State
   const [showAddressModal, setShowAddressModal] = React.useState(false);
@@ -214,17 +215,17 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
                 />
                 <Button
                   title="Cargar imagen"
-                  onPress={handlePickImage}
+                  onPress={() => pickImage([16, 9])}
                   icon={
                     <Feather
-                      name={imageFile ? "check" : "camera"}
+                      name={image ? "check" : "camera"}
                       size={20}
-                      color={imageFile ? "green" : "#f97316"}
+                      color={image ? "green" : "#f97316"}
                     />
                   }
                   variant="onlyIcon"
                   style={{
-                    borderColor: imageFile ? "#00e074" : "#f97316",
+                    borderColor: image ? "#00e074" : "#f97316",
                     paddingVertical: 13,
                     borderRadius: 16,
                   }}

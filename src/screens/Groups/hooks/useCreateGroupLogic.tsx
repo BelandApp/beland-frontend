@@ -11,6 +11,7 @@ import { notify } from "src/hooks/notification/notify.external";
 import * as ImagePicker from "expo-image-picker";
 import { CloudinaryService } from "@/services";
 import { File } from "expo-file-system";
+import { useUploadImage } from "src/hooks/image/useUploadImage";
 export type Participant = {
   id: string;
   name: string;
@@ -20,7 +21,7 @@ export type Participant = {
 
 export type ProductItem = { id: string; name: string; price: number };
 
-export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
+export const useCreateGroupLogic = () => {
   // Form State
   const [groupName, setGroupName] = useState("");
   const [groupType, setGroupType] = useState("");
@@ -30,7 +31,7 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
   const [paymentTypeId, setPaymentTypeId] = useState<string>("");
   const [userAddressId, setUserAddressId] = useState<string>("");
   const [eventDate, setEventDate] = useState<string>("");
-  const [imageFile, setImageFile] = useState<any | null>(null);
+  const { image, pickImage, appendToFormData, clearImage } = useUploadImage();
   // Data Options State
   const [groupTypes, setGroupTypes] = React.useState<GroupType[]>([]);
   const [privacyOptions, setPrivacyOptions] = React.useState<GroupPrivacy[]>(
@@ -106,74 +107,22 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
     return true;
   };
   const isValid = groupName && groupType && paymentTypeId && eventDate;
-  const handlePickImage = async () => {
-    const MAX_SIZE_BYTES = 10 * 1024 * 1024;
-    try {
-      setIsLoadingData(true);
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"],
-        allowsEditing: true,
-        aspect: [16, 9],
-        quality: 0.8,
-      });
 
-      if (result.canceled) return;
-
-      const asset = result.assets[0];
-
-      let fileSize = asset.fileSize;
-
-      if (!fileSize && asset.uri) {
-        const file = new File(asset.uri, asset.fileName ?? "image");
-        const info = file.info();
-        fileSize = info.size;
-      }
-
-      if (!fileSize) {
-        notify.error({
-          message: "No se pudo determinar el tamaño de la imagen",
-        });
-        return;
-      }
-
-      if (fileSize > MAX_SIZE_BYTES) {
-        notify.error({
-          message: "La imagen debe ser inferior a 10 MB",
-        });
-        return;
-      }
-
-      setImageFile(asset);
-    } catch (error) {
-      Alert.alert("Error", "No se pudo abrir la galería.");
-    } finally {
-      setIsLoadingData(false);
-    }
-  };
   const createGroup = async () => {
     if (!validate()) return null;
-    console.log("pase");
     setIsCreating(true);
     try {
       // ===============================
       // 🖼️ CREAMOS CLOUDINARY URL
       // ===============================
+
       const formData = new FormData();
-      if (imageFile.file instanceof File) {
-        // ✅ WEB
-        formData.append("file", imageFile.file);
-      }
-      // ✅ NATIVE
-      formData.append("file", {
-        uri: imageFile.uri,
-        name: imageFile.fileName ?? "comprobante",
-        type: imageFile.mimeType ?? "image/jpeg",
-      } as any);
+      appendToFormData(formData);
+
       const imageUrl = await CloudinaryService.uploadImage(formData);
       if (!imageUrl) {
         notify.info({
           message: "No pudimos procesar correctamente la imagen",
-          message2: "No te preocupes puedes editar dentro del grupo",
         });
       }
       // ===============================
@@ -186,7 +135,7 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
         payment_type_id: paymentTypeId,
         user_address_id: userAddressId,
         event_at: eventDate,
-        image: imageUrl ?? "",
+        image_url: imageUrl,
       };
 
       const desc = description?.trim();
@@ -215,7 +164,7 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
     userAddressId,
     eventDate,
     isValid,
-    imageFile,
+    image,
 
     // Setters
     setGroupName,
@@ -226,6 +175,7 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
     setPaymentTypeId,
     setUserAddressId,
     setEventDate,
+    pickImage,
 
     // Data Options
     groupTypes,
@@ -240,7 +190,6 @@ export const useCreateGroupLogic = (opts?: { navigation?: any }) => {
 
     // Actions
     createGroup,
-    handlePickImage,
   } as const;
 };
 

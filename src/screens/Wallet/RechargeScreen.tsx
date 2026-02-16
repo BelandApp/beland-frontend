@@ -51,7 +51,8 @@ export default function RechargeScreen() {
     isLoading,
     beCoinsAmount,
     usdAmount,
-    processingFee,
+    previewUri,
+    imageName,
     totalAmount,
     isValid,
     handleAmountChange,
@@ -62,8 +63,8 @@ export default function RechargeScreen() {
     // Bank Transfer Props
     referenceId,
     setReferenceId,
-    imageFile,
-    setImageFile,
+    image,
+    pickImage,
     showBankTransferModal,
     setShowBankTransferModal,
     paymentAccounts,
@@ -71,48 +72,6 @@ export default function RechargeScreen() {
 
   const { balance: beCoinsBalance, loading: balanceLoading } = useUserBalance();
   const usdBalance = convertBeCoinsToUSD(beCoinsBalance || 0);
-
-  const pickImage = async () => {
-    const MAX_SIZE_BYTES = 10 * 1024 * 1024;
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"],
-        allowsEditing: true,
-        aspect: [4, 6],
-        quality: 0.8,
-      });
-
-      if (result.canceled) return;
-
-      const asset = result.assets[0];
-
-      let fileSize = asset.fileSize;
-
-      if (!fileSize && asset.uri) {
-        const file = new File(asset.uri, asset.fileName ?? "image");
-        const info = file.info();
-        fileSize = info.size;
-      }
-
-      if (!fileSize) {
-        notify.error({
-          message: "No se pudo determinar el tamaño de la imagen",
-        });
-        return;
-      }
-
-      if (fileSize > MAX_SIZE_BYTES) {
-        notify.error({
-          message: "La imagen debe ser inferior a 10 MB",
-        });
-        return;
-      }
-
-      setImageFile(asset);
-    } catch (error) {
-      Alert.alert("Error", "No se pudo abrir la galería.");
-    }
-  };
 
   // Find the account to display (e.g. Banco Guayaquil or first available)
   // Hardcoding fallback as requested by user if API returns nothing or specific account overrides
@@ -334,16 +293,18 @@ export default function RechargeScreen() {
                     </View>
 
                     {/* Comisión */}
-                    <View className="flex-col md:flex-row justify-between mb-3">
-                      <Text className="text-sm text-gray-600 dark:text-gray-400">
-                        Comisión de terceros
-                      </Text>
-                      <View className="bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-md">
-                        <Text className="text-sm font-bold text-orange-600 dark:text-orange-400">
-                          Te lo devolvemos en Orange Becoins (6%)
+                    {selectedPaymentMethod === "PAYPHONE" && (
+                      <View className="flex-col md:flex-row justify-between mb-3">
+                        <Text className="text-sm text-gray-600 dark:text-gray-400">
+                          Comisión de terceros
                         </Text>
+                        <View className="bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-md">
+                          <Text className="text-sm font-bold text-orange-600 dark:text-orange-400">
+                            Te lo devolvemos en Orange Becoins (6%)
+                          </Text>
+                        </View>
                       </View>
-                    </View>
+                    )}
 
                     <View className="flex-row justify-between mb-3">
                       <Text className="text-sm text-gray-600 dark:text-gray-400">
@@ -376,25 +337,32 @@ export default function RechargeScreen() {
                           Recibirás
                         </Text>
                         <Text className="text-base font-bold text-yellow-600 dark:text-yellow-400">
-                          {beCoinsAmount - beCoinsAmount * 0.06} BeCoins
+                          {selectedPaymentMethod === "PAYPHONE"
+                            ? `${beCoinsAmount - beCoinsAmount * 0.06} BeCoins`
+                            : `${beCoinsAmount} Becoins`}
                         </Text>
-                        <Text className="px-1 text-sm text-gray-700 dark:text-gray-300">
-                          y
-                        </Text>
-                        <Text className="text-base font-bold text-orange-600 dark:text-orange-400">
-                          {beCoinsAmount * 0.06} Orange Becoins
-                        </Text>
-                        <Ionicons
-                          name="information-circle"
-                          size={20}
-                          color="gray"
-                          onPress={() =>
-                            notify.info({
-                              message:
-                                "Absorvemos la comision bancaria y te la devolvemos como Orange BeCoins",
-                            })
-                          }
-                        />
+
+                        {selectedPaymentMethod === "PAYPHONE" && (
+                          <>
+                            <Text className="px-1 text-sm text-gray-700 dark:text-gray-300">
+                              y
+                            </Text>
+                            <Text className="text-base font-bold text-orange-600 dark:text-orange-400">
+                              {beCoinsAmount * 0.06} Orange Becoins
+                            </Text>
+                            <Ionicons
+                              name="information-circle"
+                              size={20}
+                              color="gray"
+                              onPress={() =>
+                                notify.info({
+                                  message:
+                                    "Absorvemos la comision bancaria y te la devolvemos como Orange BeCoins",
+                                })
+                              }
+                            />
+                          </>
+                        )}
                       </View>
                       <Text className="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
                         1 BeCoin = $0.05 USD
@@ -514,29 +482,27 @@ export default function RechargeScreen() {
                 Subir Comprobante
               </Text>
               <TouchableOpacity
-                onPress={pickImage}
+                onPress={() => pickImage()}
                 className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800 items-center justify-center min-h-[150px]"
               >
-                {imageFile ? (
+                {image && previewUri ? (
                   <View className="items-center">
                     {/* Note: Image requires uri */}
                     {/* In Expo ImagePicker result structure: result.assets[0].uri */}
                     <Text className="text-green-600 font-bold mb-2">
-                      ¡Imagen seleccionada!
+                      Imagen seleccionada:
                     </Text>
                     <Image
-                      source={imageFile}
-                      width={100}
-                      height={100}
+                      source={{ uri: previewUri }}
                       style={{
-                        maxWidth: 100,
-                        maxHeight: 100,
+                        width: 100,
+                        height: 100,
                         borderRadius: 8,
                         objectFit: "cover",
                       }}
                     />
                     <Text className="text-xs text-center text-gray-500 mb-2">
-                      {imageFile.fileName}
+                      {imageName}
                     </Text>
                     <Ionicons
                       name="checkmark-circle"

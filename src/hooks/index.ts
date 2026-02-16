@@ -20,7 +20,7 @@ export * from "./useErrorHandler";
 export * from "./useLoadingState";
 export * from "./useStorage";
 export * from "./form/useUserValidation";
-
+export * from "./image/useUploadImage";
 // Hook de navegacion
 export * from "./navigation/useCustomNavigation";
 
