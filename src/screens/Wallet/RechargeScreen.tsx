@@ -20,7 +20,12 @@ import { convertBeCoinsToUSD, formatUSDPrice } from "src/constants/currency";
 
 import * as ImagePicker from "expo-image-picker";
 import { Alert } from "react-native";
-import { BeCoinsBalance, Button, toastConfig, WrapperModal } from "src/components";
+import {
+  BeCoinsBalance,
+  Button,
+  toastConfig,
+  WrapperModal,
+} from "src/components";
 import { notify } from "src/hooks/notification/notify.external";
 import { CopyToClipboard } from "src/utils/shareHelper";
 import { File } from "expo-file-system";
@@ -71,9 +76,9 @@ export default function RechargeScreen() {
     tabs,
     onTabChange,
   } = useRecharge();
+
   const { balance: beCoinsBalance, loading: balanceLoading } = useUserBalance();
   const usdBalance = convertBeCoinsToUSD(beCoinsBalance || 0);
-  };
 
   return (
     <>
@@ -89,9 +94,10 @@ export default function RechargeScreen() {
             >
               {/* Header con Saldo: pill centrado encima en móvil, alineado a la derecha en escritorio */}
               <BeCoinsBalance
-                            size="medium"
-                            variant="header"
-                            />
+                size="medium"
+                variant="header"
+                style={{ marginLeft: "auto" }}
+              />
 
               {/* Input de Monto */}
               <View className="mb-12">
