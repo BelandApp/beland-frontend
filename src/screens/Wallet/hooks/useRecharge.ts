@@ -113,7 +113,7 @@ export function useRecharge() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<PaymentMethodId | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-
+  const [modalPayphone, setModalPayphone] = useState(false);
   // Cálculos derivados
   const beCoinsAmount = amount ? Math.floor(Number(amount) / 0.05) : 0;
   const usdAmount = Number(amount) || 0;
@@ -156,7 +156,7 @@ export function useRecharge() {
       Alert.alert("Error", "Payphone solo está disponible en la versión web");
       return;
     }
-
+    setModalPayphone(true);
     try {
       // Limpiar variables QR antes de iniciar recarga
       clearPayphoneStorage();
@@ -202,6 +202,7 @@ export function useRecharge() {
         "No se pudo cargar el widget de Payphone. Por favor, intenta nuevamente.",
       );
       setIsLoading(false);
+      setModalPayphone(false);
     }
   };
 
@@ -362,6 +363,8 @@ export function useRecharge() {
     previewUri,
     imageName,
     tabs,
+    modalPayphone,
+    setModalPayphone,
     // Bank Transfer State
     referenceId,
     setReferenceId,

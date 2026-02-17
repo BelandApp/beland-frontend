@@ -16,24 +16,14 @@ import {
 } from "./hooks/useRecharge";
 import { ThemedHeader } from "src/components/shared/headers/Header";
 import { useUserBalance } from "src/hooks/useUserBalance";
-import { convertBeCoinsToUSD, formatUSDPrice } from "src/constants/currency";
+import { convertBeCoinsToUSD } from "src/constants/currency";
 
-import * as ImagePicker from "expo-image-picker";
-import { Alert } from "react-native";
-import {
-  BeCoinsBalance,
-  Button,
-  toastConfig,
-  WrapperModal,
-} from "src/components";
+import { BeCoinsBalance, Button, WrapperModal } from "src/components";
 import { notify } from "src/hooks/notification/notify.external";
 import { CopyToClipboard } from "src/utils/shareHelper";
 import { File } from "expo-file-system";
 import ThemedTabs from "src/components/shared/Tabs/ThemedTabs";
 
-// ... existing imports ...
-
-// Helper component for Bank Details row
 const BankDetailRow = ({ label, value, isCopyable = false }: any) => (
   <View className="flex-col sm:flex-row justify-between py-2 border-b border-gray-100 dark:border-gray-800">
     <Text className="text-gray-900 text-sm">{label}</Text>
@@ -75,10 +65,9 @@ export default function RechargeScreen() {
     selectedPaymentAccount,
     tabs,
     onTabChange,
+    modalPayphone,
+    setModalPayphone,
   } = useRecharge();
-
-  const { balance: beCoinsBalance, loading: balanceLoading } = useUserBalance();
-  const usdBalance = convertBeCoinsToUSD(beCoinsBalance || 0);
 
   return (
     <>
@@ -334,13 +323,24 @@ export default function RechargeScreen() {
                 {/* Contenedor para el botón de Payphone en Web */}
                 {Platform.OS === "web" &&
                   selectedPaymentMethod === "PAYPHONE" && (
-                    <View className="mb-4">
-                      <div id="pp-button"></div>
-                    </View>
+                    <WrapperModal
+                      header={
+                        <Text className="text-xl font-semibold"> Payphone</Text>
+                      }
+                      isOpen={modalPayphone}
+                      onClose={() => {
+                        setModalPayphone(false);
+                      }}
+                      content={
+                        <View className="mb-4">
+                          <div id="pp-button"></div>
+                        </View>
+                      }
+                    />
                   )}
 
                 {/* Botón de Recargar */}
-                {!isLoading && (
+                {
                   <TouchableOpacity
                     disabled={!isValid}
                     onPress={handleProceedToPayment}
@@ -369,7 +369,7 @@ export default function RechargeScreen() {
                       />
                     </View>
                   </TouchableOpacity>
-                )}
+                }
 
                 {/* Texto de seguridad */}
                 <View className="flex-row justify-center items-center gap-2">
