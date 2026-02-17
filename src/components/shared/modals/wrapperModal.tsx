@@ -1,5 +1,5 @@
 import { ArrowDown, ArrowDownCircle } from "lucide-react-native";
-import { Dimensions, StyleSheet, View } from "react-native";
+import { Dimensions, Platform, StyleSheet, View } from "react-native";
 import Toast from "react-native-toast-message";
 import { colors } from "src/styles";
 import { toastConfig } from "../notification/GlobalNotification";
@@ -50,7 +50,9 @@ export const WrapperModal: React.FC<WrapperModalProps> = ({
       ref={refRBSheet}
       draggable={true}
       dragOnContent={false}
-      height={SCREEN_HEIGHT * 0.98}
+      height={
+        Platform.OS === "web" ? SCREEN_HEIGHT * 0.98 : SCREEN_HEIGHT * 0.9
+      }
       closeOnPressMask={false}
       customStyles={{
         wrapper: { backgroundColor: "rgba(0,0,0,0.5)" },
