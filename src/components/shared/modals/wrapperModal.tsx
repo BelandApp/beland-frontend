@@ -50,7 +50,7 @@ export const WrapperModal: React.FC<WrapperModalProps> = ({
       ref={refRBSheet}
       draggable={true}
       dragOnContent={false}
-      height={SCREEN_HEIGHT * 0.9}
+      height={SCREEN_HEIGHT * 0.98}
       closeOnPressMask={false}
       customStyles={{
         wrapper: { backgroundColor: "rgba(0,0,0,0.5)" },
