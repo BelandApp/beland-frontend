@@ -12,6 +12,8 @@ export const useOrdersAdmin = () => {
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [modalDelivery, setModalDelivery] = useState(false);
+  const [modalRecollet, setModalRecollect] = useState(false);
 
   const [filters, setFilters] = useState({
     status: "",
@@ -70,6 +72,14 @@ export const useOrdersAdmin = () => {
   );
 
   const changeStatus = async (orderId: string, nextStatus: OrderStatus) => {
+    if (nextStatus === "delivered") {
+      setModalDelivery(true);
+      return;
+    }
+    if (nextStatus === "recycled") {
+      setModalRecollect(true);
+      return;
+    }
     setLoading(true);
     try {
       await OrderService.updateOrderStatus(orderId, nextStatus as OrderStatus);
@@ -98,10 +108,14 @@ export const useOrdersAdmin = () => {
     });
   };
 
-  const deliverOrder = async (orderId: string, code: number) => {
+  const deliverOrder = async (
+    orderId: string,
+    code: number,
+    weight?: number,
+  ) => {
     setLoading(true);
     try {
-      await OrderService.deliverOrder(orderId, code);
+      await OrderService.deliverOrder(orderId, code, weight);
       await loadOrders();
       notify.success({ message: "Orden entregada" });
     } catch (err) {
@@ -110,7 +124,18 @@ export const useOrdersAdmin = () => {
       setLoading(false);
     }
   };
-
+  const recollectOrder = async (orderId: string, weight: number) => {
+    setLoading(true);
+    try {
+      await OrderService.recollectOrder(orderId, weight);
+      await loadOrders();
+      notify.success({ message: "Orden Recolectada" });
+    } catch (err) {
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
     loadOrders(false, 1);
   }, [filters]);
@@ -127,5 +152,10 @@ export const useOrdersAdmin = () => {
     changeStatus,
     cancelOrder,
     deliverOrder,
+    modalRecollet,
+    setModalRecollect,
+    modalDelivery,
+    setModalDelivery,
+    recollectOrder,
   };
 };

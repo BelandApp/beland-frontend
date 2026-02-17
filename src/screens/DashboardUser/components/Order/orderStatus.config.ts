@@ -37,7 +37,7 @@ export const STATUS_FLOW: Record<
 > = {
   pending: { next: "preparing", label: "Preparar", icon: "package-variant" },
   preparing: { next: "on_route", label: "Enviar", icon: "truck-delivery" },
-  on_route: {}, // ← se entrega con código
+  on_route: { next: "delivered", label: "Entregar", icon: "check" },
   delivered: { next: "collected", label: "Recolectar", icon: "recycle" },
   collected: { next: "recycled", label: "Reciclar", icon: "leaf" },
 

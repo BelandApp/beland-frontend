@@ -17,9 +17,23 @@ import {
   STATUS_META,
 } from "./orderStatus.config";
 import { useCustomNavigation } from "src/hooks";
-import { Button, ThemedHeader } from "src/components";
-import { EyeIcon, X } from "lucide-react-native";
+import {
+  Button,
+  ThemedHeader,
+  VerificationCodeModal,
+  WrapperModal,
+} from "src/components";
+import {
+  EyeIcon,
+  MapPin,
+  Package,
+  PersonStanding,
+  Pin,
+  User,
+  X,
+} from "lucide-react-native";
 import { colors } from "src/design-system";
+import RecolectModal from "src/components/shared/modals/RecollectModal";
 
 export const OrdersManagementScreen = () => {
   const { navigate } = useCustomNavigation();
@@ -28,19 +42,26 @@ export const OrdersManagementScreen = () => {
     orders,
     loading,
     refreshing,
+    isFetchingMore,
     page,
     totalPages,
+    setFilters,
     loadOrders,
     changeStatus,
     cancelOrder,
-    isFetchingMore,
+    deliverOrder,
+    modalRecollet,
+    setModalRecollect,
+    modalDelivery,
+    setModalDelivery,
+    recollectOrder,
   } = useOrdersAdmin();
 
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const handleNextStatus = async (order: any) => {
     const current = order.normalizedStatus;
     const next = STATUS_FLOW[current as keyof typeof STATUS_FLOW];
-
+    console.log(next);
     if (!next) return;
 
     await changeStatus(order.id, next.next as OrderStatus);
@@ -48,7 +69,7 @@ export const OrdersManagementScreen = () => {
   const hasScrolledRef = useRef(false);
   const renderOrder = ({ item }: { item: OrdedNormalized }) => {
     const statusMeta = STATUS_META[item.normalizedStatus as OrderStatus];
-
+    console.log("Item", item);
     return (
       <TouchableOpacity
         onPress={() => navigate("OrderAdminDetail", { orderId: item.id })}
@@ -95,47 +116,48 @@ export const OrdersManagementScreen = () => {
           </View>
         </View>
         <View className="flex-row gap-1 items-center">
-          <MaterialCommunityIcons
-            name="account"
-            size={16}
-            style={{ marginRight: 4 }}
-          />
-          <Text>Cliente: {item.user?.full_name ?? "Sin usuario"}</Text>
+          <User size={16} />
+          <Text>{item.user?.full_name ?? "Sin usuario"}</Text>
         </View>
-        <View className="flex-row gap-1 items-center">
-          <MaterialCommunityIcons
-            name="map-marker"
-            size={16}
-            style={{ marginRight: 4 }}
-          />
+        <View className="flex-row gap-1 items-center my-1">
+          <MapPin size={16} />
           <Text>
             {item.address &&
               `${item.address.addressLine1}, ${item.address.city} CP: ${item.address.postalCode}`}
           </Text>
         </View>
+        <View className="flex-row gap-1 items-center">
+          <Package size={16} />
+          <Text>{item.total_items ?? "Sin datos"}</Text>
+        </View>
 
         <View className="flex-row justify-between mt-3 border-t border-t-slate-200 pt-2">
           <View className="flex-row gap-1">
-            {STATUS_FLOW[item.normalizedStatus as OrderStatus] && (
-              <Button
-                title={STATUS_FLOW[item.normalizedStatus].label as OrderStatus}
-                onPress={() => handleNextStatus(item)}
-                variant="box"
-                style={{ backgroundColor: colors.brand.orange[500] }}
-                textStyle={{ color: "white" }}
-                icon={
-                  <MaterialCommunityIcons
-                    name={STATUS_FLOW[item.normalizedStatus].icon as any}
-                    size={16}
-                    style={{ marginRight: 4 }}
-                    color="white"
-                  />
-                }
-              />
-            )}
-
+            {item.normalizedStatus !== "collected" &&
+              STATUS_FLOW[item.normalizedStatus as OrderStatus] && (
+                <Button
+                  title={
+                    STATUS_FLOW[item.normalizedStatus].label as OrderStatus
+                  }
+                  onPress={() => {
+                    setSelectedOrderId(item.id);
+                    handleNextStatus(item);
+                  }}
+                  variant="box"
+                  style={{ backgroundColor: colors.brand.orange[500] }}
+                  textStyle={{ color: "white" }}
+                  icon={
+                    <MaterialCommunityIcons
+                      name={STATUS_FLOW[item.normalizedStatus].icon as any}
+                      size={16}
+                      style={{ marginRight: 4 }}
+                      color="white"
+                    />
+                  }
+                />
+              )}
             {item.normalizedStatus !== "cancelled" &&
-              item.normalizedStatus !== "delivered" && (
+              item.normalizedStatus === "pending" && (
                 <Button
                   title="Cancelar"
                   onPress={() => cancelOrder(item.id)}
@@ -189,11 +211,16 @@ export const OrdersManagementScreen = () => {
               isFetchingMore ? (
                 <ActivityIndicator style={{ marginVertical: 16 }} />
               ) : (
-                <Button
-                  title="Cargar mas"
-                  className="mx-auto"
-                  onPress={() => loadOrders(false, page + 1)}
-                />
+                <>
+                  <Button
+                    title="Cargar mas"
+                    className="mx-auto"
+                    onPress={() => loadOrders(false, page + 1)}
+                  />
+                  <Text className="mx-auto font-semibold">
+                    {page} / {totalPages}
+                  </Text>
+                </>
               )
             }
             ListEmptyComponent={
@@ -206,6 +233,21 @@ export const OrdersManagementScreen = () => {
           />
         )}
       </View>
+      {selectedOrderId && (
+        <VerificationCodeModal
+          visible={modalDelivery}
+          onClose={() => setModalDelivery(false)}
+          onConfirm={deliverOrder}
+          orderNumber={selectedOrderId}
+        />
+      )}
+      {selectedOrderId && (
+        <RecolectModal
+          isOpen={modalRecollet}
+          onClose={() => setModalRecollect(false)}
+          onConfirm={(weight) => recollectOrder(selectedOrderId, weight)}
+        />
+      )}
     </>
   );
 };

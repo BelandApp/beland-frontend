@@ -80,6 +80,12 @@ export interface Order {
   coupon_code?: string;
   group_id?: string;
   user: User;
+  total_items: string;
+  collected_at: string;
+  recycled_weight: string;
+  recycled_at: string;
+  distance_km: string;
+  duration_min: string;
 }
 export interface OrdedNormalized extends Order {
   normalizedStatus: OrderStatus;
@@ -456,14 +462,14 @@ class OrderServiceClass extends CoreApiService {
     if (notes) {
       params.append("observation", notes);
     }
-    if (weight) {
+    if (status === "collected" && weight) {
       params.append("weight", weight.toString());
     }
     // Map status to backend endpoints
     switch (status.toLowerCase()) {
-      case "processing":
+      case "preparing":
         return this.put(`orders/preparing?${params.toString()}`);
-      case "shipped":
+      case "on_route":
         return this.put(`orders/on-route?${params.toString()}`);
       case "delivered":
         // Note: In production, this should prompt for a delivery code
@@ -488,15 +494,21 @@ class OrderServiceClass extends CoreApiService {
   async deliverOrder(
     orderId: string,
     verificationCode: number,
-    weigth?: number,
+    weight?: number,
   ): Promise<Order> {
     const params = new URLSearchParams();
     params.append("order_id", orderId);
     params.append("code", verificationCode.toString());
-    if (weigth) params.append("weigth", weigth.toString());
+    if (weight) params.append("weight", weight.toString());
     return this.put(`orders/delivered?${params.toString()}`);
   }
 
+  async recollectOrder(orderId: string, weight: number): Promise<Order> {
+    const params = new URLSearchParams();
+    params.append("order_id", orderId);
+    params.append("weight", weight.toString());
+    return this.put(`orders/recycled?${params.toString()}`);
+  }
   /**
    * Mark order as collected (user returns packaging)
    * Returns the order with a recycling code that can be used at recycling centers

@@ -3,9 +3,9 @@ import { useNotify } from "src/hooks";
 import { normalizeOrderStatus, STATUS_META } from "./orderStatus.config";
 import { OrderService, ProductService } from "src/services";
 import { OrderStatus, Product } from "src/types";
-import { Order as ApiOrder } from "@services/OrderApiService";
+import { Order as ApiOrder, OrdedNormalized } from "@services/OrderApiService";
 
-export const useOrderDetail = (orderId?: string) => {
+export const useOrderDetail = (orderId: string) => {
   const notify = useNotify();
   const [order, setOrder] = useState<ApiOrder | null>(null);
   const [products, setProducts] = useState<Record<string, Product>>({});
@@ -14,7 +14,6 @@ export const useOrderDetail = (orderId?: string) => {
   const [modalRecollet, setModalRecollect] = useState(false);
 
   const status = normalizeOrderStatus(order?.status);
-
   const refresh = async () => {
     if (!orderId) return;
     setLoading(true);
@@ -39,7 +38,16 @@ export const useOrderDetail = (orderId?: string) => {
   };
 
   const changeStatus = async (next: OrderStatus) => {
+    console.log("status:", next);
     if (!orderId) return;
+    if (next === "delivered") {
+      setModalDelivery(true);
+      return;
+    }
+    if (next === "collected") {
+      setModalRecollect(true);
+      return;
+    }
     setLoading(true);
     try {
       await OrderService.updateOrderStatus(orderId, next as any);
@@ -70,18 +78,32 @@ export const useOrderDetail = (orderId?: string) => {
     });
   };
 
-  const deliverOrder = async (code: number) => {
+  const deliverOrder = async (
+    orderId: string,
+    code: number,
+    weight?: number,
+  ) => {
     if (!orderId) return;
     setLoading(true);
     try {
-      await OrderService.deliverOrder(orderId, code);
+      await OrderService.deliverOrder(orderId, code, weight);
       await refresh();
       notify.success({ message: "Orden entregada correctamente" });
     } finally {
       setLoading(false);
     }
   };
-
+  const recollectOrder = async (weight: number) => {
+    setLoading(true);
+    try {
+      await OrderService.recollectOrder(orderId, weight);
+      notify.success({ message: "Orden Recolectada" });
+    } catch (err) {
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
     refresh();
   }, [orderId]);
@@ -98,5 +120,6 @@ export const useOrderDetail = (orderId?: string) => {
     setModalRecollect,
     modalDelivery,
     setModalDelivery,
+    recollectOrder,
   };
 };

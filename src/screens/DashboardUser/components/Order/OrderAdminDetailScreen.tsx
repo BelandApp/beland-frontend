@@ -10,10 +10,6 @@ import {
   Linking,
   Platform,
 } from "react-native";
-import { useNotify } from "src/hooks";
-import { Order as ApiOrder } from "@services/OrderApiService";
-import { Product } from "@services/ProductApiService";
-import { OrderService, ProductService } from "@services/core";
 import { ThemedHeader } from "src/components/shared/headers/Header";
 import { colors } from "src/styles/colors";
 import { RouteProp, useRoute } from "@react-navigation/native";
@@ -24,6 +20,9 @@ import { VerificationCodeModal } from "src/components/shared/modals/Verification
 import { useOrderDetail } from "./useOrderDetail";
 import { STATUS_FLOW, STATUS_META } from "./orderStatus.config";
 import { notify } from "src/hooks/notification/notify.external";
+import { openMail, openWhatsapp } from "src/utils/contactLink";
+import { Mail, PhoneCall } from "lucide-react-native";
+import RecolectModal from "src/components/shared/modals/RecollectModal";
 
 type RouteProps = RouteProp<Record<string, object | undefined>, string> & {
   params: { orderId: string };
@@ -224,6 +223,7 @@ export const OrderAdminDetailScreen: React.FC = () => {
     modalDelivery,
     modalRecollet,
     setModalRecollect,
+    recollectOrder,
   } = useOrderDetail(orderId);
 
   const action = STATUS_FLOW[status];
@@ -236,7 +236,15 @@ export const OrderAdminDetailScreen: React.FC = () => {
       </View>
     );
   }
-
+  if (order === null)
+    return (
+      <View>
+        <ThemedHeader canGoBack />
+        <Text className="text-center m-auto font-semibold">
+          Tuvimos un problema cargando la orden
+        </Text>
+      </View>
+    );
   // Mapeo de datos de la orden usando la estructura real del backend
   // NOTA: code es el código de confirmación de 4 dígitos, NO el ID de la orden
   const orderNumber = order?.order_number
@@ -353,6 +361,18 @@ export const OrderAdminDetailScreen: React.FC = () => {
             />
             <Text style={styles.statusText}>{meta.label}</Text>
           </View>
+          {status === "collected" && (
+            <View>
+              <Text>Peso: {order.recycled_weight} kg </Text>
+              <Text>Fecha de Recolección: {order.collected_at}</Text>
+            </View>
+          )}
+          {status === "recycled" && (
+            <View>
+              <Text>Peso: {order.recycled_weight} kg </Text>
+              <Text>Fecha de Reciclado: {order.recycled_at}</Text>
+            </View>
+          )}
 
           <View style={{ marginTop: 16 }}>
             <Text style={styles.label}>Fecha de creación</Text>
@@ -413,13 +433,25 @@ export const OrderAdminDetailScreen: React.FC = () => {
               color={colors.textSecondary}
               style={styles.infoIcon}
             />
-            <View style={styles.infoContent}>
+            <View className="flex-col gap-2">
               <Text style={styles.infoTitle}>{userName}</Text>
               {userEmail ? (
-                <Text style={styles.infoText}>{userEmail}</Text>
+                <TouchableOpacity
+                  onPress={() => openMail(userEmail)}
+                  className="flex-row gap-2 items-center"
+                >
+                  <Mail size="16" />
+                  <Text style={styles.infoText}>{userEmail}</Text>
+                </TouchableOpacity>
               ) : null}
               {userPhone ? (
-                <Text style={styles.infoText}>{userPhone}</Text>
+                <TouchableOpacity
+                  onPress={() => openWhatsapp(userPhone)}
+                  className="flex-row gap-2 items-center"
+                >
+                  <PhoneCall size={16} color="green" />
+                  <Text style={styles.infoText}>{userPhone}</Text>
+                </TouchableOpacity>
               ) : null}
             </View>
           </View>
@@ -451,11 +483,13 @@ export const OrderAdminDetailScreen: React.FC = () => {
             <View style={styles.infoContent}>
               <Text style={styles.infoText}>{fullAddress}</Text>
             </View>
-            <MaterialCommunityIcons
-              name="navigation"
-              size={24}
-              color={colors.belandOrange}
-            />
+            <View className="items-center">
+              <MaterialCommunityIcons
+                name="navigation"
+                size={24}
+                color={colors.belandOrange}
+              />
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -587,7 +621,7 @@ export const OrderAdminDetailScreen: React.FC = () => {
           </View>
 
           <View style={styles.actions}>
-            {action?.next && (
+            {status !== "collected" && action?.next && (
               <TouchableOpacity
                 style={styles.actionBtn}
                 onPress={() => changeStatus(action.next! as any)}
@@ -602,36 +636,7 @@ export const OrderAdminDetailScreen: React.FC = () => {
               </TouchableOpacity>
             )}
 
-            {status === "delivered" && (
-              <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: "#30B0C7" }]}
-                onPress={() => setModalDelivery(true)}
-                disabled={loading}
-              >
-                <MaterialCommunityIcons
-                  name="check-circle"
-                  size={18}
-                  color="white"
-                />
-                <Text style={styles.actionBtnText}>Entregar</Text>
-              </TouchableOpacity>
-            )}
-            {status === "delivered" && (
-              <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: "#30B0C7" }]}
-                onPress={() => setModalRecollect(true)}
-                disabled={loading}
-              >
-                <MaterialCommunityIcons
-                  name="check-circle"
-                  size={18}
-                  color="white"
-                />
-                <Text style={styles.actionBtnText}>Recolectar</Text>
-              </TouchableOpacity>
-            )}
-
-            {status !== "delivered" && status !== "cancelled" && (
+            {status === "preparing" && (
               <TouchableOpacity
                 style={[styles.actionBtn, styles.actionBtnDanger]}
                 onPress={cancelOrder}
@@ -655,6 +660,12 @@ export const OrderAdminDetailScreen: React.FC = () => {
         onClose={() => setModalDelivery(false)}
         onConfirm={deliverOrder}
         orderNumber={orderNumber}
+      />
+      {/* Recollect Modal */}
+      <RecolectModal
+        isOpen={modalRecollet}
+        onClose={() => setModalRecollect(false)}
+        onConfirm={(weight) => recollectOrder(weight)}
       />
     </View>
   );

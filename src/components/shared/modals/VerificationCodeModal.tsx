@@ -15,8 +15,8 @@ import { colors } from "@/styles/colors";
 interface VerificationCodeModalProps {
   visible: boolean;
   onClose: () => void;
-  onConfirm: (code: number, weight?: number) => Promise<void>;
-  orderNumber?: string;
+  onConfirm: (orderId: string, code: number, weight?: number) => Promise<void>;
+  orderNumber: string;
 }
 
 export const VerificationCodeModal: React.FC<VerificationCodeModalProps> = ({
@@ -76,7 +76,7 @@ export const VerificationCodeModal: React.FC<VerificationCodeModalProps> = ({
     setError(null);
 
     try {
-      await onConfirm(result.code, result.weight);
+      await onConfirm(orderNumber, result.code, result.weight);
       resetState();
       onClose();
     } catch (err) {
