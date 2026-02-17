@@ -10,11 +10,10 @@ export const useOrdersAdmin = () => {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [modalDelivery, setModalDelivery] = useState(false);
   const [modalRecollet, setModalRecollect] = useState(false);
-
+  const [page, setPage] = useState(0);
+  const [total, setTotal] = useState(0);
   const [filters, setFilters] = useState({
     status: "",
     minPrice: "",
@@ -32,7 +31,7 @@ export const useOrdersAdmin = () => {
       try {
         const queryParams: any = {
           page: pageNumber,
-          limit: 10,
+          limit: 100,
         };
 
         if (filters.status) queryParams.status = filters.status;
@@ -45,19 +44,20 @@ export const useOrdersAdmin = () => {
 
         const res = await OrderService.getOrders(queryParams);
         const data = res.data;
-
-        const normalized = data.map((order: ApiOrder) => ({
+        const sorted = data.sort(
+          (a: any, b: any) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        );
+        const normalized = sorted.map((order: ApiOrder) => ({
           ...order,
           normalizedStatus: normalizeOrderStatus(order.status),
         }));
-
         if (pageNumber === 1) {
           setOrders(normalized);
         } else {
           setOrders((prev) => [...prev, ...normalized]);
         }
-        console.log("Tenemos total de paginas", res.total / 10);
-        setTotalPages(Math.ceil(res?.total / 10) || 1);
+        setTotal(res.total || 0);
         setPage(pageNumber);
       } catch (error) {
         notify.error({ message: "No se pudieron cargar las órdenes" });
@@ -145,8 +145,7 @@ export const useOrdersAdmin = () => {
     loading,
     refreshing,
     isFetchingMore,
-    page,
-    totalPages,
+    total,
     setFilters,
     loadOrders,
     changeStatus,
@@ -157,5 +156,6 @@ export const useOrdersAdmin = () => {
     modalDelivery,
     setModalDelivery,
     recollectOrder,
+    page,
   };
 };

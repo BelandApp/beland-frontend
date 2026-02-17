@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -10,31 +10,22 @@ import {
 import { OrdedNormalized } from "@services/OrderApiService";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useOrdersAdmin } from "./useOrderAdmin";
-import {
-  OrderStatus,
-  OrderStatusEnum,
-  STATUS_FLOW,
-  STATUS_META,
-} from "./orderStatus.config";
+import { OrderStatus, STATUS_FLOW, STATUS_META } from "./orderStatus.config";
 import { useCustomNavigation } from "src/hooks";
 import {
   Button,
   ThemedHeader,
+  useThemedTabs,
   VerificationCodeModal,
-  WrapperModal,
 } from "src/components";
-import {
-  EyeIcon,
-  MapPin,
-  Package,
-  PersonStanding,
-  Pin,
-  User,
-  X,
-} from "lucide-react-native";
+import { EyeIcon, MapPin, Package, User, X } from "lucide-react-native";
 import { colors } from "src/design-system";
 import RecolectModal from "src/components/shared/modals/RecollectModal";
 
+import ThemedTabs from "src/components/shared/Tabs/ThemedTabs";
+const ACTIVE_STATUSES = ["PENDING", "PREPARING", "ON_ROUTE"];
+const COMPLETED_STATUSES = ["DELIVERED", "COLLECTED", "RECYCLED"];
+const CANCELLED_STATUSES = ["CANCELLED"];
 export const OrdersManagementScreen = () => {
   const { navigate } = useCustomNavigation();
 
@@ -43,8 +34,7 @@ export const OrdersManagementScreen = () => {
     loading,
     refreshing,
     isFetchingMore,
-    page,
-    totalPages,
+    total,
     setFilters,
     loadOrders,
     changeStatus,
@@ -55,13 +45,34 @@ export const OrdersManagementScreen = () => {
     modalDelivery,
     setModalDelivery,
     recollectOrder,
+    page,
   } = useOrdersAdmin();
+
+  const { activeTab, tabs, onTabChange } = useThemedTabs([
+    "Activas",
+    "Finalizadas",
+    "Canceladas",
+  ]);
+  const filteredOrders = useMemo(() => {
+    if (activeTab === "Activas") {
+      return orders.filter((o) => ACTIVE_STATUSES.includes(o.status.code));
+    }
+
+    if (activeTab === "Finalizadas") {
+      return orders.filter((o) => COMPLETED_STATUSES.includes(o.status.code));
+    }
+
+    if (activeTab === "Canceladas") {
+      return orders.filter((o) => CANCELLED_STATUSES.includes(o.status.code));
+    }
+
+    return orders;
+  }, [orders, activeTab]);
 
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const handleNextStatus = async (order: any) => {
     const current = order.normalizedStatus;
     const next = STATUS_FLOW[current as keyof typeof STATUS_FLOW];
-    console.log(next);
     if (!next) return;
 
     await changeStatus(order.id, next.next as OrderStatus);
@@ -69,7 +80,6 @@ export const OrdersManagementScreen = () => {
   const hasScrolledRef = useRef(false);
   const renderOrder = ({ item }: { item: OrdedNormalized }) => {
     const statusMeta = STATUS_META[item.normalizedStatus as OrderStatus];
-    console.log("Item", item);
     return (
       <TouchableOpacity
         onPress={() => navigate("OrderAdminDetail", { orderId: item.id })}
@@ -182,12 +192,13 @@ export const OrdersManagementScreen = () => {
   return (
     <>
       <ThemedHeader title="Ordenes" canGoBack />
-      <View style={{ flex: 1, padding: 16 }}>
-        {loading && page === 1 ? (
+      <View style={{ flex: 1, paddingHorizontal: 16, marginTop: 6 }}>
+        <ThemedTabs tabs={tabs} onTabChange={onTabChange} />
+        {loading ? (
           <ActivityIndicator size="large" />
         ) : (
           <FlatList
-            data={orders}
+            data={filteredOrders}
             keyExtractor={(item) => item.id}
             renderItem={renderOrder}
             refreshControl={
@@ -196,16 +207,6 @@ export const OrdersManagementScreen = () => {
                 onRefresh={() => loadOrders(true, 1)}
               />
             }
-            onScroll={() => {
-              hasScrolledRef.current = true;
-            }}
-            onEndReached={() => {
-              if (!hasScrolledRef.current) return;
-
-              if (!loading && !isFetchingMore && page < totalPages) {
-                loadOrders(false, page + 1);
-              }
-            }}
             onEndReachedThreshold={0.2}
             ListFooterComponent={
               isFetchingMore ? (
@@ -218,18 +219,12 @@ export const OrdersManagementScreen = () => {
                     onPress={() => loadOrders(false, page + 1)}
                   />
                   <Text className="mx-auto font-semibold">
-                    {page} / {totalPages}
+                    {filteredOrders.length}/ {total}
                   </Text>
                 </>
               )
             }
-            ListEmptyComponent={
-              !loading ? (
-                <Text style={{ textAlign: "center", marginTop: 40 }}>
-                  No hay órdenes disponibles
-                </Text>
-              ) : null
-            }
+            ListEmptyComponent={!loading ? <Text>No hay ordenes</Text> : null}
           />
         )}
       </View>
