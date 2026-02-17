@@ -339,7 +339,7 @@ export default function RechargeScreen() {
                       onClose={() => setModalPayphone(false)}
                       beforeClose={handleBeforeClose}
                       content={
-                        <ScrollView className="mb-4">
+                        <ScrollView className="mb-4 grow">
                           <div id="pp-button"></div>
                         </ScrollView>
                       }
