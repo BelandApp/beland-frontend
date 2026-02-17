@@ -115,6 +115,7 @@ const styles = StyleSheet.create({
   contentWrapper: {
     flex: 1, // Esto es lo que hace que el contenido sea flexible
     padding: 16,
+    overflow: "hidden",
   },
   footer: {
     padding: 16,

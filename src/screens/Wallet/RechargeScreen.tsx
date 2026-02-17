@@ -339,8 +339,17 @@ export default function RechargeScreen() {
                       onClose={() => setModalPayphone(false)}
                       beforeClose={handleBeforeClose}
                       content={
-                        <ScrollView className="mb-4 grow">
-                          <div id="pp-button"></div>
+                        <ScrollView
+                          style={{ flex: 1 }}
+                          contentContainerStyle={{
+                            paddingBottom: 40,
+                            flexGrow: 1,
+                          }}
+                          showsVerticalScrollIndicator
+                        >
+                          <View style={{ minHeight: 400 }}>
+                            <div id="pp-button"></div>
+                          </View>
                         </ScrollView>
                       }
                     />
