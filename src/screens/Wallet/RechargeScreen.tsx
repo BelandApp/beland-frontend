@@ -68,7 +68,15 @@ export default function RechargeScreen() {
     modalPayphone,
     setModalPayphone,
   } = useRecharge();
-
+  const handleBeforeClose = () => {
+    return new Promise<boolean>((resolve) => {
+      notify.confirm({
+        message: "Seguro que quieres salir? Perderás tu progreso",
+        onConfirm: () => resolve(true),
+        onCancel: () => resolve(false),
+      });
+    });
+  };
   return (
     <>
       <ThemedHeader title="Recargar BeCoins" canGoBack />
@@ -328,9 +336,8 @@ export default function RechargeScreen() {
                         <Text className="text-xl font-semibold"> Payphone</Text>
                       }
                       isOpen={modalPayphone}
-                      onClose={() => {
-                        setModalPayphone(false);
-                      }}
+                      onClose={() => setModalPayphone(false)}
+                      beforeClose={handleBeforeClose}
                       content={
                         <View className="mb-4">
                           <div id="pp-button"></div>
@@ -386,6 +393,7 @@ export default function RechargeScreen() {
 
       {/* MODAL DE TRANSFERENCIA BANCARIA */}
       <WrapperModal
+        beforeClose={handleBeforeClose}
         content={
           <ScrollView className="flex-1 px-6 pt-6">
             {/* Instrucciones */}

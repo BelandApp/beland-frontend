@@ -17,6 +17,7 @@ type WrapperModalProps = {
   content: React.ReactNode;
   actions?: React.ReactNode;
   headerBackgroundColor?: string;
+  beforeClose?: () => boolean | Promise<boolean>;
 };
 
 export const WrapperModal: React.FC<WrapperModalProps> = ({
@@ -25,7 +26,7 @@ export const WrapperModal: React.FC<WrapperModalProps> = ({
   header,
   isOpen,
   onClose,
-  headerBackgroundColor,
+  beforeClose,
 }) => {
   const refRBSheet = useRef<RBSheetRef>(null);
 
@@ -36,14 +37,21 @@ export const WrapperModal: React.FC<WrapperModalProps> = ({
       refRBSheet.current?.close();
     }
   }, [isOpen]);
+  const handleRequestClose = async () => {
+    if (beforeClose) {
+      const shouldClose = await beforeClose();
+      if (!shouldClose) return;
+    }
 
+    onClose();
+  };
   return (
     <RBSheet
       ref={refRBSheet}
       draggable={true}
       dragOnContent={false}
       height={SCREEN_HEIGHT * 0.9}
-      onClose={onClose}
+      closeOnPressMask={false}
       customStyles={{
         wrapper: { backgroundColor: "rgba(0,0,0,0.5)" },
         container: styles.sheetContainer,
@@ -57,7 +65,7 @@ export const WrapperModal: React.FC<WrapperModalProps> = ({
           <Button
             variant="onlyIcon"
             icon={<ArrowDown color={colors.belandOrange} size={24} />}
-            onPress={() => refRBSheet.current?.close()}
+            onPress={handleRequestClose}
             title="cerrar"
           />
         </View>
