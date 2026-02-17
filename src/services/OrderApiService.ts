@@ -6,6 +6,7 @@
 import { CoreApiService, PaginatedResponse } from "./core/ApiService";
 import { Product } from "./ProductApiService";
 import { CartService } from "./cart/CartApiService";
+import { User } from "src/context";
 
 // Order Types
 export interface OrderItem {
@@ -20,25 +21,44 @@ export interface OrderItem {
 
 export interface OrderAddress {
   id: string;
-  street: string;
+  addressLine1: string;
+  addressLine2: string;
   city: string;
   state: string;
-  postal_code: string;
   country: string;
-  is_default: boolean;
+  postalCode: string;
+  isDefault: boolean;
+  latitude: string;
+  longitude: string;
 }
+export type OrderStatus =
+  | "pending"
+  | "preparing"
+  | "on_route"
+  | "delivered"
+  | "collected"
+  | "recycled"
+  | "cancelled";
 
 export interface Order {
   id: string;
   user_id: string;
   order_number: string;
-  status:
-    | "pending"
-    | "confirmed"
-    | "processing"
-    | "shipped"
-    | "delivered"
-    | "cancelled";
+  status: {
+    id: string;
+    name: string;
+    description: string;
+    update_at: string;
+    create_at: string;
+    code:
+      | "PENDING"
+      | "PREPARING"
+      | "ON_ROUTE"
+      | "DELIVERED"
+      | "RECYCLED"
+      | "COLLECTED"
+      | "CANCELLED";
+  };
   items: OrderItem[];
   subtotal: number;
   tax_amount: number;
@@ -49,7 +69,7 @@ export interface Order {
   currency: string;
   payment_status: "pending" | "paid" | "failed" | "refunded";
   payment_method?: string;
-  shipping_address: OrderAddress;
+  address: OrderAddress;
   billing_address?: OrderAddress;
   tracking_number?: string;
   estimated_delivery?: string;
@@ -59,8 +79,11 @@ export interface Order {
   notes?: string;
   coupon_code?: string;
   group_id?: string;
+  user: User;
 }
-
+export interface OrdedNormalized extends Order {
+  normalizedStatus: OrderStatus;
+}
 export interface CreateOrderDto {
   cart_id: string;
 }
@@ -89,12 +112,21 @@ export interface OrderTracking {
     status: string;
   }[];
 }
+export enum OrderStatusEnum {
+  PENDING = "PENDING",
+  PREPARING = "PREPARING",
+  ON_ROUTE = "ON_ROUTE",
+  DELIVERED = "DELIVERED",
+  RECYCLED = "RECYCLED",
+  COLLECTED = "COLLECTED",
+  CANCELLED = "CANCELLED",
+}
 
 export interface OrderStats {
   total_orders: number;
   total_spent: number;
   average_order_value: number;
-  orders_by_status: Record<Order["status"], number>;
+  orders_by_status: OrderStatusEnum;
   recent_orders: Order[];
 }
 
@@ -415,15 +447,18 @@ class OrderServiceClass extends CoreApiService {
    */
   async updateOrderStatus(
     orderId: string,
-    status: Order["status"],
+    status: OrderStatus,
     notes?: string,
+    weight?: number,
   ): Promise<Order> {
     const params = new URLSearchParams();
     params.append("order_id", orderId);
     if (notes) {
       params.append("observation", notes);
     }
-
+    if (weight) {
+      params.append("weight", weight.toString());
+    }
     // Map status to backend endpoints
     switch (status.toLowerCase()) {
       case "processing":
@@ -436,6 +471,8 @@ class OrderServiceClass extends CoreApiService {
         throw new Error(
           "Para marcar como entregado, se requiere un código de verificación. Use el método deliverOrder() en su lugar.",
         );
+      case "collected":
+        return this.put(`orders/collected?${params.toString()}`);
       case "cancelled":
         return this.put(`orders/cancelled?${params.toString()}`);
       default:

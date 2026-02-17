@@ -4,7 +4,6 @@ import {
   TouchableOpacity,
   Text,
   StyleSheet,
-  ButtonProps,
   PressableProps,
 } from "react-native";
 import { colors } from "src/styles";
@@ -21,7 +20,14 @@ interface CustomButtonProps extends PressableProps {
   textStyle?: any;
   className?: string;
 }
-type Variant = "primary" | "secondary" | "ghost" | "inline" | "onlyIcon";
+type Variant =
+  | "primary"
+  | "secondary"
+  | "ghost"
+  | "inline"
+  | "onlyIcon"
+  | "box";
+
 type IconPosition = "left" | "right";
 
 const VARIANT_STYLES = {
@@ -61,6 +67,17 @@ const VARIANT_STYLES = {
       paddingHorizontal: 6,
     },
     text: { color: "transparent" },
+  },
+  box: {
+    container: {
+      backgroundColor: "transparent",
+      borderWidth: 2,
+      borderColor: "#e2e8f0",
+      paddingVertical: 10,
+      paddingHorizontal: 10,
+      borderRadius: 10,
+    },
+    text: { color: "#334155" },
   },
 } as const;
 const getVariantStyles = (variant: Variant, disabled?: boolean) => {

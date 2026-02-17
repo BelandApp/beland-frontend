@@ -21,6 +21,9 @@ import { RootStackParamList } from "src/components/layout/RootStackNavigator";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { VerificationCodeModal } from "src/components/shared/modals/VerificationCodeModal";
+import { useOrderDetail } from "./useOrderDetail";
+import { STATUS_FLOW, STATUS_META } from "./orderStatus.config";
+import { notify } from "src/hooks/notification/notify.external";
 
 type RouteProps = RouteProp<Record<string, object | undefined>, string> & {
   params: { orderId: string };
@@ -208,168 +211,23 @@ const styles = StyleSheet.create({
 export const OrderAdminDetailScreen: React.FC = () => {
   const route = useRoute<RouteProps>();
   const { orderId } = route.params || { orderId: undefined };
-  const { goBack, navigate } = useCustomNavigation();
+  const { navigate } = useCustomNavigation();
+  const {
+    order,
+    products,
+    status,
+    loading,
+    changeStatus,
+    cancelOrder,
+    deliverOrder,
+    setModalDelivery,
+    modalDelivery,
+    modalRecollet,
+    setModalRecollect,
+  } = useOrderDetail(orderId);
 
-  const [order, setOrder] = useState<ApiOrder | null>(null);
-  const [products, setProducts] = useState<Record<string, Product>>({});
-  const [loading, setLoading] = useState<boolean>(false);
-  const [verificationModalVisible, setVerificationModalVisible] =
-    useState(false);
-  const notify = useNotify();
-
-  useEffect(() => {
-    let mounted = true;
-    const fetchOrder = async () => {
-      if (!orderId) return;
-      setLoading(true);
-      try {
-        const res = await OrderService.getOrder(orderId);
-        console.log("Respuesta de orden", res);
-        if (mounted) {
-          setOrder(res);
-
-          // Cargar detalles de productos
-          const items = (res as any)?.items || [];
-          if (items.length > 0) {
-            const productPromises = items.map(async (item: any) => {
-              try {
-                const product = await ProductService.getProduct(
-                  item.product_id,
-                );
-                return { id: item.product_id, product };
-              } catch (err) {
-                console.error(
-                  `Failed to load product ${item.product_id}:`,
-                  err,
-                );
-                return { id: item.product_id, product: null };
-              }
-            });
-
-            const productsData = await Promise.all(productPromises);
-            const productsMap: Record<string, Product> = {};
-            productsData.forEach(({ id, product }) => {
-              if (product) productsMap[id] = product;
-            });
-
-            if (mounted) setProducts(productsMap);
-          }
-        }
-      } catch (err) {
-        console.error("OrderAdminDetail: could not fetch order", err);
-        notify.error({ message: "No se pudo obtener la orden" });
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-
-    fetchOrder();
-    return () => {
-      mounted = false;
-    };
-  }, [orderId]);
-
-  const changeStatus = async (status: string) => {
-    if (!orderId) return;
-    setLoading(true);
-    try {
-      await OrderService.updateOrderStatus(
-        orderId,
-        status as ApiOrder["status"],
-      );
-      const refreshed = await OrderService.getOrder(orderId);
-      setOrder(refreshed as ApiOrder);
-      notify.success({
-        message: `Estado actualizado a ${getStatusDisplayName(status)}`,
-      });
-    } catch (err) {
-      console.error("OrderAdminDetail: change status failed", err);
-      notify.error({ message: "No se pudo cambiar el estado" });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const cancel = async () => {
-    if (!orderId) return;
-    notify.confirm({
-      message: "¿Confirmar cancelar esta orden?",
-      onConfirm: async () => {
-        setLoading(true);
-        try {
-          await OrderService.cancelOrder(orderId);
-          const refreshed = await OrderService.getOrder(orderId);
-          setOrder(refreshed as ApiOrder);
-          notify.success({ message: "Orden cancelada" });
-        } catch (err) {
-          console.error("OrderAdminDetail: cancel failed", err);
-          notify.error({ message: "No se pudo cancelar la orden" });
-        } finally {
-          setLoading(false);
-        }
-      },
-    });
-  };
-
-  const handleDeliverOrder = () => {
-    setVerificationModalVisible(true);
-  };
-
-  const handleConfirmDelivery = async (code: number) => {
-    if (!orderId) return;
-
-    setLoading(true);
-    try {
-      await OrderService.deliverOrder(orderId, code);
-      const refreshed = await OrderService.getOrder(orderId);
-      setOrder(refreshed as ApiOrder);
-      notify.success({ message: "Orden marcada como entregada" });
-    } catch (err) {
-      console.error("OrderAdminDetail: delivery error", err);
-      setLoading(false);
-      throw err; // Re-throw para que el modal muestre el error
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getStatusDisplayName = (status: string) => {
-    const statusMap: Record<string, string> = {
-      pending: "Pendiente",
-      confirmed: "Confirmada",
-      processing: "Preparando",
-      shipped: "Enviada",
-      delivered: "Entregada",
-      cancelled: "Cancelada",
-      collected: "Recolectada",
-      recycled: "Reciclada",
-    };
-    return statusMap[status.toLowerCase()] || status;
-  };
-
-  const getStatusInfo = (status: string) => {
-    const statusLower = status.toLowerCase();
-    switch (statusLower) {
-      case "pending":
-        return { color: "#FF9500", icon: "clock-outline" };
-      case "confirmed":
-        return { color: "#007AFF", icon: "check-circle-outline" };
-      case "processing":
-        return { color: "#34C759", icon: "package-variant" };
-      case "shipped":
-        return { color: "#5856D6", icon: "truck-delivery-outline" };
-      case "delivered":
-        return { color: "#30B0C7", icon: "check-circle" };
-      case "cancelled":
-        return { color: "#FF3B30", icon: "close-circle-outline" };
-      case "collected":
-        return { color: "#34C759", icon: "recycle" };
-      case "recycled":
-        return { color: "#4CAF50", icon: "leaf" };
-      default:
-        return { color: "#8E8E93", icon: "help-circle-outline" };
-    }
-  };
+  const action = STATUS_FLOW[status];
+  const meta = STATUS_META[status];
 
   if (loading && !order) {
     return (
@@ -378,36 +236,6 @@ export const OrderAdminDetailScreen: React.FC = () => {
       </View>
     );
   }
-
-  // Normalizar status - mapear códigos del backend a frontend
-  const mapBackendStatusToFrontend = (backendStatus: string): string => {
-    const statusMap: Record<string, string> = {
-      PENDING: "pending",
-      PREPARING: "processing",
-      ON_ROUTE: "shipped",
-      DELIVERED: "delivered",
-      CANCELLED: "cancelled",
-      COLLECTED: "collected",
-      RECYCLED: "recycled",
-    };
-    return (
-      statusMap[backendStatus.toUpperCase()] || backendStatus.toLowerCase()
-    );
-  };
-
-  const rawStatus = order?.status;
-  let status = "unknown";
-  if (typeof rawStatus === "object" && rawStatus !== null) {
-    const code = (rawStatus as any)?.code;
-    if (code) {
-      status = mapBackendStatusToFrontend(code);
-    }
-  } else if (typeof rawStatus === "string") {
-    status = mapBackendStatusToFrontend(rawStatus);
-  }
-
-  const statusInfo = getStatusInfo(status);
-  const statusDisplayName = getStatusDisplayName(status);
 
   // Mapeo de datos de la orden usando la estructura real del backend
   // NOTA: code es el código de confirmación de 4 dígitos, NO el ID de la orden
@@ -506,7 +334,6 @@ export const OrderAdminDetailScreen: React.FC = () => {
         onBackPress={() => navigate("OrdersManagement")}
       />
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Estado y fecha */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <MaterialCommunityIcons
@@ -518,15 +345,13 @@ export const OrderAdminDetailScreen: React.FC = () => {
             <Text style={styles.sectionTitle}>Información General</Text>
           </View>
 
-          <View
-            style={[styles.statusBadge, { backgroundColor: statusInfo.color }]}
-          >
+          <View style={[styles.statusBadge, { backgroundColor: meta.color }]}>
             <MaterialCommunityIcons
-              name={statusInfo.icon as any}
+              name={meta.icon as any}
               size={18}
               color="white"
             />
-            <Text style={styles.statusText}>{statusDisplayName}</Text>
+            <Text style={styles.statusText}>{meta.label}</Text>
           </View>
 
           <View style={{ marginTop: 16 }}>
@@ -762,85 +587,73 @@ export const OrderAdminDetailScreen: React.FC = () => {
           </View>
 
           <View style={styles.actions}>
-            {(() => {
-              const getNext = (s: string) => {
-                if (s === "pending" || s === "confirmed")
-                  return {
-                    next: "processing",
-                    label: "Preparar",
-                    icon: "package-variant",
-                  };
-                if (s === "processing")
-                  return {
-                    next: "shipped",
-                    label: "Enviar",
-                    icon: "truck-delivery",
-                  };
-                return null;
-              };
+            {action?.next && (
+              <TouchableOpacity
+                style={styles.actionBtn}
+                onPress={() => changeStatus(action.next! as any)}
+                disabled={loading}
+              >
+                <MaterialCommunityIcons
+                  name={action.icon as any}
+                  size={18}
+                  color="white"
+                />
+                <Text style={styles.actionBtnText}>{action.label}</Text>
+              </TouchableOpacity>
+            )}
 
-              const action = getNext(status);
+            {status === "delivered" && (
+              <TouchableOpacity
+                style={[styles.actionBtn, { backgroundColor: "#30B0C7" }]}
+                onPress={() => setModalDelivery(true)}
+                disabled={loading}
+              >
+                <MaterialCommunityIcons
+                  name="check-circle"
+                  size={18}
+                  color="white"
+                />
+                <Text style={styles.actionBtnText}>Entregar</Text>
+              </TouchableOpacity>
+            )}
+            {status === "delivered" && (
+              <TouchableOpacity
+                style={[styles.actionBtn, { backgroundColor: "#30B0C7" }]}
+                onPress={() => setModalRecollect(true)}
+                disabled={loading}
+              >
+                <MaterialCommunityIcons
+                  name="check-circle"
+                  size={18}
+                  color="white"
+                />
+                <Text style={styles.actionBtnText}>Recolectar</Text>
+              </TouchableOpacity>
+            )}
 
-              return (
-                <>
-                  {action ? (
-                    <TouchableOpacity
-                      style={styles.actionBtn}
-                      onPress={() => changeStatus(action.next)}
-                      disabled={loading || !order}
-                    >
-                      <MaterialCommunityIcons
-                        name={action.icon as any}
-                        size={18}
-                        color="white"
-                      />
-                      <Text style={styles.actionBtnText}>{action.label}</Text>
-                    </TouchableOpacity>
-                  ) : null}
-
-                  {/* Delivered button: opens verification modal */}
-                  {status === "shipped" ? (
-                    <TouchableOpacity
-                      style={[styles.actionBtn, { backgroundColor: "#30B0C7" }]}
-                      onPress={handleDeliverOrder}
-                      disabled={loading || !order}
-                    >
-                      <MaterialCommunityIcons
-                        name="check-circle"
-                        size={18}
-                        color="white"
-                      />
-                      <Text style={styles.actionBtnText}>Entregar</Text>
-                    </TouchableOpacity>
-                  ) : null}
-
-                  {/* Cancel allowed until delivered/cancelled */}
-                  {status !== "delivered" && status !== "cancelled" ? (
-                    <TouchableOpacity
-                      style={[styles.actionBtn, styles.actionBtnDanger]}
-                      onPress={cancel}
-                      disabled={loading || !order}
-                    >
-                      <MaterialCommunityIcons
-                        name="close-circle"
-                        size={18}
-                        color="white"
-                      />
-                      <Text style={styles.actionBtnText}>Cancelar</Text>
-                    </TouchableOpacity>
-                  ) : null}
-                </>
-              );
-            })()}
+            {status !== "delivered" && status !== "cancelled" && (
+              <TouchableOpacity
+                style={[styles.actionBtn, styles.actionBtnDanger]}
+                onPress={cancelOrder}
+                disabled={loading}
+              >
+                <MaterialCommunityIcons
+                  name="close-circle"
+                  size={18}
+                  color="white"
+                />
+                <Text style={styles.actionBtnText}>Cancelar</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </ScrollView>
 
       {/* Verification Code Modal */}
       <VerificationCodeModal
-        visible={verificationModalVisible}
-        onClose={() => setVerificationModalVisible(false)}
-        onConfirm={handleConfirmDelivery}
+        visible={modalDelivery}
+        onClose={() => setModalDelivery(false)}
+        onConfirm={deliverOrder}
         orderNumber={orderNumber}
       />
     </View>
