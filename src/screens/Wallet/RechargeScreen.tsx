@@ -67,6 +67,7 @@ export default function RechargeScreen() {
     onTabChange,
     modalPayphone,
     setModalPayphone,
+    destroyPayphoneWidget,
   } = useRecharge();
   const handleBeforeClose = () => {
     return new Promise<boolean>((resolve) => {
@@ -330,29 +331,23 @@ export default function RechargeScreen() {
 
                 {/* Contenedor para el botón de Payphone en Web */}
                 {Platform.OS === "web" &&
-                  selectedPaymentMethod === "PAYPHONE" && (
-                    <WrapperModal
-                      header={
-                        <Text className="text-xl font-semibold"> Payphone</Text>
-                      }
-                      isOpen={modalPayphone}
-                      onClose={() => setModalPayphone(false)}
-                      beforeClose={handleBeforeClose}
-                      content={
-                        <View
-                          style={{
-                            flex: 1,
-                            overflow: "scroll",
-                          }}
-                        >
-                          <div id="pp-button"></div>
-                        </View>
-                      }
-                    />
+                  selectedPaymentMethod === "PAYPHONE" &&
+                  modalPayphone && (
+                    <View className="mb-4 flex gap-2">
+                      <Button
+                        onPress={() => {
+                          destroyPayphoneWidget();
+                          setModalPayphone(false);
+                        }}
+                        title="Cancelar"
+                        variant="secondary"
+                      />
+                      <div id="pp-button"></div>
+                    </View>
                   )}
 
                 {/* Botón de Recargar */}
-                {
+                {!modalPayphone && (
                   <TouchableOpacity
                     disabled={!isValid}
                     onPress={handleProceedToPayment}
@@ -381,7 +376,7 @@ export default function RechargeScreen() {
                       />
                     </View>
                   </TouchableOpacity>
-                }
+                )}
 
                 {/* Texto de seguridad */}
                 <View className="flex-row justify-center items-center gap-2">

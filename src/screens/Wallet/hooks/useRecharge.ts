@@ -156,22 +156,18 @@ export function useRecharge() {
       Alert.alert("Error", "Payphone solo está disponible en la versión web");
       return;
     }
+
     setModalPayphone(true);
+
     try {
-      // Limpiar variables QR antes de iniciar recarga
       clearPayphoneStorage();
 
-      // Limpiar el contenedor del botón
-      // @ts-ignore
-      const ppDiv = document.getElementById("pp-button");
-      if (ppDiv) ppDiv.innerHTML = "";
+      destroyPayphoneWidget();
 
       setIsLoading(true);
 
-      // Esperar un momento antes de cargar el script
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Cargar el script de Payphone
       await loadPayphoneScript();
 
       const payphoneToken = process.env.EXPO_PUBLIC_PAYPHONE_TOKEN;
@@ -180,7 +176,6 @@ export function useRecharge() {
         throw new Error("Token de Payphone no configurado");
       }
 
-      // @ts-ignore
       localStorage.setItem("payphone_token", payphoneToken);
 
       const payphoneConfig = {
@@ -197,12 +192,23 @@ export function useRecharge() {
       new window.PPaymentButtonBox(payphoneConfig).render("pp-button");
     } catch (error) {
       console.error("Error al cargar Payphone:", error);
-      Alert.alert(
-        "Error",
-        "No se pudo cargar el widget de Payphone. Por favor, intenta nuevamente.",
-      );
+      Alert.alert("Error", "No se pudo cargar el widget de Payphone.");
       setIsLoading(false);
       setModalPayphone(false);
+    }
+  };
+
+  const destroyPayphoneWidget = () => {
+    if (Platform.OS !== "web") return;
+
+    try {
+      const container = document.getElementById("pp-button");
+
+      if (container) {
+        container.innerHTML = "";
+      }
+    } catch (error) {
+      console.error("Error limpiando Payphone:", error);
     }
   };
 
@@ -390,5 +396,6 @@ export function useRecharge() {
     handleBankTransferPayment, // Export handler to be used by modal
     setIsLoading,
     onTabChange,
+    destroyPayphoneWidget,
   };
 }
