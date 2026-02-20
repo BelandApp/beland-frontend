@@ -18,7 +18,7 @@ export const HomeScreen = () => {
     navigateDelivery,
     navigateFaq,
   } = useDashboardNavigation();
-  const { userStats, activities } = useDashboardData();
+  const { userStats } = useDashboardData();
   const { getBeCoinsInUSD } = useBeCoinsStore();
   const { loadingWallet: loading, transactions, walletData } = useWallet();
   // Usar la constante centralizada para el cálculo de USD
@@ -62,7 +62,8 @@ export const HomeScreen = () => {
           </View>
 
           <StatsCard
-            becoins={walletData.becoin_green}
+            greenBecoins={walletData.becoin_green}
+            orangeBecoins={walletData.becoin_orange}
             bottlesRecycled={userStats?.bottlesRecycled ?? 0}
             estimatedValue={String(
               convertBeCoinsToUSD(walletData.becoin_green),

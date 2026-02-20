@@ -5,20 +5,22 @@ import { RecycleIcon, WaterIcon } from "../../../components/icons";
 import StatCard from "./StatCard";
 
 interface StatsCardProps {
-  becoins: number;
+  greenBecoins: number;
+  orangeBecoins: number;
   bottlesRecycled: number; // Usado para calcular kg reciclados y litros conservados
   estimatedValue: string;
 }
 
 export const StatsCard: React.FC<StatsCardProps> = ({
-  becoins,
+  greenBecoins,
+  orangeBecoins,
   bottlesRecycled,
   estimatedValue,
 }) => {
   const stats = [
     {
       icon: <BeCoinIcon width={32} height={32} />,
-      value: becoins,
+      value: greenBecoins,
       label: "Green BeCoins",
       sublabel: `≈ $${estimatedValue} USD`,
       color: "#059669",
@@ -26,7 +28,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
     },
     {
       icon: <BeCoinIcon width={32} height={32} />,
-      value: becoins,
+      value: orangeBecoins,
       label: "Orange BeCoins",
       sublabel: `≈ $${estimatedValue} USD`,
       color: "#F97316",
