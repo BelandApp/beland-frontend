@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Image,
   ScrollView,
   ActivityIndicator,
 } from "react-native";
@@ -27,8 +26,8 @@ import UserProfileFields from "../fields/UserProfileFields";
 interface EnhancedProfileCardProps {}
 
 export const EnhancedProfileCard: React.FC<EnhancedProfileCardProps> = () => {
-  const { user, setUser } = useAuth();
-  const form = useUserProfileForm(user, setUser);
+  const { user } = useAuth();
+  const form = useUserProfileForm();
 
   if (!user) {
     return null;
@@ -52,14 +51,16 @@ export const EnhancedProfileCard: React.FC<EnhancedProfileCardProps> = () => {
           <ProfileImagePicker
             localImage={form.localImage}
             userPicture={user.profile_picture_url}
-            editing={form.editing}
-            pickImage={form.pickImage}
+            loading={form.loading}
+            pickImage={form.handleNewImage}
           />
-          {form.editing && (
-            <View style={styles.editBadge}>
-              <Camera size={16} color="#fff" />
-            </View>
-          )}
+
+          <TouchableOpacity
+            onPress={form.handleNewImage}
+            style={styles.editBadge}
+          >
+            <Camera size={16} color="#fff" />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.headerInfo}>
@@ -73,8 +74,8 @@ export const EnhancedProfileCard: React.FC<EnhancedProfileCardProps> = () => {
                 {user.role_name === "USER"
                   ? "Usuario"
                   : user.role_name === "COMMERCE"
-                  ? "Comercio"
-                  : user.role_name}
+                    ? "Comercio"
+                    : user.role_name}
               </Text>
             </View>
           )}

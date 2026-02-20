@@ -1,36 +1,45 @@
 import React from "react";
-import { TouchableOpacity, Image, Platform } from "react-native";
+import {
+  TouchableOpacity,
+  Image,
+  Platform,
+  ActivityIndicator,
+} from "react-native";
 
 interface Props {
   localImage: string | null;
   userPicture: string | undefined;
-  editing: boolean;
+  loading: boolean;
   pickImage: () => Promise<void>;
 }
 
 const ProfileImagePicker: React.FC<Props> = ({
   localImage,
   userPicture,
-  editing,
   pickImage,
+  loading,
 }) => (
-  <TouchableOpacity onPress={() => (editing ? pickImage() : null)}>
-    <Image
-      source={{
-        uri:
-          localImage ||
-          userPicture ||
-          "https://ui-avatars.com/api/?name=User&background=random",
-      }}
-      style={{
-        width: 100,
-        height: 100,
-        borderRadius: 50,
-        marginBottom: 10,
-        borderColor: "#007AFF",
-        borderWidth: 2,
-      }}
-    />
+  <TouchableOpacity onPress={pickImage} disabled={loading}>
+    {loading ? (
+      <ActivityIndicator style={{ width: 100, height: 100 }} />
+    ) : (
+      <Image
+        source={{
+          uri:
+            localImage ||
+            userPicture ||
+            "https://ui-avatars.com/api/?name=User&background=random",
+        }}
+        style={{
+          width: 100,
+          height: 100,
+          borderRadius: 50,
+          marginBottom: 10,
+          borderColor: "#007AFF",
+          borderWidth: 2,
+        }}
+      />
+    )}
   </TouchableOpacity>
 );
 
