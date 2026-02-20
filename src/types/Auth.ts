@@ -13,7 +13,7 @@ export interface CodeStepProps extends ResetPasswordStepProps {
 export type FormCodeCheck = { email: string; code: string };
 export type FormResetPassword = {
   email: string;
-  code: string;
+  code?: string;
   password: string;
   confirmPassword: string;
 };

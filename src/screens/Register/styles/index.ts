@@ -103,6 +103,22 @@ export const styles = StyleSheet.create({
     borderRadius: 12,
     width: width > 600 ? 600 : width - 40,
   },
+  simpleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginHorizontal: "auto",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    width: width > 600 ? 600 : width - 40,
+  },
+  actionsContainer: {
+    gap: 4,
+    marginVertical: 4,
+  },
+
   description: {
     fontSize: 14,
     color: "#666",
