@@ -16,24 +16,16 @@ import {
   RecentTransactions,
   PaymentPreferences,
 } from "./components";
-import {
-  useWalletActions,
-  usePaymentPreferences,
-} from "./hooks";
+import { useWalletActions, usePaymentPreferences } from "./hooks";
 import { containerStyles } from "./styles";
 import { useWallet } from "./hooks/useWalletData";
 
 export const WalletScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { user, isAuthenticated, handleAuth0Login, canPerformAction } =
     useAuth();
-  
-  const {
-    walletData,
-    transactions,
-    loadingWallet,
-    loadingTransactions,
-    refreshAll,
-  } = useWallet();
+
+  const { walletData, transactions, loadingTransactions, refreshAll } =
+    useWallet();
 
   const { mainWalletActions } = useWalletActions();
 
@@ -50,7 +42,7 @@ export const WalletScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     const unsubscribe = nav.addListener("focus", () => {
       // Si venimos de una recarga exitosa, forzar refetch del saldo y transacciones
       if (canPerformAction) {
-        refreshAll()
+        refreshAll();
       }
     });
     return unsubscribe;
