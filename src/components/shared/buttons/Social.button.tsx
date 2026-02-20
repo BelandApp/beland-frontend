@@ -26,6 +26,7 @@ export const SocialButton: React.FC<SocialButtonsProps> = ({
         padding: 10,
         width: "100%",
         margin: "auto",
+        opacity: disabled ? 0.5 : 1,
       }}
       onPress={onPress}
       disabled={disabled}
