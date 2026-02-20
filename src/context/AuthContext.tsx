@@ -40,12 +40,13 @@ type AuthContextType = {
   isLoading: boolean;
   loginWithEmail: (
     email: string,
-    password: string
+    password: string,
   ) => Promise<{ token: string | null }>;
   handleAuth0Login: () => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   canPerformAction: boolean;
+  updateUser: (partial: Partial<User>) => void;
   setUser: (user: User | null) => void; //TODO VER SI LO PODEMOS QUITAR PARA MAYOR SEGURIDAD
   requireAuth: (action: () => void | Promise<void>) => Promise<void>; //TODO VER SI LO PODEMOS QUITAR
 };
@@ -65,12 +66,12 @@ const configIsValid = auth0Domain && clientWebId && scheme && auth0Audience;
 
 if (!configIsValid) {
   console.error(
-    "❌ Las variables de entorno de Auth0 no están configuradas correctamente."
+    "❌ Las variables de entorno de Auth0 no están configuradas correctamente.",
   );
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(
-  undefined
+  undefined,
 );
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -99,8 +100,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   });
   // Development URL:
   // NATIVE> exp://localhost:8081/--/callback WEB> http://localhost:8081
-  console.log(auth0Audience)
-  
+  console.log(auth0Audience);
+
   const discovery = useAutoDiscovery(`https://${auth0Domain}`);
   const [request, response, promptAsync] = useAuthRequest(
     {
@@ -113,7 +114,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         prompt: "login", // Fuerza a que Auth0 muestre la pantalla de login
       },
     },
-    discovery
+    discovery,
   );
 
   useEffect(() => {
@@ -131,12 +132,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                   code_verifier: request?.codeVerifier || "",
                 },
               },
-              discovery
+              discovery,
             );
             if (tokenResponse.accessToken) {
               await TokenService.saveToken(tokenResponse.accessToken);
               let me = await authService.exchangeAuth0Token(
-                tokenResponse.accessToken
+                tokenResponse.accessToken,
               );
               await TokenService.saveToken(me.token);
               setToken(me.token);
@@ -183,13 +184,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const logout = async () => {
-   await clearStorage(Storage);
-   resetStores();
+    await clearStorage(Storage);
+    resetStores();
 
-   await TokenService.clearToken();
+    await TokenService.clearToken();
 
-   setUser(null);
-   setToken(null);
+    setUser(null);
+    setToken(null);
+  };
+
+  const updateUser = (partial: Partial<User>) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      return { ...prev, ...partial };
+    });
   };
   const requireAuth = async (action: () => void | Promise<void>) => {
     if (!isAuthenticated) {
@@ -218,6 +226,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         canPerformAction,
         requireAuth,
         setUser,
+        updateUser,
       }}
     >
       {children}
