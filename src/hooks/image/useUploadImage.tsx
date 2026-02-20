@@ -15,7 +15,7 @@ import { useState } from "react";
 import { Platform, Alert } from "react-native";
 
 const MAX_SIZE_BYTES = 10 * 1024 * 1024;
-const getPreviewUri = (image: UploadImage | null): string | null => {
+export const getPreviewUri = (image: UploadImage | null): string | null => {
   if (!image) return null;
 
   if ("file" in image) {
@@ -82,17 +82,18 @@ export const useUploadImage = () => {
           asset.fileName ?? "image.jpg",
           asset.mimeType ?? "image/jpeg",
         );
-
+        const selected = { file };
         setImage({ file });
-        return;
+        return selected;
       }
-
       // 📱 NATIVE
-      setImage({
+      const selected = {
         uri: asset.uri,
         name: asset.fileName ?? "image.jpg",
         type: asset.mimeType ?? "image/jpeg",
-      });
+      };
+      setImage(selected);
+      return selected;
     } catch {
       Alert.alert("Error", "No se pudo seleccionar la imagen");
     }
