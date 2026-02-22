@@ -3,7 +3,7 @@ import { Platform, Alert } from "react-native";
 import { useUploadImage } from "src/hooks";
 import { useThemedTabs } from "src/components";
 import { notify } from "src/hooks/notification/notify.external";
-import { getBackendErrorMessage } from "src/services";
+import { BackendPaymentAccount, getBackendErrorMessage } from "src/services";
 import { CloudinaryService } from "src/services/cloudinary/cloudinary.service";
 
 // Tipos
@@ -248,8 +248,9 @@ export function useRecharge() {
         const { PaymentAccountService } = require("src/services");
         const response = await PaymentAccountService.getPaymentAccounts();
         console.log("Respuesta de cuentas", response);
+
         // Handle response structure (it returns [data, count] based on controller analysis)
-        let accounts: any[] = [];
+        let accounts: BackendPaymentAccount[] = [];
         if (Array.isArray(response)) {
           accounts = response[0] || [];
         } else if (response && (response as any).data) {
@@ -257,6 +258,9 @@ export function useRecharge() {
           accounts = (response as any).data || [];
         }
         console.log("Loaded payment accounts:", accounts);
+        // filter only actives
+        accounts = accounts.filter((account) => account.is_active);
+        console.log("Cuentas activas", accounts);
         setPaymentAccounts(accounts);
         setSelectedPaymentAccount(accounts[0]);
       } catch (error) {
