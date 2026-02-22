@@ -2,21 +2,33 @@ import { useEffect, useState } from "react";
 import { notify } from "src/hooks/notification/notify.external";
 import { getBackendErrorMessage, WithdrawService } from "src/services";
 import {
+  BackendPaymentAccount,
+  PaymentAccount,
+  PaymentAccountService,
   UserRecharge,
   UserRechargeService,
   UserWithdraw,
 } from "src/services/financial";
 
-type ActionType = "approve" | "reject";
-type EntityType = "withdraw" | "recharge";
-
+type ActionType = "approve" | "reject" | "create" | "modify" | "delete";
+type EntityType = "withdraw" | "recharge" | "account" | "image";
+export type HandleOpenFinancial = {
+  id: string;
+  action: ActionType;
+  entity: EntityType;
+  uri?: string;
+  account?: BackendPaymentAccount;
+};
 export const useFinanceAdmin = () => {
   const [withDraw, setWithDraw] = useState<UserWithdraw[]>([]);
+  const [accounts, setAccounts] = useState<PaymentAccount[]>([]);
   const [paymentsTransfer, setPaymentsTransfer] = useState<UserRecharge[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const [modalOpen, setModalOpen] = useState(false);
-  const [imageModal, setImageModal] = useState(false);
+  const [modalWithdraw, setModalWithdraw] = useState(false);
+  const [modalTransfer, setModalTransfer] = useState(false);
+  const [modalImage, setModalImage] = useState(false);
+  const [modalAccount, setModalAccount] = useState(false);
 
   const [image, setImage] = useState("");
   const [reference, setReference] = useState("");
@@ -35,11 +47,15 @@ export const useFinanceAdmin = () => {
 
       const pending = data.filter((i) => i?.status?.name === "Pendiente");
       const rest = data.filter((i) => i?.status?.name !== "Pendiente");
-
+      // Withdraws
       setWithDraw([...pending, ...rest]);
-
+      // Transfers
       const resIngresos = await UserRechargeService.getAll();
       setPaymentsTransfer(resIngresos);
+      // Accounts
+      const Accounts = await PaymentAccountService.getPaymentAccounts();
+      const AccountsData = Accounts.data;
+      setAccounts(AccountsData);
     } catch (err) {
       notify.error({ message: "No se pudieron cargar los datos" });
     } finally {
@@ -51,29 +67,36 @@ export const useFinanceAdmin = () => {
     loadData();
   }, []);
 
-  const handleOpen = (id: string, action: ActionType, entity: EntityType) => {
+  const handleOpen = ({ id, action, entity, uri }: HandleOpenFinancial) => {
     setSelectedId(id);
     setTypeAction(action);
     setEntityType(entity);
-    setModalOpen(true);
+    switch (entity) {
+      case "account":
+        setModalAccount(true);
+        break;
+      case "withdraw":
+        setModalWithdraw(true);
+        break;
+      case "recharge":
+        setModalTransfer(true);
+        break;
+      case "image":
+        setModalImage(true);
+        if (uri) setImage(uri);
+        break;
+    }
   };
 
   const handleCancel = () => {
-    setModalOpen(false);
+    setModalAccount(false);
+    setModalWithdraw(false);
+    setModalTransfer(false);
     setReference("");
     setObservation("");
     setTypeAction(null);
     setEntityType(null);
     setSelectedId(null);
-  };
-
-  const openImage = (uri: string) => {
-    setImage(uri);
-    setImageModal(true);
-  };
-
-  const closeImage = () => {
-    setImageModal(false);
     setImage("");
   };
 
@@ -119,24 +142,29 @@ export const useFinanceAdmin = () => {
     }
   };
 
+  const handleAddAccount = () => {};
+
   return {
     withDraw,
     paymentsTransfer,
+    accounts,
     loading,
 
-    modalOpen,
+    modalAccount,
+    modalImage,
+    modalTransfer,
+    modalWithdraw,
     handleOpen,
     handleCancel,
     handleConfirm,
+    handleAddAccount,
 
     reference,
     setReference,
     observation,
     setObservation,
-
-    imageModal,
-    openImage,
-    closeImage,
     image,
+    typeAction,
+    entityType,
   };
 };

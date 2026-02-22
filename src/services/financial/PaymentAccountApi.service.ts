@@ -17,9 +17,27 @@ export interface PaymentAccount {
   created_at: string;
   updated_at: string;
 }
-
+export type BackendPaymentAccount = {
+  accountHolder: string;
+  alias: string;
+  bank: string;
+  cbu: string;
+  created_at: string;
+  email: string;
+  id: string;
+  is_active: boolean;
+  name: string;
+  nro_account: string;
+  ruc: string;
+  type_account: string;
+  updated_at: string;
+  user_id: string;
+};
 class PaymentAccountServiceClass extends CoreApiService {
-  private readonly ENDPOINT = "payment-account/at-recharge";
+  private readonly ENDPOINT = {
+    payment: "payment-account",
+    at_recharge: "payment-account/at-recharge",
+  };
 
   /**
    * Get all payment accounts
@@ -37,14 +55,35 @@ class PaymentAccountServiceClass extends CoreApiService {
     // However, looking at other services, let's assume standard response or we handle it.
     // Actually, most NestJS standard is just returning the value.
     // If it returns [items, count], we should probably wrap it or type it as any first to be safe.
-    return this.get<any>(`${this.ENDPOINT}`);
+    const res = await this.get<any>(`${this.ENDPOINT.at_recharge}`);
+
+    return adaptSequelizePagination<PaymentAccount>(res, page, limit);
   }
 
   /**
    * Get specific payment account
    */
   async getPaymentAccount(id: string): Promise<PaymentAccount> {
-    return this.get<PaymentAccount>(`${this.ENDPOINT}/${id}`);
+    return this.get<PaymentAccount>(`${this.ENDPOINT.at_recharge}/${id}`);
+  }
+
+  async createAccount(data: Partial<PaymentAccount>): Promise<PaymentAccount> {
+    return this.post(`${this.ENDPOINT.payment}`, data);
+  }
+  async modifyAccount(
+    id: string,
+    data: Partial<PaymentAccount>,
+  ): Promise<PaymentAccount> {
+    return this.put(`${this.ENDPOINT.payment}/${id}`, data);
+  }
+  async deleteAccount(id: string) {
+    return this.delete(`${this.ENDPOINT.payment}/${id}`);
+  }
+  async activateAccount(id: string) {
+    return this.put(`${this.ENDPOINT.payment}/activate/${id}`);
+  }
+  async desactivateAccount(id: string) {
+    return this.put(`${this.ENDPOINT.payment}/deactivate/${id}`);
   }
 }
 
