@@ -3,21 +3,12 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Image,
   ScrollView,
-  TextInput,
   FlatList,
-  ActivityIndicator,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import Feather from "react-native-vector-icons/Feather";
-import { useNavigation, NavigationProp } from "@react-navigation/native";
-import {
-  GroupService,
-  Group,
-  GroupMember,
-  PaymentType,
-} from "@/services/GroupApiService";
+import { GroupService, Group } from "@/services/GroupApiService";
 import { GroupPrivacy } from "@/services/GroupApiService";
 import { useAuth } from "@/context/AuthContext";
 import { CustomLoader } from "@/components/shared/loader/Loader";
@@ -36,7 +27,7 @@ const getPrivacyIcon = (privacyCode: string) => {
 };
 
 const GroupExploreScreen = () => {
-  const { navigate, goBack } = useCustomNavigation();
+  const { navigate } = useCustomNavigation();
   const [groups, setGroups] = useState<Group[]>([]);
   const [myGroupIds, setMyGroupIds] = useState<Set<string>>(new Set());
   const [joiningGroupId, setJoiningGroupId] = useState<string | null>(null);
@@ -233,7 +224,11 @@ const GroupExploreScreen = () => {
   return (
     <View className="flex-1 bg-background-light gap-2">
       {/* Header */}
-      <ThemedHeader canGoBack title="Explorar Grupos" />
+      <ThemedHeader
+        canGoBack
+        title="Explorar Grupos"
+        onBackPress={() => navigate("Groups", { screen: "GroupsList" })}
+      />
 
       {/* Search Bar */}
       <SearchBarInput
