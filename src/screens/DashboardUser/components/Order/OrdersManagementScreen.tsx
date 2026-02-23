@@ -194,7 +194,11 @@ export const OrdersManagementScreen = () => {
 
   return (
     <>
-      <ThemedHeader title="Ordenes" canGoBack />
+      <ThemedHeader
+        title="Ordenes"
+        canGoBack
+        onBackPress={() => navigate("UserDashboardScreen")}
+      />
       <View style={{ flex: 1, paddingHorizontal: 16, marginTop: 6 }}>
         <ThemedTabs tabs={tabs} onTabChange={onTabChange} />
         {loading ? (

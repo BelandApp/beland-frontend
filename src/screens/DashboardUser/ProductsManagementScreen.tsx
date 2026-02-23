@@ -20,8 +20,10 @@ import type {
 import { ProductsTable } from "./components/products/ProductsTable";
 import { ProductFormModal } from "./components/products/ProductFormModal";
 import { ProductFilters } from "./components/products/ProductFilters";
-import { useNotify } from "@/hooks";
+import { useCustomNavigation, useNotify } from "@/hooks";
 import { useResponsiveLayout } from "@/hooks";
+import { Button, SearchBarInput, ThemedHeader } from "src/components";
+import { colors } from "src/design-system";
 
 export const ProductsManagementScreen: React.FC = () => {
   const notify = useNotify();
@@ -31,7 +33,7 @@ export const ProductsManagementScreen: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalProducts, setTotalProducts] = useState(0);
-
+  const { navigate } = useCustomNavigation();
   // Filtros y paginación
   const [filters, setFilters] = useState<ProductQuery>({
     page: 1,
@@ -204,68 +206,68 @@ export const ProductsManagementScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={[styles.header, isMobile && styles.headerMobile]}>
-        <View style={[styles.headerTop, isMobile && styles.headerTopMobile]}>
-          <View style={styles.headerTitleContainer}>
-            <Text style={[styles.title, isMobile && styles.titleMobile]}>
-              Gestión de Productos
-            </Text>
-            <Text style={[styles.subtitle, isMobile && styles.subtitleMobile]}>
-              {totalProducts} productos en total
-            </Text>
-          </View>
-          <TouchableOpacity
-            style={[styles.createButton, isMobile && styles.createButtonMobile]}
+      <ThemedHeader
+        title="Gestion de productos"
+        canGoBack
+        onBackPress={() => navigate("UserDashboardScreen")}
+        subtitle={`${totalProducts} productos en total`}
+        buttons={
+          <Button
+            title="Nuevo Producto"
+            textStyle={{ color: "white" }}
+            style={{
+              elevation: 8,
+              backgroundColor: colors.brand.green[500],
+            }}
             onPress={handleCreateProduct}
-          >
-            <MaterialCommunityIcons
-              name="plus"
-              size={isMobile ? 18 : 20}
-              color="#fff"
-            />
-            <Text
-              style={[
-                styles.createButtonText,
-                isMobile && styles.createButtonTextMobile,
-              ]}
-            >
-              Nuevo {isMobile ? "Producto" : "Producto"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Búsqueda */}
-        <View
-          style={[
-            styles.searchContainer,
-            isMobile && styles.searchContainerMobile,
-          ]}
-        >
-          <MaterialCommunityIcons
-            name="magnify"
-            size={20}
-            color="#9ca3af"
-            style={styles.searchIcon}
-          />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Buscar por nombre..."
-            value={searchText}
-            onChangeText={setSearchText}
-            onSubmitEditing={handleSearch}
-          />
-          {searchText.length > 0 && (
-            <TouchableOpacity onPress={handleClearSearch}>
+            icon={
               <MaterialCommunityIcons
-                name="close-circle"
-                size={20}
-                color="#9ca3af"
+                name="plus"
+                size={isMobile ? 18 : 20}
+                color="#fff"
               />
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
+            }
+            variant={isMobile ? "onlyIcon" : "secondary"}
+          />
+        }
+      />
 
+      {/* Búsqueda */}
+      {/* <View
+        style={[
+          styles.searchContainer,
+          isMobile && styles.searchContainerMobile,
+        ]}
+      >
+        <MaterialCommunityIcons
+          name="magnify"
+          size={20}
+          color="#9ca3af"
+          style={styles.searchIcon}
+        />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Buscar por nombre..."
+          value={searchText}
+          onChangeText={setSearchText}
+          onSubmitEditing={handleSearch}
+        />
+        {searchText.length > 0 && (
+          <TouchableOpacity onPress={handleClearSearch}>
+            <MaterialCommunityIcons
+              name="close-circle"
+              size={20}
+              color="#9ca3af"
+            />
+          </TouchableOpacity>
+        )}
+      </View> */}
+      <SearchBarInput
+        searchQuery={searchText}
+        onSearchChange={setSearchText}
+        placeholder="Buscar por nombre..."
+        styleContainer={{ marginTop: 4, marginHorizontal: 16 }}
+      />
       {/* Filtros */}
       <ProductFilters
         categories={categories}
@@ -325,7 +327,6 @@ export const ProductsManagementScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f3f4f6",
   },
   header: {
     backgroundColor: "#fff",

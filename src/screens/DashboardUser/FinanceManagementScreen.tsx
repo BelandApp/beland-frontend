@@ -75,7 +75,7 @@ const FinancesManagement: React.FC = () => {
       <ThemedHeader
         canGoBack
         title="Finanzas"
-        onBackPress={() => navigate("Dashboard")}
+        onBackPress={() => navigate("UserDashboardScreen")}
       />
 
       <View className="px-6 pt-1">
