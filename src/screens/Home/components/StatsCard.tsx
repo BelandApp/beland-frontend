@@ -3,26 +3,27 @@ import { View, Text, StyleSheet, Platform, Dimensions } from "react-native";
 import { BeCoinIcon } from "../../../components/icons/BeCoinIcon";
 import { RecycleIcon, WaterIcon } from "../../../components/icons";
 import StatCard from "./StatCard";
+import { convertBeCoinsToUSD } from "src/constants";
 
 interface StatsCardProps {
   greenBecoins: number;
   orangeBecoins: number;
   bottlesRecycled: number; // Usado para calcular kg reciclados y litros conservados
-  estimatedValue: string;
 }
 
 export const StatsCard: React.FC<StatsCardProps> = ({
   greenBecoins,
   orangeBecoins,
   bottlesRecycled,
-  estimatedValue,
 }) => {
+  const greenDollars = convertBeCoinsToUSD(greenBecoins).toFixed(2);
+  const orangeDollars = convertBeCoinsToUSD(orangeBecoins).toFixed(2);
   const stats = [
     {
       icon: <BeCoinIcon width={32} height={32} />,
       value: greenBecoins,
       label: "Green BeCoins",
-      sublabel: `≈ $${estimatedValue} USD`,
+      sublabel: `≈ $${greenDollars} USD`,
       color: "#059669",
       info: "Becoins verdes que ganas reciclando y ayudando al planeta.",
     },
@@ -30,15 +31,15 @@ export const StatsCard: React.FC<StatsCardProps> = ({
       icon: <BeCoinIcon width={32} height={32} />,
       value: orangeBecoins,
       label: "Orange BeCoins",
-      sublabel: `≈ $${estimatedValue} USD`,
+      sublabel: `≈ $${orangeDollars} USD`,
       color: "#F97316",
-      info: "Becoins naranjas que te regalamos absorbiendo la comisión de transferencias.",
+      info: "Becoins naranjas que te regalamos absorbiendo la comisión de recargas.",
     },
     {
       icon: <RecycleIcon width={32} height={32} color="#059669" />,
       value: (bottlesRecycled * 0.025).toFixed(1),
       label: "Kg reciclados",
-      sublabel: "Este mes",
+      sublabel: "Durante el mes",
       color: "#059669",
       info: "Cantidad de residuos que has ayudado a reciclar.",
     },
@@ -46,7 +47,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
       icon: <WaterIcon width={32} height={32} color="#3B82F6" />,
       value: Math.floor(bottlesRecycled * 0.5).toString(),
       label: "Litros conservados",
-      sublabel: "de agua",
+      sublabel: "Durante el mes",
       color: "#3B82F6",
       info: "Litros de agua que has ayudado a conservar reciclando.",
     },
