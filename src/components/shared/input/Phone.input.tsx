@@ -24,6 +24,7 @@ interface PhoneInputProps {
   icon?: boolean;
   textColor?: string;
   placeholderTextColor?: string;
+  required?: boolean;
 }
 
 const COUNTRY_CODES = [
@@ -37,7 +38,7 @@ const COUNTRY_CODES = [
 const parsePhoneValue = (value: string) => {
   if (!value.startsWith("+")) return { code: "+54", number: value };
   const sortedCodes = [...COUNTRY_CODES].sort(
-    (a, b) => b.code.length - a.code.length
+    (a, b) => b.code.length - a.code.length,
   );
   for (const entry of sortedCodes) {
     if (value.startsWith(entry.code)) {
@@ -59,6 +60,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
   icon = false,
   textColor,
   placeholderTextColor,
+  required,
   ...props
 }) => {
   const selectedVariant = variantStyles[variant];
@@ -181,6 +183,9 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
                 color="#666"
                 style={styles.icon}
               />
+            )}
+            {required && !value && (
+              <Text className="text-red-500 self-start text-lg pr-1">*</Text>
             )}
           </View>
         </Animated.View>
