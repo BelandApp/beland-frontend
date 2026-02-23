@@ -14,7 +14,7 @@ import { preOrderType } from "../../hooks";
 import { UserAddress } from "src/services";
 import { convertUSDToBeCoins } from "src/constants";
 import { CartItem } from "src/stores";
-import { useResponsiveLayout } from "src/screens/Home";
+import { useResponsiveLayout } from "@/hooks";
 type ProcessingStepProps = {
   preOrder: preOrderType | null;
   onSubmit: (address: UserAddress, addressId: string) => void;

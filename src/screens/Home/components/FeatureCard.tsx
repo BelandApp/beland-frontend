@@ -13,7 +13,7 @@ import {
   RecycleIcon,
   DeliveryIcon,
 } from "../../../components/icons";
-import { useResponsiveLayout } from "../hooks/useResponsiveLayout";
+import { useResponsiveLayout } from "@/hooks";
 import { FileQuestionMark } from "lucide-react-native";
 interface FeatureCardProps {
   type: "recycling" | "community" | "delivery" | "faq";

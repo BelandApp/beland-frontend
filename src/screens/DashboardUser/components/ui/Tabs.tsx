@@ -7,7 +7,7 @@ import {
   ScrollView,
   useWindowDimensions,
 } from "react-native";
-import { useResponsiveLayout } from "src/screens/Home";
+import { useResponsiveLayout } from "@/hooks";
 
 export interface Tab {
   id: string;

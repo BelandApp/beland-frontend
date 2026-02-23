@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import type { Product } from "@/services/ProductApiService";
-import { useResponsiveLayout } from "src/screens/Home";
+import { useResponsiveLayout } from "@/hooks";
 
 interface ProductsTableProps {
   products: Product[];

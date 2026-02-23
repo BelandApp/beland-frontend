@@ -20,8 +20,7 @@ import { useAuth } from "@/context";
 import { useNotify } from "@/hooks";
 import { Group } from "@/services/GroupApiService";
 import { Button, ThemedHeader } from "src/components";
-import { useResponsiveLayout } from "../Home";
-import { File } from "expo-file-system";
+import { useResponsiveLayout } from "@/hooks";
 
 export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
   const notify = useNotify();

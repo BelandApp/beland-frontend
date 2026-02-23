@@ -21,7 +21,7 @@ import { ProductsTable } from "./components/products/ProductsTable";
 import { ProductFormModal } from "./components/products/ProductFormModal";
 import { ProductFilters } from "./components/products/ProductFilters";
 import { useNotify } from "@/hooks";
-import { useResponsiveLayout } from "../Home";
+import { useResponsiveLayout } from "@/hooks";
 
 export const ProductsManagementScreen: React.FC = () => {
   const notify = useNotify();

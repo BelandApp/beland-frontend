@@ -9,7 +9,7 @@ import { styles } from "@screens/RecyclingMap/styles/RecyclingMapStyles";
 import { useRecyclingMapContext } from "./context/RecyclingMapContext";
 import { RecyclingMapProvider } from "./context/RecyclingMapContext";
 import { SearchBarInput, ThemedHeader } from "src/components";
-import { useResponsiveLayout } from "../Home";
+import { useResponsiveLayout } from "@/hooks";
 
 export const RecyclingMapScreen = () => {
   return (

@@ -15,12 +15,15 @@ export * from "./useBeCoinsPrice";
 export * from "./useRecentRecipients";
 export * from "./categories/useCategories";
 export * from "./useOnboardingTour";
+
 // Hooks de utilidad
 export * from "./useErrorHandler";
 export * from "./useLoadingState";
 export * from "./useStorage";
 export * from "./form/useUserValidation";
 export * from "./image/useUploadImage";
+export * from "./layout/useResponsiveLayout";
+
 // Hook de navegacion
 export * from "./navigation/useCustomNavigation";
 

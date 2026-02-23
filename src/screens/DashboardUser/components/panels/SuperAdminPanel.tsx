@@ -18,7 +18,7 @@ import {
   DashboardMetrics,
 } from "src/services/AdminApiService";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
-import { useResponsiveLayout } from "src/screens/Home";
+import { useResponsiveLayout } from "@/hooks";
 import { Button, RechargeIcon } from "src/components";
 
 const { width } = Dimensions.get("window");

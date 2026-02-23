@@ -18,7 +18,7 @@ import {
 import { Event } from "src/stores/Event";
 import { colors } from "src/styles";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
-import { useResponsiveLayout } from "src/screens/Home";
+import { useResponsiveLayout } from "@/hooks";
 
 export const AcquiredEventCard: React.FC<Event> = ({
   id,

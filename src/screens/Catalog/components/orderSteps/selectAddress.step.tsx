@@ -11,7 +11,7 @@ import { DeliveryAddress } from "src/types";
 import { userService } from "src/services/user/user.service";
 import { notify } from "src/hooks/notification/notify.external";
 import { useState } from "react";
-import { useResponsiveLayout } from "src/screens/Home";
+import { useResponsiveLayout } from "@/hooks";
 type AddressSelectorProps = {
   addresses: any[];
   loadingAddresses: boolean;
