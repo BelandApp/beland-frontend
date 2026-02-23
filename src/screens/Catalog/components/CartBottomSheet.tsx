@@ -6,9 +6,7 @@ import {
   FlatList,
   Image,
   StyleSheet,
-  ScrollView,
 } from "react-native";
-import Modal from "react-native-modal";
 import { useUserBalance } from "../../../hooks/useUserBalance";
 import {
   convertUSDToBeCoins,
@@ -20,13 +18,9 @@ import { InsufficientBalanceModal } from "../../Community/components";
 import { useNotify } from "@/hooks";
 import { getBackendErrorMessage } from "src/services";
 import { Button, toastConfig } from "src/components";
-import { ArrowDown } from "lucide-react-native";
-import { colors } from "src/styles";
 import { useCartStore } from "@/stores";
-import Toast from "react-native-toast-message";
 import { useAuth } from "src/context";
 import WarpperModal from "src/components/shared/modals/wrapperModal";
-import { GroupOrderButton } from "../../../components/buttons/GroupOrderButton";
 
 interface CartBottomSheetProps {
   visible: boolean;

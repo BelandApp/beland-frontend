@@ -37,6 +37,7 @@ export const WrapperModal: React.FC<WrapperModalProps> = ({
       refRBSheet.current?.close();
     }
   }, [isOpen]);
+
   const handleRequestClose = async () => {
     if (beforeClose) {
       const shouldClose = await beforeClose();
@@ -45,11 +46,13 @@ export const WrapperModal: React.FC<WrapperModalProps> = ({
 
     onClose();
   };
+  console.log("Estado del carrito>", isOpen);
   return (
     <RBSheet
       ref={refRBSheet}
       draggable={true}
       dragOnContent={false}
+      onClose={onClose}
       height={
         Platform.OS === "web" ? SCREEN_HEIGHT * 0.98 : SCREEN_HEIGHT * 0.9
       }
