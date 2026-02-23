@@ -17,7 +17,6 @@ export const useNewAddress = ({
 }: UseNewAddressProps) => {
   const [mapPickerVisible, setMapPickerVisible] = useState(false);
   const { user } = useAuth();
-  const streetRef = useRef<any>(null);
   const [FormData, setFormData] = useState<DeliveryAddress>(
     initialAddress || {
       street: "",
@@ -27,7 +26,7 @@ export const useNewAddress = ({
       country: user?.country || "Ecuador",
       phone: user?.phone || "",
       additionalInfo: "",
-    }
+    },
   );
   const onChangeText = (name: string, value: string) => {
     setFormData({
@@ -40,7 +39,7 @@ export const useNewAddress = ({
     try {
       const normalized = await mapboxService.reverseGeocode(
         coords.latitude,
-        coords.longitude
+        coords.longitude,
       );
       setFormData((prev) => ({
         ...prev,
@@ -60,6 +59,7 @@ export const useNewAddress = ({
       setMapPickerVisible(false);
     }
   };
+
   const handleCreateAddress = async () => {
     console.log(FormData);
     const isFormValid = validateForm(FormData);

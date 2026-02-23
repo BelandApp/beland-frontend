@@ -29,7 +29,7 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
   const [step, setStep] = useState<DeliveryStep>("select");
   const [submitStatus, setSubmitStatus] = useState<OrderSubmitStatus>("idle");
   const [addresses, setAddresses] = useState<UserAddress[]>([]);
-  const [loadingAddresses, setLoadingAddresses] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
     null,
   );
@@ -52,14 +52,15 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
 
   /** ---------------- LOAD ADDRESSES ---------------- */
   const loadAddresses = useCallback(async () => {
-    setLoadingAddresses(true);
+    setLoading(true);
     try {
       const list = await addressService.getUserAddresses();
+      console.log("Formato de address", list);
       setAddresses(list ?? []);
     } catch {
       setAddresses([]);
     } finally {
-      setLoadingAddresses(false);
+      setLoading(false);
     }
   }, []);
 
@@ -106,6 +107,7 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
     }
 
     try {
+      setLoading(true);
       // Obtener datos actualizados del backend antes de confirmar
       const cart = await CartService.getCart();
       const backendItems = cart.items.map((item: any) => ({
@@ -132,6 +134,8 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
       setStep("processing");
     } catch (e) {
       notify.error({ message: getBackendErrorMessage(e) });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -217,7 +221,8 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
     step,
     setStep,
     addresses,
-    loadingAddresses,
+    setLoading,
+    loading,
     preOrder,
     showLocationModal,
     detectedCountry,

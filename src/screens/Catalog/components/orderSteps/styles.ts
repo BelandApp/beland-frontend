@@ -23,15 +23,15 @@ export const OrderDeliveryModalStyles = StyleSheet.create({
     justifyContent: "center",
     position: "absolute",
     top: 2,
-    right: 2,    
+    right: 2,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20,
+    gap: 3,
   },
-  title: { fontSize: 18, fontWeight: "700", color: "#333" },
+  title: { fontSize: 20, fontWeight: "700", color: "#333" },
   selectContainer: {
     justifyContent: "space-between",
     flex: 1,
@@ -43,7 +43,7 @@ export const OrderDeliveryModalStyles = StyleSheet.create({
     marginHorizontal: "auto",
   },
   addressCard: {
-    position:"relative",
+    position: "relative",
     flexDirection: "column",
     gap: 6,
     padding: 12,

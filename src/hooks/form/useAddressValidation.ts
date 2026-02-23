@@ -7,10 +7,10 @@ export const useAddressValidation = () => {
   const validateStreet = (street: string) => street.trim().length >= 5;
   const validateCity = (city: string) => city.trim().length >= 2;
   const validateState = (state: string) => state.trim().length >= 2;
-  const validateZipCode = (zipCode: string) => /^\d{4,10}$/.test(zipCode.trim());
+  const validateZipCode = (zipCode: string) => zipCode.trim().length >= 4;
   const validateCountry = (country: string) => country.trim().length >= 2;
-   const validatePhone = (phone: string) =>
-     /^\+[1-9]\d{7,14}$/.test(phone.replace(/\s+/g, ""));
+  const validatePhone = (phone: string) =>
+    /^\+[1-9]\d{7,14}$/.test(phone.replace(/\s+/g, ""));
 
   const validateForm = (data: {
     street?: string;
@@ -39,4 +39,4 @@ export const useAddressValidation = () => {
     return valid;
   };
   return { errors, isValid, validateForm };
-}
+};

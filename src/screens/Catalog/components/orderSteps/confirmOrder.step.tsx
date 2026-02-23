@@ -9,12 +9,12 @@ import {
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors } from "src/styles";
 import { Button } from "src/components";
-import { use, useState } from "react";
 import { preOrderType } from "../../hooks";
 import { UserAddress } from "src/services";
 import { convertUSDToBeCoins } from "src/constants";
 import { CartItem } from "src/stores";
 import { useResponsiveLayout } from "@/hooks";
+
 type ProcessingStepProps = {
   preOrder: preOrderType | null;
   onSubmit: (address: UserAddress, addressId: string) => void;
@@ -41,9 +41,7 @@ export const ConfirmOrder: React.FC<ProcessingStepProps> = ({
     0,
   );
   const total = (subtotal + SHIPPING_COST).toFixed(2);
-  const handleSubmit = () => {
-    onSubmit(address, addressId);
-  };
+
   if (submitStatus === "loading") {
     return (
       <View style={styles.loadingContainer}>
@@ -88,14 +86,6 @@ export const ConfirmOrder: React.FC<ProcessingStepProps> = ({
     >
       {/* Products Section */}
       <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <MaterialCommunityIcons
-            name="cart-outline"
-            size={24}
-            color={colors.belandOrange}
-          />
-          <Text style={styles.sectionTitle}>Tu orden</Text>
-        </View>
         <View style={styles.productsWrapper}>
           {products.map((product: CartItem) => (
             <View style={styles.productCard} key={product.id}>
@@ -214,14 +204,6 @@ export const ConfirmOrder: React.FC<ProcessingStepProps> = ({
             </View>
           </View>
         </View>
-      </View>
-
-      {/* Action Buttons */}
-      <View style={styles.actionsContainer}>
-        {Dimensions.get("window").width > 600 && (
-          <Button title="Volver" onPress={onCancel} variant="ghost" />
-        )}
-        <Button onPress={handleSubmit} title="Confirmar pedido" />
       </View>
     </ScrollView>
   );
