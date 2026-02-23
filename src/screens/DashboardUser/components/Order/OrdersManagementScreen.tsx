@@ -23,6 +23,7 @@ import { colors } from "src/design-system";
 import RecolectModal from "src/components/shared/modals/RecollectModal";
 
 import ThemedTabs from "src/components/shared/Tabs/ThemedTabs";
+import { useResponsiveLayout } from "@/hooks";
 const ACTIVE_STATUSES = ["PENDING", "PREPARING", "ON_ROUTE"];
 const COMPLETED_STATUSES = ["DELIVERED", "COLLECTED", "RECYCLED"];
 const CANCELLED_STATUSES = ["CANCELLED"];
@@ -47,7 +48,7 @@ export const OrdersManagementScreen = () => {
     recollectOrder,
     page,
   } = useOrdersAdmin();
-
+  const { isMobile } = useResponsiveLayout();
   const { activeTab, tabs, onTabChange } = useThemedTabs([
     "Activas",
     "Finalizadas",
@@ -115,10 +116,7 @@ export const OrdersManagementScreen = () => {
                 color="white"
                 style={{ marginRight: 4 }}
               />
-              <Text className="text-center text-white">
-                {" "}
-                {statusMeta.label}
-              </Text>
+              <Text className="text-center text-white">{statusMeta.label}</Text>
             </View>
             <Text className="text-beland-orange-500 font-semibold text-lg self-end pr-1">
               Usd ${item.total_amount}
@@ -142,7 +140,7 @@ export const OrdersManagementScreen = () => {
         </View>
 
         <View className="flex-row justify-between mt-3 border-t border-t-slate-200 pt-2">
-          <View className="flex-row gap-1">
+          <View className="flex-row gap-2">
             {item.normalizedStatus !== "collected" &&
               STATUS_FLOW[item.normalizedStatus as OrderStatus] && (
                 <Button
@@ -153,14 +151,13 @@ export const OrdersManagementScreen = () => {
                     setSelectedOrderId(item.id);
                     handleNextStatus(item);
                   }}
-                  variant="box"
+                  variant={isMobile ? "onlyIcon" : "box"}
                   style={{ backgroundColor: colors.brand.orange[500] }}
                   textStyle={{ color: "white" }}
                   icon={
                     <MaterialCommunityIcons
                       name={STATUS_FLOW[item.normalizedStatus].icon as any}
                       size={16}
-                      style={{ marginRight: 4 }}
                       color="white"
                     />
                   }
@@ -171,8 +168,11 @@ export const OrdersManagementScreen = () => {
                 <Button
                   title="Cancelar"
                   onPress={() => cancelOrder(item.id)}
-                  variant="box"
-                  style={{ backgroundColor: "red" }}
+                  variant={isMobile ? "onlyIcon" : "box"}
+                  style={{
+                    backgroundColor: colors.semantic.error[500],
+                    borderColor: colors.semantic.error[600],
+                  }}
                   textStyle={{ color: "white" }}
                   icon={<X color="white" size="18" />}
                 />
@@ -181,7 +181,10 @@ export const OrdersManagementScreen = () => {
           <Button
             title="Ver Detalle"
             onPress={() => navigate("OrderAdminDetail", { orderId: item.id })}
-            variant="box"
+            variant={isMobile ? "onlyIcon" : "box"}
+            style={{
+              borderColor: colors.border.secondary,
+            }}
             icon={<EyeIcon size={18} />}
           />
         </View>
