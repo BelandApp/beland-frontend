@@ -18,6 +18,7 @@ import { useFinanceAdminData } from "./hooks/useFinanceAdminData";
 import { useFinanceAdminUI } from "./hooks/useFinanceAdminUI";
 import { useEffect } from "react";
 import { Picker } from "@react-native-picker/picker";
+import { useCustomNavigation } from "src/hooks";
 const FinancesManagement: React.FC = () => {
   const financeData = useFinanceAdminData();
 
@@ -26,7 +27,7 @@ const FinancesManagement: React.FC = () => {
     refreshTransfers: financeData.refreshTransfers,
     refreshAccounts: financeData.refreshAccounts,
   });
-
+  const { navigate } = useCustomNavigation();
   const { tabs, onTabChange, activeTab } = useThemedTabs([
     "Transferencias",
     "Retiros",
@@ -71,7 +72,11 @@ const FinancesManagement: React.FC = () => {
   console.log(financeData.accounts);
   return (
     <>
-      <ThemedHeader canGoBack title="Finanzas" />
+      <ThemedHeader
+        canGoBack
+        title="Finanzas"
+        onBackPress={() => navigate("Dashboard")}
+      />
 
       <View className="px-6 pt-1">
         <ThemedTabs tabs={tabs} onTabChange={onTabChange} />
