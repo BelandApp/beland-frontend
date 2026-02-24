@@ -6,7 +6,7 @@ import {
   PaymentAccountService,
   UserRechargeService,
 } from "src/services/financial";
-
+export type TypeAccount = "AHORRO" | "CORRIENTE" | null;
 type ActionType =
   | "approve"
   | "reject"
@@ -15,7 +15,6 @@ type ActionType =
   | "delete"
   | "changeStatus";
 type EntityType = "withdraw" | "recharge" | "account" | "image";
-
 export type HandleOpenFinancial = {
   id: string;
   action: ActionType;
@@ -45,9 +44,7 @@ export const useFinanceAdminUI = ({
 
   // Account states
   const [bank, setBanco] = useState("");
-  const [type_account, setAccountType] = useState<
-    "AHORRO" | "CORRIENTE" | null
-  >(null);
+  const [type_account, setAccountType] = useState<TypeAccount>(null);
   const [nro_account, setAccountNumber] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
