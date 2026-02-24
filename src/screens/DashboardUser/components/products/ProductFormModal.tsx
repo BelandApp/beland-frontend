@@ -209,7 +209,9 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         notify.success({ message: "Producto creado exitosamente" });
       }
       setFormData(payload);
-      onSuccess();
+      setTimeout(() => {
+        onSuccess();
+      }, 1000);
     } catch (error: any) {
       console.error("Error saving product:", error);
       const message =

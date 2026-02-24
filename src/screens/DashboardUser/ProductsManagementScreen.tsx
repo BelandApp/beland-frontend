@@ -192,7 +192,6 @@ export const ProductsManagementScreen: React.FC = () => {
   };
 
   const totalPages = Math.ceil(totalProducts / (filters.limit || 10));
-  console.log(products);
   return (
     <View style={styles.container}>
       {/* Header */}

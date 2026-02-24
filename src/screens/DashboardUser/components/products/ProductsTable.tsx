@@ -84,7 +84,7 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
           </Text>
         </View>
         <Text
-          className={`${product.stock === 0 ? "text-red-500" : " text-gray-600"}`}
+          className={`${product.stock === 0 ? "text-red-500" : "text-gray-600"}`}
         >
           {product.stock === 0 ? "Sin stock" : product.stock}
         </Text>
@@ -148,8 +148,8 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
             <Text style={styles.productName} numberOfLines={2}>
               {product.name}
             </Text>
-            {product.description && (
-              <Text style={styles.productDescription} numberOfLines={1}>
+            {!!product.description?.trim() && (
+              <Text style={styles.mobileCardDescription} numberOfLines={1}>
                 {product.description}
               </Text>
             )}
