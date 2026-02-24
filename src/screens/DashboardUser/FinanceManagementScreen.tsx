@@ -15,13 +15,13 @@ import WithdrawTab from "./components/financial/Withdraw.tab";
 import ThemedTabs from "src/components/shared/Tabs/ThemedTabs";
 import ConfigFinancialTab from "./components/financial/ConfigFinancialTab";
 import { useFinanceAdminData } from "./hooks/useFinanceAdminData";
-import { useFinanceAdminUI } from "./hooks/useFinanceAdminUI";
+import { TypeAccount, useFinanceAdminUI } from "./hooks/useFinanceAdminUI";
 import { useEffect } from "react";
 import { Picker } from "@react-native-picker/picker";
 import { useCustomNavigation } from "src/hooks";
+import CustomPicker from "src/components/shared/input/Custom.picker";
 const FinancesManagement: React.FC = () => {
   const financeData = useFinanceAdminData();
-
   const financeUI = useFinanceAdminUI({
     refreshWithdraws: financeData.refreshWithdraws,
     refreshTransfers: financeData.refreshTransfers,
@@ -69,7 +69,6 @@ const FinancesManagement: React.FC = () => {
       </>
     );
   }
-  console.log(financeData.accounts);
   return (
     <>
       <ThemedHeader
@@ -135,6 +134,18 @@ const FinancesManagement: React.FC = () => {
               onChangeText={financeUI.setBanco}
               value={financeUI.bank}
               required
+            />
+            <CustomPicker
+              value={financeUI.type_account}
+              onChange={(value) =>
+                financeUI.setAccountType(value as TypeAccount)
+              }
+              required
+              options={[
+                { label: "Seleccionar tipo de cuent", value: null },
+                { label: "Caja de ahorro", value: "AHORRO" },
+                { label: "Cuenta corriente", value: "CORRIENTE" },
+              ]}
             />
             <View
               style={{
