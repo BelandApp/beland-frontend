@@ -1,3 +1,4 @@
+import "react-native-reanimated";
 import React, { useRef, useState, useEffect } from "react";
 import "./global.css";
 import { Platform } from "react-native";
@@ -12,7 +13,7 @@ import {
   NavigationContainerRef,
   NavigationState,
 } from "@react-navigation/native";
-import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import {
   RootStackNavigator,
   RootStackParamList,
@@ -22,7 +23,7 @@ import { useAuth, AuthProvider } from "src/context";
 import { TokenService } from "src/services/auth/token.service";
 import { SocketService } from "src/services/SocketService";
 import { NotificationProvider } from "./src/hooks/NotificationContext";
-import { NotificationBanner } from "./src/components/ui/NotificationBanner";
+import { NotificationBanner } from "./src/components/shared/notification";
 import { usePaymentSocket } from "src/hooks/usePaymentSocket";
 import { useOrderSocket } from "src/hooks/useOrderSocket";
 import { colors } from "src/styles";
@@ -33,6 +34,7 @@ import {
 } from "src/components/shared/notification/GlobalNotification";
 import Toast from "react-native-toast-message";
 import { ErrorBoundary } from "src/components/layout/ErrorBoundary";
+import { TooltipProvider } from "src/components/shared/tooltip/Tooltip.portal";
 
 const AppContent = () => {
   const { user } = useAuth();
@@ -40,7 +42,7 @@ const AppContent = () => {
   const navigationRef =
     useRef<NavigationContainerRef<RootStackParamList>>(null);
   const [currentRoute, setCurrentRoute] = useState<string | undefined>(
-    undefined
+    undefined,
   );
   // Estado para saber si estamos en algún screen de grupos
   const [isInGroups, setIsInGroups] = useState(false);
@@ -100,7 +102,7 @@ const AppContent = () => {
 
   // Detectar la tab activa dentro de MainTabs
   const getActiveTab = (
-    state: NavigationState | undefined
+    state: NavigationState | undefined,
   ): string | undefined => {
     if (!state) return undefined;
     const route = state.routes[state.index];
@@ -162,7 +164,7 @@ const AppContent = () => {
         linking={linking}
       >
         <RootStackNavigator />
-
+        <NotificationBanner />
         <Toast config={toastConfig} />
         {shouldShowQRButton && <FloatingQRButton onPress={handleQRPress} />}
       </NavigationContainer>
@@ -178,10 +180,11 @@ const App = () => {
           {/* <SocketStatus /> */}
           <Toast config={toastConfig} />
           <ErrorBoundary>
-            <AppContent />
+            <TooltipProvider>
+              <AppContent />
+            </TooltipProvider>
           </ErrorBoundary>
           <GlobalNotification />
-          <NotificationBanner />
         </NotificationProvider>
       </AuthProvider>
     </SafeAreaProvider>

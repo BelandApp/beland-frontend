@@ -13,10 +13,13 @@ import {
 } from "react-native";
 import { useGroupsNavigation, useGroups } from "./hooks";
 import Feather from "react-native-vector-icons/Feather";
-import { ThemedHeader } from "src/components";
+import { Button, ThemedHeader } from "src/components";
 import { CustomLoader } from "@/components/shared/loader/Loader";
 import { GroupService, GroupPrivacy } from "@/services/GroupApiService";
 import { GroupCard } from "./components/GroupCard";
+import { point } from "leaflet";
+import { Plus, PlusCircle } from "lucide-react-native";
+import { green } from "react-native-reanimated/lib/typescript/Colors";
 // Ícono según código de privacidad
 const getPrivacyIcon = (privacyCode: string) => {
   if (privacyCode === "public") return "globe";
@@ -122,7 +125,7 @@ export const GroupsScreen: React.FC = () => {
           <View className="items-center w-full">
             <View className="relative mb-8 mt-2 items-center justify-center">
               <View
-                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full bg-emerald-100 opacity-70 shadow-2xl"
+                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full bg-orange-500 opacity-70 shadow-2xl"
                 style={{ zIndex: 0 }}
               />
               <Image
@@ -133,12 +136,12 @@ export const GroupsScreen: React.FC = () => {
                 resizeMode="cover"
                 style={{ zIndex: 1 }}
               />
-              <View
-                className="absolute bottom-2 right-2 bg-white rounded-full shadow-lg p-1 items-center justify-center"
-                style={{ zIndex: 2 }}
-              >
-                <Text className="text-primary text-2xl">＋</Text>
-              </View>
+
+              <PlusCircle
+                color={"orange"}
+                fill={"white"}
+                className="absolute bottom-2 right-2 z-10  rounded-full"
+              />
             </View>
             <Text className="text-2xl font-bold text-text-main mb-2 text-center tracking-tight">
               No tienes grupos aún
@@ -147,26 +150,19 @@ export const GroupsScreen: React.FC = () => {
               Únete a una comunidad existente o crea tu propio espacio para
               empezar a colaborar con otros.
             </Text>
-            <TouchableOpacity
-              className="w-full flex-row items-center justify-center gap-2 rounded-xl bg-primary h-12 mb-3 shadow-lg active:scale-95"
-              onPress={navigateToCreateGroup}
-              style={{ maxWidth: 400 }}
-            >
-              <Text className="text-white text-xl">＋</Text>
-              <Text className="text-white font-bold text-base">
-                Crear nuevo grupo
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className="w-full flex-row items-center justify-center gap-2 rounded-xl border border-gray-200 h-12 active:scale-95"
-              onPress={navigateToExploreGroups}
-              style={{ maxWidth: 400 }}
-            >
-              <Feather name="compass" size={22} color="#00E074" />
-              <Text className="text-primary font-bold text-base">
-                Explorar grupos
-              </Text>
-            </TouchableOpacity>
+            <View className="flex md:flex-row gap-2">
+              <Button
+                title=" Explorar grupos"
+                onPress={navigateToExploreGroups}
+                className="rounded-xl"
+                variant="secondary"
+              />
+              <Button
+                title="+ Crear nuevo grupo"
+                onPress={navigateToCreateGroup}
+                className="rounded-xl"
+              />
+            </View>
           </View>
         </View>
       </>
@@ -267,7 +263,6 @@ export const GroupsScreen: React.FC = () => {
       </View>
       {/* Botón flotante para crear grupo */}
       <View
-        pointerEvents="auto"
         style={
           (Platform.OS === "web"
             ? {
@@ -275,12 +270,14 @@ export const GroupsScreen: React.FC = () => {
                 right: 10,
                 bottom: 100,
                 zIndex: 9999,
+                pointerEvents: "auto",
               }
             : {
                 position: "absolute" as any,
                 right: 24,
                 bottom: 32,
                 zIndex: 9999,
+                pointerEvents: "auto",
               }) as any
         }
       >

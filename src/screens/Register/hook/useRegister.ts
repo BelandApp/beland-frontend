@@ -7,7 +7,9 @@ import { notify } from "src/hooks/notification/notify.external";
 import { useAuth } from "src/context";
 
 export const useRegister = () => {
-  const [step, setStep] = useState<"register" | "code">("register");
+  const [step, setStep] = useState<"register" | "prevRegister" | "code">(
+    "register",
+  );
   const [isLoading, setIsLoading] = useState(false);
   const { navigate } = useCustomNavigation();
   const { validateForm, errors } = useUserValidation();
@@ -71,6 +73,18 @@ export const useRegister = () => {
       setIsLoading(false);
     }
   };
+  const handlePrevRegister = async () => {
+    if (!FormData.email) {
+      notify.error({ message: "Falta ingresar tu correo" });
+      return;
+    }
+    const isValid = validateForm({ email: FormData.email });
+    if (!isValid) {
+      return;
+    }
+    await authService.resendRegisterCode(FormData.email);
+    setStep("code");
+  };
   const handleReSendCode = async () => {
     try {
       if (!FormData.email) return;
@@ -94,6 +108,7 @@ export const useRegister = () => {
   };
   return {
     step,
+    setStep,
     isLoading,
     FormData,
     errors,
@@ -103,5 +118,6 @@ export const useRegister = () => {
     handleStepBack,
     handleReSendCode,
     handleVerifyCode,
+    handlePrevRegister,
   };
 };

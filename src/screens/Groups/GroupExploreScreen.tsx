@@ -3,21 +3,12 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Image,
   ScrollView,
-  TextInput,
   FlatList,
-  ActivityIndicator,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import Feather from "react-native-vector-icons/Feather";
-import { useNavigation, NavigationProp } from "@react-navigation/native";
-import {
-  GroupService,
-  Group,
-  GroupMember,
-  PaymentType,
-} from "@/services/GroupApiService";
+import { GroupService, Group } from "@/services/GroupApiService";
 import { GroupPrivacy } from "@/services/GroupApiService";
 import { useAuth } from "@/context/AuthContext";
 import { CustomLoader } from "@/components/shared/loader/Loader";
@@ -26,6 +17,7 @@ import { getGroupTypeFeatherIcon } from "./GroupsScreen";
 import { notify } from "@/hooks/notification/notify.external";
 import { useGroupPaymentTypes } from "@/hooks/useGroupPaymentTypes";
 import { useCustomNavigation } from "src/hooks";
+import { SearchBarInput, ThemedHeader } from "src/components";
 
 // Los filtros se generan dinámicamente según los tipos de privacidad
 
@@ -35,7 +27,7 @@ const getPrivacyIcon = (privacyCode: string) => {
 };
 
 const GroupExploreScreen = () => {
-  const { navigate, goBack } = useCustomNavigation();
+  const { navigate } = useCustomNavigation();
   const [groups, setGroups] = useState<Group[]>([]);
   const [myGroupIds, setMyGroupIds] = useState<Set<string>>(new Set());
   const [joiningGroupId, setJoiningGroupId] = useState<string | null>(null);
@@ -230,33 +222,20 @@ const GroupExploreScreen = () => {
   };
 
   return (
-    <View className="flex-1 bg-background-light">
+    <View className="flex-1 bg-background-light gap-2">
       {/* Header */}
-      <View className="sticky top-0 z-10 bg-background-light/95 flex-row items-center justify-between p-4 pb-2">
-        <TouchableOpacity
-          onPress={() => goBack()}
-          className="mr-4 p-2 border-2 border-green-500 rounded-full"
-        >
-          <Feather name="arrow-left" size={24} color="#00E074" />
-        </TouchableOpacity>
-        <Text className="flex-1 text-center text-lg font-bold">
-          Explorar Grupos
-        </Text>
-      </View>
+      <ThemedHeader
+        canGoBack
+        title="Explorar Grupos"
+        onBackPress={() => navigate("Groups", { screen: "GroupsList" })}
+      />
 
       {/* Search Bar */}
-      <View className="px-4 py-2">
-        <View className="flex-row items-center bg-white rounded-xl shadow-sm px-4">
-          <Feather name="search" size={22} color="#5e8d76" />
-          <TextInput
-            className="flex-1 h-12 px-2 text-base"
-            placeholder="Buscar por nombre o categoría..."
-            value={search}
-            onChangeText={setSearch}
-            placeholderTextColor="#8caea0"
-          />
-        </View>
-      </View>
+      <SearchBarInput
+        onSearchChange={setSearch}
+        searchQuery={search}
+        placeholder="Buscar por nombre o categoría..."
+      />
 
       {/* Filter Chips (sticky, scrollable horizontally, compact spacing) */}
       <View className="sticky top-16 z-10 bg-background-light/95">
@@ -274,7 +253,7 @@ const GroupExploreScreen = () => {
             key="all"
             className={`h-8 flex-row items-center gap-x-2 rounded-xl px-3 mr-2 ${
               filter === "all"
-                ? "bg-primary shadow-md"
+                ? "bg-[#F88D2A] shadow-md"
                 : "bg-white border border-gray-200"
             }`}
             onPress={() => setFilter("all")}

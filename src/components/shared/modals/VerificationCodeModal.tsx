@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   TextInput,
   StyleSheet,
   ActivityIndicator,
+  Switch,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors } from "@/styles/colors";
@@ -14,8 +15,8 @@ import { colors } from "@/styles/colors";
 interface VerificationCodeModalProps {
   visible: boolean;
   onClose: () => void;
-  onConfirm: (code: number) => Promise<void>;
-  orderNumber?: string;
+  onConfirm: (orderId: string, code: number, weight?: number) => Promise<void>;
+  orderNumber: string;
 }
 
 export const VerificationCodeModal: React.FC<VerificationCodeModalProps> = ({
@@ -25,49 +26,73 @@ export const VerificationCodeModal: React.FC<VerificationCodeModalProps> = ({
   orderNumber,
 }) => {
   const [code, setCode] = useState("");
+  const [recycleWeight, setRecycleWeight] = useState("");
+  const [recycles, setRecycles] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-  const handleConfirm = async () => {
-    // Validar que el código no esté vacío
+  const resetState = () => {
+    setCode("");
+    setRecycleWeight("");
+    setRecycles(false);
+    setError(null);
+  };
+
+  const validate = (): { code: number; weight?: number } | null => {
     if (!code.trim()) {
       setError("Ingrese el código de verificación");
-      return;
+      return null;
     }
 
-    // Validar que sea un número
-    const codeNumber = parseInt(code, 10);
-    if (isNaN(codeNumber)) {
+    const parsedCode = Number(code);
+    if (Number.isNaN(parsedCode)) {
       setError("El código debe ser numérico");
-      return;
+      return null;
     }
 
-    setError("");
+    if (recycles) {
+      if (!recycleWeight.trim()) {
+        setError("Ingrese el peso a reciclar");
+        return null;
+      }
+
+      const parsedWeight = Number(recycleWeight);
+      if (Number.isNaN(parsedWeight)) {
+        setError("El peso del residuo debe ser un número");
+        return null;
+      }
+
+      return { code: parsedCode, weight: parsedWeight };
+    }
+
+    return { code: parsedCode };
+  };
+
+  const handleConfirm = useCallback(async () => {
+    const result = validate();
+    if (!result) return;
+
     setLoading(true);
+    setError(null);
 
     try {
-      await onConfirm(codeNumber);
-      // Reset state on success
-      setCode("");
+      await onConfirm(orderNumber, result.code, result.weight);
+      resetState();
       onClose();
     } catch (err) {
-      console.error("VerificationCodeModal: error confirming code", err);
+      console.error("VerificationCodeModal error:", err);
       setError(
-        err instanceof Error
-          ? err.message
-          : "Error al verificar el código. Verifique que sea correcto."
+        err instanceof Error ? err.message : "Error al verificar el código",
       );
     } finally {
       setLoading(false);
     }
-  };
+  }, [code, recycleWeight, recycles]);
 
   const handleClose = () => {
-    if (!loading) {
-      setCode("");
-      setError("");
-      onClose();
-    }
+    if (loading) return;
+    resetState();
+    onClose();
   };
 
   return (
@@ -97,15 +122,15 @@ export const VerificationCodeModal: React.FC<VerificationCodeModalProps> = ({
           {/* Content */}
           <View style={styles.content}>
             <Text style={styles.label}>
-              Ingrese el código de verificación proporcionado por el cliente:
+              Ingrese el código proporcionado por el cliente
             </Text>
 
             <TextInput
-              style={[styles.input, error ? styles.inputError : null]}
+              style={[styles.input, error && styles.inputError]}
               value={code}
               onChangeText={(text) => {
                 setCode(text);
-                setError("");
+                setError(null);
               }}
               placeholder="Ej: 1234"
               keyboardType="numeric"
@@ -114,7 +139,37 @@ export const VerificationCodeModal: React.FC<VerificationCodeModalProps> = ({
               autoFocus
             />
 
-            {error ? (
+            <View style={styles.infoContainer}>
+              <MaterialCommunityIcons
+                name="information-outline"
+                size={16}
+                color={colors.textSecondary}
+              />
+              <Text style={styles.infoText}>
+                El código debe coincidir con el generado al crear la orden.
+              </Text>
+            </View>
+
+            <View style={styles.switchRow}>
+              <Text style={styles.label}>¿Entrega residuos?</Text>
+              <Switch value={recycles} onValueChange={setRecycles} />
+            </View>
+
+            {recycles && (
+              <TextInput
+                style={[styles.input, error && styles.inputError]}
+                value={recycleWeight}
+                onChangeText={(text) => {
+                  setRecycleWeight(text);
+                  setError(null);
+                }}
+                placeholder="Ej: 2 (kg)"
+                keyboardType="numeric"
+                editable={!loading}
+              />
+            )}
+
+            {error && (
               <View style={styles.errorContainer}>
                 <MaterialCommunityIcons
                   name="alert-circle"
@@ -123,19 +178,7 @@ export const VerificationCodeModal: React.FC<VerificationCodeModalProps> = ({
                 />
                 <Text style={styles.errorText}>{error}</Text>
               </View>
-            ) : null}
-
-            <View style={styles.infoContainer}>
-              <MaterialCommunityIcons
-                name="information-outline"
-                size={16}
-                color={colors.textSecondary}
-              />
-              <Text style={styles.infoText}>
-                Este código debe coincidir con el que se le proporcionó al
-                cliente al momento de crear la orden.
-              </Text>
-            </View>
+            )}
           </View>
 
           {/* Actions */}
@@ -167,7 +210,6 @@ export const VerificationCodeModal: React.FC<VerificationCodeModalProps> = ({
                     color="white"
                   />
                   <Text style={styles.buttonPrimaryText}>
-                    {" "}
                     Confirmar Entrega
                   </Text>
                 </>
@@ -298,5 +340,9 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.6,
+  },
+  switchRow: {
+    flexDirection: "row",
+    gap: 2,
   },
 });

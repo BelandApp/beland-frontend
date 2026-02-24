@@ -9,6 +9,7 @@ import { styles } from "@screens/RecyclingMap/styles/RecyclingMapStyles";
 import { useRecyclingMapContext } from "./context/RecyclingMapContext";
 import { RecyclingMapProvider } from "./context/RecyclingMapContext";
 import { SearchBarInput, ThemedHeader } from "src/components";
+import { useResponsiveLayout } from "@/hooks";
 
 export const RecyclingMapScreen = () => {
   return (
@@ -32,9 +33,9 @@ const RecyclingMapScreenContent = () => {
     handleDirections,
   } = useRecyclingMapContext();
 
-  if (typeof window !== "undefined" && window.document) {
-    const isMobileWeb = window.innerWidth < 600;
-    if (isMobileWeb) {
+  const { isWeb, isWebMobile } = useResponsiveLayout();
+  if (isWeb) {
+    if (isWebMobile) {
       // Layout vertical para web móvil
       return (
         <div
@@ -75,7 +76,11 @@ const RecyclingMapScreenContent = () => {
             }}
           >
             <StatusHeader pointCount={filteredPoints.length} />
-            <SearchBarInput searchQuery={searchQuery} onSearchChange={setSearchQuery} placeholder="Buscar..."/>
+            <SearchBarInput
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              placeholder="Buscar..."
+            />
             <FilterChips
               selectedFilters={selectedFilters}
               toggleFilter={toggleFilter}
@@ -120,7 +125,11 @@ const RecyclingMapScreenContent = () => {
           }}
         >
           <StatusHeader pointCount={filteredPoints.length} />
-          <SearchBarInput searchQuery={searchQuery} onSearchChange={setSearchQuery} placeholder="Buscar por nombre o dirección..."/>
+          <SearchBarInput
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            placeholder="Buscar por nombre o dirección..."
+          />
           <FilterChips
             selectedFilters={selectedFilters}
             toggleFilter={toggleFilter}

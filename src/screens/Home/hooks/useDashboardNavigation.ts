@@ -36,6 +36,9 @@ export const useDashboardNavigation = () => {
   const navigateDelivery = () => {
     navigate("MainTabs", { screen: "Catalog" });
   };
+  const navigateFaq = () => {
+    navigate("FAQ");
+  };
 
   return {
     navigateViewHistory,
@@ -47,5 +50,6 @@ export const useDashboardNavigation = () => {
     navigateCollect,
     navigateCommunity,
     navigateDelivery,
+    navigateFaq,
   };
 };

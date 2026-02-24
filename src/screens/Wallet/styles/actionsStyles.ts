@@ -4,8 +4,9 @@ import { colors } from "../../../styles/colors";
 export const actionsStyles = StyleSheet.create({
   actionsContainer: {
     width: "100%",
+    flexWrap: "wrap",
     flexDirection: "row",
-    justifyContent: "center",
+    justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: "#1F2937",
     paddingVertical: 28,
@@ -23,11 +24,10 @@ export const actionsStyles = StyleSheet.create({
     marginVertical: 16,
   },
   actionButton: {
-    flex:1,
+    flexGrow: 1,
     alignItems: "center",
     gap: 6,
-    maxWidth: 100,
-    padding: Platform.OS === "web" ? 12 : 10,
+    padding: Platform.OS === "web" ? 10 : 8,
     borderRadius: 16,
     backgroundColor: "rgba(255, 255, 255, 0.08)",
     borderWidth: 1,

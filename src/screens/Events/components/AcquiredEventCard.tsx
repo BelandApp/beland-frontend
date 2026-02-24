@@ -18,6 +18,7 @@ import {
 import { Event } from "src/stores/Event";
 import { colors } from "src/styles";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
+import { useResponsiveLayout } from "@/hooks";
 
 export const AcquiredEventCard: React.FC<Event> = ({
   id,
@@ -40,22 +41,22 @@ export const AcquiredEventCard: React.FC<Event> = ({
     return navigate("AcquiredEventModal", { id_modal: user_pass_id });
   };
   const [activeIndex, setActiveIndex] = useState(0);
-  const windowWidth = Dimensions.get("window").width;
-  const isMobileWeb = Platform.OS === "web" && windowWidth < 600;
-  const IMAGE_WIDTH = isMobileWeb ? 100 : 140;
+  const { isMobile } = useResponsiveLayout();
+
+  const IMAGE_WIDTH = isMobile ? 100 : 140;
 
   const imgs =
     images_urls && images_urls.length
       ? images_urls
       : image_url
-      ? [image_url]
-      : [];
+        ? [image_url]
+        : [];
 
   return (
     <Pressable
       key={id}
       onPress={handleNavigation}
-      style={[styles.card, isMobileWeb && styles.cardMobileWeb]}
+      style={[styles.card, isMobile && styles.cardMobileWeb]}
     >
       {/* Badge: usado/finalizado */}
       {!user_attended &&
@@ -112,8 +113,8 @@ export const AcquiredEventCard: React.FC<Event> = ({
 
       <View style={styles.content}>
         <Text
-          style={[styles.eventName, isMobileWeb && styles.eventNameMobile]}
-          numberOfLines={isMobileWeb ? 3 : 2}
+          style={[styles.eventName, isMobile && styles.eventNameMobile]}
+          numberOfLines={isMobile ? 3 : 2}
           ellipsizeMode="tail"
         >
           {name}
@@ -132,11 +133,11 @@ export const AcquiredEventCard: React.FC<Event> = ({
         </View>
       </View>
 
-      <View style={[styles.rightCol, isMobileWeb && styles.rightColMobile]}>
+      <View style={[styles.rightCol, isMobile && styles.rightColMobile]}>
         <Text style={styles.destLabel}>Destinado a</Text>
         <Text
-          style={[styles.holderText, isMobileWeb && styles.holderTextMobile]}
-          numberOfLines={isMobileWeb ? 2 : 2}
+          style={[styles.holderText, isMobile && styles.holderTextMobile]}
+          numberOfLines={isMobile ? 2 : 2}
           ellipsizeMode="tail"
         >
           {holder_name}

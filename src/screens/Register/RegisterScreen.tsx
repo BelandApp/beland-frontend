@@ -16,6 +16,7 @@ import { useRegister } from "./hook/useRegister";
 import CodeStep from "../NewPassword/components/Code.step";
 import { Button } from "src/components";
 import { Platform } from "react-native";
+import PrevRegister from "./components/PrevRegister.step";
 
 export type RegisterFormData = {
   email: string;
@@ -35,6 +36,7 @@ export default function RegisterScreen() {
   const {
     FormData,
     step,
+    setStep,
     handleRegister,
     isLoading,
     navigate,
@@ -43,6 +45,7 @@ export default function RegisterScreen() {
     handleStepBack,
     handleVerifyCode,
     errors,
+    handlePrevRegister,
   } = useRegister();
 
   return (
@@ -82,6 +85,15 @@ export default function RegisterScreen() {
               errors={errors}
             />
           )}
+          {step === "prevRegister" && (
+            <PrevRegister
+              formData={FormData}
+              onChangeText={onChangeText}
+              handleRegister={handlePrevRegister}
+              isLoading={isLoading}
+              errors={errors}
+            />
+          )}
           {step === "code" && (
             <CodeStep
               FormData={FormData}
@@ -92,16 +104,29 @@ export default function RegisterScreen() {
             />
           )}
         </View>
-
-        <View style={styles.containerRow}>
-          <Text style={styles.subtitle}>¿Ya tienes cuenta? </Text>
-          <Button
-            title="Inicia Sesión"
-            onPress={() => navigate("Login")}
-            style={{ paddingLeft: 0 }}
-            textStyle={styles.buttonLink}
-            variant="inline"
-          />
+        <View style={styles.actionsContainer}>
+          <View style={styles.simpleRow}>
+            <Text style={styles.subtitle}>¿Ya tienes cuenta? </Text>
+            <Button
+              title="Inicia Sesión"
+              onPress={() => navigate("Login")}
+              style={{ paddingLeft: 0 }}
+              textStyle={styles.buttonLink}
+              variant="inline"
+            />
+          </View>
+          {step === "register" && (
+            <View style={styles.simpleRow}>
+              <Text style={styles.subtitle}>¿Te falta validar tu correo? </Text>
+              <Button
+                title="Validar Cuenta"
+                onPress={() => setStep("prevRegister")}
+                style={{ paddingLeft: 0 }}
+                textStyle={styles.buttonLink}
+                variant="inline"
+              />
+            </View>
+          )}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

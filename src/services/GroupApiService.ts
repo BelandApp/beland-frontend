@@ -1,3 +1,4 @@
+import { CloudinaryService } from "./cloudinary/cloudinary.service";
 import { CoreApiService, PaginatedResponse } from "./core/ApiService";
 
 // Group Types
@@ -32,6 +33,7 @@ export interface Group {
   payment_type_id?: string;
   payment_type?: PaymentType;
   event_pass_id: string;
+  cart?: GroupPurchaseCart; // Added cart relation
 }
 
 // Group Privacy
@@ -102,6 +104,7 @@ export interface GroupPurchaseCartItem {
   unit_price: number;
   total_price: number;
   created_at: string;
+  user_id?: string | null;
 }
 
 export interface GroupPurchaseCart {
@@ -309,8 +312,17 @@ class GroupServiceClass extends CoreApiService {
   /**
    * Update a group
    */
-  async updateGroup(id: string, data: UpdateGroupDto): Promise<Group> {
+  async updateGroup(
+    id: string,
+    data: UpdateGroupDto | FormData,
+  ): Promise<Group> {
     return this.put<Group>(`${this.ENDPOINTS.GROUPS}/${id}`, data);
+  }
+  /**
+   * Update a image of a group
+   */
+  async uploadGroupImage(id: string, image: FormData): Promise<string> {
+    return this.patch(`${this.ENDPOINTS.GROUPS}/image/${id}`, image);
   }
 
   /**
@@ -514,12 +526,16 @@ class GroupServiceClass extends CoreApiService {
     groupId: string,
     productId: string,
     notes?: string,
+    userId?: string, // [NEW] Added to support assignment
   ): Promise<GroupMemberConsumption> {
-    return this.post<GroupMemberConsumption>("group-member-consumptions", {
+    const body: any = {
       group_id: groupId,
       product_id: productId,
       notes,
-    });
+    };
+    if (userId) body.user_id = userId;
+
+    return this.post<GroupMemberConsumption>("group-member-consumptions", body);
   }
 
   /**
@@ -534,8 +550,9 @@ class GroupServiceClass extends CoreApiService {
   /**
    * Obtener el carrito del usuario autenticado
    */
-  async getMyCart(): Promise<any> {
-    return this.get<any>("carts/user");
+  async getMyCart(groupId?: string): Promise<any> {
+    const url = groupId ? `carts/user?group_id=${groupId}` : "carts/user";
+    return this.get<any>(url);
   }
 
   /**
@@ -568,13 +585,25 @@ class GroupServiceClass extends CoreApiService {
     suggestedBy: string,
   ): Promise<GroupPurchaseCart> {
     // Obtener carrito del usuario
-    let cart = await this.getMyCart();
+    let cart = await this.getMyCart(groupId);
 
     // Si no tiene carrito, crear uno
     if (!cart) {
       cart = await this.post("carts", {});
       if (cart && cart.id && groupId) {
         cart = await this.updateCartGroup(cart.id, groupId);
+      }
+    } else {
+      // [MODIFICATION] Context Switching Logic
+      // Since backend enforces 1 user = 1 cart, we must simulate "per group" carts
+      // by clearing the cart if the user switches groups.
+      if (cart.group_id && String(cart.group_id) !== String(groupId)) {
+        await this.clearGroupCart(cart.id);
+        await this.updateCartGroup(cart.id, groupId);
+        // Re-fetch clean cart
+        cart = await this.getMyCart(groupId);
+      } else if (!cart.group_id && groupId) {
+        await this.updateCartGroup(cart.id, groupId);
       }
     }
 
@@ -587,7 +616,7 @@ class GroupServiceClass extends CoreApiService {
     });
 
     // Recargar carrito actualizado
-    return this.getMyCart();
+    return this.getMyCart(groupId);
   }
 
   /**
@@ -598,7 +627,7 @@ class GroupServiceClass extends CoreApiService {
     cartItemId: string,
   ): Promise<GroupPurchaseCart> {
     await this.delete(`cart-items/${cartItemId}`);
-    return this.getMyCart();
+    return this.getMyCart(groupId);
   }
 
   /**
@@ -610,15 +639,18 @@ class GroupServiceClass extends CoreApiService {
     newQuantity: number,
   ): Promise<GroupPurchaseCart> {
     await this.put(`cart-items/${cartItemId}?quantity=${newQuantity}`, {});
-    return this.getMyCart();
+    return this.getMyCart(groupId);
   }
 
   /**
    * Vaciar el carrito
    */
-  async clearGroupCart(cartId: string): Promise<GroupPurchaseCart> {
+  async clearGroupCart(
+    cartId: string,
+    groupId?: string,
+  ): Promise<GroupPurchaseCart> {
     await this.put(`carts/${cartId}/empty`, {});
-    return this.getMyCart();
+    return this.getMyCart(groupId);
   }
 
   /**
@@ -645,10 +677,7 @@ class GroupServiceClass extends CoreApiService {
       name: "upload.jpg",
     } as any);
 
-    const response = await this.postFormData<string>(
-      "cloudinary/upload-image", // Endpoint relativo
-      formData,
-    );
+    const response = await CloudinaryService.uploadImage(formData);
     return response;
   }
 
@@ -660,6 +689,75 @@ class GroupServiceClass extends CoreApiService {
     // Handle direct array
     if (Array.isArray(res)) return res;
     return [];
+  }
+  /**
+   * Add item to a specific cart by ID (used for Group Carts)
+   */
+  async addItemToSpecificCart(
+    cartId: string,
+    product: { id: string; price: number },
+    quantity: number,
+    isGeneral?: boolean,
+  ): Promise<any> {
+    const queryParams =
+      isGeneral !== undefined ? `?is_general=${isGeneral}` : "";
+    return this.post(`cart-items${queryParams}`, {
+      cart_id: cartId,
+      product_id: product.id,
+      quantity: quantity,
+      unit_price: product.price,
+    });
+  }
+
+  /**
+   * Remove item from specific cart (by CartItem ID)
+   */
+  async removeItemFromSpecificCart(cartItemId: string): Promise<any> {
+    return this.delete(`cart-items/${cartItemId}`);
+  }
+
+  /**
+   * Update item quantity in specific cart
+   */
+  async updateItemQuantitySpecificCart(
+    cartItemId: string,
+    quantity: number,
+  ): Promise<any> {
+    return this.put(`cart-items/quantity/${cartItemId}?quantity=${quantity}`);
+  }
+
+  /**
+   * Update item quantity in specific cart by Product ID (and optional User ID)
+   */
+  async updateItemQuantityByProduct(
+    productId: string,
+    quantity: number,
+    userId?: string | null,
+  ): Promise<any> {
+    const userParam = userId ? `&user_id=${userId}` : "";
+    return this.put(
+      `cart-items/quantity-by-product/${productId}?quantity=${quantity}${userParam}`,
+      {},
+    );
+  }
+  /**
+   * Update payment type for a specific cart
+   */
+  async updateCartPaymentType(
+    cartId: string,
+    paymentTypeId: string,
+  ): Promise<any> {
+    return this.put(
+      `carts/payment-type/${cartId}?payment_type_id=${paymentTypeId}`,
+      {},
+    );
+  }
+
+  /**
+   * Get specific cart by ID (Full details)
+   */
+  async getCartById(cartId: string): Promise<GroupPurchaseCart> {
+    return this.get<GroupPurchaseCart>(`carts/${cartId}`);
   }
 }
 

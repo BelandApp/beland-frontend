@@ -1,8 +1,5 @@
 import React, { useEffect } from "react";
-import { ScrollView, View } from "react-native";
-import { OrderDeliveryModalStyles as styles } from "./orderSteps/styles";
-import { useOrderDelivery } from "../hooks";
-import Modal from "react-native-modal";
+import { DeliveryStep, useOrderDelivery } from "../hooks";
 import {
   CreateAddress,
   SelectAddress,
@@ -12,6 +9,8 @@ import {
 import { LocationNotAvailableModal } from "./LocationNotAvailableModal";
 import Toast from "react-native-toast-message";
 import { toastConfig } from "src/components/shared/notification/GlobalNotification";
+import { Button, WrapperModal } from "src/components";
+import { View } from "react-native";
 
 interface OrderDeliveryModalProps {
   visible: boolean;
@@ -31,7 +30,8 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
     loadAddresses,
     setStep,
     addresses,
-    loadingAddresses,
+    setLoading,
+    loading,
     preOrder,
     selectAddress,
     createAddress,
@@ -56,64 +56,79 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
     onClose();
   };
   const handleSubmit = async () => {
+    setLoading(true);
     await submitOrder();
     setTimeout(() => {
       setSubmitStatus("idle");
+      setLoading(false);
       onClose();
     }, 2000);
   };
+  const STEP_COMPONENTS: Record<DeliveryStep, React.ReactNode> = {
+    select: (
+      <SelectAddress
+        addresses={addresses}
+        loadingAddresses={loading}
+        onSubmit={selectAddress}
+      />
+    ),
+    form: (
+      <CreateAddress
+        onCreateAddress={createAddress}
+        onCreateAndSubmit={createAndContinue}
+        onCancel={cancelAddressCreation}
+      />
+    ),
+    processing: (
+      <ConfirmOrder
+        onSubmit={handleSubmit}
+        submitStatus={submitStatus}
+        preOrder={preOrder}
+        onCancel={cancelPreOrder}
+      />
+    ),
+  };
+  const STEP_BUTTONS: Record<DeliveryStep, React.ReactNode> = {
+    select: (
+      <Button
+        title=" Agregar nueva dirección"
+        onPress={() => setStep("form")}
+        variant="secondary"
+        disabled={loading}
+      />
+    ),
+    form: <></>,
+    processing: (
+      <Button
+        onPress={handleSubmit}
+        title="Confirmar pedido"
+        disabled={loading}
+      />
+    ),
+  };
   return (
-    <Modal
-      style={styles.overlay}
-      isVisible={visible}
-      onBackdropPress={onClose}
-      onSwipeComplete={onClose}
-      propagateSwipe
-    >
-      <View style={styles.container}>
-        {/* HEADER */}
-        <HeaderSteps
-          step={step}
-          setStep={setStep}
-          onBack={() => (step === "form" ? setStep("select") : handleDismiss())}
-        />
-
-        {/* BODY */}
-        {step === "select" && (
-          <SelectAddress
-            addresses={addresses}
-            loadingAddresses={loadingAddresses}
-            onSubmit={selectAddress}
-            onCancel={handleDismiss}
-            onAddNew={() => setStep("form")}
+    <>
+      <WrapperModal
+        isOpen={visible}
+        onClose={onClose}
+        header={
+          <HeaderSteps
+            step={step}
+            setStep={setStep}
+            onBack={() =>
+              step === "form" ? setStep("select") : handleDismiss()
+            }
           />
-        )}
+        }
+        content={STEP_COMPONENTS[step]}
+        actions={STEP_BUTTONS[step]}
+      />
 
-        {step === "form" && (
-          <CreateAddress
-            onCreateAddress={createAddress}
-            onCreateAndSubmit={createAndContinue}
-            onCancel={cancelAddressCreation}
-          />
-        )}
-
-        {step === "processing" && (
-          <ConfirmOrder
-            onSubmit={handleSubmit}
-            submitStatus={submitStatus}
-            preOrder={preOrder}
-            onCancel={cancelPreOrder}
-          />
-        )}
-      </View>
-      <Toast config={toastConfig} />
-
-      {/* Modal de ubicación no disponible */}
       <LocationNotAvailableModal
         visible={showLocationModal}
         onClose={() => setShowLocationModal(false)}
         country={detectedCountry}
       />
-    </Modal>
+    </>
   );
 };

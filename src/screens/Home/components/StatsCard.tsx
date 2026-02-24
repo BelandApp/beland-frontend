@@ -1,68 +1,64 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, StyleSheet, Platform, Dimensions } from "react-native";
 import { BeCoinIcon } from "../../../components/icons/BeCoinIcon";
 import { RecycleIcon, WaterIcon } from "../../../components/icons";
+import StatCard from "./StatCard";
+import { convertBeCoinsToUSD } from "src/constants";
 
 interface StatsCardProps {
-  becoins: number;
+  greenBecoins: number;
+  orangeBecoins: number;
   bottlesRecycled: number; // Usado para calcular kg reciclados y litros conservados
-  estimatedValue: string;
 }
 
 export const StatsCard: React.FC<StatsCardProps> = ({
-  becoins,
+  greenBecoins,
+  orangeBecoins,
   bottlesRecycled,
-  estimatedValue,
 }) => {
+  const greenDollars = convertBeCoinsToUSD(greenBecoins).toFixed(2);
+  const orangeDollars = convertBeCoinsToUSD(orangeBecoins).toFixed(2);
   const stats = [
     {
       icon: <BeCoinIcon width={32} height={32} />,
-      value: becoins.toLocaleString(),
-      label: "BeCoins ganados",
-      sublabel: `≈ $${estimatedValue} USD`,
-      color: "#1E40AF",
+      value: greenBecoins,
+      label: "Green BeCoins",
+      sublabel: `≈ $${greenDollars} USD`,
+      color: "#059669",
+      info: "Becoins verdes que ganas reciclando y ayudando al planeta.",
+    },
+    {
+      icon: <BeCoinIcon width={32} height={32} />,
+      value: orangeBecoins,
+      label: "Orange BeCoins",
+      sublabel: `≈ $${orangeDollars} USD`,
+      color: "#F97316",
+      info: "Becoins naranjas que te regalamos absorbiendo la comisión de recargas.",
     },
     {
       icon: <RecycleIcon width={32} height={32} color="#059669" />,
       value: (bottlesRecycled * 0.025).toFixed(1),
       label: "Kg reciclados",
-      sublabel: "Este mes",
+      sublabel: "Durante el mes",
       color: "#059669",
+      info: "Cantidad de residuos que has ayudado a reciclar.",
     },
     {
       icon: <WaterIcon width={32} height={32} color="#3B82F6" />,
       value: Math.floor(bottlesRecycled * 0.5).toString(),
       label: "Litros conservados",
-      sublabel: "de agua",
+      sublabel: "Durante el mes",
       color: "#3B82F6",
+      info: "Litros de agua que has ayudado a conservar reciclando.",
     },
   ];
-
+  const [showTooltip, setShowTooltip] = useState<string | null>(null);
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Tu Impacto</Text>
       <View style={styles.statsGrid}>
-        {stats.map((stat, index) => (
-          <View key={index} style={styles.statItem}>
-            <View
-              style={[
-                styles.iconContainer,
-                { backgroundColor: `${stat.color}20` },
-              ]}
-            >
-              {stat.icon}
-            </View>
-
-            <View style={styles.textContainer}>
-              <View style={styles.textContainer}>
-                <Text style={[styles.statValue, { color: stat.color }]}>
-                  {stat.value}
-                </Text>
-                <Text style={styles.statLabel}>{stat.label}</Text>
-              </View>
-              <Text style={styles.statSublabel}>{stat.sublabel}</Text>
-            </View>
-          </View>
+        {stats.map((stat) => (
+          <StatCard stat={stat} key={stat.label} />
         ))}
       </View>
     </View>
@@ -99,47 +95,5 @@ const styles = StyleSheet.create({
     flexDirection: Dimensions.get("window").width > 600 ? "row" : "column",
     gap: Platform.OS === "web" ? 24 : 16,
     justifyContent: "space-between",
-  },
-  statItem: {
-    width: Dimensions.get("window").width > 600 ? "30%" : "100%", // 3 items en un row,
-    flexDirection: Dimensions.get("window").width > 600 ? "column" : "row",
-    justifyContent:
-      Dimensions.get("window").width > 600 ? "center" : "space-evenly",
-    alignItems: "center",
-    padding: Platform.OS === "web" ? 20 : 18,
-    backgroundColor: "#F8FAFC",
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-  },
-  iconContainer: {
-    width: Platform.OS === "web" ? 60 : 56,
-    height: Platform.OS === "web" ? 60 : 56,
-    borderRadius: Platform.OS === "web" ? 30 : 28,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 14,
-  },
-  statValue: {
-    fontSize: Platform.OS === "web" ? 28 : 24,
-    fontWeight: "800",
-    marginBottom: 6,
-    letterSpacing: -0.5,
-  },
-  statLabel: {
-    fontSize: Platform.OS === "web" ? 15 : 14,
-    fontWeight: "600",
-    color: "#334155",
-    textAlign: "center",
-    marginBottom: 4,
-  },
-  statSublabel: {
-    fontSize: Platform.OS === "web" ? 13 : 12,
-    color: "#64748B",
-    textAlign: "center",
-    fontWeight: "500",
-  },
-  textContainer: {
-    alignItems: "center",
   },
 });

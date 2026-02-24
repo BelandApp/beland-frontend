@@ -6,9 +6,7 @@ import {
   FlatList,
   Image,
   StyleSheet,
-  ScrollView,
 } from "react-native";
-import Modal from "react-native-modal";
 import { useUserBalance } from "../../../hooks/useUserBalance";
 import {
   convertUSDToBeCoins,
@@ -20,13 +18,9 @@ import { InsufficientBalanceModal } from "../../Community/components";
 import { useNotify } from "@/hooks";
 import { getBackendErrorMessage } from "src/services";
 import { Button, toastConfig } from "src/components";
-import { ArrowDown } from "lucide-react-native";
-import { colors } from "src/styles";
 import { useCartStore } from "@/stores";
-import Toast from "react-native-toast-message";
 import { useAuth } from "src/context";
 import WarpperModal from "src/components/shared/modals/wrapperModal";
-import { GroupOrderButton } from "../../../components/buttons/GroupOrderButton";
 
 interface CartBottomSheetProps {
   visible: boolean;
@@ -72,7 +66,7 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
 
   const handleUpdateQuantity = async (
     productId: string,
-    newQuantity: number
+    newQuantity: number,
   ) => {
     try {
       updateQuantity(productId, newQuantity);
@@ -165,7 +159,7 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
             <View style={styles.footer}>
               <View>
                 <Text style={styles.total}>
-                  Total: {CURRENCY_CONFIG.CURRENCY_DISPLAY_SYMBOL}
+                  Total: USD {CURRENCY_CONFIG.CURRENCY_DISPLAY_SYMBOL}
                   {formatUSDPrice(totalUSD())}
                 </Text>
                 <Text style={styles.totalBecoins}>

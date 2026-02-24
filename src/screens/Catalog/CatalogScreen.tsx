@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -31,6 +31,7 @@ import { buildCatalogTabs, CatalogTabs } from "./components/catalogTab";
 // Styles
 import { containerStyles } from "./styles";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Pagination } from "src/components/shared/pagination/Pagination";
 
 export const CatalogScreen = () => {
   const { navigate } = useCustomNavigation();
@@ -44,25 +45,29 @@ export const CatalogScreen = () => {
     showCart,
     addingProductId,
   } = useCatalogCart();
+  const notify = useNotify();
   const { searchText, setSearchText, filters, setFilters } =
     useCatalogFilters();
   const { categories } = useCategories();
-  const { products, loading, refresh, error } = useFilteredProducts({
-    filters,
-    searchText,
-    categories,
-  });
+  const { products, loading, refresh, error, pagination } = useFilteredProducts(
+    {
+      filters,
+      searchText,
+      categories,
+    },
+  );
 
   const tabs = buildCatalogTabs(categories);
 
   const { activeTab, toggleTab } = useCatalogTabs(setFilters);
   const { showDeliveryModal, openDeliveryModal, closeDeliveryModal } =
     useCatalogModals();
+  // ScrollTop when page changes
+  const scrollRef = useRef<ScrollView>(null);
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ y: 0, animated: true });
+  }, [pagination.page]);
 
-  const notify = useNotify();
-
-  // TODO para el futuro sortear con marcas
-  const [brands, setBrands] = useState<string[]>([]);
   return (
     <>
       {/* Header */}
@@ -106,6 +111,7 @@ export const CatalogScreen = () => {
 
       {/* Content */}
       <ScrollView
+        ref={scrollRef}
         style={containerStyles.container}
         contentContainerStyle={containerStyles.contentContainer}
         showsVerticalScrollIndicator={false}
@@ -128,11 +134,19 @@ export const CatalogScreen = () => {
             Error al cargar los productos
           </Text>
         ) : (
-          <ProductGrid
-            products={products}
-            onAddToCart={handleAddProduct}
-            addingProductId={addingProductId}
-          />
+          <>
+            <ProductGrid
+              products={products}
+              onAddToCart={handleAddProduct}
+              addingProductId={addingProductId}
+            />
+            <Pagination
+              page={pagination.page}
+              totalPages={pagination.totalPages}
+              onPrev={pagination.prev}
+              onNext={pagination.next}
+            />
+          </>
         )}
       </ScrollView>
 

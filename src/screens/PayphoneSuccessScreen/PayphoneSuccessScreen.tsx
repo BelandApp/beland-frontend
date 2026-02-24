@@ -16,32 +16,44 @@ import {
   RedirectMessage,
 } from "./components";
 import { styles } from "./styles";
+import { Button, Card, ThemedHeader } from "src/components";
+import { View } from "react-native";
+import { useCustomNavigation } from "src/hooks";
 
 export default function PayphoneSuccessScreen() {
   const { id, clientTxId, status, loading, walletBalance } =
     usePayphoneConfirmation();
+  const { navigate } = useCustomNavigation();
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        {/* Título */}
-        <StatusTitle status={status} loading={loading} />
+    <View className="min-h-screen">
+      <ThemedHeader canGoBack />
+      <div>
+        <Card style={styles.card}>
+          {/* Título */}
+          <StatusTitle status={status} loading={loading} />
 
-        {/* Spinner de carga */}
-        {loading && <LoadingSpinner />}
+          {/* Spinner de carga */}
+          {loading && <LoadingSpinner />}
 
-        {/* Estado de la transacción */}
-        <StatusInfo status={status} loading={loading} />
+          {/* Estado de la transacción */}
+          <StatusInfo status={status} loading={loading} />
 
-        {/* Información de transacción */}
-        <TransactionInfo id={id} clientTxId={clientTxId} />
+          {/* Información de transacción */}
+          <TransactionInfo id={id} clientTxId={clientTxId} />
 
-        {/* Badge de saldo actualizado */}
-        <WalletBalanceBadge balance={walletBalance} />
+          {/* Badge de saldo actualizado */}
+          <WalletBalanceBadge balance={walletBalance} />
 
-        {/* Mensaje de redirección */}
-        <RedirectMessage status={status} />
+          {/* Mensaje de redirección */}
+          <RedirectMessage status={status} />
+        </Card>
+        <Button
+          title="Volver"
+          onPress={() => navigate("MainTabs", { screen: "Home" })}
+          style={{ margin: "auto" }}
+        />
       </div>
-    </div>
+    </View>
   );
 }

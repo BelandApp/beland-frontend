@@ -1,120 +1,78 @@
 import { useState } from "react";
 import { Alert, Platform } from "react-native";
 import { userService } from "src/services/user/user.service";
-import { User } from "src/context";
+import { useAuth, User } from "src/context";
 import { notify } from "../notification/notify.external";
-import { getBackendErrorMessage } from "src/services";
+import { CloudinaryService, getBackendErrorMessage } from "src/services";
+import { getPreviewUri, useUploadImage } from "../image/useUploadImage";
 
-export const useUserProfileForm = (
-  user: User | null,
-  setUser: (u: User) => void
-) => {
+export const useUserProfileForm = () => {
+  const { user, updateUser } = useAuth();
   const [editing, setEditing] = useState(false);
   const [fullName, setFullName] = useState(user?.full_name || "");
   const [address, setAddress] = useState((user as any)?.address || "");
   const [phone, setPhone] = useState((user as any)?.phone?.toString() || "");
   const [localImage, setLocalImage] = useState<string | null>(null);
-  const [localImageFile, setLocalImageFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
-
-  const pickImage = async () => {
+  const { pickImage } = useUploadImage();
+  const [loading, setLoading] = useState(false);
+  const handleNewImage = async () => {
     try {
-      if (Platform.OS === "web") {
-        const file: File | null = await new Promise((resolve) => {
-          const input = document.createElement("input");
-          input.type = "file";
-          input.accept = "image/*";
-          input.onchange = (e: any) => resolve(e?.target?.files?.[0] ?? null);
-          input.click();
-        });
-        if (file) {
-          setLocalImage(URL.createObjectURL(file));
-          setLocalImageFile(file);
-        }
-        return;
+      const selectedImage = await pickImage();
+      if (!selectedImage) return;
+      setLoading(true);
+      const formData = new FormData();
+      if ("file" in selectedImage) {
+        formData.append("file", selectedImage.file);
+      } else {
+        formData.append("file", selectedImage as any);
       }
-
-      const ImagePicker = await import("expo-image-picker");
-      const permission =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (permission.status !== "granted") {
-        notify.error({
-          message: "Necesitamos permisos para acceder a tu galería de fotos",
-        })
-        return;
-      }
-
-      const result: any = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        quality: 0.8,
+      const imageUrl = await CloudinaryService.uploadImage(formData);
+      await userService.updateUser({
+        profile_picture_url: imageUrl,
       });
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        setLocalImage(result.assets[0].uri);
-        setLocalImageFile(null);
-      }
-    } catch (err) {
-      Alert.alert("Error", "No se pudo seleccionar la imagen.");
-    }
-  };
-
-  const convertImageToDataUrl = async (): Promise<string | null> => {
-    try {
-      if (Platform.OS === "web" && localImageFile) {
-        return await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(localImageFile);
-        });
-      }
-
-      if (localImage) {
-        const FileSystem = await import("expo-file-system");
-        const base64 = await (FileSystem.readAsStringAsync as any)(localImage);
-        const filename = localImage.split("/").pop() || "photo.jpg";
-        const ext = filename.split(".").pop()?.toLowerCase() || "jpg";
-        const mimeType = ext === "png" ? "image/png" : "image/jpeg";
-        return `data:${mimeType};base64,${base64}`;
-      }
-    } catch (err) {
-      console.warn("[useUserProfileForm] Error converting image:", err);
-    }
-    return null;
-  };
-
-  const onSave = async () => {
-    if (!user) return;
-    if (fullName.trim().length < 2) {
-      notify.error({message: "Nombre requerido, al menos 3 caracteres"})
-      return;
-    }
-    if (address.trim().length < 5) {
-      notify.error({message: "Dirección requerida, al menos 5 caracteres"})
-      return;
-    }
-    setSaving(true);
-    try {
-      const payload: any = { full_name: fullName, address, phone };
-      if (localImage || localImageFile) {
-        const dataUrl = await convertImageToDataUrl();
-        if (dataUrl) payload.profile_picture_url = dataUrl;
-      }
-      const updated = await userService.updateUser(payload);
-      setUser({
-        ...user,
-        ...updated,
-        picture: updated.profile_picture_url || updated.picture,
-      });
-      setEditing(false);
       notify.success({
-        message: "Perfil actualizado",
-      })
+        message: "Imagen actualizada",
+      });
+      const preview = getPreviewUri(selectedImage);
+      setLocalImage(preview);
+      if (preview !== null) {
+        updateUser({ profile_picture_url: preview });
+      }
     } catch (err) {
       const message = getBackendErrorMessage(err);
       notify.error({ message });
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const onSave = async () => {
+    if (!user) return;
+
+    setSaving(true);
+    try {
+      setLoading(true);
+      let payload: {
+        full_name?: string;
+        address?: string;
+        phone?: string;
+      } = {};
+      if (fullName) payload.full_name = fullName;
+      if (address) payload.address = address;
+      if (phone) payload.phone = phone;
+
+      const updated = await userService.updateUser(payload);
+      updateUser(updated);
+      setEditing(false);
+      notify.success({
+        message: "Perfil actualizado",
+      });
+    } catch (err) {
+      const message = getBackendErrorMessage(err);
+      notify.error({ message });
+    } finally {
+      setLoading(false);
       setSaving(false);
     }
   };
@@ -129,6 +87,7 @@ export const useUserProfileForm = (
 
   return {
     editing,
+    loading,
     setEditing,
     fullName,
     setFullName,
@@ -137,9 +96,8 @@ export const useUserProfileForm = (
     phone,
     setPhone,
     localImage,
-    localImageFile,
     saving,
-    pickImage,
+    handleNewImage,
     onSave,
     onCancel,
   };

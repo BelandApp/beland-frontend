@@ -58,9 +58,9 @@ export const useWallet = () => {
     setLoadingTransactions(true);
 
     try {
-      const resp = await WalletService.getTransactions(1, 20, walletId);
-      const arr = Array.isArray(resp[0]) ? resp[0] : resp;
-      setTransactions(arr.map(mapBackendTransactionToFrontend));
+      const { data } = await WalletService.getTransactions(1, 20, walletId);
+      console.log("Fetched transactions:", data);
+      setTransactions(data.map(mapBackendTransactionToFrontend));
     } catch (err) {
       notify.error({ message: getBackendErrorMessage(err) });
     } finally {
@@ -95,8 +95,10 @@ export const useWallet = () => {
   return {
     walletData: {
       balance,
+      becoin_green: wallet?.becoin_green ?? 0,
+      becoin_orange: wallet?.becoin_orange ?? 0,
       locked_balance: wallet?.locked_balance ?? 0,
-      alias: wallet?.alias,
+      alias: wallet?.alias ?? "",
       estimatedValue: (balance * 0.05).toFixed(2),
     },
     wallet,

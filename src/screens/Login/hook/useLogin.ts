@@ -17,7 +17,7 @@ export const useLogin = () => {
   if (isAuthenticated) navigate("MainTabs", { screen: "Home" });
   const handleLogin = async () => {
     try {
-      const isValid = validateForm(FormData);
+      const isValid = validateForm({ email: FormData.email });
       if (!isValid) return;
       const res = await loginWithEmail(FormData.email, FormData.password);
       if (!res.token) throw new Error("Credenciales incorrectas");
@@ -32,7 +32,6 @@ export const useLogin = () => {
   const handleLoginAuth0 = async () => {
     try {
       await handleAuth0Login();
-      navigate("MainTabs", { screen: "Home" });
     } catch (error) {
       const message = getBackendErrorMessage(error);
       notify.error({ message });

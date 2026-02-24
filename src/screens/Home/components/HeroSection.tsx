@@ -5,12 +5,12 @@ import {
   StyleSheet,
   Platform,
   ActivityIndicator,
-  Dimensions,
   TouchableOpacity,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { BeCoinIcon } from "../../../components/icons/BeCoinIcon";
 import { Ionicons } from "@expo/vector-icons";
+import { useCustomNavigation } from "src/hooks";
 
 interface HeroSectionProps {
   balance: number;
@@ -26,7 +26,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   isLoading,
 }) => {
   const [showBalance, setShowBalance] = useState(true);
-
+  const { navigate } = useCustomNavigation();
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -40,23 +40,28 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         <View style={styles.decorativeCircle2} />
 
         <View style={styles.cardHeader}>
-          <View>
+          <View
+            style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}
+          >
             <Text style={styles.cardSubtitle}>Balance Total</Text>
             <TouchableOpacity
               onPress={() => setShowBalance(!showBalance)}
               style={styles.eyeButton}
             >
               {showBalance ? (
-                <Ionicons name="eye-outline" size={16} color="#94A3B8" />
+                <Ionicons name="eye-outline" size={20} color="#94A3B8" />
               ) : (
-                <Ionicons name="eye-off-outline" size={16} color="#94A3B8" />
+                <Ionicons name="eye-off-outline" size={20} color="#94A3B8" />
               )}
             </TouchableOpacity>
           </View>
-          <View style={styles.logoContainer}>
+          <TouchableOpacity
+            onPress={() => navigate("Wallet")}
+            style={styles.logoContainer}
+          >
             <Ionicons name="wallet-outline" size={20} color="#F97316" />
             <Text style={styles.logoText}>Beland Wallet</Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.balanceContainer}>
@@ -84,11 +89,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             <View>
               <Text style={styles.footerLabel}>Disponible</Text>
               <Text style={styles.footerValue}>
-                {isLoading
-                  ? "..."
-                  : showBalance
-                    ? balance.toLocaleString()
-                    : "***"}{" "}
+                {isLoading ? "..." : showBalance ? balance : "***"}{" "}
                 <Text style={styles.unit}>BC</Text>
               </Text>
             </View>
@@ -103,11 +104,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <View style={{ alignItems: "flex-end" }}>
                 <Text style={styles.footerLabel}>Bloqueado</Text>
                 <Text style={styles.footerLockedValue}>
-                  {isLoading
-                    ? "..."
-                    : showBalance
-                      ? locked_balance.toLocaleString()
-                      : "***"}{" "}
+                  {isLoading ? "..." : showBalance ? locked_balance : "***"}{" "}
                   <Text style={styles.unitLocked}>BC</Text>
                 </Text>
               </View>
@@ -121,7 +118,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: Platform.OS === "web" ? 0 : 16,
     paddingVertical: 16,
     width: "100%",
     maxWidth: "100%", // Allow full width to match other cards

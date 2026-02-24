@@ -1,5 +1,5 @@
-import { ArrowDown } from "lucide-react-native";
-import { Dimensions, StyleSheet, View } from "react-native";
+import { ArrowDown, ArrowDownCircle } from "lucide-react-native";
+import { Dimensions, Platform, StyleSheet, View } from "react-native";
 import Toast from "react-native-toast-message";
 import { colors } from "src/styles";
 import { toastConfig } from "../notification/GlobalNotification";
@@ -15,8 +15,9 @@ type WrapperModalProps = {
   onClose: () => void;
   header?: React.ReactNode;
   content: React.ReactNode;
-  actions: React.ReactNode;
+  actions?: React.ReactNode;
   headerBackgroundColor?: string;
+  beforeClose?: () => boolean | Promise<boolean>;
 };
 
 export const WrapperModal: React.FC<WrapperModalProps> = ({
@@ -25,7 +26,7 @@ export const WrapperModal: React.FC<WrapperModalProps> = ({
   header,
   isOpen,
   onClose,
-  headerBackgroundColor,
+  beforeClose,
 }) => {
   const refRBSheet = useRef<RBSheetRef>(null);
 
@@ -37,14 +38,24 @@ export const WrapperModal: React.FC<WrapperModalProps> = ({
     }
   }, [isOpen]);
 
+  const handleRequestClose = async () => {
+    if (beforeClose) {
+      const shouldClose = await beforeClose();
+      if (!shouldClose) return;
+    }
+
+    onClose();
+  };
   return (
     <RBSheet
       ref={refRBSheet}
       draggable={true}
       dragOnContent={false}
-      height={SCREEN_HEIGHT * 0.9}
       onClose={onClose}
-      
+      height={
+        Platform.OS === "web" ? SCREEN_HEIGHT * 0.98 : SCREEN_HEIGHT * 0.9
+      }
+      closeOnPressMask={false}
       customStyles={{
         wrapper: { backgroundColor: "rgba(0,0,0,0.5)" },
         container: styles.sheetContainer,
@@ -53,19 +64,12 @@ export const WrapperModal: React.FC<WrapperModalProps> = ({
     >
       <View style={styles.mainContainer}>
         {/* HEADER */}
-        <View
-          style={[
-            styles.header,
-            headerBackgroundColor
-              ? { backgroundColor: headerBackgroundColor }
-              : null,
-          ]}
-        >
+        <View style={[styles.header]}>
           {header}
           <Button
             variant="onlyIcon"
-            icon={<ArrowDown color={colors.belandOrange} />}
-            onPress={() => refRBSheet.current?.close()}
+            icon={<ArrowDown color={colors.belandOrange} size={24} />}
+            onPress={handleRequestClose}
             title="cerrar"
           />
         </View>
@@ -74,7 +78,7 @@ export const WrapperModal: React.FC<WrapperModalProps> = ({
         <View style={styles.contentWrapper}>{content}</View>
 
         {/* FOOTER */}
-        <View style={styles.footer}>{actions}</View>
+        {actions && <View style={styles.footer}>{actions}</View>}
       </View>
 
       <Toast config={toastConfig} />
@@ -113,6 +117,7 @@ const styles = StyleSheet.create({
   contentWrapper: {
     flex: 1, // Esto es lo que hace que el contenido sea flexible
     padding: 16,
+    overflow: "hidden",
   },
   footer: {
     padding: 16,

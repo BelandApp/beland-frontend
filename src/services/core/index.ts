@@ -59,7 +59,6 @@ export type {
 } from "../OrderApiService";
 
 // Group service
-export { GroupService } from "../GroupApiService";
 export type {
   Group,
   GroupMember,
@@ -106,7 +105,7 @@ export type {
 } from "../WalletApiService";
 
 // Withdraw service
-export { WithdrawService } from "../withdrawService";
+export { WithdrawService } from "./../";
 export type {
   WithdrawAccount,
   WithdrawAccountType,
@@ -114,7 +113,7 @@ export type {
   UpdateWithdrawAccountRequest,
   WithdrawRequest,
   UserWithdraw,
-} from "../withdrawService";
+} from "../";
 
 // Transaction service
 export { TransactionService } from "../TransactionApiService";

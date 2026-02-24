@@ -21,7 +21,7 @@ const Field: React.FC<FieldProps> = ({
   className = "",
 }) => {
   return (
-    <View className={`w-full ${className}`}>
+    <View className={`flex-1 ${className}`}>
       {label ? (
         <Text className="text-sm font-bold text-beland-text-primary mb-2">
           {label}
@@ -32,8 +32,10 @@ const Field: React.FC<FieldProps> = ({
         onChangeText={onChangeText}
         placeholder={placeholder}
         multiline={multiline}
-        className="h-13 rounded-xl border-2 border-primary/60 px-4 py-2 bg-white shadow-soft font-bold  focus:border-primary focus:bg-primary/5"
-        placeholderTextColor="#31c57db9"
+        className={`h-13 rounded-xl border-2 px-4 py-2 bg-white shadow-soft font-bold
+    ${value && value.length > 2 ? "border-[#00e074]" : "border-orange-500"}
+    focus:border-[#f88e2ab7] focus:bg-[#efcbaa2c]
+  `}
         {...inputProps}
       />
     </View>

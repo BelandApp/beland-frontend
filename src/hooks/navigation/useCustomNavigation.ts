@@ -10,6 +10,17 @@ export const useCustomNavigation = () => {
   const goBack = () => {
     if (navigation.canGoBack()) navigation.goBack();
   };
+  const reload = (route: { name: any; params: any }) => {
+    navigation.reset({
+      index: 0,
+      routes: [
+        {
+          name: route.name,
+          params: route.params,
+        },
+      ],
+    });
+  };
 
-  return { navigate, goBack };
+  return { navigate, goBack, reload };
 };

@@ -47,6 +47,9 @@ import {
 } from "@screens/DashboardUser";
 // TODO arreglar pantallas en carpeta raiz
 import { HistoryScreen, RecyclingMapScreen } from "../../screens";
+import FinancesManagement from "src/screens/DashboardUser/FinanceManagementScreen";
+import { GroupsStackNavigator } from "./GroupsStackNavigator";
+import FAQScreen from "src/screens/FAQ/FaqScreen";
 
 export type RootStackParamList = {
   // Auth Screens
@@ -58,6 +61,8 @@ export type RootStackParamList = {
   Orders: NavigatorScreenParams<OrdersStackParamList>;
   Groups: NavigatorScreenParams<GroupsStackParamList>;
   CreateGroup: undefined;
+  // FAQ
+  FAQ: undefined;
   // Payments
   CobrarScreen: undefined;
   SendScreen: undefined;
@@ -104,8 +109,8 @@ export type RootStackParamList = {
   OrderAdminDetail?: { orderId: string };
   UsersManagement: undefined;
   ProductsManagement: undefined;
-
-  MisEntradas: {tab: string|undefined};
+  FinancesManagement: undefined;
+  MisEntradas: { tab: string | undefined };
   // Events Screens
   EventModal: { id: string };
   AcquiredEventModal: { id_modal: string };
@@ -126,6 +131,7 @@ export const RootStackNavigator = () => {
       screenOptions={{ headerShown: false }}
     >
       <Stack.Screen name="MainTabs" component={MainTabNavigator} />
+      <Stack.Screen name="Groups" component={GroupsStackNavigator} />
       <Stack.Screen
         name="Orders"
         component={OrdersStackNavigator}
@@ -232,6 +238,11 @@ export const RootStackNavigator = () => {
         options={{ headerShown: false }}
       />
       <Stack.Screen
+        name="FinancesManagement"
+        component={FinancesManagement}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
         name="UseEventScreen"
         component={UseEventScreen}
         options={{ headerShown: false }}
@@ -258,6 +269,11 @@ export const RootStackNavigator = () => {
         component={NewPaymentScreen}
         options={{ headerShown: false }}
       />
+      <Stack.Screen
+        name="FAQ"
+        component={FAQScreen}
+        options={{ headerShown: false }}
+      />
       {/* Modales */}
       <Stack.Screen
         name="EventModal"
@@ -269,7 +285,6 @@ export const RootStackNavigator = () => {
           animation: "slide_from_bottom",
           animationTypeForReplace: "pop",
         }}
-        
       />
       <Stack.Screen
         name="AcquiredEventModal"

@@ -50,6 +50,7 @@ export const CreateAddress: React.FC<AddressFormProps> = ({
         </View>
         <View style={styles.row}>
           <CustomInput
+            required
             variant="filled"
             label="Calle y Numeración"
             onChangeText={(street) => onChangeText("street", street)}
@@ -66,6 +67,7 @@ export const CreateAddress: React.FC<AddressFormProps> = ({
             }
           />
           <CustomInput
+            required
             variant="filled"
             label="Código Postal"
             onChangeText={(CP) => onChangeText("zipCode", CP)}
@@ -84,6 +86,7 @@ export const CreateAddress: React.FC<AddressFormProps> = ({
         </View>
         <View style={styles.row}>
           <CustomInput
+            required
             variant="filled"
             label="Ciudad"
             onChangeText={(city) => onChangeText("city", city)}
@@ -99,6 +102,7 @@ export const CreateAddress: React.FC<AddressFormProps> = ({
             }
           />
           <CustomInput
+            required
             variant="filled"
             label="Provincia/Estado"
             onChangeText={(state) => onChangeText("state", state)}
@@ -116,6 +120,7 @@ export const CreateAddress: React.FC<AddressFormProps> = ({
         </View>
         <View style={styles.row}>
           <CustomInput
+            required
             variant="filled"
             label="País"
             onChangeText={(country) => onChangeText("country", country)}
@@ -132,6 +137,7 @@ export const CreateAddress: React.FC<AddressFormProps> = ({
           />
 
           <PhoneInput
+            required
             value={FormData.phone || ""}
             onChange={(phone) => onChangeText("phone", phone)}
             error={errors.phone}
@@ -157,20 +163,6 @@ export const CreateAddress: React.FC<AddressFormProps> = ({
             />
           }
         />
-        {/* Delivery Info */}
-        <View style={styles.infoBox}>
-          <MaterialCommunityIcons
-            name="information"
-            size={20}
-            color={colors.belandOrange}
-          />
-          <View style={styles.infoContent}>
-            <Text style={styles.infoTitle}>Información de entrega</Text>
-            <Text style={styles.infoText}>
-              • Tiempo estimado: 2-3 días hábiles{"\n"}• Costo de envío: $2.50
-            </Text>
-          </View>
-        </View>
         <View style={styles.actionsContainer}>
           {Dimensions.get("window").width > 600 && (
             <Button title="Cancelar" onPress={onCancel} variant="ghost" />

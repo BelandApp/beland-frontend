@@ -1,5 +1,6 @@
 import { StyleSheet, Platform, Dimensions } from "react-native";
 import { colors } from "../../../styles/colors";
+import { color } from "html2canvas/dist/types/css/types/color";
 
 const { width: screenWidth } = Dimensions.get("window");
 const isWeb = Platform.OS === "web";
@@ -30,6 +31,7 @@ export const productStyles = StyleSheet.create({
   },
   // Product card
   productCard: {
+    position: "relative",
     backgroundColor: "white",
     borderRadius: 16,
     padding: 12,
@@ -53,10 +55,13 @@ export const productStyles = StyleSheet.create({
           minHeight: 260,
         }),
   },
+  noStock: {
+    opacity: 0.5,
+  },
   productImageContainer: {
     width: "100%",
     height: isWeb ? 140 : 120,
-    backgroundColor: "#F8F9FA",
+    backgroundColor: "transparent",
     borderRadius: 12,
     overflow: "hidden",
     marginBottom: 8,
@@ -74,6 +79,7 @@ export const productStyles = StyleSheet.create({
     width: "100%",
     height: "100%",
     borderRadius: 12,
+    backgroundColor: "transparent",
   },
   productBrand: {
     fontSize: 11,
@@ -92,10 +98,22 @@ export const productStyles = StyleSheet.create({
     minHeight: 32, // Altura mínima para mantener alineación
   },
   productCategory: {
-    fontSize: 11,
-    color: colors.textSecondary,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    fontSize: 10,
+    color: "white",
     marginBottom: 12,
     textAlign: "center" as const,
+    backgroundColor: "#FF6b35",
+    borderRadius: 12,
+    borderTopLeftRadius: 16,
+    borderBottomLeftRadius: 0,
+    opacity: 0.9,
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+    marginHorizontal: "auto",
+    zIndex: 2,
   },
   productPriceRow: {
     flexDirection: "row" as const,

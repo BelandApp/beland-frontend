@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import { Platform, Alert } from "react-native";
+import { useUploadImage } from "src/hooks";
+import { useThemedTabs } from "src/components";
 import { notify } from "src/hooks/notification/notify.external";
+import { BackendPaymentAccount, getBackendErrorMessage } from "src/services";
+import { CloudinaryService } from "src/services/cloudinary/cloudinary.service";
 
 // Tipos
 export interface PaymentMethod {
@@ -18,6 +22,22 @@ export interface RechargeState {
   isLoading: boolean;
 }
 
+export interface PaymentAccount {
+  accountHolder: string;
+  alias?: string | null;
+  bank: string;
+  cbu?: string | null;
+  created_at: string;
+  email: string;
+  id: string;
+  is_active: boolean;
+  name: string;
+  nro_account: string;
+  ruc: string;
+  type_account: string;
+  updated_at: string;
+  user_id: string;
+}
 // Constantes
 export const PRESET_AMOUNTS = [1, 2, 5, 10, 20];
 
@@ -39,6 +59,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     description: "Sin comisiones",
   },
 ];
+type PaymentMethodId = PaymentMethod["id"];
 
 // Función para cargar el script Payphone en web
 function loadPayphoneScript(): Promise<void> {
@@ -89,9 +110,10 @@ function loadPayphoneScript(): Promise<void> {
 // Hook personalizado
 export function useRecharge() {
   const [amount, setAmount] = useState("");
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] =
+    useState<PaymentMethodId | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-
+  const [modalPayphone, setModalPayphone] = useState(false);
   // Cálculos derivados
   const beCoinsAmount = amount ? Math.floor(Number(amount) / 0.05) : 0;
   const usdAmount = Number(amount) || 0;
@@ -112,7 +134,7 @@ export function useRecharge() {
     setAmount(presetAmount.toString());
   };
 
-  const handlePaymentMethodSelect = (methodId: string) => {
+  const handlePaymentMethodSelect = (methodId: PaymentMethodId) => {
     setSelectedPaymentMethod(methodId);
   };
 
@@ -135,21 +157,17 @@ export function useRecharge() {
       return;
     }
 
+    setModalPayphone(true);
+
     try {
-      // Limpiar variables QR antes de iniciar recarga
       clearPayphoneStorage();
 
-      // Limpiar el contenedor del botón
-      // @ts-ignore
-      const ppDiv = document.getElementById("pp-button");
-      if (ppDiv) ppDiv.innerHTML = "";
+      destroyPayphoneWidget();
 
       setIsLoading(true);
 
-      // Esperar un momento antes de cargar el script
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Cargar el script de Payphone
       await loadPayphoneScript();
 
       const payphoneToken = process.env.EXPO_PUBLIC_PAYPHONE_TOKEN;
@@ -158,7 +176,6 @@ export function useRecharge() {
         throw new Error("Token de Payphone no configurado");
       }
 
-      // @ts-ignore
       localStorage.setItem("payphone_token", payphoneToken);
 
       const payphoneConfig = {
@@ -175,21 +192,52 @@ export function useRecharge() {
       new window.PPaymentButtonBox(payphoneConfig).render("pp-button");
     } catch (error) {
       console.error("Error al cargar Payphone:", error);
-      Alert.alert(
-        "Error",
-        "No se pudo cargar el widget de Payphone. Por favor, intenta nuevamente.",
-      );
+      Alert.alert("Error", "No se pudo cargar el widget de Payphone.");
       setIsLoading(false);
+      setModalPayphone(false);
+    }
+  };
+
+  const destroyPayphoneWidget = () => {
+    if (Platform.OS !== "web") return;
+
+    try {
+      const container = document.getElementById("pp-button");
+
+      if (container) {
+        container.innerHTML = "";
+      }
+    } catch (error) {
+      console.error("Error limpiando Payphone:", error);
     }
   };
 
   // Bank Transfer State
   const [referenceId, setReferenceId] = useState("");
-  const [proofImage, setProofImage] = useState<any>(null);
+  const {
+    image,
+    pickImage,
+    appendToFormData,
+    clearImage,
+    previewUri,
+    imageName,
+  } = useUploadImage();
   const [showBankTransferModal, setShowBankTransferModal] = useState(false);
-  const [paymentAccounts, setPaymentAccounts] = useState<any[]>([]);
-  const [selectedPaymentAccountId, setSelectedPaymentAccountId] =
-    useState<string>("");
+  const [paymentAccounts, setPaymentAccounts] = useState<PaymentAccount[]>([]);
+  const [selectedPaymentAccount, setSelectedPaymentAccount] =
+    useState<PaymentAccount>();
+  const { tabs, onTabChange, activeTab } = useThemedTabs(
+    paymentAccounts.map((tab) => tab.bank),
+  );
+
+  // Change account with tab
+  useEffect(() => {
+    if (!activeTab || paymentAccounts.length === 0) return;
+
+    const selected = paymentAccounts.find((acc) => acc.bank === activeTab);
+
+    setSelectedPaymentAccount(selected);
+  }, [activeTab, paymentAccounts]);
 
   // Load Payment Accounts
   useEffect(() => {
@@ -197,36 +245,27 @@ export function useRecharge() {
     // assuming PaymentAccountService is available
     const loadPaymentAccounts = async () => {
       try {
-        const {
-          PaymentAccountService,
-        } = require("src/services/PaymentAccountApiService");
+        const { PaymentAccountService } = require("src/services");
         const response = await PaymentAccountService.getPaymentAccounts();
+        console.log("Respuesta de cuentas", response);
 
         // Handle response structure (it returns [data, count] based on controller analysis)
-        let accounts: any[] = [];
+        let accounts: BackendPaymentAccount[] = [];
         if (Array.isArray(response)) {
           accounts = response[0] || [];
         } else if (response && (response as any).data) {
           // Standard PaginatedResponse
           accounts = (response as any).data || [];
         }
-
+        console.log("Loaded payment accounts:", accounts);
+        // filter only actives
+        accounts = accounts.filter((account) => account.is_active);
+        console.log("Cuentas activas", accounts);
         setPaymentAccounts(accounts);
-
-        // Try to find the one matching "Banco Guayaquil"
-        const guayaquilAccount = accounts.find(
-          (acc: any) =>
-            acc.bank_name?.toLowerCase().includes("guayaquil") ||
-            acc.alias?.toLowerCase().includes("guayaquil"),
-        );
-
-        if (guayaquilAccount) {
-          setSelectedPaymentAccountId(guayaquilAccount.id);
-        } else if (accounts.length > 0) {
-          setSelectedPaymentAccountId(accounts[0].id);
-        }
+        setSelectedPaymentAccount(accounts[0]);
       } catch (error) {
-        console.error("Error loading payment accounts:", error);
+        const message = getBackendErrorMessage(error);
+        notify.error({ message });
       }
     };
 
@@ -237,43 +276,51 @@ export function useRecharge() {
 
   const handleBankTransferPayment = async () => {
     if (!referenceId) {
-      Alert.alert(
-        "Error",
-        "Por favor ingresa el número de referencia eferencia.",
-      );
+      notify.error({ message: "Por favor ingresa el número de referencia." });
       return;
     }
 
     // Validate amount
     if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
-      Alert.alert("Error", "Monto inválido.");
+      notify.error({ message: "Por favor ingresa un monto válido." });
       return;
     }
 
     // Validate Payment Account
-    if (!selectedPaymentAccountId && paymentAccounts.length === 0) {
-      Alert.alert(
-        "Error",
-        "No hay cuentas bancarias disponibles para transferir.",
-      );
+    if (!selectedPaymentAccount?.id && paymentAccounts.length === 0) {
+      notify.error({ message: "No hay cuentas bancarias disponibles." });
       return;
     }
 
     // Use selected or first one
-    const accountId = selectedPaymentAccountId || paymentAccounts[0]?.id;
+    const accountId =
+      selectedPaymentAccount?.id ||
+      paymentAccounts[0]?.id ||
+      "a3b7c1d2-9f12-4b0a-85d4-123456789abc";
 
     try {
       setIsLoading(true);
 
       const { WalletService } = require("src/services/WalletApiService");
+      // ===============================
+      // 🖼️ CREAMOS CLOUDINARY URL
+      // ===============================
 
-      // Note: Backend doesn't support image upload yet.
-      // We send the reference ID and we assume the user has transferred.
+      const formData = new FormData();
+      appendToFormData(formData);
+
+      const imageUrl = await CloudinaryService.uploadImage(formData);
+      if (!imageUrl) {
+        notify.info({
+          message: "No pudimos procesar correctamente la imagen",
+        });
+      }
 
       await WalletService.createRechargeTransfer({
         payment_account_id: accountId,
         amount_usd: Number(amount),
         transfer_id: referenceId,
+        ticket_image_url: imageUrl,
       });
 
       notify.success({
@@ -283,16 +330,17 @@ export function useRecharge() {
 
       // Reset logic
       setReferenceId("");
-      setProofImage(null);
+      clearImage();
       setAmount("");
       setShowBankTransferModal(false);
-      setSelectedPaymentMethod("");
+      setSelectedPaymentMethod(null);
     } catch (error: any) {
       console.error("Error creating bank transfer recharge:", error);
-      Alert.alert(
-        "Error",
-        error.message || "No se pudo crear la solicitud de recarga.",
-      );
+      const res = getBackendErrorMessage(error);
+      notify.error({
+        message:
+          res || "Error creando la transferencia Bancaria, corrobora los datos",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -322,15 +370,20 @@ export function useRecharge() {
     amount,
     selectedPaymentMethod,
     isLoading,
-
+    previewUri,
+    imageName,
+    tabs,
+    modalPayphone,
+    setModalPayphone,
     // Bank Transfer State
     referenceId,
     setReferenceId,
-    proofImage,
-    setProofImage,
+    image,
+    pickImage,
     showBankTransferModal,
     setShowBankTransferModal,
     paymentAccounts,
+    selectedPaymentAccount,
 
     // Datos calculados
     beCoinsAmount,
@@ -346,5 +399,7 @@ export function useRecharge() {
     handleProceedToPayment,
     handleBankTransferPayment, // Export handler to be used by modal
     setIsLoading,
+    onTabChange,
+    destroyPayphoneWidget,
   };
 }

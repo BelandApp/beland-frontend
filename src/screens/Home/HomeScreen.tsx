@@ -1,40 +1,36 @@
 import React from "react";
 import { View, ScrollView, StyleSheet, Dimensions } from "react-native";
-import {
-  HeroSection,
-  QuickActions,
-  FeatureCard,
-  StatsCard,
-} from "./components";
+import { HeroSection, FeatureCard, StatsCard } from "./components";
 import { RecentTransactions } from "@/screens/Wallet/components/RecentTransactions";
 import { useDashboardNavigation, useDashboardData } from "./hooks";
-import { useWallet } from "../Wallet/hooks";
+import { useWallet, useWalletActions } from "../Wallet/hooks";
 import { useBeCoinsStore } from "@/stores";
 import { HomeWave } from "src/components/ui/waves/Home.wave";
 import { ThemedHeader } from "src/components/shared/headers/Header";
+import { convertBeCoinsToUSD } from "src/constants";
+import { WalletActions } from "../Wallet";
+import { colors } from "src/design-system";
 
 export const HomeScreen = () => {
   const {
-    navigateViewHistory,
     navigateRecyclingMapPress,
     navigateCommunity,
     navigateDelivery,
+    navigateFaq,
   } = useDashboardNavigation();
-  const { userStats, activities } = useDashboardData();
+  const { userStats } = useDashboardData();
   const { getBeCoinsInUSD } = useBeCoinsStore();
-  const { loadingWallet: loading, transactions } = useWallet();
-
+  const { loadingWallet: loading, transactions, walletData } = useWallet();
   // Usar la constante centralizada para el cálculo de USD
-  const balance = userStats?.coinsAmount ?? 0;
   const lockedBalance = useBeCoinsStore((state) => state.locked_balance) ?? 0;
-  const estimatedValue = getBeCoinsInUSD(balance);
+  const estimatedValue = getBeCoinsInUSD(walletData.balance);
 
   // Solo pasar locked_balance si es mayor a 0
   const shouldShowLockedBalance = lockedBalance > 0;
   const lockedBalanceToPass = shouldShowLockedBalance
     ? lockedBalance
     : undefined;
-
+  const { mainWalletActions } = useWalletActions();
   return (
     <View style={styles.container}>
       <ThemedHeader title="Inicio" logo />
@@ -44,12 +40,15 @@ export const HomeScreen = () => {
       >
         <View style={styles.content}>
           <HeroSection
-            balance={balance}
+            balance={walletData.balance}
             locked_balance={lockedBalanceToPass}
             estimatedValue={estimatedValue.toFixed(2)}
             isLoading={loading}
           />
-          <QuickActions />
+          <WalletActions
+            actions={mainWalletActions}
+            backgroundColor={colors.brand.orange[500]}
+          />
 
           <View style={styles.featuresGrid}>
             <FeatureCard
@@ -59,12 +58,16 @@ export const HomeScreen = () => {
             />
             <FeatureCard type="delivery" onPress={navigateDelivery} />
             <FeatureCard type="community" onPress={navigateCommunity} />
+            <FeatureCard type="faq" onPress={navigateFaq} />
           </View>
 
           <StatsCard
-            becoins={balance}
+            greenBecoins={walletData.becoin_green}
+            orangeBecoins={walletData.becoin_orange}
             bottlesRecycled={userStats?.bottlesRecycled ?? 0}
-            estimatedValue={estimatedValue.toFixed(2)}
+            estimatedValue={String(
+              convertBeCoinsToUSD(walletData.becoin_green),
+            )}
           />
 
           <RecentTransactions transactions={transactions ?? []} />

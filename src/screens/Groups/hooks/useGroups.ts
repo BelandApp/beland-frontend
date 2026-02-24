@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useFocusEffect } from "@react-navigation/native";
 import { Group } from "@/services/GroupApiService";
-import { GroupService } from "@services/core";
+import { GroupService } from "@/services";
 import { mapApiGroupToUi } from "src/utils/groupMapper";
 
 // Mapeo especial para grupos de usuario (cuando group_type es objeto)

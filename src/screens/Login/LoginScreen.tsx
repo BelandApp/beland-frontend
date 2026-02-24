@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -14,10 +14,11 @@ import { BelandLogo } from "@/components";
 import { styles } from "./styles";
 import { CircleArrowLeftIcon, Mail } from "lucide-react-native";
 import { useLogin } from "./hook/useLogin";
+import { useAuth } from "src/context";
 export default function LoginScreen() {
   const { width, height } = Dimensions.get("window");
   const [showLocalLogin, setShowLocalLogin] = useState(false);
-
+  const { user } = useAuth();
   const {
     handleLogin,
     handleLoginAuth0,
@@ -25,11 +26,15 @@ export default function LoginScreen() {
     navigate,
     FormData,
     isLoading,
-    isAuthenticated,
     errors,
   } = useLogin();
-
-  if (isAuthenticated) navigate("MainTabs", { screen: "Home" });
+  useEffect(() => {
+    if (!isLoading && user) {
+      navigate("MainTabs", {
+        screen: "Home",
+      });
+    }
+  }, [user, isLoading]);
 
   return (
     <KeyboardAvoidingView

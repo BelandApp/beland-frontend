@@ -12,41 +12,85 @@ import {
   GroupPurchaseCartItem,
 } from "src/services/GroupApiService";
 
-export const useGroupPurchaseCart = (groupId: string) => {
+// Re-defined useGroupPurchaseCart to use Group's specific cart
+export const useGroupPurchaseCart = (
+  groupId: string,
+  initialGroupData?: any,
+) => {
   const { user } = useAuth();
   const notify = useNotify();
 
   const [cart, setCart] = useState<GroupPurchaseCart | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [groupCartId, setGroupCartId] = useState<string | null>(null);
 
-  // Cargar el carrito del grupo al montar el componente
   useEffect(() => {
+    const loadGroupCart = async () => {
+      try {
+        setLoading(true);
+        console.log("[useGroupPurchaseCart] Loading cart for group:", groupId);
+
+        const groupData = await GroupService.getGroup(groupId);
+        console.log("[useGroupPurchaseCart] Fetched Group Data.");
+
+        if (groupData && groupData.cart) {
+          console.log(
+            "[useGroupPurchaseCart] Found Group Cart ID:",
+            groupData.cart.id,
+          );
+          setGroupCartId(groupData.cart.id);
+
+          // Fetch FULL cart details with products
+          const fullCart = await GroupService.getCartById(groupData.cart.id);
+          setCart(fullCart);
+        } else {
+          console.warn(
+            "[useGroupPurchaseCart] No cart found on fetched group object!",
+          );
+          setCart(null);
+          setGroupCartId(null);
+        }
+      } catch (err) {
+        console.error("[useGroupPurchaseCart] Error loading group cart:", err);
+        setError(
+          err instanceof Error ? err.message : "Error loading group cart",
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (groupId) {
-      fetchCart();
+      loadGroupCart();
     }
   }, [groupId]);
 
-  const fetchCart = async () => {
+  const refreshCart = async () => {
+    if (!groupCartId) {
+      // If we don't have ID, try fetching group first
+      if (!groupId) return;
+      try {
+        const groupData = await GroupService.getGroup(groupId);
+        if (groupData?.cart) {
+          setGroupCartId(groupData.cart.id);
+          const fullCart = await GroupService.getCartById(groupData.cart.id);
+          setCart(fullCart);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+      return;
+    }
+
     try {
-      setLoading(true);
-      setError(null);
-      // Obtener carrito del usuario autenticado
-      const fetchedCart = await GroupService.getMyCart();
-      setCart(fetchedCart);
+      const fullCart = await GroupService.getCartById(groupCartId);
+      setCart(fullCart);
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Error al cargar el carrito";
-      setError(errorMessage);
-      console.error("Error fetching group purchase cart:", err);
-    } finally {
-      setLoading(false);
+      console.error("Error refreshing cart:", err);
     }
   };
 
-  /**
-   * Agregar un producto al carrito del grupo
-   */
   const addProductToCart = async (
     product: {
       id: string;
@@ -55,128 +99,111 @@ export const useGroupPurchaseCart = (groupId: string) => {
       image_url?: string;
       description?: string;
     },
-    quantity: number
+    quantity: number,
+    is_general?: boolean,
   ): Promise<boolean> => {
     try {
-      if (!user?.id) {
-        notify.error({ message: "Usuario no autenticado" });
+      if (!groupCartId) {
+        notify.error({ message: "No se encontró el carrito del grupo" });
         return false;
       }
-
-      const updatedCart = await GroupService.addProductToGroupCart(
-        groupId,
+      // Use helper method to add to specific cart ID
+      await GroupService.addItemToSpecificCart(
+        groupCartId,
         product,
         quantity,
-        user.id
+        is_general,
       );
-
-      setCart(updatedCart);
+      await refreshCart();
       return true;
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Error al agregar el producto";
-      notify.error({ message: errorMessage });
-      console.error("Error adding product to cart:", err);
+      console.error("Error adding to cart:", err);
+      // notify.error({ message: "Error al agregar producto" });
       return false;
     }
   };
 
-  /**
-   * Remover un producto del carrito
-   */
   const removeProductFromCart = async (
-    cartItemId: string
-  ): Promise<boolean> => {
-    try {
-      const updatedCart = await GroupService.removeProductFromGroupCart(
-        groupId,
-        cartItemId
-      );
-      setCart(updatedCart);
-      return true;
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Error al remover el producto";
-      notify.error({ message: errorMessage });
-      console.error("Error removing product from cart:", err);
-      return false;
-    }
-  };
-
-  /**
-   * Actualizar la cantidad de un producto en el carrito
-   */
-  const updateProductQuantity = async (
     cartItemId: string,
-    newQuantity: number
   ): Promise<boolean> => {
     try {
-      if (newQuantity <= 0) {
-        return await removeProductFromCart(cartItemId);
-      }
-
-      const updatedCart = await GroupService.updateProductQuantityInGroupCart(
-        groupId,
-        cartItemId,
-        newQuantity
-      );
-      setCart(updatedCart);
+      await GroupService.removeItemFromSpecificCart(cartItemId);
+      await refreshCart();
       return true;
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Error al actualizar la cantidad";
-      notify.error({ message: errorMessage });
-      console.error("Error updating product quantity:", err);
+      console.error("Error removing:", err);
       return false;
     }
   };
 
-  /**
-   * Obtener el precio total del carrito (sin envío)
-   */
+  const updateCartItemQuantity = async (
+    cartItemId: string,
+    newQuantity: number,
+  ): Promise<boolean> => {
+    try {
+      if (newQuantity <= 0) return removeProductFromCart(cartItemId);
+      await GroupService.updateItemQuantitySpecificCart(
+        cartItemId,
+        newQuantity,
+      );
+      await refreshCart();
+      return true;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
+  };
+
+  const updateProductQuantity = async (
+    productId: string,
+    newQuantity: number,
+    userId?: string,
+  ): Promise<boolean> => {
+    try {
+      // NOTE: backend updateItemQuantityByProduct might not handle "delete if 0" automatically
+      // if it logic is different. But CartItemsService.updateQuantityProduct usually does check 0?
+      // Actually CartItemsService.update checks 0. updateQuantityProduct uses repo.findByProduct then calls update.
+      // So yes, it should handle 0 -> delete.
+      await GroupService.updateItemQuantityByProduct(
+        productId,
+        newQuantity,
+        userId,
+      );
+      await refreshCart();
+      return true;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
+  };
+
+  const clearCart = async (): Promise<boolean> => {
+    if (!groupCartId) return false;
+    try {
+      // Use direct cart clear endpoint if available or loop items
+      // Assuming clearGroupCart can take an ID if modified?
+      // Actually GroupService.clearGroupCart in frontend was modified to take cartId
+      await GroupService.clearGroupCart(groupCartId);
+      await refreshCart();
+      return true;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
+  };
+
   const getTotalPrice = (): number => {
     if (!cart || !cart.items) return 0;
-    // Prefer user cart.total_amount if reliable, otherwise sum items
-    // Ensure we return a number
-    const total = cart.items.reduce(
-      (sum: number, item: GroupPurchaseCartItem) => {
-        return sum + Number(item.total_price);
-      },
-      0
+    return cart.items.reduce(
+      (sum, item) => sum + Number(item.total_price || 0),
+      0,
     );
-    return Number(total);
   };
 
-  /**
-   * Obtener la cantidad total de items en el carrito
-   */
-  const getTotalItems = (): number => {
-    if (!cart) return 0;
-    return cart.total_items;
-  };
+  const getTotalItems = (): number => cart?.total_items || 0;
 
-  /**
-   * Obtener el precio con envío incluido
-   */
   const getTotalWithDelivery = (): number => {
     return getTotalPrice() + (cart?.delivery_cost || 0);
-  };
-
-  /**
-   * Vaciar el carrito
-   */
-  const clearCart = async (): Promise<boolean> => {
-    try {
-      const clearedCart = await GroupService.clearGroupCart(groupId);
-      setCart(clearedCart);
-      return true;
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Error al vaciar el carrito";
-      notify.error({ message: errorMessage });
-      console.error("Error clearing cart:", err);
-      return false;
-    }
   };
 
   return {
@@ -185,12 +212,13 @@ export const useGroupPurchaseCart = (groupId: string) => {
     error,
     addProductToCart,
     removeProductFromCart,
-    updateProductQuantity,
+    updateCartItemQuantity, // For Item Row +/-
+    updateProductQuantity, // For Assignment Logic
     getTotalPrice,
     getTotalItems,
     getTotalWithDelivery,
     clearCart,
-    refetchCart: fetchCart,
+    refetchCart: refreshCart,
   };
 };
 

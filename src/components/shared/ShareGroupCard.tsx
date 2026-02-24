@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Dimensions } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { colors } from "@/styles";
 import Feather from "react-native-vector-icons/Feather";
+import { Image } from "react-native";
 
 interface ShareGroupCardProps {
   groupName: string;
@@ -84,7 +85,12 @@ export const ShareGroupCard = React.forwardRef<View, ShareGroupCardProps>(
 
             {/* QR Code placeholder - puedes agregar un QR real después */}
             <View style={styles.qrPlaceholder}>
-              <Feather name="maximize" size={60} color="#ffffff33" />
+              <Image
+                source={require("../../../assets/beland_qr.png")}
+                width={150}
+                height={150}
+                style={{ maxWidth: 150, maxHeight: 150 }}
+              />
               <Text style={styles.qrText}>Escanea para unirte</Text>
             </View>
           </View>
@@ -96,7 +102,7 @@ export const ShareGroupCard = React.forwardRef<View, ShareGroupCardProps>(
         </LinearGradient>
       </View>
     );
-  }
+  },
 );
 
 const styles = StyleSheet.create({
@@ -132,7 +138,7 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     alignItems: "center",
-    marginTop: 20,
+    marginVertical: 10,
   },
   iconCircle: {
     width: 100,
@@ -148,7 +154,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   content: {
-    flex: 1,
+    marginTop: 42,
     justifyContent: "center",
     gap: 16,
   },
@@ -216,7 +222,6 @@ const styles = StyleSheet.create({
   qrPlaceholder: {
     alignItems: "center",
     marginTop: 24,
-    opacity: 0.5,
   },
   qrText: {
     color: "#ffffff88",

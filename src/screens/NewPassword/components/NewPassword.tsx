@@ -46,6 +46,11 @@ const NewPasswordStep: React.FC<ResetPasswordStepProps> = ({ onSubmit }) => {
   const passwordsDontMatch =
     password && confirmPassword && password !== confirmPassword;
 
+  const hasMinLength = password.length >= 8;
+  const hasUpperAndLower = /[a-z]/.test(password) && /[A-Z]/.test(password);
+  const hasNumber = /\d/.test(password);
+  const hasSpecialChar = /[!@#$%^&*._\-]/.test(password);
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -126,35 +131,37 @@ const NewPasswordStep: React.FC<ResetPasswordStepProps> = ({ onSubmit }) => {
         <View style={styles.requirementsList}>
           <View style={styles.requirement}>
             <Feather
-              name={password.length >= 8 ? "check-circle" : "circle"}
+              name={hasMinLength ? "check-circle" : "circle"}
               size={14}
-              color={password.length >= 8 ? "#00E074" : "#999"}
+              color={hasMinLength ? "#00E074" : "#999"}
             />
             <Text style={styles.requirementText}>Mínimo 8 caracteres</Text>
           </View>
           <View style={styles.requirement}>
             <Feather
-              name={
-                /[a-z]/.test(password) && /[A-Z]/.test(password)
-                  ? "check-circle"
-                  : "circle"
-              }
+              name={hasUpperAndLower ? "check-circle" : "circle"}
               size={14}
-              color={
-                /[a-z]/.test(password) && /[A-Z]/.test(password)
-                  ? "#00E074"
-                  : "#999"
-              }
+              color={hasUpperAndLower ? "#00E074" : "#999"}
             />
             <Text style={styles.requirementText}>Mayúsculas y minúsculas</Text>
           </View>
           <View style={styles.requirement}>
             <Feather
-              name={/\d/.test(password) ? "check-circle" : "circle"}
+              name={hasNumber ? "check-circle" : "circle"}
               size={14}
-              color={/\d/.test(password) ? "#00E074" : "#999"}
+              color={hasNumber ? "#00E074" : "#999"}
             />
             <Text style={styles.requirementText}>Al menos un número</Text>
+          </View>
+          <View style={styles.requirement}>
+            <Feather
+              name={hasSpecialChar ? "check-circle" : "circle"}
+              size={14}
+              color={hasSpecialChar ? "#00E074" : "#999"}
+            />
+            <Text style={styles.requirementText}>
+              Al menos un caracter especial
+            </Text>
           </View>
         </View>
       </View>

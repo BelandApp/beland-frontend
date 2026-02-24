@@ -21,7 +21,13 @@ export const useCatalogCart = () => {
       const imageField =
         (product as any).image_url || (product as any).image || "";
       setAddingProductId(product.id);
-
+      if (product.stock < 1) {
+        notify.error({
+          message: "Nos quedamos sin stock",
+          message2: "Lo sentimos",
+        });
+        return;
+      }
       addProduct({
         id: product.id,
         name: product.name,
@@ -31,10 +37,14 @@ export const useCatalogCart = () => {
       });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setAddingProductId(null);
-      notify.cartItem({ message: "Producto agregado al carrito",message2:"Ir al carrito", onConfirm: () => setShowCart(true) });
+      notify.cartItem({
+        message: "Producto agregado al carrito",
+        message2: "Ir al carrito",
+        onConfirm: () => setShowCart(true),
+      });
       setIsSyncing(false);
     },
-    [canPerformAction]
+    [canPerformAction],
   );
 
   // Abrir/cerrar carrito

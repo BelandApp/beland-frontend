@@ -34,6 +34,7 @@ interface CustomInputProps extends TextInputProps {
   textColor?: string;
   /** Color del placeholder del input (override). Si no se provea, se usa el del variant o negro */
   placeholderTextColor?: string;
+  required?: boolean;
 }
 
 export const CustomInput: React.FC<CustomInputProps> = ({
@@ -49,6 +50,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
   icon,
   textColor,
   placeholderTextColor,
+  required,
   ...props
 }) => {
   const selectedVariant = variantStyles[variant];
@@ -163,6 +165,9 @@ export const CustomInput: React.FC<CustomInputProps> = ({
             />
           ))}
         {icon && icon}
+        {required && !value && (
+          <Text className="text-red-500 self-start text-lg pr-1">*</Text>
+        )}
       </Animated.View>
       <View style={InputStyles.errorContainer}>
         {error && <Text style={InputStyles.textError}>{error}</Text>}

@@ -197,7 +197,7 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
 
       console.log(
         "[OrdersStoreAPI] Local cart has items:",
-        cartState.items.length
+        cartState.items.length,
       );
       console.log("[OrdersStoreAPI] Local cart products:", cartState.items);
 
@@ -206,10 +206,13 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
       // Step 1: Get current cart from backend
       const cart = await CartService.getCart();
       console.log("[OrdersStoreAPI] Backend cart ID:", cart.id);
-      console.log("[OrdersStoreAPI] Backend cart items:", cart.items);
+      console.log(
+        "[OrdersStoreAPI] Backend cart items:",
+        JSON.stringify(cart.items, null, 2),
+      );
       console.log(
         "[OrdersStoreAPI] Backend cart total_items:",
-        cart.total_items
+        cart.total_items,
       );
 
       // Step 1.5: If backend cart is empty but local cart has items, sync them
@@ -218,7 +221,7 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
         cartState.items.length > 0
       ) {
         console.log(
-          "[OrdersStoreAPI] Backend cart is empty, syncing local items to server..."
+          "[OrdersStoreAPI] Backend cart is empty, syncing local items to server...",
         );
 
         try {
@@ -226,7 +229,7 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
           for (const localProduct of cartState.items) {
             console.log(
               "[OrdersStoreAPI] Syncing product to server:",
-              localProduct
+              localProduct,
             );
             await CartService.addToCart({
               product_id: localProduct.id,
@@ -238,7 +241,7 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
           const updatedCart = await CartService.getCart();
           console.log(
             "[OrdersStoreAPI] Cart after sync - items:",
-            updatedCart.items?.length || 0
+            updatedCart.items?.length || 0,
           );
 
           if (!updatedCart.items || updatedCart.items.length === 0) {
@@ -250,10 +253,10 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
         } catch (syncError) {
           console.error(
             "[OrdersStoreAPI] Failed to sync cart items:",
-            syncError
+            syncError,
           );
           throw new Error(
-            "No se pudieron sincronizar los items del carrito con el servidor"
+            "No se pudieron sincronizar los items del carrito con el servidor",
           );
         }
       }
@@ -261,20 +264,19 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
       // Validate backend cart has items after potential sync
       if (!cart.items || cart.items.length === 0) {
         throw new Error(
-          "El carrito del servidor está vacío. Agregue productos antes de crear la orden."
+          "El carrito del servidor está vacío. Agregue productos antes de crear la orden.",
         );
       }
 
       // Step 2: Create order directly from the user's existing cart
       console.log(
         "[OrdersStoreAPI] Calling OrderService.createOrder with cartId:",
-        cart.id
+        cart.id,
       );
 
       // Get current user ID from auth store (for validation only, backend gets it from JWT)
-    
-      const token = TokenService.getToken()
 
+      const token = TokenService.getToken();
 
       if (!token) {
         console.error("[OrdersStoreAPI] User not authenticated");
@@ -295,7 +297,7 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
 
       console.log(
         "[OrdersStoreAPI] orderToSave (newOrder.order || newOrder):",
-        orderToSave
+        orderToSave,
       );
 
       // Convert date strings to Date objects
@@ -311,7 +313,7 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
         }
         if (orderToSave.estimated_delivery) {
           orderToSave.estimatedDelivery = new Date(
-            orderToSave.estimated_delivery
+            orderToSave.estimated_delivery,
           );
         }
 
@@ -364,7 +366,7 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
       // Diagnostic: log the response returned by OrderService
       console.log(
         "[OrdersStoreAPI] OrderService.createOrder returned:",
-        orderToSave
+        orderToSave,
       );
 
       // Clear the local cart after successful order creation
@@ -379,13 +381,13 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
           const serverItems = cartSyncResult.items || [];
           // Should be empty since backend cleared it
           console.log(
-            `🔄 Store API: Cart synced - server has ${serverItems.length} items (should be 0)`
+            `🔄 Store API: Cart synced - server has ${serverItems.length} items (should be 0)`,
           );
         }
       } catch (syncError) {
         console.log(
           "⚠️ Store API: Cart sync failed (non-critical):",
-          syncError
+          syncError,
         );
       }
 
@@ -448,7 +450,7 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
           try {
             patched.__attached_fallback = true;
             console.log(
-              "[OrdersStoreAPI] Forced attach of deliveryAddress to newOrder before saving to store (__attached_fallback = true)"
+              "[OrdersStoreAPI] Forced attach of deliveryAddress to newOrder before saving to store (__attached_fallback = true)",
             );
           } catch (e) {}
           // update orderToSave variable with patched
@@ -457,7 +459,7 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
       } catch (e) {
         console.error(
           "[OrdersStoreAPI] Could not attach fallback deliveryAddress to newOrder:",
-          e
+          e,
         );
       }
 
@@ -493,13 +495,13 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
   // Load user orders from API
   loadUserOrders: async (
     page: number = 1,
-    limit: number = 10
+    limit: number = 10,
   ): Promise<Order[]> => {
     set({ isLoading: true, error: undefined });
 
     try {
       console.log(
-        `🌐 Store API: Loading user orders from API (page ${page}, limit ${limit})...`
+        `🌐 Store API: Loading user orders from API (page ${page}, limit ${limit})...`,
       );
       const response = await OrderService.getUserOrders({ page, limit });
       // TODO: Map API response to store types - temporary conversion
@@ -539,7 +541,7 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
           : undefined,
         subtotal: parseFloat(apiOrder.subtotal_amount) || 0,
         status: mapBackendStatusToFrontend(
-          apiOrder.status?.code || apiOrder.status
+          apiOrder.status?.code || apiOrder.status,
         ),
         createdAt: apiOrder.created_at
           ? new Date(apiOrder.created_at)
@@ -567,17 +569,18 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
       const orderCounts = {
         pending: allOrders.filter(
           (o: any) =>
-            mapBackendStatusToFrontend(o.status?.code || o.status) === "pending"
+            mapBackendStatusToFrontend(o.status?.code || o.status) ===
+            "pending",
         ).length,
         delivered: allOrders.filter(
           (o: any) =>
             mapBackendStatusToFrontend(o.status?.code || o.status) ===
-            "delivered"
+            "delivered",
         ).length,
         cancelled: allOrders.filter(
           (o: any) =>
             mapBackendStatusToFrontend(o.status?.code || o.status) ===
-            "cancelled"
+            "cancelled",
         ).length,
       };
 
@@ -597,7 +600,7 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
         "✅ Store API: User orders loaded:",
         orders.length,
         "Total:",
-        totalOrders
+        totalOrders,
       );
       return orders;
     } catch (error) {
@@ -654,7 +657,7 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
           : undefined,
         subtotal: parseFloat(apiOrder.subtotal_amount) || 0,
         status: mapBackendStatusToFrontend(
-          apiOrder.status?.code || apiOrder.status
+          apiOrder.status?.code || apiOrder.status,
         ),
         createdAt: apiOrder.created_at
           ? new Date(apiOrder.created_at)
@@ -691,7 +694,7 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
   // Confirm delivery via API
   confirmDelivery: async (
     orderId: string,
-    notes?: string
+    notes?: string,
   ): Promise<boolean> => {
     set({ isLoading: true, error: undefined });
 
@@ -699,7 +702,7 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
       console.log("🌐 Store API: Confirming delivery via API:", orderId);
       const updatedOrder = await OrderService.updateOrderStatus(
         orderId,
-        "delivered"
+        "delivered",
       );
 
       if (updatedOrder) {
@@ -731,7 +734,7 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
     try {
       console.log(
         "🌐 Store API: User confirming reception (local update):",
-        orderId
+        orderId,
       );
 
       // Note: The backend marks orders as delivered via the delivery person with a code.
@@ -746,7 +749,7 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
                 // User has acknowledged receipt
                 // Could add a local flag here if needed: userConfirmedReceipt: true
               }
-            : order
+            : order,
         );
 
         const newState = {
@@ -779,7 +782,7 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
   // Cancel order via API (admin or user depending on permissions)
   cancelOrderApi: async (
     orderId: string,
-    reason?: string
+    reason?: string,
   ): Promise<boolean> => {
     set({ isLoading: true, error: undefined });
 
@@ -821,7 +824,7 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
               deliveredAt:
                 status === "delivered" ? new Date() : order.deliveredAt,
             }
-          : order
+          : order,
       );
 
       const newState = {
@@ -846,7 +849,7 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
         ...apiOrder,
         // Map status from backend code to frontend code
         status: mapBackendStatusToFrontend(
-          apiOrder.status?.code || apiOrder.status
+          apiOrder.status?.code || apiOrder.status,
         ),
         // Map address to deliveryAddress
         deliveryAddress: apiOrder.address
@@ -904,7 +907,7 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
       };
 
       const updatedOrders = state.orders.map((order) =>
-        order.id === mappedOrder.id ? mappedOrder : order
+        order.id === mappedOrder.id ? mappedOrder : order,
       );
 
       // If order doesn't exist in local state, add it
@@ -938,15 +941,15 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
         it.price !== undefined
           ? it.price
           : it.unit_price !== undefined
-          ? parseFloat(String(it.unit_price))
-          : undefined;
+            ? parseFloat(String(it.unit_price))
+            : undefined;
 
       const subtotal =
         it.subtotal !== undefined
           ? it.subtotal
           : it.total_price !== undefined
-          ? parseFloat(String(it.total_price))
-          : undefined;
+            ? parseFloat(String(it.total_price))
+            : undefined;
 
       // Preserve other fields, but prefer 'name'/'image' if present
       return {
@@ -1025,7 +1028,7 @@ export const useOrdersStoreAPI = create<OrdersStore>((set, get) => ({
           (sum, o) =>
             sum +
             (typeof o.total === "number" ? o.total : parseFloat(o.total) || 0),
-          0
+          0,
         ),
     };
   },

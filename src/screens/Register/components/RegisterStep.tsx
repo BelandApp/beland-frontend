@@ -6,7 +6,7 @@ import { styles } from "../styles";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import Feather from "react-native-vector-icons/Feather";
 
-type RegisterStepProps = {
+export type RegisterStepProps = {
   formData: RegisterFormData;
   onChangeText: (name: string, value: string) => void;
   handleRegister: () => void;
@@ -21,8 +21,6 @@ const RegisterStep: React.FC<RegisterStepProps> = ({
   isLoading,
   errors,
 }) => {
-  const { navigate } = useCustomNavigation();
-
   // Password strength indicator
   const getPasswordStrength = (password: string) => {
     if (!password) return { strength: 0, label: "", color: "#E0E0E0" };

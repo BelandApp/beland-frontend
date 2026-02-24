@@ -1,5 +1,3 @@
-
-
 import { ArrowDown, ArrowLeft } from "lucide-react-native";
 import { View, Text } from "react-native";
 import { OrderDeliveryModalStyles as styles } from "./styles";
@@ -13,35 +11,37 @@ type headerStepsType = {
   setStep: Dispatch<SetStateAction<DeliveryStep>>;
   onBack: () => void;
 };
-export const HeaderSteps: React.FC<headerStepsType> = ({step, onBack, setStep}) => {
+export const HeaderSteps: React.FC<headerStepsType> = ({
+  step,
+  onBack,
+  setStep,
+}) => {
   return (
     <View style={styles.header}>
-      <MaterialCommunityIcons
-        name="truck-delivery"
-        size={32}
-        color={colors.belandOrange}
-      />
+      {step !== "select" && (
+        <Button
+          title="cerrar"
+          variant="onlyIcon"
+          icon={<ArrowLeft color={colors.belandOrange} />}
+          onPress={() => setStep("select")}
+        />
+      )}
+      {step === "select" && (
+        <MaterialCommunityIcons
+          name="truck-delivery"
+          size={32}
+          color={colors.belandOrange}
+        />
+      )}
       <Text style={styles.title}>
         {step === "select"
-          ? "Seleccionar dirección de entrega"
+          ? "Dirección de entrega"
           : step === "form"
-          ? "Nueva dirección de entrega"
-          : step === "processing"
-          ? "Confirmar pedido"
-          : ""}
+            ? "Nueva dirección"
+            : step === "processing"
+              ? "Confirmar pedido"
+              : ""}
       </Text>
-      <Button
-        title="cerrar"
-        variant="onlyIcon"
-        icon={
-          step === "form" ? (
-            <ArrowLeft color={colors.belandOrange} />
-          ) : (
-            <ArrowDown color={colors.belandOrange} />
-          )
-        }
-        onPress={() => (step === "form" ? setStep("select") : onBack())}
-      />
     </View>
   );
 };

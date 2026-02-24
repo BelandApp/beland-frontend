@@ -19,7 +19,7 @@ export const styles = StyleSheet.create({
     gap: 8,
     height: Platform.OS === "web" ? "auto" : undefined,
     borderRadius: 16,
-    minWidth: width > 600 ? 600 : width - 20,
+    width: width > 600 ? 600 : width - 20,
     backgroundColor: "rgba(255,255,255,0.95)",
     shadowColor: "#000",
     shadowOpacity: 0.04,

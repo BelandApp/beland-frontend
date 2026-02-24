@@ -3,13 +3,20 @@
  * Handles wallets, transfers, recharges, and payment amounts
  */
 
-import { CoreApiService, PaginatedResponse } from "./core/ApiService";
+import {
+  adaptSequelizePagination,
+  CoreApiService,
+  PaginatedResponse,
+} from "./core/ApiService";
+import { Transaction } from "./TransactionApiService";
 
 // Wallet Types
 export interface Wallet {
   id: string;
   user_id: string;
   becoin_balance: number;
+  becoin_green: number;
+  becoin_orange: number;
   locked_balance: number;
   address?: string;
   alias?: string;
@@ -468,6 +475,7 @@ class WalletServiceClass extends CoreApiService {
     payment_account_id: string;
     amount_usd: number;
     transfer_id: string;
+    ticket_image_url: string;
   }): Promise<any> {
     // Note: Endpoint is /user-recharge, handled by UserRechargeController
     // Since this service base path is /wallets, we need to use directApiCall or absolute path if request supports it.
@@ -498,8 +506,9 @@ class WalletServiceClass extends CoreApiService {
       params.append("wallet_id", walletId);
     }
 
-    // Use direct API call since transactions endpoint is not under /wallets
-    return this.directApiCall(`transactions?${params.toString()}`);
+    const resp = await this.directApiCall(`transactions?${params.toString()}`);
+
+    return adaptSequelizePagination<Transaction>(resp, page, limit);
   }
 
   /**

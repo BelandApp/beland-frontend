@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
+  FlatList,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { TransactionCard } from "./components/TransactionCard";
@@ -30,6 +31,13 @@ export default function WalletHistoryScreen() {
     { id: "pago", label: "Compras", icon: "credit-card-minus" },
   ];
 
+  const renderItemTransactions = ({ item }: { item: Transaction }) => {
+    return (
+      <Pressable onPress={() => setModalOpen(item)}>
+        <TransactionCard transaction={item} />
+      </Pressable>
+    );
+  };
   const filteredTransactions = (transactions ?? []).filter((transaction) => {
     const matchesSearch = transaction.description
       .toLowerCase()
@@ -111,16 +119,11 @@ export default function WalletHistoryScreen() {
             </Text>
           </View>
         ) : (
-          <View className="pb-4">
-            {filteredTransactions.map((transaction) => (
-              <Pressable
-                onPress={() => setModalOpen(transaction)}
-                key={transaction.id}
-              >
-                <TransactionCard transaction={transaction} />
-              </Pressable>
-            ))}
-          </View>
+          <FlatList
+            data={transactions}
+            renderItem={renderItemTransactions}
+            keyExtractor={(item) => item.id}
+          />
         )}
       </ScrollView>
 

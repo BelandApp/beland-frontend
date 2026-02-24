@@ -47,6 +47,44 @@ export interface RequestOptions extends RequestInit {
   skipJsonContentType?: boolean;
 }
 
+// Helper Sequelize Pagination Adapter
+
+export function adaptSequelizePagination<T>(
+  resp: any,
+  page: number,
+  limit: number,
+): PaginatedResponse<T> {
+  const payload = resp?.data ?? resp;
+
+  // Caso Sequelize raw: [rows, count]
+  if (Array.isArray(payload) && Array.isArray(payload[0])) {
+    const rows = payload[0];
+    const total = Number(payload[1]) || rows.length;
+
+    return {
+      data: rows,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  // Caso API bien formada
+  if (payload?.data && Array.isArray(payload.data)) {
+    return payload;
+  }
+
+  // Fallback seguro
+  return {
+    data: [],
+    total: 0,
+    page,
+    limit,
+    totalPages: 0,
+  };
+}
+
 export class CoreApiService {
   protected baseUrl: string;
   private static _inFlightRequests: Map<string, Promise<any>> = new Map();
@@ -177,15 +215,15 @@ export class CoreApiService {
             `📡 Response Status: ${response.status} ${response.statusText}`,
           );
 
-          let data;
-          try {
-            data = await response.json();
-            console.log(`📦 Response Data:`, data);
-          } catch (jsonError) {
-            console.log(`⚠️ No JSON response or empty body`);
-            data = null;
-          }
+          let data: any = null;
 
+          const contentType = response.headers.get("content-type");
+
+          if (contentType?.includes("application/json")) {
+            data = await response.json();
+          } else {
+            data = await response.text();
+          }
           if (!response.ok) {
             console.error(`❌ API Error: ${response.status}`, data);
 
@@ -303,10 +341,17 @@ export class CoreApiService {
     data?: any,
     options: RequestOptions = {},
   ): Promise<T> {
+    const isFormData =
+      typeof FormData !== "undefined" && data instanceof FormData;
+
     return this.request<T>(endpoint, {
       ...options,
       method: "PUT",
-      body: data ? JSON.stringify(data) : undefined,
+      body: isFormData ? data : data ? JSON.stringify(data) : undefined,
+      headers: {
+        ...(options.headers || {}),
+        ...(isFormData ? {} : { "Content-Type": "application/json" }),
+      },
     });
   }
 
@@ -318,10 +363,17 @@ export class CoreApiService {
     data?: any,
     options: RequestOptions = {},
   ): Promise<T> {
+    const isFormData =
+      typeof FormData !== "undefined" && data instanceof FormData;
+
     return this.request<T>(endpoint, {
       ...options,
       method: "PATCH",
-      body: data ? JSON.stringify(data) : undefined,
+      body: isFormData ? data : data ? JSON.stringify(data) : undefined,
+      headers: {
+        ...(options.headers || {}),
+        ...(isFormData ? {} : { "Content-Type": "application/json" }),
+      },
     });
   }
 
