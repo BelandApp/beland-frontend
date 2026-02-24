@@ -7,7 +7,7 @@ interface CustomPickerProps extends Omit<
   PickerProps,
   "selectedValue" | "onValueChange"
 > {
-  label?: string;
+  label: string;
   value: PickerValue;
   options: { label: string; value: PickerValue }[];
   onChange: (value: PickerValue, index: number) => void;
@@ -37,10 +37,6 @@ const CustomPicker: React.FC<CustomPickerProps> = ({
         overflow: "hidden",
       }}
     >
-      {label && (
-        <Text style={{ marginBottom: 6, fontWeight: "500" }}>{label}</Text>
-      )}
-
       <Picker
         selectedValue={value}
         mode="dropdown"
@@ -52,6 +48,7 @@ const CustomPicker: React.FC<CustomPickerProps> = ({
         }}
         {...pickerProps}
       >
+        <Picker.Item key="nulleable" label={label} value={null} />
         {options.map((op, index) => (
           <Picker.Item
             key={`${op.value ?? "null"}-${index}`}
