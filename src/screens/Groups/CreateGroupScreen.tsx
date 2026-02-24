@@ -102,14 +102,25 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
       </View>
     );
   }
-
+  const handleBeforeClose = async () => {
+    const result = await new Promise<boolean>((resolve) => {
+      notify.confirm({
+        message: "¿Seguro que quieres salir? Perderás tu progreso",
+        onConfirm: () => resolve(true),
+        onCancel: () => resolve(false),
+      });
+    });
+    if (result) {
+      navigate("MainTabs", { screen: "Groups" });
+    } else return;
+  };
   return (
     <View className="flex-1 bg-background-light">
       {/* Header */}
       <ThemedHeader
         canGoBack
         title="Crear Grupo"
-        onBackPress={() => navigate("MainTabs", { screen: "Groups" })}
+        onBackPress={handleBeforeClose}
       />
 
       <ScrollView
