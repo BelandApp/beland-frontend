@@ -138,7 +138,7 @@ export const DatePickerInput: React.FC<DatePickerInputProps> = ({
 
           {Platform.OS === "web" ? (
             <input
-              type="date"
+              type={isFocused ? "date" : undefined}
               value={formatDateWeb(value)}
               onChange={handleWebChange}
               min={minimumDate ? formatDateWeb(minimumDate) : undefined}
