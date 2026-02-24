@@ -83,6 +83,11 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
               : "Sin categoría"}
           </Text>
         </View>
+        <Text
+          className={`${product.stock === 0 ? "text-red-500" : " text-gray-600"}`}
+        >
+          {product.stock === 0 ? "Sin stock" : product.stock}
+        </Text>
       </View>
       <View style={styles.mobileCardActions}>
         <TouchableOpacity
@@ -191,7 +196,7 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
                     : styles.stockTextOutOfStock,
                 ]}
               >
-                {product.inventory_count || 0}
+                {product.stock || 0}
               </Text>
             </View>
           </View>

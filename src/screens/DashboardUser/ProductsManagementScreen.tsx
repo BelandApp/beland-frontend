@@ -1,15 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-  TextInput,
-  Modal,
-  useWindowDimensions,
-} from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { ProductService } from "@/services/core";
 import type {
@@ -22,7 +12,12 @@ import { ProductFormModal } from "./components/products/ProductFormModal";
 import { ProductFilters } from "./components/products/ProductFilters";
 import { useCustomNavigation, useNotify } from "@/hooks";
 import { useResponsiveLayout } from "@/hooks";
-import { Button, SearchBarInput, ThemedHeader } from "src/components";
+import {
+  Button,
+  CustomLoader,
+  SearchBarInput,
+  ThemedHeader,
+} from "src/components";
 import { colors } from "src/design-system";
 
 export const ProductsManagementScreen: React.FC = () => {
@@ -113,11 +108,6 @@ export const ProductsManagementScreen: React.FC = () => {
     setFilters((prev) => ({ ...prev, name: searchText, page: 1 }));
   };
 
-  const handleClearSearch = () => {
-    setSearchText("");
-    setFilters((prev) => ({ ...prev, name: undefined, page: 1 }));
-  };
-
   const handleCreateProduct = () => {
     setEditingProduct(null);
     setShowFormModal(true);
@@ -202,12 +192,12 @@ export const ProductsManagementScreen: React.FC = () => {
   };
 
   const totalPages = Math.ceil(totalProducts / (filters.limit || 10));
-
+  console.log(products);
   return (
     <View style={styles.container}>
       {/* Header */}
       <ThemedHeader
-        title="Gestion de productos"
+        title="Gestión de productos"
         canGoBack
         onBackPress={() => navigate("UserDashboardScreen")}
         subtitle={`${totalProducts} productos en total`}
@@ -233,35 +223,6 @@ export const ProductsManagementScreen: React.FC = () => {
       />
 
       {/* Búsqueda */}
-      {/* <View
-        style={[
-          styles.searchContainer,
-          isMobile && styles.searchContainerMobile,
-        ]}
-      >
-        <MaterialCommunityIcons
-          name="magnify"
-          size={20}
-          color="#9ca3af"
-          style={styles.searchIcon}
-        />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Buscar por nombre..."
-          value={searchText}
-          onChangeText={setSearchText}
-          onSubmitEditing={handleSearch}
-        />
-        {searchText.length > 0 && (
-          <TouchableOpacity onPress={handleClearSearch}>
-            <MaterialCommunityIcons
-              name="close-circle"
-              size={20}
-              color="#9ca3af"
-            />
-          </TouchableOpacity>
-        )}
-      </View> */}
       <SearchBarInput
         searchQuery={searchText}
         onSearchChange={setSearchText}
@@ -281,10 +242,7 @@ export const ProductsManagementScreen: React.FC = () => {
 
       {/* Contenido */}
       {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#7DA244" />
-          <Text style={styles.loadingText}>Cargando productos...</Text>
-        </View>
+        <CustomLoader title="Cargando productos" />
       ) : products.length === 0 ? (
         <View style={styles.emptyContainer}>
           <MaterialCommunityIcons

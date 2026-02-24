@@ -44,6 +44,7 @@ export interface CreateProductDto {
   price_becoin?: number;
   image_url?: string;
   category_id?: string;
+  quantity: number;
 }
 
 export interface UpdateProductDto {
