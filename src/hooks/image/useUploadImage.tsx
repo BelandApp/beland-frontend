@@ -8,7 +8,7 @@ type NativeImage = {
   type: string;
 };
 
-type UploadImage = WebImage | NativeImage;
+export type UploadImage = WebImage | NativeImage;
 
 import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
