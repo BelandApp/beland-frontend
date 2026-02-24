@@ -1,6 +1,74 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
 import { WithdrawService, WithdrawAccountType } from "services";
+
+/* ---------------- OPTIONS ---------------- */
+
+const ALLOW_COUNTRIES_OPTIONS = ["ECUADOR", "ARGENTINA"] as const;
+export type AllowCountries = (typeof ALLOW_COUNTRIES_OPTIONS)[number] | null;
+
+export const countriesOptions = ALLOW_COUNTRIES_OPTIONS.map((co) => ({
+  label: co,
+  value: co,
+}));
+
+const ALLOW_DOCUMENT_OPTIONS = [
+  "DNI",
+  "CUIT",
+  "CUIL",
+  "CEDULA",
+  "RUC",
+  "NIT",
+] as const;
+
+export type AllowDocuments = (typeof ALLOW_DOCUMENT_OPTIONS)[number] | null;
+
+export const documentOptions = ALLOW_DOCUMENT_OPTIONS.map((doc) => ({
+  label: doc,
+  value: doc,
+}));
+
+const ALLOW_CURRENCY_OPTIONS = ["ARS", "USD", "COP"] as const;
+export type AllowCurrency = (typeof ALLOW_CURRENCY_OPTIONS)[number] | null;
+
+export const currencyOptions = ALLOW_CURRENCY_OPTIONS.map((curr) => ({
+  label: curr,
+  value: curr,
+}));
+
+/* ---------------- FORM TYPE ---------------- */
+
+type FormState = {
+  selectedType: string;
+  holderName: string;
+  holderDocument: string;
+  holderDocumentType: AllowDocuments;
+  bankName: string;
+  accountNumber: string;
+  country: AllowCountries;
+  currency: AllowCurrency;
+  cbu: string;
+  alias: string;
+  provider: string;
+  phone: string;
+};
+
+const initialForm: FormState = {
+  selectedType: "",
+  holderName: "",
+  holderDocument: "",
+  holderDocumentType: null,
+  bankName: "",
+  accountNumber: "",
+  country: null,
+  currency: null,
+  cbu: "",
+  alias: "",
+  provider: "",
+  phone: "",
+};
+
+/* ---------------- HOOK OPTIONS ---------------- */
 
 type UseAddWithdrawAccountOpts = {
   visible?: boolean;
@@ -8,46 +76,31 @@ type UseAddWithdrawAccountOpts = {
   onClose?: () => void;
 };
 
+/* ---------------- HOOK ---------------- */
+
 function useAddWithdrawAccount(opts: UseAddWithdrawAccountOpts = {}) {
   const { visible, onAdd, onClose } = opts;
 
-  // Loading / data
   const [accountTypes, setAccountTypes] = useState<WithdrawAccountType[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Form state
-  const [selectedType, setSelectedType] = useState("");
-  const [holderName, setHolderName] = useState("");
-  const [holderDocument, setHolderDocument] = useState("");
-  const [holderDocumentType, setHolderDocumentType] = useState<
-    "DNI" | "CUIT" | "CUIL" | "CEDULA" | "RUC" | "NIT" | ""
-  >("");
-  const [bankCode, setBankCode] = useState("");
-  const [bankName, setBankName] = useState("");
-  const [accountNumber, setAccountNumber] = useState("");
-  const [country, setCountry] = useState<
-    "ARGENTINA" | "COLOMBIA" | "ECUADOR" | ""
-  >("");
-  const [currency, setCurrency] = useState<"ARS" | "USD" | "COP" | "">("");
-  const [cbu, setCbu] = useState("");
-  const [alias, setAlias] = useState("");
-  const [provider, setProvider] = useState("");
-  const [phone, setPhone] = useState("");
-
-  // Errors
+  const [form, setForm] = useState<FormState>(initialForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  /* -------- LOAD ACCOUNT TYPES -------- */
+
   useEffect(() => {
-    if (visible) loadAccountTypes();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (!visible) return;
+    loadAccountTypes();
   }, [visible]);
 
   const loadAccountTypes = async () => {
     try {
       setLoading(true);
       const resp = await WithdrawService.getWithdrawAccountTypes();
-      setAccountTypes(Array.isArray(resp) ? resp : []);
+      const respArray = Array.isArray(resp) ? resp[0] : [];
+      setAccountTypes(respArray);
     } catch (err) {
       console.error(err);
       Alert.alert("Error", "No se pudieron cargar los tipos de cuenta");
@@ -56,203 +109,118 @@ function useAddWithdrawAccount(opts: UseAddWithdrawAccountOpts = {}) {
     }
   };
 
+  /* -------- HELPERS -------- */
+
+  const setField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
   const resetForm = () => {
-    setHolderName("");
-    setHolderDocument("");
-    setHolderDocumentType("");
-    setSelectedType("");
-    setBankCode("");
-    setBankName("");
-    setAccountNumber("");
-    setCountry("");
-    setCurrency("");
-    setCbu("");
-    setAlias("");
-    setProvider("");
-    setPhone("");
+    setForm(initialForm);
     setErrors({});
   };
 
-  const validateForm = (overrides?: {
-    country?: string;
-    currency?: string;
-    holderDocumentType?: string;
-    selectedType?: string;
-    cbu?: string;
-    alias?: string;
-  }) => {
+  /* -------- OPTIONS PARA PICKER -------- */
+
+  const accountTypeOptions = useMemo(
+    () =>
+      accountTypes.map((op) => ({
+        label: op.name,
+        value: op.id,
+      })),
+    [accountTypes],
+  );
+
+  /* -------- VALIDATION -------- */
+
+  const validateForm = () => {
     const e: Record<string, string> = {};
 
-    const _holderName = holderName?.trim() || "";
-    const _holderDocument =
-      holderDocument?.replace(/[^0-9]/g, "")?.trim() || "";
-    const _bankCode = bankCode?.trim() || "";
-    const _bankName = bankName?.trim() || "";
-    const _cbu = (overrides?.cbu ?? cbu)?.replace(/[^0-9]/g, "")?.trim() || "";
-    const _alias = (overrides?.alias ?? alias)?.trim() || "";
-    const _provider = provider?.trim() || "";
-    const _phone = phone?.trim() || "";
+    const acctType = accountTypes.find((t) => t.id === form.selectedType)?.code;
 
-    const countryVal = overrides?.country ?? country;
-    const currencyVal = overrides?.currency ?? currency;
-    const holderDocTypeVal =
-      overrides?.holderDocumentType ?? holderDocumentType;
-    const selectedTypeVal = overrides?.selectedType ?? selectedType;
+    const holderDocumentClean = form.holderDocument.replace(/\D/g, "");
 
-    if (!selectedTypeVal) e.selectedType = "Seleccione el tipo de cuenta";
-    if (!_holderName) e.holderName = "Nombre del titular requerido";
-    if (!_holderDocument) e.holderDocument = "Documento requerido";
-    else if (_holderDocument.length < 7)
+    if (!form.selectedType) e.selectedType = "Seleccione el tipo de cuenta";
+    if (!form.holderName.trim()) e.holderName = "Nombre requerido";
+
+    if (!holderDocumentClean) e.holderDocument = "Documento requerido";
+    else if (holderDocumentClean.length < 7)
       e.holderDocument = "Debe tener al menos 7 dígitos";
-    if (!holderDocTypeVal) e.holderDocumentType = "Tipo de documento requerido";
 
-    // Si es cuenta bancaria
-    const acctCode =
-      accountTypes.find((t) => t.id === selectedTypeVal)?.code || "";
-    if (acctCode && ["BANK", "CORRIENTE", "AHORRO"].includes(acctCode)) {
-      if (!_bankCode) e.bankCode = "Código de banco requerido";
-      if (!_bankName) e.bankName = "Nombre de banco requerido";
-      // CBU obligatorio para Argentina
-      if (countryVal === "ARGENTINA") {
-        if (!_cbu) e.cbu = "CBU requerido para Argentina";
-        else if (_cbu.length !== 22)
-          e.cbu = "El CBU debe tener exactamente 22 dígitos";
+    if (!form.holderDocumentType)
+      e.holderDocumentType = "Tipo de documento requerido";
+
+    if (!form.country) e.country = "Seleccione país";
+    if (!form.currency) e.currency = "Seleccione moneda";
+
+    if (acctType === "BANK") {
+      if (!form.bankName.trim()) e.bankName = "Banco requerido";
+
+      if (form.country === "ARGENTINA") {
+        const cbuClean = form.cbu.replace(/\D/g, "");
+        if (!cbuClean) e.cbu = "CBU requerido";
+        else if (cbuClean.length !== 22) e.cbu = "El CBU debe tener 22 dígitos";
       }
     }
 
-    if (!countryVal) e.country = "Seleccione país";
-    if (
-      (countryVal === "ECUADOR" || countryVal === "COLOMBIA") &&
-      !accountNumber?.trim()
-    ) {
-      e.accountNumber = "Número de cuenta requerido";
-    }
-    if (!currencyVal) e.currency = "Seleccione moneda";
-
-    // BANK: necesita CBU o Alias cuando no es Argentina
-    if (acctCode === "BANK") {
-      if (countryVal !== "ARGENTINA") {
-        if (!_cbu && !_alias) e.cbu = "Ingrese CBU o Alias";
-        else if (_cbu && _cbu.length !== 22)
-          e.cbu = "El CBU debe tener exactamente 22 dígitos";
-      }
-    }
-
-    // WALLET
-    if (acctCode === "WALLET") {
-      if (!_provider) e.provider = "Proveedor requerido";
-      if (!_phone) e.phone = "Teléfono requerido";
+    if (acctType === "WALLET") {
+      if (!form.provider.trim()) e.provider = "Proveedor requerido";
+      if (!form.phone.trim()) e.phone = "Teléfono requerido";
     }
 
     setErrors(e);
     return Object.keys(e).length === 0;
   };
 
-  const handleSubmit = async (overrides?: {
-    country?: string;
-    currency?: string;
-    holderDocumentType?: string;
-    selectedType?: string;
-    cbu?: string;
-    alias?: string;
-  }) => {
-    if (!validateForm(overrides)) return;
+  /* -------- SUBMIT -------- */
+
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+
     try {
       setSubmitting(true);
 
-      const _holderName = holderName?.trim() || "";
-      const _holderDocument =
-        holderDocument?.replace(/[^0-9]/g, "")?.trim() || "";
-      const _bankCode = bankCode?.trim() || "";
-      const _bankName = bankName?.trim() || "";
-      const _cbu =
-        (overrides?.cbu ?? cbu)?.replace(/[^0-9]/g, "")?.trim() || "";
-      const _alias = (overrides?.alias ?? alias)?.trim() || "";
-      const _provider = provider?.trim() || "";
-      const _phone = phone?.replace(/\D/g, "")?.trim() || "";
-
-      const countryVal = overrides?.country ?? country;
-      const currencyVal = overrides?.currency ?? currency;
-      const selectedTypeVal = overrides?.selectedType ?? selectedType;
-
       const payload: any = {
-        withdraw_account_type_id: selectedTypeVal,
-        country: countryVal,
-        currency: currencyVal,
-        // bankCode: _bankCode,
-        bankName: _bankName,
-        holderName: _holderName,
-        holderDocument: _holderDocument,
-        holderDocumentType: overrides?.holderDocumentType ?? holderDocumentType,
+        withdraw_account_type_id: form.selectedType,
+        country: form.country,
+        currency: form.currency,
+        bankName: form.bankName.trim(),
+        holderName: form.holderName.trim(),
+        holderDocument: form.holderDocument.replace(/\D/g, ""),
+        holderDocumentType: form.holderDocumentType,
       };
 
-      if (
-        (countryVal === "ECUADOR" || countryVal === "COLOMBIA") &&
-        accountNumber?.trim()
-      ) {
-        payload.accountNumber = accountNumber.trim();
-      }
-
-      if (_cbu) payload.cbu = _cbu;
-      if (_alias) payload.alias = _alias;
-
-      // WALLET fields
-      if (
-        accountTypes.find((t) => t.id === selectedTypeVal)?.code === "WALLET"
-      ) {
-        if (_provider) payload.provider = _provider;
-        if (_phone) payload.phone = _phone;
-      }
-
-      // eslint-disable-next-line no-console
-      console.log("createWithdrawAccount payload:", payload);
+      if (form.accountNumber) payload.accountNumber = form.accountNumber.trim();
+      if (form.cbu) payload.cbu = form.cbu.replace(/\D/g, "");
+      if (form.alias) payload.alias = form.alias.trim();
+      if (form.provider) payload.provider = form.provider.trim();
+      if (form.phone) payload.phone = form.phone.replace(/\D/g, "");
 
       await WithdrawService.createWithdrawAccount(payload);
+
       onAdd?.();
-      resetForm();
-      onClose?.();
+      setTimeout(() => {
+        resetForm();
+        onClose?.();
+      }, 3000);
     } catch (err: any) {
       console.error(err);
-      const message = err?.message || "No se pudo crear la cuenta";
-      Alert.alert("Error", message);
+      Alert.alert("Error", err?.message || "No se pudo crear la cuenta");
     } finally {
       setSubmitting(false);
     }
   };
 
+  /* -------- RETURN -------- */
+
   return {
     accountTypes,
+    accountTypeOptions,
     loading,
     submitting,
-    selectedType,
-    setSelectedType,
-    holderName,
-    setHolderName,
-    holderDocument,
-    setHolderDocument,
-    holderDocumentType,
-    setHolderDocumentType,
-    bankCode,
-    setBankCode,
-    bankName,
-    setBankName,
-    accountNumber,
-    setAccountNumber,
-    country,
-    setCountry,
-    currency,
-    setCurrency,
-    cbu,
-    setCbu,
-    alias,
-    setAlias,
-    provider,
-    setProvider,
-    phone,
-    setPhone,
+    form,
     errors,
-    setErrors,
-    validateForm,
+    setField,
     handleSubmit,
     resetForm,
   } as const;

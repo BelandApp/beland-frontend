@@ -13,23 +13,25 @@ import {
 // Withdraw Types
 export interface WithdrawAccount {
   id: string;
-  user_id: string;
-  withdraw_account_type_id: string;
-  owner_name: string;
-  holderName: string;
-  cbu?: string;
-  alias?: string;
-  provider?: string;
-  phone?: string;
-  is_active: boolean;
-  created_at: string;
-  currency?: number;
-  withdraw_account_type: WithdrawAccountType;
-  type?: WithdrawAccountType; // For backward compatibility
-  bankName: string;
-  holderDocument: string;
-  accountNumber: string;
   country: string;
+  currency?: number;
+  bankName: string;
+  withdraw_account_type: WithdrawAccountType;
+  withdraw_account_type_id: string;
+  accountNumber: string;
+  cbu: string | null;
+  alias: string | null;
+  holderName: string;
+  holderDocument: string;
+  holderDocumentType: string;
+  user_id: string;
+  is_active: boolean;
+  owner_name: string;
+  provider?: string;
+  created_at: string;
+  updated_at: string;
+  //
+  type?: WithdrawAccountType; // For backward compatibility
 }
 
 export interface WithdrawAccountType {
@@ -117,6 +119,7 @@ class WithdrawServiceClass extends CoreApiService {
   }
 
   /**
+   * @deprecated use getWithdrawsAccounts
    * Get specific withdraw account by ID
    */
   async getWithdrawAccount(id: string): Promise<WithdrawAccount> {
@@ -167,7 +170,7 @@ class WithdrawServiceClass extends CoreApiService {
   /**
    * Get all available account types
    */
-  async getWithdrawAccountTypes(): Promise<WithdrawAccountType[]> {
+  async getWithdrawAccountTypes(): Promise<[WithdrawAccountType[], number]> {
     return this.get(this.ENDPOINTS.WITHDRAW_ACCOUNT_TYPES);
   }
 
