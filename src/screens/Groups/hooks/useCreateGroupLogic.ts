@@ -129,15 +129,16 @@ export const useCreateGroupLogic = () => {
       // ===============================
       // 🖼️ CREAMOS CLOUDINARY URL
       // ===============================
-
-      const formData = new FormData();
-      appendToFormData(formData);
-
-      const imageUrl = await CloudinaryService.uploadImage(formData);
-      if (!imageUrl) {
-        notify.info({
-          message: "No pudimos procesar correctamente la imagen",
-        });
+      let imagenUrl = undefined;
+      if (image) {
+        const formData = new FormData();
+        appendToFormData(formData);
+        imagenUrl = await CloudinaryService.uploadImage(formData);
+        if (!imagenUrl) {
+          notify.info({
+            message: "No pudimos procesar correctamente la imagen",
+          });
+        }
       }
       // ===============================
       // CREAMOS GRUPO
@@ -149,7 +150,7 @@ export const useCreateGroupLogic = () => {
         payment_type_id: paymentTypeId,
         user_address_id: userAddressId,
         event_at: eventDate,
-        image_url: imageUrl,
+        image_url: imagenUrl ?? undefined,
       };
 
       const desc = description?.trim();

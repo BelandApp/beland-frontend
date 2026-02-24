@@ -65,6 +65,7 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
     isLoading,
     isLoadingData,
     isValid,
+    nameAvailable,
     // Actions
     createGroup,
   } = useCreateGroupLogic();
@@ -127,6 +128,7 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
                 value={groupName}
                 onChangeText={setGroupName}
                 label="Nombre del Grupo"
+                error={nameAvailable ? undefined : "Nombre ya ocupado"}
               />
               <DatePickerInput
                 value={eventDate}
