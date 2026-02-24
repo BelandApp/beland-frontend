@@ -46,7 +46,6 @@ export const WrapperModal: React.FC<WrapperModalProps> = ({
 
     onClose();
   };
-  console.log("Estado del carrito>", isOpen);
   return (
     <RBSheet
       ref={refRBSheet}
