@@ -291,14 +291,6 @@ const SuperAdminPanel: React.FC = () => {
       screen: "organizations",
     },
     {
-      id: "inventory",
-      title: "Inventario",
-      description: "Items y stock de productos",
-      icon: "IN",
-      color: "#5AC8FA",
-      screen: "inventory",
-    },
-    {
       id: "recycling",
       title: "Reciclaje",
       description: "Precios y métricas de reciclaje",
