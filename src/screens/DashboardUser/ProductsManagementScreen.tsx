@@ -233,35 +233,7 @@ export const ProductsManagementScreen: React.FC = () => {
       />
 
       {/* Búsqueda */}
-      {/* <View
-        style={[
-          styles.searchContainer,
-          isMobile && styles.searchContainerMobile,
-        ]}
-      >
-        <MaterialCommunityIcons
-          name="magnify"
-          size={20}
-          color="#9ca3af"
-          style={styles.searchIcon}
-        />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Buscar por nombre..."
-          value={searchText}
-          onChangeText={setSearchText}
-          onSubmitEditing={handleSearch}
-        />
-        {searchText.length > 0 && (
-          <TouchableOpacity onPress={handleClearSearch}>
-            <MaterialCommunityIcons
-              name="close-circle"
-              size={20}
-              color="#9ca3af"
-            />
-          </TouchableOpacity>
-        )}
-      </View> */}
+
       <SearchBarInput
         searchQuery={searchText}
         onSearchChange={setSearchText}

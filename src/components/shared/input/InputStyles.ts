@@ -15,7 +15,7 @@ export const InputStyles = StyleSheet.create({
     borderColor: "transparent",
   },
   errorContainer: {
-    minHeight: 25
+    minHeight: 25,
   },
   textError: {
     color: "red",
@@ -25,27 +25,11 @@ export const InputStyles = StyleSheet.create({
 });
 
 export const variantStyles = {
-  underline: {
-    container: {
-      borderBottomWidth: 2,
-      paddingBottom: Platform.OS === "web" ? 0 : 4,
-      backgroundColor: "transparent",
-      borderRadius: 0,
-    },
-    input: {
-      color: "white",
-      fontWeight: 200,
-    },
-    label: {
-      color: "white",
-    },
-  },
-
   filled: {
     container: {
       flexDirection: "row",
       alignItems: "center",
-      padding:0,
+      padding: 0,
       backgroundColor: "#fff",
       borderRadius: 12,
       shadowColor: "#000",
