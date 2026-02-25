@@ -11,22 +11,26 @@ import { LinearGradient } from "expo-linear-gradient";
 import { BeCoinIcon } from "../../../components/icons/BeCoinIcon";
 import { Ionicons } from "@expo/vector-icons";
 import { useCustomNavigation } from "src/hooks";
+import { WalletDataType } from "src/screens/Wallet/hooks/useWalletData";
 
 interface HeroSectionProps {
-  balance: number;
-  locked_balance?: number;
-  estimatedValue: string;
+  wallet: WalletDataType;
   isLoading: boolean;
 }
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
-  balance,
-  locked_balance,
-  estimatedValue,
+  wallet,
   isLoading,
 }) => {
   const [showBalance, setShowBalance] = useState(true);
   const { navigate } = useCustomNavigation();
+  const {
+    balance,
+    becoin_green,
+    becoin_orange,
+    locked_balance,
+    estimatedValue,
+  } = wallet;
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -83,15 +87,50 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         <View style={styles.footerContainer}>
           {/* BeCoins Balance */}
           <View style={styles.footerItem}>
-            <View style={styles.iconContainer}>
+            {/* Coins */}
+            <View
+              style={[
+                styles.iconContainer,
+                { backgroundColor: "rgba(249, 192, 22, 0.15)" },
+              ]}
+            >
               <BeCoinIcon width={16} height={16} />
             </View>
             <View>
-              <Text style={styles.footerLabel}>Disponible</Text>
               <Text style={styles.footerValue}>
                 {isLoading ? "..." : showBalance ? balance : "***"}{" "}
-                <Text style={styles.unit}>BC</Text>
               </Text>
+              <Text style={styles.footerLabel}>Coins</Text>
+            </View>
+            {/* GreenCoins */}
+            <View
+              style={[
+                styles.iconContainer,
+                { backgroundColor: "rgba(75, 158, 43, 0.15)" },
+              ]}
+            >
+              <BeCoinIcon width={16} height={16} color="green" />
+            </View>
+            <View>
+              <Text style={styles.footerValue}>
+                {isLoading ? "..." : showBalance ? becoin_green : "***"}{" "}
+              </Text>
+              <Text style={styles.footerLabel}>Green Coins</Text>
+            </View>
+            {/* OrangeCoins */}
+            <View
+              style={[
+                styles.iconContainer,
+                { backgroundColor: "rgba(249, 115, 22, 0.15)" },
+              ]}
+            >
+              <BeCoinIcon width={16} height={16} color="orange" />
+            </View>
+            <View>
+              <Text style={styles.footerValue}>
+                {isLoading ? "..." : showBalance ? becoin_orange : "***"}{" "}
+              </Text>
+              <Text style={styles.footerLabel}>Orange Coins</Text>
             </View>
           </View>
 
@@ -238,7 +277,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "rgba(249, 115, 22, 0.15)", // Orange tint
     justifyContent: "center",
     alignItems: "center",
   },

@@ -39,12 +39,7 @@ export const HomeScreen = () => {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.content}>
-          <HeroSection
-            balance={walletData.balance}
-            locked_balance={lockedBalanceToPass}
-            estimatedValue={estimatedValue.toFixed(2)}
-            isLoading={loading}
-          />
+          <HeroSection wallet={walletData} isLoading={loading} />
           <WalletActions
             actions={mainWalletActions}
             backgroundColor={colors.brand.orange[500]}
@@ -65,9 +60,6 @@ export const HomeScreen = () => {
             greenBecoins={walletData.becoin_green}
             orangeBecoins={walletData.becoin_orange}
             bottlesRecycled={userStats?.bottlesRecycled ?? 0}
-            estimatedValue={String(
-              convertBeCoinsToUSD(walletData.becoin_green),
-            )}
           />
 
           <RecentTransactions transactions={transactions ?? []} />
