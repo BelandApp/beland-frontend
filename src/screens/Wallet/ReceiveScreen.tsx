@@ -23,7 +23,7 @@ import { useBeCoinsPrice } from "src/hooks";
 import { ThemedHeader } from "src/components/shared/headers/Header";
 
 const ReceiveScreen = () => {
-  const { goBack } = useCustomNavigation();
+  const { goBack, navigate } = useCustomNavigation();
   const { walletData, wallet, refreshAll } = useWallet();
   const { user } = useAuth();
   const { beCoinsToUsd } = useBeCoinsPrice();
@@ -139,7 +139,7 @@ const ReceiveScreen = () => {
     <ScrollView style={styles.container}>
       <ThemedHeader
         title="Recibir Dinero"
-        onBackPress={() => goBack()}
+        onBackPress={() => navigate("Wallet")}
         canGoBack
       />
 
@@ -159,7 +159,9 @@ const ReceiveScreen = () => {
               style={styles.aliasBoxTouchable}
             >
               <Text style={styles.aliasValue}>
-                {alias || `Cargando${".".repeat(aliasLoadingDots)}`}
+                {alias !== null
+                  ? alias || `Cargando${".".repeat(aliasLoadingDots)}`
+                  : "Crea tu alias"}
               </Text>
               <View style={styles.pencilCircle}>
                 <MaterialCommunityIcons
@@ -340,7 +342,7 @@ const ReceiveScreen = () => {
                         const filename = `qr-beland-${Date.now()}.png`;
                         const downloadResumable = FileSystem.downloadAsync(
                           qrImage,
-                          FileSystem.documentDirectory + filename
+                          FileSystem.documentDirectory + filename,
                         );
                         await downloadResumable;
                         alert("QR guardado en tus archivos");
