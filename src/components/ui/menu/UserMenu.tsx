@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import {
   View,
   Text,
@@ -17,11 +16,8 @@ import {
   User,
   Settings,
   PackageIcon,
-  Gift,
   Ticket,
-  ArrowRightCircle,
   ArrowRight,
-  PersonStanding,
   UserRound,
   Landmark,
 } from "lucide-react-native";
@@ -38,11 +34,11 @@ import {
   CreateOrganizationDto,
 } from "src/services/OrganizationApiService";
 import { eventStore } from "src/stores";
-
 import SuccessModal from "src/components/ui/SuccessModal";
 import { Button } from "src/components/shared";
-import { borderTopWidth } from "html2canvas/dist/types/css/property-descriptors/border-width";
 import { colors } from "src/design-system";
+import { Animated, Easing, Dimensions } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
 
 interface UserMenuProps {
   style?: any;
@@ -63,16 +59,39 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   iconColor = "#fff",
 }) => {
   const { navigate } = useCustomNavigation();
-
   const { user, isLoading, logout, reloadUser } = useAuth();
   const notify = useNotify();
   const [menuVisible, setMenuVisible] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const screenWidth = Dimensions.get("window").width;
+  const slideAnim = useRef(new Animated.Value(screenWidth)).current;
   const [showOrganizationModal, setShowOrganizationModal] = useState(false);
   const [isCreatingOrganization, setIsCreatingOrganization] = useState(false);
   const pendingEvents = eventStore.getState().pendingEvents;
   const [hasPendingEvents, setHasPendingEvents] = useState<boolean>(
     pendingEvents.length > 0,
   );
+  useEffect(() => {
+    if (menuVisible) {
+      setIsMounted(true);
+
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 300,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }).start();
+    } else if (isMounted) {
+      Animated.timing(slideAnim, {
+        toValue: screenWidth,
+        duration: 250,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }).start(() => {
+        setIsMounted(false);
+      });
+    }
+  }, [menuVisible]);
   const handleLogout = async () => {
     setMenuVisible(false);
     await logout();
@@ -80,7 +99,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   };
 
   const toggleMenu = () => {
-    setMenuVisible(!menuVisible);
+    setMenuVisible((prev) => !prev);
   };
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -102,11 +121,11 @@ export const UserMenu: React.FC<UserMenuProps> = ({
       case "WALLET":
         navigate("WalletSettingsScreen");
         break;
-      case "ORDERSADMIN":
-        navigate("UserDashboardScreen", { screen: "OrdersManagement" });
-        break;
       case "FINANCESADMIN":
         navigate("UserDashboardScreen", { screen: "FinancesManagement" });
+        break;
+      case "ORDERSADMIN":
+        navigate("UserDashboardScreen", { screen: "OrdersManagement" });
         break;
     }
   };
@@ -271,7 +290,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
         notify.error({ message: "No pudimos sincronizar los datos" });
         return;
       }
-      await organizationService.deleteOrganization(actualMerchants?.id);
+      await organizationService.disactivateOrganization(actualMerchants?.id);
       notify.success({ message: "Ya no eres comerciante" });
       reloadUser();
     } catch (error) {
@@ -279,6 +298,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
       notify.error({ message });
     }
   };
+
   if (isLoading) {
     return (
       <TouchableOpacity
@@ -381,14 +401,14 @@ export const UserMenu: React.FC<UserMenuProps> = ({
           title="Ordenes"
           variant="box"
           icon={<PackageIcon size={18} color="#333" />}
-          onPress={() => handleNavigate("DASHBOARD")}
+          onPress={() => handleNavigate("ORDERSADMIN")}
           className="justify-start"
         />
         <Button
           title="Finanzas"
           variant="box"
           icon={<Landmark size={18} color="#333" />}
-          onPress={() => handleNavigate("DASHBOARD")}
+          onPress={() => handleNavigate("FINANCESADMIN")}
           className="justify-start"
         />
       </View>
@@ -403,6 +423,13 @@ export const UserMenu: React.FC<UserMenuProps> = ({
           className="justify-start"
         />
         <Button
+          title="Hacerme comerciante"
+          onPress={handleOpenOrganizationModal}
+          variant="box"
+          icon={<Store size={18} color="#333" />}
+          className="justify-start"
+        />
+        <Button
           title="Dejar de ser comerciante"
           onPress={handleDeleteOrganization}
           variant="box"
@@ -412,6 +439,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
       </View>
     ),
   };
+  console.log(user);
   return (
     <View style={[styles.container, style]}>
       <TouchableOpacity onPress={toggleMenu} style={styles.avatarContainer}>
@@ -425,78 +453,85 @@ export const UserMenu: React.FC<UserMenuProps> = ({
         />
       </TouchableOpacity>
 
-      <Modal
-        transparent={true}
-        visible={menuVisible}
-        onRequestClose={toggleMenu}
-      >
-        <Pressable style={styles.modalOverlay} onPress={toggleMenu}>
-          <View style={styles.menuDropdown}>
-            {/* Header del menú con info del usuario */}
-            <View style={styles.menuHeader}>
-              <View style={styles.menuAvatar}>
-                {user.profile_picture_url ? (
-                  <Image
-                    source={{
-                      uri: user.profile_picture_url,
-                    }}
-                    style={{ width: 45, height: 45 }}
-                  />
-                ) : (
-                  <UserRound color="orange" />
-                )}
-              </View>
+      {isMounted && (
+        <Modal transparent animationType="none">
+          <Pressable style={styles.modalOverlay} onPress={toggleMenu}>
+            <Animated.View
+              style={[
+                styles.menuDropdown,
+                {
+                  transform: [{ translateX: slideAnim }],
+                },
+              ]}
+            >
+              {/* Header del menú con info del usuario */}
+              <View style={styles.menuHeader}>
+                <View style={styles.menuAvatar}>
+                  {user.profile_picture_url ? (
+                    <Image
+                      source={{
+                        uri: user.profile_picture_url,
+                      }}
+                      style={{ width: 45, height: 45 }}
+                    />
+                  ) : (
+                    <UserRound color="orange" />
+                  )}
+                </View>
 
-              <View className="px-1">
-                <Text style={styles.menuUserName}>
-                  {user.full_name || "Usuario"}
-                </Text>
-                {user.role_name && (
-                  <View
-                    style={[
-                      styles.menuRoleBadge,
-                      {
-                        backgroundColor:
-                          user.role_name === "COMMERCE" ||
-                          user.role_name === "Comercio"
-                            ? "#4CAF50"
-                            : "#FF6B35",
-                      },
-                    ]}
-                  >
-                    <Text style={styles.menuRoleBadgeText}>
-                      {user.role_name === "COMMERCE" ||
-                      user.role_name === "Comercio"
-                        ? "Comerciante"
-                        : user.role_name}
-                    </Text>
-                  </View>
-                )}
+                <View className="px-4">
+                  <Text style={styles.menuUserName}>
+                    {user.full_name || "Usuario"}
+                  </Text>
+                  {user.role_name && (
+                    <View
+                      style={[
+                        styles.menuRoleBadge,
+                        {
+                          backgroundColor:
+                            user.role_name === "COMMERCE" ||
+                            user.role_name === "Comercio"
+                              ? "#4CAF50"
+                              : "#FF6B35",
+                        },
+                      ]}
+                    >
+                      <Text style={styles.menuRoleBadgeText}>
+                        {user.role_name === "COMMERCE" ||
+                        user.role_name === "Comercio"
+                          ? "Comerciante"
+                          : user.role_name}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+                <Button
+                  onPress={toggleMenu}
+                  title="Cerrar menu"
+                  variant="onlyIcon"
+                  icon={<ArrowRight color="orange" />}
+                />
               </View>
-              <Button
-                onPress={toggleMenu}
-                title="Cerrar menu"
-                variant="onlyIcon"
-                icon={<ArrowRight color="orange" />}
-              />
-            </View>
-            <View style={styles.menuDivider} />
-            <View className="p-4">
-              {/* CONTENT BY ROLE */}
-              {MENU_CONTENT[user.role_name as UserRole]}
               <View style={styles.menuDivider} />
-              <Button
-                title="Cerrar sesión"
-                onPress={handleLogout}
-                variant="box"
-                icon={<LogOut size={20} color="#E53935" />}
-                className="justify-start"
-                textStyle={{ color: "red" }}
-              />
-            </View>
-          </View>
-        </Pressable>
-      </Modal>
+              <View className="p-4">
+                {/* CONTENT BY ROLE */}
+                {MENU_CONTENT[user.role_name as UserRole]}
+              </View>
+              <View style={styles.menuDivider} />
+              <View className="px-6 pb-4">
+                <Button
+                  title="Cerrar sesión"
+                  onPress={handleLogout}
+                  variant="box"
+                  icon={<LogOut size={20} color="#E53935" />}
+                  className="justify-start"
+                  textStyle={{ color: "red" }}
+                />
+              </View>
+            </Animated.View>
+          </Pressable>
+        </Modal>
+      )}
 
       {/* Modal de registro de organización */}
       <OrganizationRegistrationModal
@@ -561,11 +596,11 @@ const styles = StyleSheet.create({
 
   menuDropdown: {
     position: "absolute",
-    top: 20,
+    top: 16,
     right: 0,
     backgroundColor: "#fff",
-    borderTopLeftRadius: 12,
-    borderBottomLeftRadius: 12,
+    borderTopLeftRadius: 16,
+    borderBottomLeftRadius: 16,
     borderWidth: 2,
     borderRightWidth: 0,
     borderColor: colors.brand.orange[500],
@@ -624,7 +659,7 @@ const styles = StyleSheet.create({
   menuDivider: {
     height: 1,
     backgroundColor: "#E0E0E0",
-    marginVertical: 8,
+    marginVertical: 12,
   },
 
   menuItem: {
