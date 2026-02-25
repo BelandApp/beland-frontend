@@ -115,7 +115,7 @@ export const GroupServicesScreen: React.FC<GroupServicesScreenProps> = ({
     if (!serviceToDelete) return;
     try {
       setProcessingHiring(true);
-      await ServicesApiService.deleteGroupService(serviceToDelete.id);
+      await ServicesApiService.cancelGroupService(serviceToDelete.id);
       notifyContext.success({
         message: "Servicio cancelado exitosamente.",
       });

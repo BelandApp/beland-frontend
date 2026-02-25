@@ -28,7 +28,7 @@ interface CustomInputProps extends TextInputProps {
   secureTextEntry?: boolean;
   error?: string;
   onBlur?: () => void;
-  variant?: "underline" | "filled";
+  variant?: "filled";
   icon?: React.ReactNode;
   /** Color del texto del input (override). Si no se provee, se usa el del variant */
   textColor?: string;
@@ -46,7 +46,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
   error,
   onBlur,
   placeholder,
-  variant = "underline",
+  variant = "filled",
   icon,
   textColor,
   placeholderTextColor,
@@ -111,11 +111,7 @@ export const CustomInput: React.FC<CustomInputProps> = ({
       <Animated.View
         accessible={false}
         tabIndex={-1}
-        style={[
-          InputStyles.baseContainer,
-          selectedVariant.container,
-          variant === "underline" && { borderBottomColor: borderColor },
-        ]}
+        style={[InputStyles.baseContainer, selectedVariant.container]}
       >
         <Animated.Text
           style={[labelStyle, selectedVariant.label]}

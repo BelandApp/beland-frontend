@@ -6,6 +6,14 @@ import { getBackendErrorMessage } from "src/services";
 import { notify } from "src/hooks/notification/notify.external";
 import { mapBackendTransactionToFrontend } from "./useWalletTransactions";
 import { Transaction } from "../types";
+export type WalletDataType = {
+  balance: number;
+  becoin_green: number;
+  becoin_orange: number;
+  locked_balance: number;
+  alias: string;
+  estimatedValue: string;
+};
 
 export const useWallet = () => {
   const { user } = useAuth();
@@ -92,15 +100,16 @@ export const useWallet = () => {
     fetchTransactions();
   };
 
+  const walletData: WalletDataType = {
+    balance,
+    becoin_green: wallet?.becoin_green ?? 0,
+    becoin_orange: wallet?.becoin_orange ?? 0,
+    locked_balance: wallet?.locked_balance ?? 0,
+    alias: wallet?.alias ?? "",
+    estimatedValue: (balance * 0.05).toFixed(2),
+  };
   return {
-    walletData: {
-      balance,
-      becoin_green: wallet?.becoin_green ?? 0,
-      becoin_orange: wallet?.becoin_orange ?? 0,
-      locked_balance: wallet?.locked_balance ?? 0,
-      alias: wallet?.alias ?? "",
-      estimatedValue: (balance * 0.05).toFixed(2),
-    },
+    walletData,
     wallet,
     transactions,
     loadingWallet,

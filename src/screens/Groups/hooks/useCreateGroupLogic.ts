@@ -24,13 +24,15 @@ export type ProductItem = { id: string; name: string; price: number };
 export const useCreateGroupLogic = () => {
   // Form State
   const [groupName, setGroupName] = useState("");
+  const [groupNameExist, setGroupNameExist] = useState<string[]>([]);
+  const [nameAvailable, setNameAvailable] = useState(true);
   const [groupType, setGroupType] = useState("");
   const [description, setDescription] = useState("");
   const [privacy, setPrivacy] = useState<string>("");
   const [invitationMsg, setInvitationMsg] = useState<string>("");
   const [paymentTypeId, setPaymentTypeId] = useState<string>("");
   const [userAddressId, setUserAddressId] = useState<string>("");
-  const [eventDate, setEventDate] = useState<string>("");
+  const [eventDate, setEventDate] = useState<Date | null>(null);
   const { image, pickImage, appendToFormData, clearImage } = useUploadImage();
   // Data Options State
   const [groupTypes, setGroupTypes] = React.useState<GroupType[]>([]);
@@ -44,12 +46,24 @@ export const useCreateGroupLogic = () => {
   const [isLoadingData, setIsLoadingData] = React.useState(true);
   const [isCreating, setIsCreating] = React.useState(false);
 
+  // check if name is available
+
+  useEffect(() => {
+    if (groupNameExist.includes(groupName)) {
+      setNameAvailable(false);
+    } else {
+      setNameAvailable(true);
+    }
+  }, [groupName]);
   // Load all required data on mount
   useEffect(() => {
     let mounted = true;
     const loadData = async () => {
       try {
         const data = await GroupService.getInfoCreate();
+        const existingGroups = await GroupService.getGroups();
+        let existingNames = existingGroups.data.map((group) => group.name);
+        setGroupNameExist(existingNames);
         if (mounted && data) {
           setGroupTypes(data.group_types || []);
           setPrivacyOptions(data.group_privacies || []);
@@ -115,15 +129,16 @@ export const useCreateGroupLogic = () => {
       // ===============================
       // 🖼️ CREAMOS CLOUDINARY URL
       // ===============================
-
-      const formData = new FormData();
-      appendToFormData(formData);
-
-      const imageUrl = await CloudinaryService.uploadImage(formData);
-      if (!imageUrl) {
-        notify.info({
-          message: "No pudimos procesar correctamente la imagen",
-        });
+      let imagenUrl = undefined;
+      if (image) {
+        const formData = new FormData();
+        appendToFormData(formData);
+        imagenUrl = await CloudinaryService.uploadImage(formData);
+        if (!imagenUrl) {
+          notify.info({
+            message: "No pudimos procesar correctamente la imagen",
+          });
+        }
       }
       // ===============================
       // CREAMOS GRUPO
@@ -135,7 +150,7 @@ export const useCreateGroupLogic = () => {
         payment_type_id: paymentTypeId,
         user_address_id: userAddressId,
         event_at: eventDate,
-        image_url: imageUrl,
+        image_url: imagenUrl ?? undefined,
       };
 
       const desc = description?.trim();
@@ -187,6 +202,7 @@ export const useCreateGroupLogic = () => {
     // Status
     isLoading: isCreating,
     isLoadingData,
+    nameAvailable,
 
     // Actions
     createGroup,

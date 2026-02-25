@@ -10,16 +10,20 @@ import {
   Alert,
 } from "react-native";
 import Feather from "react-native-vector-icons/Feather";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import useCreateGroupLogic from "./hooks/useCreateGroupLogic";
 import Card from "./components/Card";
 import Field from "./components/Field";
 import { AddressManagementModal } from "@/screens/DashboardUser/components/settings/AddressManagementModal";
 import { ShareGroupModal } from "@/components/shared/ShareGroupModal";
 import { useAuth } from "@/context";
-import { useNotify } from "@/hooks";
+import { useCustomNavigation, useNotify } from "@/hooks";
 import { Group } from "@/services/GroupApiService";
-import { Button, ThemedHeader } from "src/components";
+import {
+  Button,
+  CustomInput,
+  ThemedHeader,
+  DatePickerInput,
+} from "src/components";
 import { useResponsiveLayout } from "@/hooks";
 
 export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
@@ -61,13 +65,13 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
     isLoading,
     isLoadingData,
     isValid,
+    nameAvailable,
     // Actions
     createGroup,
   } = useCreateGroupLogic();
-
+  const { navigate } = useCustomNavigation();
   // Local UI State
   const [showAddressModal, setShowAddressModal] = React.useState(false);
-  const [showDatePicker, setShowDatePicker] = React.useState(false);
   const [showShareModal, setShowShareModal] = React.useState(false);
   const [createdGroup, setCreatedGroup] = React.useState<Group | null>(null);
   const { isWeb } = useResponsiveLayout();
@@ -98,11 +102,26 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
       </View>
     );
   }
-
+  const handleBeforeClose = async () => {
+    const result = await new Promise<boolean>((resolve) => {
+      notify.confirm({
+        message: "¿Seguro que quieres salir? Perderás tu progreso",
+        onConfirm: () => resolve(true),
+        onCancel: () => resolve(false),
+      });
+    });
+    if (result) {
+      navigate("MainTabs", { screen: "Groups" });
+    } else return;
+  };
   return (
     <View className="flex-1 bg-background-light">
       {/* Header */}
-      <ThemedHeader canGoBack title="Crear Grupo" />
+      <ThemedHeader
+        canGoBack
+        title="Crear Grupo"
+        onBackPress={handleBeforeClose}
+      />
 
       <ScrollView
         className="flex-1"
@@ -114,102 +133,27 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
             <Text className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3 ml-1">
               Información del Evento
             </Text>
-            <Card>
-              <Field
-                label="Nombre del Grupo *"
+            <Card className="gap-2">
+              <CustomInput
+                variant="filled"
                 value={groupName}
                 onChangeText={setGroupName}
-                placeholder="Ej. Cumpleaños de Ana"
+                label="Nombre del Grupo"
+                error={nameAvailable ? undefined : "Nombre ya ocupado"}
+              />
+              <DatePickerInput
+                value={eventDate}
+                onChange={setEventDate}
+                label="Fecha y Hora"
               />
 
-              <View className="mt-4">
-                <Text className="text-base font-medium mb-2 text-gray-700">
-                  Fecha y Hora *
-                </Text>
-                {Platform.OS === "web" ? (
-                  <View className="flex-row gap-3">
-                    <View
-                      className="  flex-1
-      border-2 border-gray-100
-      rounded-xl
-      bg-gray-50
-      overflow-hidden
-      flex-row
-      items-center
-      group
-      group-focus-within:border-[#f88e2ab7]
-      group-focus-within:bg-[#efcbaa2c]"
-                    >
-                      <View className="pl-3">
-                        <Feather name="calendar" size={18} color="#9CA3AF" />
-                      </View>
-                      <input
-                        type="datetime-local"
-                        value={
-                          eventDate
-                            ? new Date(
-                                new Date(eventDate).getTime() -
-                                  new Date().getTimezoneOffset() * 60000,
-                              )
-                                .toISOString()
-                                .slice(0, 16)
-                            : ""
-                        }
-                        onChange={(e) => {
-                          const d = new Date(e.target.value);
-                          if (!isNaN(d.getTime())) {
-                            setEventDate(d.toISOString());
-                          }
-                        }}
-                        className="
-        flex-1
-        p-3
-        bg-transparent
-        outline-none
-        text-sm
-        text-gray-700
-      "
-                        style={{
-                          border: "none",
-                          fontFamily: "inherit",
-                        }}
-                      />
-                    </View>
-                  </View>
-                ) : (
-                  <TouchableOpacity
-                    onPress={() => setShowDatePicker(true)}
-                    className="flex-row items-center bg-gray-50 border-2 border-gray-100 rounded-xl p-3"
-                  >
-                    <View className="bg-white p-2 rounded-lg mr-3 shadow-sm">
-                      <Feather name="calendar" size={20} color="#00E074" />
-                    </View>
-                    <View>
-                      <Text className="text-xs text-gray-500 font-medium">
-                        Fecha de inicio
-                      </Text>
-                      <Text
-                        className={`text-base font-semibold ${eventDate ? "text-gray-800" : "text-gray-400"}`}
-                      >
-                        {eventDate
-                          ? new Date(eventDate).toLocaleString("es-ES", {
-                              dateStyle: "medium",
-                              timeStyle: "short",
-                            })
-                          : "Seleccionar fecha"}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                )}
-              </View>
-              <View className="flex flex-row justify-between items-end gap-2">
-                <Field
-                  label="Descripción"
+              <View className="flex flex-row justify-between items-start gap-2">
+                <CustomInput
+                  variant="filled"
                   value={description}
                   onChangeText={setDescription}
+                  label="Descripción"
                   placeholder="¿De qué trata este evento?"
-                  multiline
-                  className="mt-4"
                 />
                 <Button
                   title="Cargar imagen"
@@ -224,8 +168,6 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
                   variant="onlyIcon"
                   style={{
                     borderColor: image ? "#00e074" : "#f97316",
-                    paddingVertical: 13,
-                    borderRadius: 16,
                   }}
                 />
               </View>
@@ -499,50 +441,6 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
           setShowAddressModal(false);
         }}
       />
-
-      {/* Native Date Picker Modal */}
-      {Platform.OS !== "web" && showDatePicker && (
-        <Modal
-          transparent={true}
-          animationType="fade"
-          visible={showDatePicker}
-          onRequestClose={() => setShowDatePicker(false)}
-        >
-          <View className="flex-1 justify-end bg-black/40">
-            <View className="bg-white rounded-t-3xl p-6 pb-10">
-              <View className="flex-row justify-between items-center mb-6">
-                <Text className="text-xl font-bold text-gray-900">
-                  Seleccionar Fecha
-                </Text>
-                <TouchableOpacity
-                  onPress={() => setShowDatePicker(false)}
-                  className="p-2 bg-gray-100 rounded-full"
-                >
-                  <Feather name="x" size={20} color="#374151" />
-                </TouchableOpacity>
-              </View>
-              <DateTimePicker
-                value={eventDate ? new Date(eventDate) : new Date()}
-                mode="datetime"
-                display="spinner"
-                onChange={(event, date) => {
-                  if (date) setEventDate(date.toISOString());
-                }}
-                locale="es-ES"
-                textColor="#000"
-              />
-              <TouchableOpacity
-                onPress={() => setShowDatePicker(false)}
-                className="mt-6 bg-[#F88D2A] py-4 rounded-2xl shadow-sm"
-              >
-                <Text className="text-white text-center font-bold text-lg">
-                  Confirmar Fecha
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
-      )}
 
       {/* Share Modal */}
       {createdGroup && (

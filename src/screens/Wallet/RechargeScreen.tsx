@@ -72,7 +72,7 @@ export default function RechargeScreen() {
   const handleBeforeClose = () => {
     return new Promise<boolean>((resolve) => {
       notify.confirm({
-        message: "Seguro que quieres salir? Perderás tu progreso",
+        message: "¿Seguro que quieres salir? Perderás tu progreso",
         onConfirm: () => resolve(true),
         onCancel: () => resolve(false),
       });

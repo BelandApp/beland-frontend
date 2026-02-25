@@ -136,13 +136,14 @@ const FinancesManagement: React.FC = () => {
               required
             />
             <CustomPicker
+              label="Seleccionar tipo de cuenta"
               value={financeUI.type_account}
               onChange={(value) =>
                 financeUI.setAccountType(value as TypeAccount)
               }
               required
               options={[
-                { label: "Seleccionar tipo de cuent", value: null },
+                { label: "Seleccionar tipo de cuenta", value: null },
                 { label: "Caja de ahorro", value: "AHORRO" },
                 { label: "Cuenta corriente", value: "CORRIENTE" },
               ]}
