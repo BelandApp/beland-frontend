@@ -79,7 +79,6 @@ const styles = StyleSheet.create({
   },
   content: {
     width: "100%",
-    maxWidth: 1400,
     alignSelf: "center",
     padding: 16,
     paddingBottom: 120,
