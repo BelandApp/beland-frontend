@@ -19,30 +19,44 @@ import {
   PackageIcon,
   Gift,
   Ticket,
+  ArrowRightCircle,
+  ArrowRight,
+  PersonStanding,
+  UserRound,
+  Landmark,
 } from "lucide-react-native";
-import { authService } from "../../services/auth/auth.service";
+import { authService } from "@/services";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { useNotify } from "src/hooks";
 import { getBackendErrorMessage } from "src/services";
 import {
   OrganizationRegistrationModal,
   MerchantFormData,
-} from "./OrganizationRegistrationModal";
+} from "../OrganizationRegistrationModal";
 import {
   organizationService,
   CreateOrganizationDto,
 } from "src/services/OrganizationApiService";
 import { eventStore } from "src/stores";
-import { colors } from "src/styles";
 
 import SuccessModal from "src/components/ui/SuccessModal";
+import { Button } from "src/components/shared";
+import { borderTopWidth } from "html2canvas/dist/types/css/property-descriptors/border-width";
+import { colors } from "src/design-system";
 
 interface UserMenuProps {
   style?: any;
   variant?: "compact" | "full";
   iconColor?: string;
 }
-
+type UserRole = "USER" | "ADMIN" | "SUPERADMIN" | "COMMERCE";
+type MenuRoutes =
+  | "DASHBOARD"
+  | "ENTRIES"
+  | "ORDERS"
+  | "WALLET"
+  | "ORDERSADMIN"
+  | "FINANCESADMIN";
 export const UserMenu: React.FC<UserMenuProps> = ({
   style,
   variant = "compact",
@@ -50,14 +64,14 @@ export const UserMenu: React.FC<UserMenuProps> = ({
 }) => {
   const { navigate } = useCustomNavigation();
 
-  const { user, isLoading, logout } = useAuth();
+  const { user, isLoading, logout, reloadUser } = useAuth();
   const notify = useNotify();
   const [menuVisible, setMenuVisible] = useState(false);
   const [showOrganizationModal, setShowOrganizationModal] = useState(false);
   const [isCreatingOrganization, setIsCreatingOrganization] = useState(false);
   const pendingEvents = eventStore.getState().pendingEvents;
   const [hasPendingEvents, setHasPendingEvents] = useState<boolean>(
-    pendingEvents.length > 0
+    pendingEvents.length > 0,
   );
   const handleLogout = async () => {
     setMenuVisible(false);
@@ -71,11 +85,30 @@ export const UserMenu: React.FC<UserMenuProps> = ({
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | undefined>(
-    undefined
+    undefined,
   );
-  const handleNavigateToDashboard = () => {
+  const handleNavigate = (screen: MenuRoutes) => {
     setMenuVisible(false);
-    navigate("UserDashboardScreen");
+    switch (screen) {
+      case "DASHBOARD":
+        navigate("UserDashboardScreen");
+        break;
+      case "ENTRIES":
+        navigate("MisEntradas", { tab: "Próximos" });
+        break;
+      case "ORDERS":
+        navigate("WalletSettingsScreen");
+        break;
+      case "WALLET":
+        navigate("WalletSettingsScreen");
+        break;
+      case "ORDERSADMIN":
+        navigate("UserDashboardScreen", { screen: "OrdersManagement" });
+        break;
+      case "FINANCESADMIN":
+        navigate("UserDashboardScreen", { screen: "FinancesManagement" });
+        break;
+    }
   };
 
   const handleOpenOrganizationModal = async () => {
@@ -186,8 +219,10 @@ export const UserMenu: React.FC<UserMenuProps> = ({
         }
 
         await organizationService.createOrganization(
-          cleanedData as CreateOrganizationDto
+          cleanedData as CreateOrganizationDto,
         );
+        notify.success({ message: "Eres comerciante ahora" });
+        reloadUser();
       } catch (orgError) {
         const message = getBackendErrorMessage(orgError);
         notify.error({ message });
@@ -226,6 +261,24 @@ export const UserMenu: React.FC<UserMenuProps> = ({
       setIsCreatingOrganization(false);
     }
   };
+  const handleDeleteOrganization = async () => {
+    try {
+      if (!user) return;
+      const actualMerchants = await organizationService.getUserOrganization(
+        user.id,
+      );
+      if (!actualMerchants) {
+        notify.error({ message: "No pudimos sincronizar los datos" });
+        return;
+      }
+      await organizationService.deleteOrganization(actualMerchants?.id);
+      notify.success({ message: "Ya no eres comerciante" });
+      reloadUser();
+    } catch (error) {
+      const message = getBackendErrorMessage(error);
+      notify.error({ message });
+    }
+  };
   if (isLoading) {
     return (
       <TouchableOpacity
@@ -252,7 +305,113 @@ export const UserMenu: React.FC<UserMenuProps> = ({
       </TouchableOpacity>
     );
   }
+  const MENU_CONTENT: Record<UserRole, React.ReactNode> = {
+    USER: (
+      <View className="gap-2">
+        <Button
+          title="Dashboard"
+          variant="box"
+          icon={<LayoutDashboard size={18} color="#333" />}
+          onPress={() => handleNavigate("DASHBOARD")}
+          className="justify-start"
+        />
+        <View className="relative">
+          <Button
+            title="Mis entradas"
+            onPress={() => handleNavigate("ENTRIES")}
+            variant="box"
+            icon={<Ticket size={18} color="#333" />}
+            className="justify-start"
+          />
+          {hasPendingEvents && (
+            <View
+              style={styles.badgeContainer}
+              className="absolute top-0 right-0 w-1 h-1 rounded-full bg-beland-orange-500"
+            />
+          )}
+        </View>
+        <Button
+          title="Mis ordenes"
+          onPress={() => handleNavigate("ORDERS")}
+          variant="box"
+          icon={<PackageIcon size={18} color="#333" />}
+          className="justify-start"
+        />
+        <Button
+          title="Mi wallet"
+          onPress={() => handleNavigate("WALLET")}
+          variant="box"
+          icon={<Settings size={18} color="#333" />}
+          className="justify-start"
+        />
+        {/* Mostrar opción solo si el usuario NO es comerciante */}
 
+        {user.role.name !== "COMERCIO" && (
+          <Button
+            title="Hacerme comerciante"
+            onPress={handleOpenOrganizationModal}
+            variant="box"
+            icon={<Store size={18} color="#333" />}
+            className="justify-start"
+          />
+        )}
+      </View>
+    ),
+    ADMIN: (
+      <View className="gap-2">
+        <Button
+          title="Dashboard"
+          variant="box"
+          icon={<LayoutDashboard size={18} color="#333" />}
+          onPress={() => handleNavigate("DASHBOARD")}
+          className="justify-start"
+        />
+      </View>
+    ),
+    SUPERADMIN: (
+      <View className="gap-2">
+        <Button
+          title="Dashboard"
+          variant="box"
+          icon={<LayoutDashboard size={18} color="#333" />}
+          onPress={() => handleNavigate("DASHBOARD")}
+          className="justify-start"
+        />
+        <Button
+          title="Ordenes"
+          variant="box"
+          icon={<PackageIcon size={18} color="#333" />}
+          onPress={() => handleNavigate("DASHBOARD")}
+          className="justify-start"
+        />
+        <Button
+          title="Finanzas"
+          variant="box"
+          icon={<Landmark size={18} color="#333" />}
+          onPress={() => handleNavigate("DASHBOARD")}
+          className="justify-start"
+        />
+      </View>
+    ),
+    COMMERCE: (
+      <View className="gap-2">
+        <Button
+          title="Dashboard"
+          variant="box"
+          icon={<LayoutDashboard size={18} color="#333" />}
+          onPress={() => handleNavigate("DASHBOARD")}
+          className="justify-start"
+        />
+        <Button
+          title="Dejar de ser comerciante"
+          onPress={handleDeleteOrganization}
+          variant="box"
+          icon={<Store size={18} color="#333" />}
+          className="justify-start"
+        />
+      </View>
+    ),
+  };
   return (
     <View style={[styles.container, style]}>
       <TouchableOpacity onPress={toggleMenu} style={styles.avatarContainer}>
@@ -275,15 +434,20 @@ export const UserMenu: React.FC<UserMenuProps> = ({
           <View style={styles.menuDropdown}>
             {/* Header del menú con info del usuario */}
             <View style={styles.menuHeader}>
-              <Image
-                source={{
-                  uri:
-                    user.profile_picture_url ||
-                    "https://ui-avatars.com/api/?name=User",
-                }}
-                style={styles.menuAvatar}
-              />
-              <View style={styles.menuUserInfo}>
+              <View style={styles.menuAvatar}>
+                {user.profile_picture_url ? (
+                  <Image
+                    source={{
+                      uri: user.profile_picture_url,
+                    }}
+                    style={{ width: 45, height: 45 }}
+                  />
+                ) : (
+                  <UserRound color="orange" />
+                )}
+              </View>
+
+              <View className="px-1">
                 <Text style={styles.menuUserName}>
                   {user.full_name || "Usuario"}
                 </Text>
@@ -309,83 +473,27 @@ export const UserMenu: React.FC<UserMenuProps> = ({
                   </View>
                 )}
               </View>
+              <Button
+                onPress={toggleMenu}
+                title="Cerrar menu"
+                variant="onlyIcon"
+                icon={<ArrowRight color="orange" />}
+              />
             </View>
-
             <View style={styles.menuDivider} />
-
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={handleNavigateToDashboard}
-            >
-              <LayoutDashboard size={18} color="#333" />
-              <Text style={styles.menuItemText}>Dashboard</Text>
-            </TouchableOpacity>
-            {/* TODO REVISAR SI ES NECESARIO */}
-            {/* <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => {
-                setMenuVisible(false);
-                (navigation as any).navigate("Rewards");
-              }}
-            >
-              <GiftIcon size={18} color="#333" />
-              <Text style={styles.menuItemText}>Mis Premios</Text>
-            </TouchableOpacity> */}
-
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => {
-                setMenuVisible(false);
-                navigate("MisEntradas",{ tab: "Próximos"});
-              }}
-            >
-              <Ticket size={18} color="#333" />
-              <Text style={styles.menuItemText}>Mis Entradas</Text>
-              {hasPendingEvents && <View style={styles.badgeContainer} />}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => {
-                setMenuVisible(false);
-                navigate("Orders", { screen: "OrdersList" });
-              }}
-            >
-              <PackageIcon size={18} color="#333" />
-              <Text style={styles.menuItemText}>Mis Ordenes</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => {
-                setMenuVisible(false);
-                navigate("WalletSettingsScreen");
-              }}
-            >
-              <Settings size={18} color="#333" />
-              <Text style={styles.menuItemText}>Wallet</Text>
-            </TouchableOpacity>
-
-            {/* Mostrar opción solo si el usuario NO es comerciante */}
-            {!(
-              user?.role_name === "COMMERCE" || user?.role_name === "Comercio"
-            ) && (
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={handleOpenOrganizationModal}
-              >
-                <Store size={18} color="#333" />
-                <Text style={styles.menuItemText}>Hacerme comerciante</Text>
-              </TouchableOpacity>
-            )}
-
-            <View style={styles.menuDivider} />
-
-            <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
-              <LogOut size={20} color="#E53935" />
-              <Text style={[styles.menuItemText, { color: "#E53935" }]}>
-                Cerrar sesión
-              </Text>
-            </TouchableOpacity>
+            <View className="p-4">
+              {/* CONTENT BY ROLE */}
+              {MENU_CONTENT[user.role_name as UserRole]}
+              <View style={styles.menuDivider} />
+              <Button
+                title="Cerrar sesión"
+                onPress={handleLogout}
+                variant="box"
+                icon={<LogOut size={20} color="#E53935" />}
+                className="justify-start"
+                textStyle={{ color: "red" }}
+              />
+            </View>
           </View>
         </Pressable>
       </Modal>
@@ -453,39 +561,42 @@ const styles = StyleSheet.create({
 
   menuDropdown: {
     position: "absolute",
-    top: 100,
-    right: 20,
+    top: 20,
+    right: 0,
     backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    width: 250,
+    borderTopLeftRadius: 12,
+    borderBottomLeftRadius: 12,
+    borderWidth: 2,
+    borderRightWidth: 0,
+    borderColor: colors.brand.orange[500],
+    minWidth: 250,
     elevation: 8,
     shadowColor: "#FF6B35",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.18,
     shadowRadius: 8,
     zIndex: 1000,
-    borderWidth: 1,
-    borderColor: "#FF6B35",
   },
 
   menuHeader: {
     flexDirection: "row",
     alignItems: "center",
-    paddingBottom: 12,
-    gap: 12,
+    justifyContent: "space-between",
+    paddingRight: 6,
   },
 
   menuAvatar: {
     width: 50,
     height: 50,
-    borderRadius: 25,
-    borderWidth: 2,
-    borderColor: "#FF6B35",
-  },
-
-  menuUserInfo: {
-    flex: 1,
+    borderBottomRightRadius: 25,
+    borderTopLeftRadius: 11,
+    borderRightWidth: 2,
+    borderBottomWidth: 2,
+    borderColor: colors.brand.orange[500],
+    backgroundColor: colors.brand.orange[200],
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
   },
 
   menuUserName: {
@@ -536,7 +647,7 @@ const styles = StyleSheet.create({
     width: 5,
     height: 5,
     borderRadius: 50,
-    backgroundColor: colors.belandOrange,
+    backgroundColor: colors.brand.orange[500],
   },
   overlay: {
     flex: 1,

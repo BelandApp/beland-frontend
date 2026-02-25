@@ -209,7 +209,9 @@ export const ProductsManagementScreen: React.FC = () => {
       <ThemedHeader
         title="Gestion de productos"
         canGoBack
-        onBackPress={() => navigate("UserDashboardScreen")}
+        onBackPress={() =>
+          navigate("UserDashboardScreen", { screen: "Dashboard" })
+        }
         subtitle={`${totalProducts} productos en total`}
         buttons={
           <Button

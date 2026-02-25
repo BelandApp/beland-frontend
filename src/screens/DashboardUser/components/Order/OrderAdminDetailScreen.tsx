@@ -339,7 +339,9 @@ export const OrderAdminDetailScreen: React.FC = () => {
       <ThemedHeader
         title={`Orden ${orderNumber}`}
         canGoBack
-        onBackPress={() => navigate("OrdersManagement")}
+        onBackPress={() =>
+          navigate("UserDashboardScreen", { screen: "Dashboard" })
+        }
       />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.section}>
