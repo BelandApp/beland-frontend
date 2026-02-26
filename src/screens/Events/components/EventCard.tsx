@@ -6,12 +6,13 @@ import {
   SquareChevronUp,
   Tickets,
 } from "lucide-react-native";
-import React from "react";
+import React, { useState } from "react";
 import { Pressable, StyleSheet, View, Text, Image } from "react-native";
 import { Event } from "src/stores/Event";
 import { colors } from "src/styles";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { convertBeCoinsToUSD, formatUSDPrice } from "src/constants/currency";
+import { EventModal } from "../Event.modal";
 
 export const EventCard: React.FC<Event> = ({
   id,
@@ -24,89 +25,97 @@ export const EventCard: React.FC<Event> = ({
   end_sale_date,
   user_attended,
 }) => {
-  const { navigate } = useCustomNavigation();
+  const [isOpen, setIsOpen] = useState(false);
   if (!id) return null;
-  const handleNavigation = () => {
-    return navigate("EventModal", { id });
-  };
   return (
-    <Pressable key={id} onPress={handleNavigation} style={styles.card}>
-      {/* Badges */}
-      {/* No deberian superponerse, si ya fue adquirido solo mostramos ese */}
-      {!user_attended &&
-        end_sale_date &&
-        new Date(end_sale_date).getTime() < Date.now() && (
+    <>
+      <Pressable key={id} onPress={() => setIsOpen(true)} style={styles.card}>
+        {/* Badges */}
+        {/* No deberian superponerse, si ya fue adquirido solo mostramos ese */}
+        {!user_attended &&
+          end_sale_date &&
+          new Date(end_sale_date).getTime() < Date.now() && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>Finalizado</Text>
+            </View>
+          )}
+        {user_attended && (
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>Finalizado</Text>
+            <Text style={styles.badgeText}>Usado</Text>
           </View>
         )}
-      {user_attended && (
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>Usado</Text>
-        </View>
-      )}
-      {/* Main Image */}
-      <Image source={{ uri: image_url }} style={styles.image} resizeMode="cover" />
-      {/* Container */}
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.eventName} numberOfLines={2} ellipsizeMode="tail">
-            {name}
-          </Text>
-          <View style={styles.infoContainer}>
-            <Tickets color={"white"} />
-            <Text style={styles.eventText}>{name}</Text>
-          </View>
-          <View style={styles.infoContainer}>
-            <Calendar color={"white"} />
+        {/* Main Image */}
+        <Image
+          source={{ uri: image_url }}
+          style={styles.image}
+          resizeMode="cover"
+        />
+        {/* Container */}
+        <View style={styles.container}>
+          <View style={styles.header}>
             <Text
-              style={styles.eventText}
-              numberOfLines={1}
+              style={styles.eventName}
+              numberOfLines={2}
               ellipsizeMode="tail"
             >
-              {event_date ? new Date(event_date).toLocaleDateString() : ""}
+              {name}
             </Text>
-          </View>
-          <View style={styles.infoContainer}>
-            <MapPin color={"white"} />
-            <Text
-              style={styles.eventText}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {event_place}
-            </Text>
-          </View>
-          <View style={styles.infoContainer}>
-            <Building2 color={"white"} />
-            <Text
-              style={styles.eventText}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {event_city}
-            </Text>
-          </View>
-        </View>
-        <View style={styles.footer}>
-          <View style={styles.priceSection}>
-            <View style={styles.textContainer}>
-              <BadgeDollarSign color={colors.belandOrange} />
-              <Text style={styles.eventPrice}>{price_becoin} Becoin</Text>
+            <View style={styles.infoContainer}>
+              <Tickets color={"white"} />
+              <Text style={styles.eventText}>{name}</Text>
             </View>
-            {/* Badge de precio en USD más distintivo */}
-            <View style={styles.usdBadge}>
-              <Text style={styles.usdBadgeLabel}>≈ </Text>
-              <Text style={styles.usdBadgePrice}>
-                ${formatUSDPrice(convertBeCoinsToUSD(Number(price_becoin)))}
+            <View style={styles.infoContainer}>
+              <Calendar color={"white"} />
+              <Text
+                style={styles.eventText}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {event_date ? new Date(event_date).toLocaleDateString() : ""}
               </Text>
-              <Text style={styles.usdBadgeCurrency}> USD</Text>
+            </View>
+            <View style={styles.infoContainer}>
+              <MapPin color={"white"} />
+              <Text
+                style={styles.eventText}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {event_place}
+              </Text>
+            </View>
+            <View style={styles.infoContainer}>
+              <Building2 color={"white"} />
+              <Text
+                style={styles.eventText}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {event_city}
+              </Text>
             </View>
           </View>
-          <SquareChevronUp />
+          <View style={styles.footer}>
+            <View style={styles.priceSection}>
+              <View style={styles.textContainer}>
+                <BadgeDollarSign color={colors.belandOrange} />
+                <Text style={styles.eventPrice}>{price_becoin} Becoin</Text>
+              </View>
+              {/* Badge de precio en USD más distintivo */}
+              <View style={styles.usdBadge}>
+                <Text style={styles.usdBadgeLabel}>≈ </Text>
+                <Text style={styles.usdBadgePrice}>
+                  ${formatUSDPrice(convertBeCoinsToUSD(Number(price_becoin)))}
+                </Text>
+                <Text style={styles.usdBadgeCurrency}> USD</Text>
+              </View>
+            </View>
+            <SquareChevronUp />
+          </View>
         </View>
-      </View>
-    </Pressable>
+      </Pressable>
+      <EventModal id={id} isOpen={isOpen} onClose={() => setIsOpen(false)} />
+    </>
   );
 };
 

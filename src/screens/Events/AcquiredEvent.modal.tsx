@@ -22,20 +22,28 @@ import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { useNotify } from "src/hooks";
 import { canRefundTicket } from "./helpers/canrefund";
 import { WrapperModal } from "src/components";
-export const AcquiredEventModal = ({ route }: { route: any }) => {
-  const { id_modal } = route.params;
-  const { getAcquiredEvent } = eventStore();
-  const event = getAcquiredEvent(id_modal);
+import { EventModalType } from "./Event.modal";
+export const AcquiredEventModal: React.FC<EventModalType> = ({
+  id,
+  isOpen,
+  onClose,
+}) => {
+  const { getAcquiredEvent, getEvent } = eventStore();
+
+  let event = getAcquiredEvent(id);
+  if (event === undefined) {
+    event = getEvent(id);
+  }
   const { navigate } = useCustomNavigation();
   const notify = useNotify();
   const [visibleImage, setVisibleImage] = useState(0);
-  const [isOpen, setIsOpen] = useState(true);
   const allImages = useMemo(() => {
     if (!event || !event.images_urls?.length) return [event?.image_url];
     return [event.image_url, ...event.images_urls];
   }, [event]);
 
   const translateAnim = useRef(new Animated.Value(0)).current;
+
   if (!event) return null;
 
   const {
@@ -52,16 +60,6 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
     user_pass_id,
     holder_name,
   } = event;
-
-  const handleClose = () => {
-    setIsOpen(false);
-    const targetTab =
-      new Date(end_sale_date) < new Date() ? "Anteriores" : "Próximos";
-
-    setTimeout(() => {
-      navigate("MisEntradas", { tab: targetTab });
-    }, 300);
-  };
 
   const handleNextImage = () => {
     Animated.sequence([
@@ -92,10 +90,19 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
         user_attended,
         end_sale_date,
       }),
-    [is_refundable, refund_days_limit, event_date, user_attended, end_sale_date]
+    [
+      is_refundable,
+      refund_days_limit,
+      event_date,
+      user_attended,
+      end_sale_date,
+    ],
   );
 
-  const handleUse = () => navigate("UseEventScreen", { id: id_modal });
+  const handleUse = () => {
+    onClose();
+    navigate("UseEventScreen", { id: id });
+  };
   const handleRefund = async () => {
     notify.info({ message: "Procesando reembolso..." });
     if (!purchase_price || !user_pass_id)
@@ -114,14 +121,14 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
   return (
     <WrapperModal
       isOpen={isOpen}
-      onClose={handleClose}
+      onClose={onClose}
       header={
         <Text style={styles.headerTitle} numberOfLines={1}>
           {event.name}
         </Text>
       }
       content={
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <View>
           <View style={styles.content}>
             {/* Imagen principal */}
             <View style={styles.imageContainer}>
@@ -185,7 +192,7 @@ export const AcquiredEventModal = ({ route }: { route: any }) => {
               )}
             </View>
           </View>
-        </ScrollView>
+        </View>
       }
       actions={
         <View style={styles.footer}>

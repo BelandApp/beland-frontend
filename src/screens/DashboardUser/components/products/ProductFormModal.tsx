@@ -256,10 +256,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
           </Text>
         }
         content={
-          <ScrollView
-            style={styles.formContainer}
-            showsVerticalScrollIndicator={false}
-          >
+          <View>
             <View style={styles.row}>
               <CustomInput
                 label="Nombre"
@@ -439,7 +436,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 )}
               </View>
             </View>
-          </ScrollView>
+          </View>
         }
         actions={
           <View className="md:flex-row gap-2 mx-auto">

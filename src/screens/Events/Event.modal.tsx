@@ -23,22 +23,24 @@ import { useAuth } from "src/context";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { useNotify } from "src/hooks";
 import { convertBeCoinsToUSD, formatUSDPrice } from "src/constants/currency";
-import { Button, WrapperModal } from "src/components";
-
-export const EventModal = ({ route }: { route: any }) => {
-  const { id } = route.params;
+import { WrapperModal } from "src/components";
+export type EventModalType = {
+  id: string;
+  isOpen: boolean;
+  onClose: () => void;
+};
+export const EventModal: React.FC<EventModalType> = ({
+  id,
+  isOpen,
+  onClose,
+}) => {
   const notify = useNotify();
   const { getEvent } = eventStore();
   const event = getEvent(id);
   const { navigate } = useCustomNavigation();
   const { canPerformAction, handleAuth0Login } = useAuth();
   const [visibleImage, setVisibleImage] = useState(0);
-  const [isOpen, setIsOpen] = useState(true);
 
-  const handleClose = () => {
-    setIsOpen(false);
-    setTimeout(() => navigate("MainTabs", { screen: "Community" }), 300);
-  };
   const allImages = useMemo(() => {
     if (!event || !event.images_urls?.length) return [event?.image_url];
     return [event.image_url, ...event.images_urls];
@@ -62,7 +64,6 @@ export const EventModal = ({ route }: { route: any }) => {
     image_url,
   } = event;
 
-  
   const handleNextImage = () => {
     Animated.sequence([
       Animated.timing(translateAnim, {
@@ -88,6 +89,7 @@ export const EventModal = ({ route }: { route: any }) => {
       });
       return;
     }
+    onClose();
     navigate("NewPaymentScreen", {
       company: { id: name, name, img: image_url },
       product: {
@@ -113,14 +115,14 @@ export const EventModal = ({ route }: { route: any }) => {
   return (
     <WrapperModal
       isOpen={isOpen}
-      onClose={handleClose}
+      onClose={onClose}
       header={
         <Text style={styles.headerTitle} numberOfLines={1}>
           {event.name}
         </Text>
       }
       content={
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <View>
           <View style={styles.imageContainer}>
             <Animated.Image
               source={{ uri: allImages[visibleImage] }}
@@ -202,7 +204,7 @@ export const EventModal = ({ route }: { route: any }) => {
               </View>
             )}
           </View>
-        </ScrollView>
+        </View>
       }
       actions={
         <Pressable
