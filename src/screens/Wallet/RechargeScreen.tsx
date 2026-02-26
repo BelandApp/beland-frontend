@@ -395,7 +395,7 @@ export default function RechargeScreen() {
       <WrapperModal
         beforeClose={handleBeforeClose}
         content={
-          <ScrollView className="flex-1 px-6 pt-6">
+          <View>
             {/* Instrucciones */}
             <View className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800 mb-6">
               <View className="flex-row gap-2 mb-2">
@@ -527,7 +527,7 @@ export default function RechargeScreen() {
                 Ingresa el número de confirmación que aparece en tu comprobante.
               </Text>
             </View>
-          </ScrollView>
+          </View>
         }
         actions={
           <Button

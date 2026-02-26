@@ -70,11 +70,7 @@ export const ShareGroupModal: React.FC<ShareGroupModalProps> = ({
       onClose={onClose}
       header={<Text style={styles.title}>Compartir Grupo</Text>}
       content={
-        <ScrollView
-          style={styles.content}
-          contentContainerStyle={styles.contentContainer}
-          showsVerticalScrollIndicator={false}
-        >
+        <View>
           {/* Share Options */}
           <View style={styles.optionsSection}>
             <Text style={styles.sectionTitle}>¿Dónde compartir?</Text>
@@ -163,7 +159,7 @@ export const ShareGroupModal: React.FC<ShareGroupModalProps> = ({
               </Text>
             </View>
           </View>
-        </ScrollView>
+        </View>
       }
     />
   );

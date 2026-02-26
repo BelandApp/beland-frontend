@@ -33,7 +33,7 @@ export const SelectAddress: React.FC<AddressSelectorProps> = ({
     setDisplayAddress(displayAddress.filter((a) => a.id !== addressId));
     notify.success({ message: "Dirección eliminada" });
   };
-
+  const { isMobile } = useResponsiveLayout();
   const AddressCard = ({ item }: { item: any }) => (
     <View style={styles.addressCard}>
       <TouchableOpacity
@@ -74,7 +74,13 @@ export const SelectAddress: React.FC<AddressSelectorProps> = ({
       <FlatList
         data={displayAddress}
         renderItem={AddressCard}
-        contentContainerStyle={{ gap: 8 }}
+        horizontal={isMobile ? true : false}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{
+          gap: 8,
+          flexWrap: isMobile ? "nowrap" : "wrap",
+          flexDirection: "row",
+        }}
         ListEmptyComponent={
           <View style={{ padding: 20 }}>
             <Text style={{ color: "#666" }}>

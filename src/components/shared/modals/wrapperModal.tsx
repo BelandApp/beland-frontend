@@ -1,5 +1,11 @@
-import { ArrowDown, ArrowDownCircle } from "lucide-react-native";
-import { Dimensions, Platform, StyleSheet, View } from "react-native";
+import { ArrowDown, ArrowDownCircle, Scroll } from "lucide-react-native";
+import {
+  Dimensions,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 import Toast from "react-native-toast-message";
 import { colors } from "src/styles";
 import { toastConfig } from "../notification/GlobalNotification";
@@ -75,7 +81,12 @@ export const WrapperModal: React.FC<WrapperModalProps> = ({
         </View>
 
         {/* CONTENT */}
-        <View style={styles.contentWrapper}>{content}</View>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          style={styles.contentWrapper}
+        >
+          {content}
+        </ScrollView>
 
         {/* FOOTER */}
         {actions && <View style={styles.footer}>{actions}</View>}
@@ -115,13 +126,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   contentWrapper: {
-    flex: 1, // Esto es lo que hace que el contenido sea flexible
+    flex: 1,
     padding: 16,
     overflow: "hidden",
   },
   footer: {
     padding: 16,
-    paddingBottom: 34, // Espacio extra para el área segura de iOS/Android
+    paddingBottom: 34,
     borderTopWidth: 1,
     borderTopColor: "rgba(0,0,0,0.05)",
     backgroundColor: colors.background,
