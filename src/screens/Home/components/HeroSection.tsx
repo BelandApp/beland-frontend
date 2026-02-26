@@ -6,6 +6,7 @@ import {
   Platform,
   ActivityIndicator,
   TouchableOpacity,
+  Dimensions,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { BeCoinIcon } from "../../../components/icons/BeCoinIcon";
@@ -115,7 +116,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <Text style={styles.footerValue}>
                 {isLoading ? "..." : showBalance ? becoin_green : "***"}{" "}
               </Text>
-              <Text style={styles.footerLabel}>Green Coins</Text>
+              <Text style={styles.footerLabel}>Green</Text>
             </View>
             {/* OrangeCoins */}
             <View
@@ -130,7 +131,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <Text style={styles.footerValue}>
                 {isLoading ? "..." : showBalance ? becoin_orange : "***"}{" "}
               </Text>
-              <Text style={styles.footerLabel}>Orange Coins</Text>
+              <Text style={styles.footerLabel}>Orange</Text>
             </View>
           </View>
 
@@ -259,9 +260,10 @@ const styles = StyleSheet.create({
     marginVertical: 16,
   },
   footerContainer: {
-    flexDirection: "row",
+    flexDirection: Dimensions.get("window").width < 768 ? "column" : "row",
     justifyContent: "space-between",
     alignItems: "center",
+    gap: 4,
   },
   footerItem: {
     flexDirection: "row",
