@@ -83,7 +83,14 @@ export const OrdersManagementScreen = () => {
     const statusMeta = STATUS_META[item.normalizedStatus as OrderStatus];
     return (
       <TouchableOpacity
-        onPress={() => navigate("OrderAdminDetail", { orderId: item.id })}
+        onPress={() =>
+          navigate("UserDashboardScreen", {
+            screen: "OrderAdminDetail",
+            params: {
+              orderId: item.id,
+            },
+          })
+        }
         className="p-4 m-1 rounded bg-white shadow-slate-100 border border-[#e9ecef]"
       >
         <View className="flex-row justify-between">
@@ -180,7 +187,12 @@ export const OrdersManagementScreen = () => {
           </View>
           <Button
             title="Ver Detalle"
-            onPress={() => navigate("OrderAdminDetail", { orderId: item.id })}
+            onPress={() =>
+              navigate("UserDashboardScreen", {
+                screen: "OrderAdminDetail",
+                params: { orderId: item.id },
+              })
+            }
             variant={isMobile ? "onlyIcon" : "box"}
             style={{
               borderColor: colors.border.secondary,
@@ -197,7 +209,9 @@ export const OrdersManagementScreen = () => {
       <ThemedHeader
         title="Ordenes"
         canGoBack
-        onBackPress={() => navigate("UserDashboardScreen")}
+        onBackPress={() =>
+          navigate("UserDashboardScreen", { screen: "Dashboard" })
+        }
       />
       <View style={{ flex: 1, paddingHorizontal: 16, marginTop: 6 }}>
         <ThemedTabs tabs={tabs} onTabChange={onTabChange} />

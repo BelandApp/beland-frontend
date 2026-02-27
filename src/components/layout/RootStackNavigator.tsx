@@ -7,6 +7,7 @@ import { MainTabNavigator } from "./MainTabNavigator";
 import { OrdersStackNavigator } from "./OrdersStackNavigator";
 // Types imports
 import {
+  DashboardStackParamList,
   GroupsStackParamList,
   MainTabParamList,
   OrdersStackParamList,
@@ -50,6 +51,7 @@ import { HistoryScreen, RecyclingMapScreen } from "../../screens";
 import FinancesManagement from "src/screens/DashboardUser/FinanceManagementScreen";
 import { GroupsStackNavigator } from "./GroupsStackNavigator";
 import FAQScreen from "src/screens/FAQ/FaqScreen";
+import { DashboardStackNavigator } from "./DashboardNavigator";
 
 export type RootStackParamList = {
   // Auth Screens
@@ -60,6 +62,7 @@ export type RootStackParamList = {
   MainTabs: NavigatorScreenParams<MainTabParamList>;
   Orders: NavigatorScreenParams<OrdersStackParamList>;
   Groups: NavigatorScreenParams<GroupsStackParamList>;
+  UserDashboardScreen: NavigatorScreenParams<DashboardStackParamList>;
   CreateGroup: undefined;
   // FAQ
   FAQ: undefined;
@@ -91,7 +94,6 @@ export type RootStackParamList = {
 
   // Users
   Dashboard: undefined;
-  UserDashboardScreen: undefined;
   UserResources: undefined;
   CommerceDashboard: undefined;
   Wallet: undefined;
@@ -103,13 +105,6 @@ export type RootStackParamList = {
     usdAmount: number;
   };
 
-  // Admin Management Screens
-  EventsManagement: undefined;
-  OrdersManagement: undefined;
-  OrderAdminDetail?: { orderId: string };
-  UsersManagement: undefined;
-  ProductsManagement: undefined;
-  FinancesManagement: undefined;
   MisEntradas: { tab: string | undefined };
   // Events Screens
   EventModal: { id: string };
@@ -167,7 +162,7 @@ export const RootStackNavigator = () => {
       />
       <Stack.Screen
         name="UserDashboardScreen"
-        component={UserDashboardScreen}
+        component={DashboardStackNavigator}
         options={{ headerShown: false }}
       />
       <Stack.Screen
@@ -212,36 +207,7 @@ export const RootStackNavigator = () => {
         component={NewPasswordScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen
-        name="EventsManagement"
-        component={EventsManagementScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="OrdersManagement"
-        component={OrdersManagementScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="OrderAdminDetail"
-        component={OrderAdminDetailScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="UsersManagement"
-        component={UsersManagementScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="ProductsManagement"
-        component={ProductsManagementScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="FinancesManagement"
-        component={FinancesManagement}
-        options={{ headerShown: false }}
-      />
+
       <Stack.Screen
         name="UseEventScreen"
         component={UseEventScreen}

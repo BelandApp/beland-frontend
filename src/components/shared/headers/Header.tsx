@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { CircleArrowLeftIcon } from "lucide-react-native";
 import BelandLogo from "src/components/icons/BelandLogo";
-import { UserMenu } from "src/components/ui/UserMenu";
+import { UserMenu } from "@/components";
 import { HeaderStyles } from "./header.styles";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
