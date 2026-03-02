@@ -1,12 +1,9 @@
 import React from "react";
-import { View, Platform } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { colors } from "@styles/colors";
 import { HomeScreen } from "@screens/HomeScreen";
 import { WalletScreen } from "@screens/WalletScreen";
 import { CatalogScreen } from "@screens/CatalogScreen";
 import { GroupsStackNavigator } from "./GroupsStackNavigator";
-import { useAuth } from "@/context";
 import { useOnboardingTour } from "@/hooks/useOnboardingTour";
 import {
   OnboardingOverlay,
@@ -20,15 +17,16 @@ import {
   CatalogIcon,
   OrderIcon,
   CommunityIcon,
+  GroupIcon,
 } from "@components/icons";
 
 import EventsScreen from "src/screens/Events/EventsScreen";
+import { CustomTabBar } from "./customTabBar/CustomTabBar";
+import { TicketCheck } from "lucide-react-native";
 
 const Tab = createBottomTabNavigator();
 
 export const MainTabNavigator = () => {
-  const { user } = useAuth(); // Usar el hook de autenticación
-
   // Onboarding tour
   const {
     showTour,
@@ -43,115 +41,70 @@ export const MainTabNavigator = () => {
   return (
     <>
       <Tab.Navigator
-        screenOptions={({ route }) => ({
-          tabBarIcon: ({ focused, color, size }) => {
-            const iconProps = {
-              width: size,
-              height: size,
-              color: focused ? colors.belandOrange : colors.textSecondary,
-            };
-
-            switch (route.name) {
-              case "Home":
-                return <HomeIcon {...iconProps} />;
-              case "QR":
-                return <QRIcon {...iconProps} />;
-              case "Wallet":
-                return <WalletIcon {...iconProps} />;
-              case "Community":
-                return <CommunityIcon {...iconProps} />;
-              case "Catalog":
-                return <CatalogIcon {...iconProps} />;
-              case "Orders":
-                return <OrderIcon {...iconProps} />;
-              default:
-                return <HomeIcon {...iconProps} />;
-            }
-          },
-          tabBarActiveTintColor: colors.belandOrange,
-          tabBarInactiveTintColor: colors.textSecondary,
-          tabBarAllowFontScaling: false,
-          tabBarBackground: () => (
-            <View
-              style={{
-                flex: 1,
-                backgroundColor: "#FFFFFF",
-                overflow: "hidden",
-              }}
-            />
-          ),
-          tabBarStyle: (() => {
-            const baseStyle = {
-              backgroundColor: "#FFFFFF",
-              borderTopWidth: 0,
-              elevation: 8,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: -2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              paddingTop: 8,
-            };
-            if (
-              Platform.OS === "web" &&
-              typeof window !== "undefined" &&
-              window.innerWidth < 600
-            ) {
-              return {
-                ...baseStyle,
-                position: "absolute",
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: 90, // Altura aumentada para dejar más espacio
-                zIndex: 9999,
-              };
-            }
-            return {
-              ...baseStyle,
-              paddingBottom: Platform.OS === "ios" ? 20 : 0,
-              height: Platform.OS === "ios" ? 80 : 60,
-            };
-          })(),
-          tabBarItemStyle: {
-            paddingHorizontal: 0,
-          },
-          tabBarLabelStyle: {
-            fontSize: 12,
-            fontWeight: "500",
-            marginTop: 4,
-            marginBottom: Platform.OS === "android" ? 4 : 0,
-          },
+        tabBar={(props) => <CustomTabBar {...props} />}
+        screenOptions={{
           headerShown: false,
           tabBarHideOnKeyboard: true,
-        })}
+          tabBarStyle: {
+            position: "absolute",
+            backgroundColor: "transparent",
+            borderTopWidth: 0,
+            elevation: 0,
+          },
+        }}
       >
         <Tab.Screen
           name="Home"
           component={HomeScreen}
-          options={{ tabBarLabel: "Home" }}
+          options={{
+            tabBarLabel: "Home",
+            tabBarIcon: ({ focused }) => (
+              <HomeIcon color={focused ? "#000" : "#777"} />
+            ),
+          }}
         />
 
         <Tab.Screen
-          name="Wallet"
+          name="Billetera"
           component={WalletScreen}
-          options={{ tabBarLabel: "Wallet" }}
+          options={{
+            tabBarLabel: "Wallet",
+            tabBarIcon: ({ focused }) => (
+              <WalletIcon color={focused ? "#000" : "#777"} />
+            ),
+          }}
         />
 
         <Tab.Screen
-          name="Catalog"
+          name="Catalogo"
           component={CatalogScreen}
-          options={{ tabBarLabel: "Catálogo" }}
+          options={{
+            tabBarLabel: "Catalogo",
+            tabBarIcon: ({ focused }) => (
+              <CatalogIcon color={focused ? "#000" : "#777"} />
+            ),
+          }}
         />
 
         <Tab.Screen
-          name="Community"
+          name="Eventos"
           component={EventsScreen}
-          options={{ tabBarLabel: "Eventos" }}
+          options={{
+            tabBarLabel: "Eventos",
+            tabBarIcon: ({ focused }) => (
+              <TicketCheck color={focused ? "#000" : "#777"} />
+            ),
+          }}
         />
         <Tab.Screen
-          name="Groups"
+          name="Grupos"
           component={GroupsStackNavigator}
-          options={{ tabBarLabel: "Grupos" }}
+          options={{
+            tabBarLabel: "Grupos",
+            tabBarIcon: ({ focused }) => (
+              <CommunityIcon color={focused ? "#000" : "#777"} />
+            ),
+          }}
         />
       </Tab.Navigator>
 

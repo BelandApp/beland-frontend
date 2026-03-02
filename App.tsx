@@ -166,7 +166,7 @@ const AppContent = () => {
         <RootStackNavigator />
         <NotificationBanner />
         <Toast config={toastConfig} />
-        {shouldShowQRButton && <FloatingQRButton onPress={handleQRPress} />}
+        {/* {shouldShowQRButton && <FloatingQRButton onPress={handleQRPress} />} */}
       </NavigationContainer>
     </View>
   );

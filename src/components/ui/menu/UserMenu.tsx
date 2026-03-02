@@ -518,7 +518,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
                 {/* CONTENT BY ROLE */}
                 {MENU_CONTENT[user.role_name as UserRole]}
               </View>
-              <View style={styles.menuDivider} />
+              <View style={styles.menuDivider} className="mt-auto" />
               <View className="px-6 pb-4">
                 <Button
                   title="Cerrar sesión"
@@ -604,8 +604,9 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 16,
     borderWidth: 2,
     borderRightWidth: 0,
-    borderColor: colors.brand.orange[500],
+    borderColor: "rgba(255,255,255,0.3)",
     minWidth: 250,
+    height: "90%",
     elevation: 8,
     shadowColor: "#FF6B35",
     shadowOffset: { width: 0, height: 4 },
@@ -625,10 +626,10 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderBottomRightRadius: 25,
-    borderTopLeftRadius: 11,
+    borderTopLeftRadius: 16,
     borderRightWidth: 2,
     borderBottomWidth: 2,
-    borderColor: colors.brand.orange[500],
+    borderColor: "rgba(255,255,255,0.3)",
     backgroundColor: colors.brand.orange[200],
     alignItems: "center",
     justifyContent: "center",
