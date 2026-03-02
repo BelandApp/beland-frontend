@@ -116,11 +116,12 @@ export const UserMenu: React.FC<UserMenuProps> = ({
         navigate("MisEntradas", { tab: "Próximos" });
         break;
       case "ORDERS":
-        navigate("WalletSettingsScreen");
+        navigate("UserDashboardScreen", { screen: "OrdersManagement" });
         break;
-      case "WALLET":
-        navigate("WalletSettingsScreen");
-        break;
+      // DESACTIVADO TEMPORALMENTE POR DEFINIR FUNCIONALIDAD DE WALLET
+      // case "WALLET":
+      //   navigate("WalletSettingsScreen");
+      //   break;
       case "FINANCESADMIN":
         navigate("UserDashboardScreen", { screen: "FinancesManagement" });
         break;

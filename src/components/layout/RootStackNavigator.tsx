@@ -93,7 +93,6 @@ export type RootStackParamList = {
   PayphoneSuccess: { toWalletId: string; amountPaymentId: string };
 
   // Users
-  Dashboard: undefined;
   UserResources: undefined;
   CommerceDashboard: undefined;
   Wallet: undefined;
@@ -239,29 +238,6 @@ export const RootStackNavigator = () => {
         name="FAQ"
         component={FAQScreen}
         options={{ headerShown: false }}
-      />
-      {/* Modales */}
-      <Stack.Screen
-        name="EventModal"
-        component={EventModal}
-        options={{
-          headerShown: false,
-          gestureEnabled: true,
-          presentation: "transparentModal",
-          animation: "slide_from_bottom",
-          animationTypeForReplace: "pop",
-        }}
-      />
-      <Stack.Screen
-        name="AcquiredEventModal"
-        component={AcquiredEventModal}
-        options={{
-          headerShown: false,
-          gestureEnabled: true,
-          presentation: "transparentModal",
-          animation: "slide_from_bottom",
-          animationTypeForReplace: "push",
-        }}
       />
     </Stack.Navigator>
   );
