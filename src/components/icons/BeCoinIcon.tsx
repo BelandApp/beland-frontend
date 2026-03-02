@@ -11,9 +11,9 @@ export type BecoinColorName = keyof typeof BecoinColors;
 export type BecoinColorTuple = (typeof BecoinColors)[BecoinColorName];
 
 export const BecoinColors = {
-  orange: ["#FFA500", "#F0B74F", "#FF7F50"],
-  green: ["#00FF00", "#32CD32", "#228B22"],
-  yellow: ["#FAB400", "#F7CC00", "#D89005"],
+  orange: ["#FFA500", "#F0B74F", "#9A3412"],
+  green: ["#6BA43A", "#8FCE8F", "#2E4F1B"],
+  yellow: ["#FAB400", "#F7CC00", "#B37607"],
 } as const;
 
 export const BeCoinIcon: React.FC<BeCoinIconProps> = ({
