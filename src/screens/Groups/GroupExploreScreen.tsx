@@ -222,7 +222,7 @@ const GroupExploreScreen = () => {
   };
 
   return (
-    <View className="flex-1 bg-background-light gap-2">
+    <View className="flex-1 gap-2">
       {/* Header */}
       <ThemedHeader
         canGoBack

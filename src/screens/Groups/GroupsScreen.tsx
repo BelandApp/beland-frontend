@@ -113,7 +113,7 @@ export const GroupsScreen: React.FC = () => {
   if (!todosMisGrupos || todosMisGrupos.length === 0) {
     return (
       <>
-        <ThemedHeader title="Grupos" />
+        <ThemedHeader title="Grupos" canGoBack />
         <View className="flex-1 justify-center items-center bg-background-light px-4">
           <View className="items-center w-full">
             <View className="relative mb-8 mt-2 items-center justify-center">
@@ -177,65 +177,72 @@ export const GroupsScreen: React.FC = () => {
   });
 
   return (
-    <View className="flex-1">
+    <View className="flex-1 gap-2">
       {/* Header */}
       <ThemedHeader
         title="Grupos"
         buttons={
-          <Button
-            variant="secondary"
-            title="Explorar grupos"
-            onPress={() => {
-              navigate("Groups", { screen: "GroupExplore" });
-            }}
-            icon={<Feather name="compass" size={24} color="white" />}
-          />
+          <>
+            <Button
+              variant="secondary"
+              title="Explorar grupos"
+              onPress={() => {
+                navigate("Groups", { screen: "GroupExplore" });
+              }}
+              icon={<Feather name="compass" size={24} color="white" />}
+            />
+            <Button
+              variant="secondary"
+              title="Crear Grupo"
+              onPress={navigateToCreateGroup}
+              icon={<Feather name="plus" size={24} color="white" />}
+            />
+          </>
         }
       />
 
-      <View className=" gap-2 px-4 flex-1">
-        <View className="pt-1">
-          <SearchBarInput
-            searchQuery={search}
-            onSearchChange={setSearch}
-            placeholder="Buscar por nombre"
-          />
-        </View>
-        <FlatList
-          data={filteredGroups}
-          keyExtractor={(item) => item.id}
-          showsHorizontalScrollIndicator={false}
-          renderItem={({ item }) => (
-            <GroupCard
-              group={item}
-              variant="my-group"
-              onPress={() =>
-                navigate("Groups", {
-                  screen: "GroupDetailScreen",
-                  params: { groupId: item.id },
-                })
-              }
-              privacyOptions={privacyOptions}
-              membersCount={groupMembersCount[item.id] || 0}
-              paymentType={item.payment_type}
-              isMember={true}
-              isOwner={item.is_leader}
-            />
-          )}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              colors={["#00e074"]}
-            />
-          }
-          ListEmptyComponent={
-            <Text className="text-center text-text-sec-light mt-10">
-              No se encontraron grupos
-            </Text>
-          }
+      {/* Search Bar */}
+      <View className="px-2 py-1">
+        <SearchBarInput
+          onSearchChange={setSearch}
+          searchQuery={search}
+          placeholder="Buscar por nombre o categoría..."
         />
       </View>
+      <FlatList
+        data={filteredGroups}
+        keyExtractor={(item) => item.id}
+        showsHorizontalScrollIndicator={false}
+        renderItem={({ item }) => (
+          <GroupCard
+            group={item}
+            variant="my-group"
+            onPress={() =>
+              navigate("Groups", {
+                screen: "GroupDetailScreen",
+                params: { groupId: item.id },
+              })
+            }
+            privacyOptions={privacyOptions}
+            membersCount={groupMembersCount[item.id] || 0}
+            paymentType={item.payment_type}
+            isMember={true}
+            isOwner={item.is_leader}
+          />
+        )}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#00e074"]}
+          />
+        }
+        ListEmptyComponent={
+          <Text className="text-center text-text-sec-light mt-10">
+            No se encontraron grupos
+          </Text>
+        }
+      />
       {/* Botón flotante para crear grupo */}
       <View
         style={

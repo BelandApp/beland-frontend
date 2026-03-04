@@ -448,9 +448,9 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
           visible={showShareModal}
           onClose={() => {
             setShowShareModal(false);
-            navigation?.navigate("MainTabs", {
-              screen: "Groups",
-              params: { screen: "GroupsList" },
+            navigate("Groups", {
+              screen: "GroupDetailScreen",
+              params: { groupId: createdGroup.id },
             });
           }}
           groupData={{
