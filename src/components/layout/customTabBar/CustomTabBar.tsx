@@ -11,6 +11,11 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = ({
   navigation,
 }) => {
   const { navigate } = useCustomNavigation();
+
+  const handleNavigateFloatButton = () => {
+    // State.index === 4 its groups tab
+    state.index === 4 ? navigate("CreateGroup") : navigate("QR");
+  };
   return (
     <View style={styles.wrapper}>
       {/* Glass Container */}
@@ -50,8 +55,15 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = ({
       </BlurView>
 
       {/* QR Floating Button */}
-      <TouchableOpacity style={styles.qrButton} onPress={() => navigate("QR")}>
-        <MaterialCommunityIcons name="qrcode" size={26} color="#fff" />
+      <TouchableOpacity
+        style={styles.qrButton}
+        onPress={handleNavigateFloatButton}
+      >
+        <MaterialCommunityIcons
+          name={state.index !== 4 ? "qrcode" : "plus"}
+          size={26}
+          color="#fff"
+        />
       </TouchableOpacity>
     </View>
   );

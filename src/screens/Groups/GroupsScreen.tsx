@@ -243,44 +243,6 @@ export const GroupsScreen: React.FC = () => {
           </Text>
         }
       />
-      {/* Botón flotante para crear grupo */}
-      <View
-        style={
-          (Platform.OS === "web"
-            ? {
-                position: "fixed" as any,
-                right: 10,
-                bottom: 100,
-                zIndex: 9999,
-                pointerEvents: "auto",
-              }
-            : {
-                position: "absolute" as any,
-                right: 24,
-                bottom: 32,
-                zIndex: 9999,
-                pointerEvents: "auto",
-              }) as any
-        }
-      >
-        <TouchableOpacity
-          style={{
-            height: 56,
-            width: 56,
-            borderRadius: 28,
-            backgroundColor: "#00E074",
-            alignItems: "center",
-            justifyContent: "center",
-            shadowColor: "#000",
-            shadowOpacity: 0.2,
-            shadowRadius: 8,
-            elevation: 8,
-          }}
-          onPress={navigateToCreateGroup}
-        >
-          <Feather name="plus" size={28} color="#fff" />
-        </TouchableOpacity>
-      </View>
     </View>
   );
 };

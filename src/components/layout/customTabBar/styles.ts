@@ -5,7 +5,6 @@ export const styles = StyleSheet.create({
   wrapper: {
     position: "absolute",
     bottom: Dimensions.get("window").width > 600 ? 30 : 0,
-
     left: Dimensions.get("window").width > 600 ? 20 : 2,
     right: Dimensions.get("window").width > 600 ? 20 : 2,
     flexDirection: "row",
@@ -16,12 +15,13 @@ export const styles = StyleSheet.create({
   glassContainer: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 8,
+
     paddingBottom: Dimensions.get("window").width > 600 ? 0 : 20,
     borderRadius: Dimensions.get("window").width > 600 ? 50 : 0,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: "rgba(255,255,255,0.3)",
     overflow: "hidden",
+
     gap: Dimensions.get("window").width > 600 ? 24 : 0,
     width: Dimensions.get("window").width > 600 ? "auto" : "100%",
     justifyContent:
