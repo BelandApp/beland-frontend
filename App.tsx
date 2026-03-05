@@ -1,5 +1,5 @@
 import "react-native-reanimated";
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useEffect } from "react";
 import "./global.css";
 import { Platform } from "react-native";
 import "react-native-gesture-handler";
@@ -11,7 +11,6 @@ import { setStatusBarHidden } from "expo-status-bar";
 import {
   NavigationContainer,
   NavigationContainerRef,
-  NavigationState,
 } from "@react-navigation/native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import {
@@ -38,25 +37,20 @@ import { TooltipProvider } from "src/components/shared/tooltip/Tooltip.portal";
 import { DeepLinkService } from "src/services/deepLink/deepLink.service";
 
 const AppContent = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   useBeCoinsAutoRefresh();
   const navigationRef =
     useRef<NavigationContainerRef<RootStackParamList>>(null);
-  const [currentRoute, setCurrentRoute] = useState<string | undefined>(
-    undefined,
-  );
-  // Estado para saber si estamos en algún screen de grupos
-  const [isInGroups, setIsInGroups] = useState(false);
+
   // Conexión global a sockets para notificaciones de pagos
   usePaymentSocket(() => {});
   useOrderSocket(() => {});
+
   // deepLink intent
   useEffect(() => {
     const handlePendingIntent = async () => {
       if (!isAuthenticated) return;
-
       const intent = await DeepLinkService.getIntent();
-
       if (intent) {
         navigationRef.current?.reset({
           index: 0,
@@ -112,31 +106,6 @@ const AppContent = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Detectar la tab activa dentro de MainTabs
-  const getActiveTab = (
-    state: NavigationState | undefined,
-  ): string | undefined => {
-    if (!state) return undefined;
-    const route = state.routes[state.index];
-    if (route.name === "MainTabs" && route.state) {
-      // Buscar la tab activa dentro de MainTabs
-      return getActiveTab(route.state as NavigationState);
-    }
-    return route.name;
-  };
-
-  const onNavigationStateChange = (state: NavigationState | undefined) => {
-    if (state) {
-      const activeTab = getActiveTab(state);
-      setCurrentRoute(activeTab);
-    }
-  };
-
-  // Mostrar QR solo en Home, Wallet, Catalog, Events
-  const allowedQRTabs = ["Home", "Wallet", "Catalog", "Community"];
-  const shouldShowQRButton =
-    !!user && currentRoute && allowedQRTabs.includes(currentRoute);
-
   // Configuración de linking para rutas web
   const linking = {
     prefixes: [
@@ -171,11 +140,7 @@ const AppContent = () => {
   return (
     <View style={{ flex: 1, backgroundColor: colors.belandOrange }}>
       <StatusBar style="light" />
-      <NavigationContainer
-        ref={navigationRef}
-        onStateChange={onNavigationStateChange}
-        linking={linking}
-      >
+      <NavigationContainer ref={navigationRef} linking={linking}>
         <RootStackNavigator />
         <NotificationBanner />
         <Toast config={toastConfig} />
