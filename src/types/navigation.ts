@@ -33,5 +33,5 @@ export type MainTabParamList = {
   Wallet: undefined;
   Catalog: undefined;
   Community: undefined;
-  Groups: undefined;
+  Groups: NavigatorScreenParams<GroupsStackParamList>;
 };

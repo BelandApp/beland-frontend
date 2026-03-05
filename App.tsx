@@ -137,7 +137,7 @@ const AppContent = () => {
         MainTabs: "",
         PayphoneSuccess: "payphone-success",
         CanjearScreen: "canjear",
-        SendScreen: "send",
+        SendScreen: "send/:id?",
         ReceiveScreen: "receive",
         WalletHistoryScreen: "wallet-history",
         RechargeScreen: "recharge",

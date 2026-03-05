@@ -65,10 +65,10 @@ export const MainTabNavigator = () => {
         />
 
         <Tab.Screen
-          name="Billetera"
+          name="Wallet"
           component={WalletScreen}
           options={{
-            tabBarLabel: "Wallet",
+            tabBarLabel: "Billetera",
             tabBarIcon: ({ focused }) => (
               <WalletIcon color={focused ? "#000" : "#777"} />
             ),
@@ -76,7 +76,7 @@ export const MainTabNavigator = () => {
         />
 
         <Tab.Screen
-          name="Catalogo"
+          name="Catalog"
           component={CatalogScreen}
           options={{
             tabBarLabel: "Catalogo",
@@ -87,7 +87,7 @@ export const MainTabNavigator = () => {
         />
 
         <Tab.Screen
-          name="Eventos"
+          name="Events"
           component={EventsScreen}
           options={{
             tabBarLabel: "Eventos",
@@ -97,7 +97,7 @@ export const MainTabNavigator = () => {
           }}
         />
         <Tab.Screen
-          name="Grupos"
+          name="Groups"
           component={GroupsStackNavigator}
           options={{
             tabBarLabel: "Grupos",

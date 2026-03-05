@@ -440,7 +440,6 @@ export const UserMenu: React.FC<UserMenuProps> = ({
       </View>
     ),
   };
-  console.log(user);
   return (
     <View style={[styles.container, style]}>
       <TouchableOpacity onPress={toggleMenu} style={styles.avatarContainer}>

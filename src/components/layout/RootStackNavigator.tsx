@@ -69,7 +69,7 @@ export type RootStackParamList = {
   // Payments
   CobrarScreen: undefined;
   SendScreen: undefined;
-  ReceiveScreen: undefined;
+  ReceiveScreen: { id?: string };
   HistoryScreen: undefined;
   WalletHistoryScreen: undefined;
   RechargeScreen: undefined;
@@ -95,7 +95,6 @@ export type RootStackParamList = {
   // Users
   UserResources: undefined;
   CommerceDashboard: undefined;
-  Wallet: undefined;
   QR: { pendingRedemption?: any } | undefined;
   RecyclingMap: undefined;
   CanjearScreen: undefined;

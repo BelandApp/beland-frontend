@@ -23,7 +23,7 @@ import { useBeCoinsPrice } from "src/hooks";
 import { ThemedHeader } from "src/components/shared/headers/Header";
 
 const ReceiveScreen = () => {
-  const { goBack, navigate } = useCustomNavigation();
+  const { navigate } = useCustomNavigation();
   const { walletData, wallet, refreshAll } = useWallet();
   const { user } = useAuth();
   const { beCoinsToUsd } = useBeCoinsPrice();
@@ -99,7 +99,9 @@ const ReceiveScreen = () => {
       const userName =
         user?.full_name || user?.email?.split("@")[0] || "Usuario";
       await Share.share({
-        message: `¡Hola! Soy ${userName} y puedes enviarme dinero en Beland usando mi alias: ${alias}`,
+        message: `Hola! Puedes enviarme dinero en Beland, sin importar tu institución bancaria y sin comisiones. Ingresa a LINK, a la opción enviar dinero y usa mi ALIAS: ${alias}
+Gracias! Un abrazo, ${userName} ♻️🌎 
+ https://beland.app/send/${alias}`,
         title: "Mi alias de Beland",
       });
     } catch (error) {
@@ -139,7 +141,7 @@ const ReceiveScreen = () => {
     <ScrollView style={styles.container}>
       <ThemedHeader
         title="Recibir Dinero"
-        onBackPress={() => navigate("Wallet")}
+        onBackPress={() => navigate("MainTabs", { screen: "Wallet" })}
         canGoBack
       />
 
@@ -260,7 +262,7 @@ const ReceiveScreen = () => {
       </View>
 
       {/* QR Code (solo para comercios) */}
-      {user?.role === "COMMERCE" && (
+      {user?.role_name === "COMMERCE" && (
         <View style={styles.qrSection}>
           <View style={styles.sectionHeader}>
             <MaterialCommunityIcons name="qrcode" size={20} color="#111827" />

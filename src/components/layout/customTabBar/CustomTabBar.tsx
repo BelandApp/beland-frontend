@@ -48,7 +48,11 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = ({
                 size: 22,
               })}
 
-              {isFocused && <Text style={styles.label}>{route.name}</Text>}
+              {isFocused && (
+                <Text style={styles.label}>
+                  {options.tabBarLabel?.toString()}
+                </Text>
+              )}
             </TouchableOpacity>
           );
         })}

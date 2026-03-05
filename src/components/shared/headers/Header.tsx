@@ -33,6 +33,7 @@ export const ThemedHeader: React.FC<HeaderProps> = ({
     if (onBackPress) {
       onBackPress();
     } else {
+      console.log("Navegando");
       navigate("MainTabs", { screen: "Home" });
     }
   };

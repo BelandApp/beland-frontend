@@ -22,7 +22,9 @@ import { ThemedHeader } from "src/components/shared/headers/Header";
 
 type Tab = "amount" | "contacts";
 
-const SendScreen = () => {
+const SendScreen = ({ route }: { route: any }) => {
+  const id = route.params?.id;
+  console.log(id);
   const { navigate, goBack } = useCustomNavigation();
   const { walletData, refreshAll } = useWallet();
   const { user, handleAuth0Login } = useAuth();
@@ -37,7 +39,7 @@ const SendScreen = () => {
   // Estados principales
   const [activeTab, setActiveTab] = useState<Tab>("amount");
   const [amountUsd, setAmountUsd] = useState("");
-  const [address, setAddress] = useState("");
+  const [address, setAddress] = useState(id ?? "");
   const [isLoading, setIsLoading] = useState(false);
   const [recipientLoading, setRecipientLoading] = useState(false);
   const [recipientAliases, setRecipientAliases] = useState<
@@ -74,7 +76,7 @@ const SendScreen = () => {
           } catch (err) {
             // ignore individual fetch errors
           }
-        })
+        }),
       );
       if (mounted) setRecipientAliases(map);
     };
@@ -129,7 +131,7 @@ const SendScreen = () => {
         await new Promise((resolve) => setTimeout(resolve, 1500));
         notify.success({
           message: `Se han enviado $${amountUsd} USD (${beCoinsAmount.toFixed(
-            2
+            2,
           )} BECOINS) a ${address}`,
         });
         refreshAll();
@@ -146,7 +148,7 @@ const SendScreen = () => {
 
         const transferResult = await WalletService.transferToAlias(
           recipientIdentifier,
-          beCoinsAmount
+          beCoinsAmount,
         );
 
         if (transferResult) {
