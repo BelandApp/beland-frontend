@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   View,
   Text,
@@ -19,6 +19,7 @@ import { useNotify, useBeCoinsPrice, useRecentRecipients } from "src/hooks";
 import { getBackendErrorMessage } from "src/services";
 import RecentRecipients from "./components/RecentRecipients";
 import { ThemedHeader } from "src/components/shared/headers/Header";
+import { CustomLoader } from "src/components";
 
 type Tab = "amount" | "contacts";
 
@@ -26,8 +27,14 @@ const SendScreen = ({ route }: { route: any }) => {
   const id = route.params?.id;
   const { navigate, goBack } = useCustomNavigation();
   const { user, handleAuth0Login, isAuthenticated } = useAuth();
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("MainTabs", { screen: "Wallet" });
+    }
+  }, [isAuthenticated]);
+
   if (!isAuthenticated) {
-    return navigate("MainTabs", { screen: "Wallet" });
+    return <CustomLoader />;
   }
   const { walletData, refreshAll } = useWallet();
   const { pricePerBeCoin, usdToBeCoins, beCoinsToUsd } = useBeCoinsPrice();

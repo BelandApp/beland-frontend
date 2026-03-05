@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -16,7 +16,12 @@ import {
 } from "./hooks/useRecharge";
 import { ThemedHeader } from "src/components/shared/headers/Header";
 
-import { BeCoinsBalance, Button, WrapperModal } from "src/components";
+import {
+  BeCoinsBalance,
+  Button,
+  CustomLoader,
+  WrapperModal,
+} from "src/components";
 import { notify } from "src/hooks/notification/notify.external";
 import { CopyToClipboard } from "src/utils/shareHelper";
 import ThemedTabs from "src/components/shared/Tabs/ThemedTabs";
@@ -40,6 +45,18 @@ const BankDetailRow = ({ label, value, isCopyable = false }: any) => (
 );
 
 export default function RechargeScreen() {
+  const { navigate } = useCustomNavigation();
+  const { isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("MainTabs", { screen: "Wallet" });
+    }
+  }, [isAuthenticated]);
+
+  if (!isAuthenticated) {
+    return <CustomLoader />;
+  }
   const {
     amount,
     selectedPaymentMethod,
@@ -68,11 +85,7 @@ export default function RechargeScreen() {
     setModalPayphone,
     destroyPayphoneWidget,
   } = useRecharge();
-  const { navigate } = useCustomNavigation();
-  const { isAuthenticated } = useAuth();
-  if (!isAuthenticated) {
-    return navigate("MainTabs", { screen: "Wallet" });
-  }
+
   const handleBeforeClose = () => {
     return new Promise<boolean>((resolve) => {
       notify.confirm({

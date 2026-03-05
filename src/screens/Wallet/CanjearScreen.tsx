@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { useCustomNavigation } from "src/hooks";
 import { useCanjear } from "./hooks/useCanjear";
-import { ThemedHeader } from "src/components";
+import { CustomLoader, ThemedHeader } from "src/components";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { BeCoinIcon } from "src/components/icons/BeCoinIcon";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -22,8 +22,14 @@ import { useAuth } from "src/context";
 const CanjearScreen = () => {
   const { goBack, navigate } = useCustomNavigation();
   const { isAuthenticated } = useAuth();
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("MainTabs", { screen: "Wallet" });
+    }
+  }, [isAuthenticated]);
+
   if (!isAuthenticated) {
-    return navigate("MainTabs", { screen: "Wallet" });
+    return <CustomLoader />;
   }
   const {
     // Estados

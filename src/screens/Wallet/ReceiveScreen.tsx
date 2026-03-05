@@ -21,11 +21,18 @@ import { getBackendErrorMessage } from "src/services";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { useBeCoinsPrice } from "src/hooks";
 import { ThemedHeader } from "src/components/shared/headers/Header";
+import { CustomLoader } from "src/components";
 const ReceiveScreen = () => {
   const { navigate } = useCustomNavigation();
   const { user, isAuthenticated } = useAuth();
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("MainTabs", { screen: "Wallet" });
+    }
+  }, [isAuthenticated]);
+
   if (!isAuthenticated) {
-    return navigate("MainTabs", { screen: "Wallet" });
+    return <CustomLoader />;
   }
   const { walletData, wallet, refreshAll } = useWallet();
   const { beCoinsToUsd } = useBeCoinsPrice();
