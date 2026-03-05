@@ -1,5 +1,5 @@
 import React from "react";
-import { createStackNavigator } from "@react-navigation/stack";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { NavigatorScreenParams } from "@react-navigation/native";
 
 // Navigators imports
@@ -115,7 +115,7 @@ export type RootStackParamList = {
   Rewards: undefined;
 };
 
-const Stack = createStackNavigator<RootStackParamList>();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export const RootStackNavigator = () => {
   return (
@@ -124,7 +124,11 @@ export const RootStackNavigator = () => {
       screenOptions={{ headerShown: false }}
     >
       <Stack.Screen name="MainTabs" component={MainTabNavigator} />
-      <Stack.Screen name="Groups" component={GroupsStackNavigator} />
+      <Stack.Screen
+        name="Groups"
+        options={{ headerShown: false }}
+        component={GroupsStackNavigator}
+      />
       <Stack.Screen
         name="Orders"
         component={OrdersStackNavigator}

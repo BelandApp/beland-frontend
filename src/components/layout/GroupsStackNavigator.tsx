@@ -1,5 +1,4 @@
 import React from "react";
-import { createStackNavigator } from "@react-navigation/stack";
 import { GroupsStackParamList } from "@/types/navigation";
 import { GroupsScreen } from "@/screens";
 import GroupExploreScreen from "@/screens/Groups/GroupExploreScreen";
@@ -10,12 +9,13 @@ import {
   GroupOrdersHistoryScreen,
   GroupServicesHistoryScreen,
 } from "src/screens/Groups";
-
-const Stack = createStackNavigator<GroupsStackParamList>();
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+const Stack = createNativeStackNavigator<GroupsStackParamList>();
 
 export const GroupsStackNavigator = () => {
   return (
     <Stack.Navigator
+      initialRouteName="GroupsList"
       screenOptions={{
         headerShown: false,
       }}

@@ -8,16 +8,12 @@ import {
   Modal,
   Dimensions,
   Platform,
-  Image,
   ImageBackground,
   ActivityIndicator,
 } from "react-native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Feather from "react-native-vector-icons/Feather";
 import { ActionMenu } from "src/screens/Groups/components/ActionMenu";
-import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
-import { GroupsStackParamList } from "@/types/navigation";
+import { useRoute, RouteProp } from "@react-navigation/native";
 import { GroupService, Group, GroupMember } from "@/services/GroupApiService";
 import { GroupPrivacy } from "@/services/GroupApiService";
 import { addressService, UserAddress } from "@/services/addressService";
@@ -30,16 +26,12 @@ import { Button, GroupMembersList } from "src/components";
 import { useAuth } from "src/context/AuthContext";
 import { GroupServicesScreen } from "./GroupServicesScreen";
 import { GroupPurchaseScreen } from "./GroupPurchaseScreen";
-import { GroupOrdersHistoryScreen } from "./GroupOrdersHistoryScreen";
 import { Service } from "@/services/ServicesApiService";
 import { GroupServiceModal } from "@/components/modals/GroupServiceModal";
 import { ShareGroupModal } from "@/components/shared/ShareGroupModal";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
-import { ArrowLeftIcon, CircleArrowLeftIcon } from "lucide-react-native";
-import { colors } from "src/design-system";
-import { position } from "html2canvas/dist/types/css/property-descriptors/position";
-import { CloudinaryService } from "src/services/cloudinary/cloudinary.service";
+import { ArrowLeftIcon } from "lucide-react-native";
 
 type GroupDetailParams = { groupId: string };
 

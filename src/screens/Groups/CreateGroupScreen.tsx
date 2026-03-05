@@ -111,7 +111,10 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
       });
     });
     if (result) {
-      navigate("MainTabs", { screen: "Groups" });
+      navigate("MainTabs", {
+        screen: "Groups",
+        params: { screen: "GroupsList" },
+      });
     } else return;
   };
   return (

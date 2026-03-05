@@ -1,4 +1,4 @@
-import { createStackNavigator } from "@react-navigation/stack";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import {
   EventsManagementScreen,
   OrderAdminDetailScreen,
@@ -10,7 +10,7 @@ import {
 import FinancesManagement from "src/screens/DashboardUser/FinanceManagementScreen";
 import { DashboardStackParamList } from "src/types";
 
-const Stack = createStackNavigator<DashboardStackParamList>();
+const Stack = createNativeStackNavigator<DashboardStackParamList>();
 export const DashboardStackNavigator = () => {
   return (
     <Stack.Navigator
