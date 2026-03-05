@@ -354,7 +354,6 @@ const SendScreen = ({ route }: { route: any }) => {
     <View style={styles.container}>
       <ThemedHeader
         title="Enviar Dinero"
-        onBackPress={() => goBack()}
         buttons={
           <TouchableOpacity
             onPress={() => navigate("QR")}
