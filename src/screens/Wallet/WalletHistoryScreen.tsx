@@ -15,13 +15,14 @@ import { SearchBarInput, ThemedHeader } from "src/components";
 import { useWallet } from "./hooks";
 import { Pressable } from "react-native";
 import { Transaction } from "./types";
-import { CoreApiService } from "src/services";
 import TransactionModal from "./modal/transaction.modal";
+import { useCustomNavigation } from "src/hooks";
 export default function WalletHistoryScreen() {
   const { transactions, loadingTransactions } = useWallet();
   const [searchText, setSearchText] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
   const [modalTransaction, setModalOpen] = useState<Transaction | null>(null);
+  const { navigate } = useCustomNavigation();
   const filterOptions = [
     { id: "all", label: "Todas", icon: "format-list-bulleted" },
     { id: "transferencia", label: "Enviados", icon: "arrow-up-right" },
@@ -54,7 +55,11 @@ export default function WalletHistoryScreen() {
   return (
     <View className="flex-1 bg-[#f8f9fa]">
       {/* Header */}
-      <ThemedHeader canGoBack title="Transacciones" />
+      <ThemedHeader
+        canGoBack
+        title="Transacciones"
+        onBackPress={() => navigate("MainTabs", { screen: "Wallet" })}
+      />
 
       {/* Search and Filters */}
       <View className="p-4">

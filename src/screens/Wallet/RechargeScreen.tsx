@@ -15,14 +15,12 @@ import {
   PAYMENT_METHODS,
 } from "./hooks/useRecharge";
 import { ThemedHeader } from "src/components/shared/headers/Header";
-import { useUserBalance } from "src/hooks/useUserBalance";
-import { convertBeCoinsToUSD } from "src/constants/currency";
 
 import { BeCoinsBalance, Button, WrapperModal } from "src/components";
 import { notify } from "src/hooks/notification/notify.external";
 import { CopyToClipboard } from "src/utils/shareHelper";
-import { File } from "expo-file-system";
 import ThemedTabs from "src/components/shared/Tabs/ThemedTabs";
+import { useCustomNavigation } from "src/hooks";
 
 const BankDetailRow = ({ label, value, isCopyable = false }: any) => (
   <View className="flex-col sm:flex-row justify-between py-2 border-b border-gray-100 dark:border-gray-800">
@@ -69,6 +67,7 @@ export default function RechargeScreen() {
     setModalPayphone,
     destroyPayphoneWidget,
   } = useRecharge();
+  const { navigate } = useCustomNavigation();
   const handleBeforeClose = () => {
     return new Promise<boolean>((resolve) => {
       notify.confirm({
@@ -80,7 +79,11 @@ export default function RechargeScreen() {
   };
   return (
     <>
-      <ThemedHeader title="Recargar BeCoins" canGoBack />
+      <ThemedHeader
+        title="Recargar BeCoins"
+        canGoBack
+        onBackPress={() => navigate("MainTabs", { screen: "Wallet" })}
+      />
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="py-8 px-4">
           {/* Card Principal */}

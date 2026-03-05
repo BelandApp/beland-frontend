@@ -220,7 +220,9 @@ const WithdrawAccounts = () => {
         <Button
           variant="onlyIcon"
           icon={<Plus size={18} color="#FF6B35" />}
-          onPress={() => {}}
+          onPress={() => {
+            openModal("addAccount");
+          }}
           title="Nueva"
           style={{ borderColor: "transparent", backgroundColor: "#f3f4f6" }}
         />

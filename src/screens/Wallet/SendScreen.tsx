@@ -24,7 +24,6 @@ type Tab = "amount" | "contacts";
 
 const SendScreen = ({ route }: { route: any }) => {
   const id = route.params?.id;
-  console.log(id);
   const { navigate, goBack } = useCustomNavigation();
   const { walletData, refreshAll } = useWallet();
   const { user, handleAuth0Login } = useAuth();
@@ -363,6 +362,7 @@ const SendScreen = ({ route }: { route: any }) => {
           </TouchableOpacity>
         }
         canGoBack
+        onBackPress={() => navigate("MainTabs", { screen: "Wallet" })}
       />
 
       {/* Tabs */}
