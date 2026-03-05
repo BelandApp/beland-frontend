@@ -34,6 +34,7 @@ import { useNotify } from "src/hooks/notification/useNotify";
 import { CustomLoader } from "@/components/shared/loader/Loader";
 import { useNavigation } from "@react-navigation/native";
 import Feather from "react-native-vector-icons/Feather";
+import { Button, WrapperModal } from "src/components";
 
 const { width } = Dimensions.get("window");
 const ITEM_WIDTH = (width - 48) / 2;
@@ -105,110 +106,167 @@ const OrderDetailsModal = ({
   });
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-    >
-      <View className="flex-1 bg-black/60 justify-center items-center p-4">
-        <View className="bg-white w-full max-w-md rounded-2xl overflow-hidden max-h-[80%]">
-          {/* Header */}
-          <View className="p-4 flex-row justify-between items-center border-b border-gray-100 bg-gray-50">
-            <View>
-              <Text className="text-lg font-bold text-gray-900">
-                Orden #
-                {fullOrder.order_number ||
-                  (fullOrder.id && fullOrder.id.slice(0, 6)) ||
-                  "---"}
-              </Text>
-              <Text className="text-gray-500 text-xs">{dateStr}</Text>
-            </View>
-            <TouchableOpacity
-              onPress={onClose}
-              className="p-2 bg-gray-200 rounded-full"
+    <WrapperModal
+      isOpen={visible}
+      onClose={onClose}
+      header={
+        <React.Fragment>
+          <Text className="text-lg font-bold text-gray-900">
+            Orden #
+            {fullOrder.order_number ||
+              (fullOrder.id && fullOrder.id.slice(0, 6)) ||
+              "---"}
+          </Text>
+          <Text className="text-gray-500 text-xs">{dateStr}</Text>
+        </React.Fragment>
+      }
+      content={
+        <View>
+          <View className="flex-row items-center justify-between mb-6 bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
+            <Text className="text-gray-500 font-medium">Estado</Text>
+            <View
+              className="px-3 py-1 rounded-full flex-row items-center gap-2"
+              style={{ backgroundColor: `${statusInfo.color}15` }}
             >
-              <X size={16} color="#374151" />
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView className="p-4">
-            {/* Status */}
-            <View className="flex-row items-center justify-between mb-6 bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
-              <Text className="text-gray-500 font-medium">Estado</Text>
-              <View
-                className="px-3 py-1 rounded-full flex-row items-center gap-2"
-                style={{ backgroundColor: `${statusInfo.color}15` }}
+              <Feather
+                name={statusInfo.icon as any}
+                size={14}
+                color={statusInfo.color}
+              />
+              <Text
+                className="font-bold text-sm capitalize"
+                style={{ color: statusInfo.color }}
               >
-                <Feather
-                  name={statusInfo.icon as any}
-                  size={14}
-                  color={statusInfo.color}
-                />
-                <Text
-                  className="font-bold text-sm capitalize"
-                  style={{ color: statusInfo.color }}
-                >
-                  {statusInfo.label}
-                </Text>
-              </View>
+                {statusInfo.label}
+              </Text>
             </View>
-
-            {/* Items */}
-            <Text className="font-bold text-gray-900 mb-3 text-base">
-              Productos ({fullOrder.items?.length || 0})
-            </Text>
-            {loadingDetails ? (
-              <ActivityIndicator color="orange" />
-            ) : (
-              (fullOrder.items || []).map((item: any) => (
-                <View
-                  key={item.id}
-                  className="flex-row items-center mb-4 border-b border-gray-50 pb-3 last:border-0"
-                >
-                  <View className="w-12 h-12 bg-gray-100 rounded-lg mr-3 overflow-hidden border border-gray-100">
-                    {item.product?.image_url && (
-                      <Image
-                        source={{ uri: item.product.image_url }}
-                        className="w-full h-full"
-                        resizeMode="cover"
-                      />
-                    )}
-                  </View>
-                  <View className="flex-1">
-                    <Text className="font-semibold text-gray-800 text-sm">
-                      {item.product?.name || "Producto"}
-                    </Text>
-                    <Text className="text-gray-500 text-xs">
-                      {item.quantity} x {formatCurrency(item.unit_price)}
-                    </Text>
-                  </View>
-                  <Text className="font-bold text-gray-900">
-                    {formatCurrency(item.total_price)}
+          </View>
+          {/* Items */}
+          <Text className="font-bold text-gray-900 mb-3 text-base">
+            Productos ({fullOrder.items?.length || 0})
+          </Text>
+          {loadingDetails ? (
+            <ActivityIndicator color="orange" />
+          ) : (
+            (fullOrder.items || []).map((item: any) => (
+              <View
+                key={item.id}
+                className="flex-row items-center mb-4 border-b border-gray-50 pb-3 last:border-0"
+              >
+                <View className="w-12 h-12 bg-gray-100 rounded-lg mr-3 overflow-hidden border border-gray-100">
+                  {item.product?.image_url && (
+                    <Image
+                      source={{ uri: item.product.image_url }}
+                      className="w-full h-full"
+                      resizeMode="cover"
+                    />
+                  )}
+                </View>
+                <View className="flex-1">
+                  <Text className="font-semibold text-gray-800 text-sm">
+                    {item.product?.name || "Producto"}
+                  </Text>
+                  <Text className="text-gray-500 text-xs">
+                    {item.quantity} x {formatCurrency(item.unit_price)}
                   </Text>
                 </View>
-              ))
-            )}
-
-            {/* Totals */}
-            <View className="mt-4 bg-gray-50 p-4 rounded-xl space-y-2">
-              <View className="flex-row justify-between">
-                <Text className="text-gray-500">Subtotal</Text>
-                <Text className="font-semibold text-gray-900">
-                  {formatCurrency(fullOrder.subtotal)}
+                <Text className="font-bold text-gray-900">
+                  {formatCurrency(item.total_price)}
                 </Text>
               </View>
-              <View className="flex-row justify-between pt-2 border-t border-gray-200">
-                <Text className="font-bold text-lg text-gray-900">Total</Text>
-                <Text className="font-bold text-lg text-orange-600">
-                  {formatCurrency(fullOrder.total_amount)}
-                </Text>
-              </View>
-            </View>
-          </ScrollView>
+            ))
+          )}
         </View>
-      </View>
-    </Modal>
+      }
+      // actions={}
+    />
+    // <Modal
+    //   visible={visible}
+    //   transparent
+    //   animationType="fade"
+    //   onRequestClose={onClose}
+    // >
+    //   <View className="flex-1 bg-black/60 justify-center items-center p-4">
+    //     <View className="bg-white w-full max-w-md rounded-2xl overflow-hidden max-h-[80%]">
+    //       {/* Header */}
+
+    //       <ScrollView className="p-4">
+    //         {/* Status */}
+    //         <View className="flex-row items-center justify-between mb-6 bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
+    //           <Text className="text-gray-500 font-medium">Estado</Text>
+    //           <View
+    //             className="px-3 py-1 rounded-full flex-row items-center gap-2"
+    //             style={{ backgroundColor: `${statusInfo.color}15` }}
+    //           >
+    //             <Feather
+    //               name={statusInfo.icon as any}
+    //               size={14}
+    //               color={statusInfo.color}
+    //             />
+    //             <Text
+    //               className="font-bold text-sm capitalize"
+    //               style={{ color: statusInfo.color }}
+    //             >
+    //               {statusInfo.label}
+    //             </Text>
+    //           </View>
+    //         </View>
+
+    //         {/* Items */}
+    //         <Text className="font-bold text-gray-900 mb-3 text-base">
+    //           Productos ({fullOrder.items?.length || 0})
+    //         </Text>
+    //         {loadingDetails ? (
+    //           <ActivityIndicator color="orange" />
+    //         ) : (
+    //           (fullOrder.items || []).map((item: any) => (
+    //             <View
+    //               key={item.id}
+    //               className="flex-row items-center mb-4 border-b border-gray-50 pb-3 last:border-0"
+    //             >
+    //               <View className="w-12 h-12 bg-gray-100 rounded-lg mr-3 overflow-hidden border border-gray-100">
+    //                 {item.product?.image_url && (
+    //                   <Image
+    //                     source={{ uri: item.product.image_url }}
+    //                     className="w-full h-full"
+    //                     resizeMode="cover"
+    //                   />
+    //                 )}
+    //               </View>
+    //               <View className="flex-1">
+    //                 <Text className="font-semibold text-gray-800 text-sm">
+    //                   {item.product?.name || "Producto"}
+    //                 </Text>
+    //                 <Text className="text-gray-500 text-xs">
+    //                   {item.quantity} x {formatCurrency(item.unit_price)}
+    //                 </Text>
+    //               </View>
+    //               <Text className="font-bold text-gray-900">
+    //                 {formatCurrency(item.total_price)}
+    //               </Text>
+    //             </View>
+    //           ))
+    //         )}
+
+    //         {/* Totals */}
+    //         <View className="mt-4 bg-gray-50 p-4 rounded-xl space-y-2">
+    //           <View className="flex-row justify-between">
+    //             <Text className="text-gray-500">Subtotal</Text>
+    //             <Text className="font-semibold text-gray-900">
+    //               {formatCurrency(fullOrder.subtotal)}
+    //             </Text>
+    //           </View>
+    //           <View className="flex-row justify-between pt-2 border-t border-gray-200">
+    //             <Text className="font-bold text-lg text-gray-900">Total</Text>
+    //             <Text className="font-bold text-lg text-orange-600">
+    //               {formatCurrency(fullOrder.total_amount)}
+    //             </Text>
+    //           </View>
+    //         </View>
+    //       </ScrollView>
+    //     </View>
+    //   </View>
+    // </Modal>
   );
 };
 
@@ -1203,291 +1261,265 @@ export const GroupPurchaseScreen: React.FC<GroupPurchaseScreenProps> = ({
         order={selectedOrder}
         onClose={() => setDetailsModalVisible(false)}
       />
-      <Modal
-        visible={checkoutModalVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setCheckoutModalVisible(false)}
-      >
-        <View className="flex-1 bg-black/60 justify-end">
-          <View className="bg-white rounded-t-3xl max-h-[90%] w-full flex-col">
-            <View className="p-4 border-b border-gray-100 flex-row items-center justify-between">
-              <Text className="text-lg font-bold text-gray-900">
-                Resumen de Compra
-              </Text>
-              <TouchableOpacity
-                onPress={() => setCheckoutModalVisible(false)}
-                className="bg-gray-100 p-2 rounded-full"
-              >
-                <X size={20} color="#374151" />
-              </TouchableOpacity>
-            </View>
+      <WrapperModal
+        isOpen={checkoutModalVisible}
+        onClose={() => setCheckoutModalVisible(false)}
+        header={
+          <Text className="text-lg font-bold text-gray-900">
+            Resumen de Compra
+          </Text>
+        }
+        content={
+          <View>
+            {" "}
+            {isConsumptionMode && (
+              <View className="bg-blue-50 p-3 rounded-xl mb-4 flex-row gap-2 border border-blue-100">
+                <Feather
+                  name="info"
+                  size={16}
+                  color="#2563EB"
+                  className="mt-0.5"
+                />
+                <Text className="text-blue-700 text-xs flex-1 font-medium">
+                  Modo Consumo: Debes asignar cada producto a quien lo consumirá
+                  para confirmar la orden.
+                </Text>
+              </View>
+            )}
+            <View className="mb-6">
+              {groupedItems.map((item) => {
+                const assignments = getProductAssignments(item.product_id);
+                const missing = item.quantity - assignments.count;
 
-            <ScrollView
-              className="p-4 flex-1"
-              showsVerticalScrollIndicator={false}
-            >
-              {isConsumptionMode && (
-                <View className="bg-blue-50 p-3 rounded-xl mb-4 flex-row gap-2 border border-blue-100">
-                  <Feather
-                    name="info"
-                    size={16}
-                    color="#2563EB"
-                    className="mt-0.5"
-                  />
-                  <Text className="text-blue-700 text-xs flex-1 font-medium">
-                    Modo Consumo: Debes asignar cada producto a quien lo
-                    consumirá para confirmar la orden.
-                  </Text>
-                </View>
-              )}
+                // Use the first valid product info available
+                const productInfo =
+                  item.product ||
+                  products.find((p) => p.id === item.product_id);
 
-              <View className="mb-6">
-                {groupedItems.map((item) => {
-                  const assignments = getProductAssignments(item.product_id);
-                  const missing = item.quantity - assignments.count;
-
-                  // Use the first valid product info available
-                  const productInfo =
-                    item.product ||
-                    products.find((p) => p.id === item.product_id);
-
-                  return (
-                    <View
-                      key={item.product_id}
-                      className="py-4 border-b border-gray-50 bg-white"
-                    >
-                      {/* Item Row */}
-                      <View className="flex-row items-center mb-3">
-                        <View className="w-16 h-16 bg-gray-100 rounded-lg mr-3 overflow-hidden border border-gray-100">
-                          {productInfo?.image_url && (
-                            <Image
-                              source={{ uri: productInfo.image_url }}
-                              className="w-full h-full"
-                              resizeMode="contain"
-                            />
-                          )}
-                        </View>
-                        <View className="flex-1">
-                          <Text className="font-semibold text-gray-800 text-sm mb-1">
-                            {productInfo?.name}
-                          </Text>
-                          <Text className="text-orange-600 font-bold text-sm">
-                            $
-                            {(
-                              Number(item.unit_price || 0) * item.quantity
-                            ).toFixed(2)}
-                          </Text>
-                        </View>
-
-                        {/* Qty Controls */}
-                        <View className="flex-row items-center bg-gray-50 rounded-lg border border-gray-200 h-8">
-                          <TouchableOpacity
-                            onPress={() =>
-                              // Decrease: We need to decide WHAT to decrease.
-                              // Logic: Decrease General first, then Personal?
-                              // Or simply decrease 'General' if available, else notify?
-                              // Current logic in updateCartItemQuantity targets SPECIFIC id.
-                              // Since we are grouped, we can't easily use updateCartItemQuantity on "item.id" because "item" is synthetic.
-
-                              // BETTER APPROACH for Grouped Row:
-                              // If I click Minus:
-                              // 1. Try to remove from My Personal Assignment first? Or General First?
-                              // Usually General is "unassigned". So remove General first.
-                              // If General is 0, remove my personal?
-
-                              // Simplified: Just use updateProductQuantity logic (product-based).
-                              // If I reduce quantity:
-                              //  - Check General Qty. If > 0, reduce General.
-                              //  - Else, check My Personal. If > 0, reduce Personal.
-                              //  - Else, show error "Cannot remove others' items".
-                              handleGroupedQuantityChange(item.product_id, -1)
-                            }
-                            className="w-8 h-full items-center justify-center border-r border-gray-200"
-                          >
-                            <Minus size={14} color="#6B7280" />
-                          </TouchableOpacity>
-                          <Text className="font-bold text-gray-900 w-8 text-center text-xs">
-                            {item.quantity}
-                          </Text>
-                          <TouchableOpacity
-                            onPress={() =>
-                              // Increase: Just add to General?
-                              handleGroupedQuantityChange(item.product_id, 1)
-                            }
-                            className="w-8 h-full items-center justify-center border-l border-gray-200"
-                          >
-                            <Plus size={14} color="#6B7280" />
-                          </TouchableOpacity>
-                        </View>
+                return (
+                  <View
+                    key={item.product_id}
+                    className="py-4 border-b border-gray-50 bg-white"
+                  >
+                    {/* Item Row */}
+                    <View className="flex-row items-center mb-3">
+                      <View className="w-16 h-16 bg-gray-100 rounded-lg mr-3 overflow-hidden border border-gray-100">
+                        {productInfo?.image_url && (
+                          <Image
+                            source={{ uri: productInfo.image_url }}
+                            className="w-full h-full"
+                            resizeMode="contain"
+                          />
+                        )}
+                      </View>
+                      <View className="flex-1">
+                        <Text className="font-semibold text-gray-800 text-sm mb-1">
+                          {productInfo?.name}
+                        </Text>
+                        <Text className="text-orange-600 font-bold text-sm">
+                          $
+                          {(
+                            Number(item.unit_price || 0) * item.quantity
+                          ).toFixed(2)}
+                        </Text>
                       </View>
 
-                      {/* ASSIGNMENT SECTION (Only Consumption Mode) */}
-                      {isConsumptionMode && (
-                        <View className="bg-gray-50 rounded-xl p-3 border border-gray-100">
-                          <View className="flex-row justify-between mb-2">
-                            <Text className="text-xs font-bold text-gray-500 uppercase tracking-widest">
-                              Consumidores
-                            </Text>
-                            <Text
-                              className={`text-xs font-bold ${missing > 0 ? "text-red-500" : "text-green-600"}`}
-                            >
-                              {assignments.count} / {item.quantity}
-                            </Text>
-                          </View>
+                      {/* Qty Controls */}
+                      <View className="flex-row items-center bg-gray-50 rounded-lg border border-gray-200 h-8">
+                        <TouchableOpacity
+                          onPress={() =>
+                            // Decrease: We need to decide WHAT to decrease.
+                            // Logic: Decrease General first, then Personal?
+                            // Or simply decrease 'General' if available, else notify?
+                            // Current logic in updateCartItemQuantity targets SPECIFIC id.
+                            // Since we are grouped, we can't easily use updateCartItemQuantity on "item.id" because "item" is synthetic.
 
-                          <ScrollView
-                            horizontal
-                            showsHorizontalScrollIndicator={false}
-                            className="flex-row"
+                            // BETTER APPROACH for Grouped Row:
+                            // If I click Minus:
+                            // 1. Try to remove from My Personal Assignment first? Or General First?
+                            // Usually General is "unassigned". So remove General first.
+                            // If General is 0, remove my personal?
+
+                            // Simplified: Just use updateProductQuantity logic (product-based).
+                            // If I reduce quantity:
+                            //  - Check General Qty. If > 0, reduce General.
+                            //  - Else, check My Personal. If > 0, reduce Personal.
+                            //  - Else, show error "Cannot remove others' items".
+                            handleGroupedQuantityChange(item.product_id, -1)
+                          }
+                          className="w-8 h-full items-center justify-center border-r border-gray-200"
+                        >
+                          <Minus size={14} color="#6B7280" />
+                        </TouchableOpacity>
+                        <Text className="font-bold text-gray-900 w-8 text-center text-xs">
+                          {item.quantity}
+                        </Text>
+                        <TouchableOpacity
+                          onPress={() =>
+                            // Increase: Just add to General?
+                            handleGroupedQuantityChange(item.product_id, 1)
+                          }
+                          className="w-8 h-full items-center justify-center border-l border-gray-200"
+                        >
+                          <Plus size={14} color="#6B7280" />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+
+                    {/* ASSIGNMENT SECTION (Only Consumption Mode) */}
+                    {isConsumptionMode && (
+                      <View className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                        <View className="flex-row justify-between mb-2">
+                          <Text className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+                            Consumidores
+                          </Text>
+                          <Text
+                            className={`text-xs font-bold ${missing > 0 ? "text-red-500" : "text-green-600"}`}
                           >
-                            {/* Assigned Members Avatars */}
-                            {assignments.userIds.map((uid, idx) => {
-                              const mem = members.find(
-                                (m) => (m.user_id || m.user?.id) === uid,
-                              );
-                              const avatar =
-                                mem?.user?.profile_picture_url ||
-                                mem?.user?.avatar_url;
-                              const initials = (mem?.user?.name || "??")
-                                .slice(0, 2)
-                                .toUpperCase();
+                            {assignments.count} / {item.quantity}
+                          </Text>
+                        </View>
 
-                              const isMe = uid === user?.id;
+                        <ScrollView
+                          horizontal
+                          showsHorizontalScrollIndicator={false}
+                          className="flex-row"
+                        >
+                          {/* Assigned Members Avatars */}
+                          {assignments.userIds.map((uid, idx) => {
+                            const mem = members.find(
+                              (m) => (m.user_id || m.user?.id) === uid,
+                            );
+                            const avatar =
+                              mem?.user?.profile_picture_url ||
+                              mem?.user?.avatar_url;
+                            const initials = (mem?.user?.name || "??")
+                              .slice(0, 2)
+                              .toUpperCase();
 
-                              return (
-                                <TouchableOpacity
-                                  key={`${uid}-${idx}`}
-                                  disabled={!isMe}
-                                  onPress={() =>
-                                    isMe && handleUnassignSelf(item.product_id)
-                                  }
-                                  className="mr-3 mt-2 relative"
+                            const isMe = uid === user?.id;
+
+                            return (
+                              <TouchableOpacity
+                                key={`${uid}-${idx}`}
+                                disabled={!isMe}
+                                onPress={() =>
+                                  isMe && handleUnassignSelf(item.product_id)
+                                }
+                                className="mr-3 mt-2 relative"
+                              >
+                                <View
+                                  className={`w-10 h-10 rounded-full bg-white border items-center justify-center overflow-hidden ${isMe ? "border-orange-500" : "border-gray-200"}`}
                                 >
-                                  <View
-                                    className={`w-10 h-10 rounded-full bg-white border items-center justify-center overflow-hidden ${isMe ? "border-orange-500" : "border-gray-200"}`}
-                                  >
-                                    {avatar ? (
-                                      <Image
-                                        source={{ uri: avatar }}
-                                        className="w-full h-full"
-                                      />
-                                    ) : (
-                                      <Text className="text-[10px] font-bold text-gray-500">
-                                        {initials}
-                                      </Text>
-                                    )}
-                                  </View>
-                                  {isMe && (
-                                    <View className="absolute -top-1 -right-1 bg-red-500 rounded-full w-5 h-5 items-center justify-center border border-white elevation-2">
-                                      <X size={12} color="white" />
-                                    </View>
+                                  {avatar ? (
+                                    <Image
+                                      source={{ uri: avatar }}
+                                      className="w-full h-full"
+                                    />
+                                  ) : (
+                                    <Text className="text-[10px] font-bold text-gray-500">
+                                      {initials}
+                                    </Text>
                                   )}
-                                </TouchableOpacity>
-                              );
-                            })}
+                                </View>
+                                {isMe && (
+                                  <View className="absolute -top-1 -right-1 bg-red-500 rounded-full w-5 h-5 items-center justify-center border border-white elevation-2">
+                                    <X size={12} color="white" />
+                                  </View>
+                                )}
+                              </TouchableOpacity>
+                            );
+                          })}
 
-                            {/* Add Button - Show Self to allow quick add if needed, or maybe just +/- controls above suffice? 
+                          {/* Add Button - Show Self to allow quick add if needed, or maybe just +/- controls above suffice? 
                                 Actually, sticking to Self-Service means I only see ME here mostly if I assigned myself.
                                 But if I want to assign myself from this list? 
                                 Let's show "Assign Me" button if I am missing.
                             */}
-                            {missing > 0 &&
-                              user?.id &&
-                              !assignments.userIds.includes(user.id) && (
-                                <TouchableOpacity
-                                  onPress={() =>
-                                    handleAssignSelf(item.product_id)
-                                  }
-                                  className={`mr-2 w-10 h-10 rounded-full bg-white border border-dashed border-orange-400 items-center justify-center mt-3 overflow-hidden`}
-                                >
-                                  {user?.profile_picture_url ? (
-                                    <Image
-                                      source={{
-                                        uri: user.profile_picture_url,
-                                      }}
-                                      className="w-full h-full"
-                                    />
-                                  ) : (
-                                    <View className="w-full h-full items-center justify-center bg-orange-50">
-                                      <Text className="text-[10px] font-bold text-orange-600">
-                                        {(user?.full_name || "U")
-                                          .slice(0, 2)
-                                          .toUpperCase()}
-                                      </Text>
-                                    </View>
-                                  )}
-                                  <View className="absolute -top-2 -right-1 bg-orange-500 rounded-full w-5 h-5 items-center justify-center border-2 border-white shadow-lg elevation-2 z-50">
-                                    <Feather
-                                      name="plus"
-                                      size={10}
-                                      color="white"
-                                    />
+                          {missing > 0 &&
+                            user?.id &&
+                            !assignments.userIds.includes(user.id) && (
+                              <TouchableOpacity
+                                onPress={() =>
+                                  handleAssignSelf(item.product_id)
+                                }
+                                className={`mr-2 w-10 h-10 rounded-full bg-white border border-dashed border-orange-400 items-center justify-center mt-3 overflow-hidden`}
+                              >
+                                {user?.profile_picture_url ? (
+                                  <Image
+                                    source={{
+                                      uri: user.profile_picture_url,
+                                    }}
+                                    className="w-full h-full"
+                                  />
+                                ) : (
+                                  <View className="w-full h-full items-center justify-center bg-orange-50">
+                                    <Text className="text-[10px] font-bold text-orange-600">
+                                      {(user?.full_name || "U")
+                                        .slice(0, 2)
+                                        .toUpperCase()}
+                                    </Text>
                                   </View>
-                                </TouchableOpacity>
-                              )}
-                          </ScrollView>
-                        </View>
-                      )}
-                    </View>
-                  );
-                })}
+                                )}
+                                <View className="absolute -top-2 -right-1 bg-orange-500 rounded-full w-5 h-5 items-center justify-center border-2 border-white shadow-lg elevation-2 z-50">
+                                  <Feather
+                                    name="plus"
+                                    size={10}
+                                    color="white"
+                                  />
+                                </View>
+                              </TouchableOpacity>
+                            )}
+                        </ScrollView>
+                      </View>
+                    )}
+                  </View>
+                );
+              })}
+            </View>
+            <View className="bg-gray-50 p-4 rounded-xl mb-8">
+              <View className="flex-row justify-between mb-2">
+                <Text className="text-gray-500 text-sm">Subtotal</Text>
+                <Text className="text-gray-900 font-semibold">
+                  ${getTotalPrice().toFixed(2)}
+                </Text>
               </View>
-
-              <View className="bg-gray-50 p-4 rounded-xl mb-8">
-                <View className="flex-row justify-between mb-2">
-                  <Text className="text-gray-500 text-sm">Subtotal</Text>
-                  <Text className="text-gray-900 font-semibold">
-                    ${getTotalPrice().toFixed(2)}
-                  </Text>
-                </View>
-                <View className="flex-row justify-between">
-                  <Text className="text-gray-900 font-bold text-lg">
-                    Total a Pagar
-                  </Text>
-                  <Text className="text-orange-600 font-bold text-lg">
-                    ${getTotalPrice().toFixed(2)}
-                  </Text>
-                </View>
+              <View className="flex-row justify-between">
+                <Text className="text-gray-900 font-bold text-lg">
+                  Total a Pagar
+                </Text>
+                <Text className="text-orange-600 font-bold text-lg">
+                  ${getTotalPrice().toFixed(2)}
+                </Text>
               </View>
-            </ScrollView>
-
-            <View className="p-4 px-6 border-t border-gray-100 bg-white shadow-xl pt-2 pb-8">
-              {isLeader ? (
-                <TouchableOpacity
-                  onPress={handleCheckout}
-                  disabled={processingOrder || !isAssignmentComplete}
-                  className={`w-full py-4 rounded-xl items-center flex-row justify-center gap-2 ${processingOrder || !isAssignmentComplete ? "bg-gray-300" : "bg-gray-900"}`}
-                >
-                  {processingOrder ? (
-                    <Text className="text-gray-500 font-bold">
-                      Procesando...
-                    </Text>
-                  ) : !isAssignmentComplete ? (
-                    <Text className="text-gray-500 font-bold">
-                      Asigna todos los productos
-                    </Text>
-                  ) : (
-                    <>
-                      <Text className="text-white font-bold text-lg">
-                        Confirmar Orden
-                      </Text>
-                      <ArrowRight size={20} color="white" />
-                    </>
-                  )}
-                </TouchableOpacity>
-              ) : (
-                <View className="bg-yellow-50 p-3 rounded-lg flex-row items-center gap-2 border border-yellow-200">
-                  <Feather name="info" size={18} color="#CA8A04" />
-                  <Text className="text-yellow-700 text-xs font-semibold flex-1">
-                    Solo el administrador del grupo puede confirmar la compra.
-                  </Text>
-                </View>
-              )}
             </View>
           </View>
-        </View>
-      </Modal>
+        }
+        actions={
+          <View className=" border-t border-gray-100 ">
+            {isLeader ? (
+              <Button
+                title={
+                  processingOrder
+                    ? "Procesando..."
+                    : !isAssignmentComplete
+                      ? " Asigna todos los productos"
+                      : "  Confirmar Orden"
+                }
+                onPress={handleCheckout}
+                disabled={processingOrder || !isAssignmentComplete}
+              />
+            ) : (
+              <View className="bg-yellow-50 p-3 rounded-lg flex-row items-center gap-2 border border-yellow-200">
+                <Feather name="info" size={18} color="#CA8A04" />
+                <Text className="text-yellow-700 text-xs font-semibold flex-1">
+                  Solo el administrador del grupo puede confirmar la compra.
+                </Text>
+              </View>
+            )}
+          </View>
+        }
+      />
     </View>
   );
 };

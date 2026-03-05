@@ -199,9 +199,8 @@ const GroupExploreScreen = () => {
         group={item}
         variant="explore"
         onPress={() =>
-          navigate("Groups", {
-            screen: "GroupDetailScreen",
-            params: { groupId: item.id },
+          navigate("GroupDetailScreen", {
+            groupId: item.id,
           })
         }
         privacyOptions={privacyOptions}
@@ -222,108 +221,105 @@ const GroupExploreScreen = () => {
   };
 
   return (
-    <View className="flex-1 gap-2">
-      {/* Header */}
-      <ThemedHeader
-        canGoBack
-        title="Explorar Grupos"
-        onBackPress={() => navigate("Groups", { screen: "GroupsList" })}
-      />
+    <FlatList
+      ListHeaderComponent={
+        <React.Fragment>
+          <ThemedHeader
+            canGoBack
+            title="Explorar Grupos"
+            onBackPress={() => navigate("Groups", { screen: "GroupsList" })}
+          />
 
-      {/* Search Bar */}
-      <View className="px-2 py-1">
-        <SearchBarInput
-          onSearchChange={setSearch}
-          searchQuery={search}
-          placeholder="Buscar por nombre o categoría..."
-        />
-      </View>
-
-      {/* Filter Chips (sticky, scrollable horizontally, compact spacing) */}
-      <View className="sticky top-16 z-10 bg-background-light/95">
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingHorizontal: 12,
-
-            paddingBottom: 8,
-            alignItems: "center",
-          }}
-        >
-          <TouchableOpacity
-            key="all"
-            className={`h-8 flex-row items-center gap-x-2 rounded-xl px-3 mr-2 ${
-              filter === "all"
-                ? "bg-[#F88D2A] shadow-md"
-                : "bg-white border border-gray-200"
-            }`}
-            onPress={() => setFilter("all")}
-          >
-            <Feather
-              name="users"
-              size={18}
-              color={filter === "all" ? "#0f2319" : "#101815"}
+          {/* Search Bar */}
+          <View className="px-2 py-1">
+            <SearchBarInput
+              onSearchChange={setSearch}
+              searchQuery={search}
+              placeholder="Buscar por nombre o categoría..."
             />
-            <Text
-              className={`text-sm ${
-                filter === "all"
-                  ? "font-bold text-[#0f2319]"
-                  : "font-medium text-text-main-light"
-              }`}
-            >
-              Todos
-            </Text>
-          </TouchableOpacity>
-          {privacyOptions.map((p) => (
-            <TouchableOpacity
-              key={p.code}
-              className={`h-8 flex-row items-center gap-x-2 rounded-xl px-3 mr-2 ${
-                filter === p.code
-                  ? "bg-primary shadow-md"
-                  : "bg-white border border-gray-200"
-              }`}
-              onPress={() => setFilter(p.code)}
-            >
-              <Feather
-                name={getPrivacyIcon(p.code)}
-                size={18}
-                color={filter === p.code ? "#0f2319" : "#101815"}
-              />
-              <Text
-                className={`text-sm ${
-                  filter === p.code
-                    ? "font-bold text-[#0f2319]"
-                    : "font-medium text-text-main-light"
-                }`}
-              >
-                {p.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
+          </View>
+          <View className=" bg-background-light/95">
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{
+                paddingHorizontal: 12,
 
-      {/* Groups List */}
-      <FlatList
-        data={filteredGroups}
-        keyExtractor={(item) => item.id}
-        renderItem={renderGroup}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}
-        ListEmptyComponent={
-          loading ? (
-            <View style={{ paddingTop: 24 }}>
-              <CustomLoader />
-            </View>
-          ) : (
-            <Text className="text-center text-text-sec-light mt-10">
-              No se encontraron grupos
-            </Text>
-          )
-        }
-      />
-    </View>
+                paddingBottom: 8,
+                alignItems: "center",
+              }}
+            >
+              <TouchableOpacity
+                key="all"
+                className={`h-8 flex-row items-center gap-x-2 rounded-xl px-3 mr-2 ${
+                  filter === "all"
+                    ? "bg-[#F88D2A] shadow-md"
+                    : "bg-white border border-gray-200"
+                }`}
+                onPress={() => setFilter("all")}
+              >
+                <Feather
+                  name="users"
+                  size={18}
+                  color={filter === "all" ? "#0f2319" : "#101815"}
+                />
+                <Text
+                  className={`text-sm ${
+                    filter === "all"
+                      ? "font-bold text-[#0f2319]"
+                      : "font-medium text-text-main-light"
+                  }`}
+                >
+                  Todos
+                </Text>
+              </TouchableOpacity>
+              {privacyOptions.map((p) => (
+                <TouchableOpacity
+                  key={p.code}
+                  className={`h-8 flex-row items-center gap-x-2 rounded-xl px-3 mr-2 ${
+                    filter === p.code
+                      ? "bg-primary shadow-md"
+                      : "bg-white border border-gray-200"
+                  }`}
+                  onPress={() => setFilter(p.code)}
+                >
+                  <Feather
+                    name={getPrivacyIcon(p.code)}
+                    size={18}
+                    color={filter === p.code ? "#0f2319" : "#101815"}
+                  />
+                  <Text
+                    className={`text-sm ${
+                      filter === p.code
+                        ? "font-bold text-[#0f2319]"
+                        : "font-medium text-text-main-light"
+                    }`}
+                  >
+                    {p.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </React.Fragment>
+      }
+      data={filteredGroups}
+      keyExtractor={(item) => item.id}
+      renderItem={renderGroup}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{ paddingBottom: 40 }}
+      ListEmptyComponent={
+        loading ? (
+          <View style={{ paddingTop: 24 }}>
+            <CustomLoader />
+          </View>
+        ) : (
+          <Text className="text-center text-text-sec-light mt-10">
+            No se encontraron grupos
+          </Text>
+        )
+      }
+    />
   );
 };
 

@@ -1,5 +1,5 @@
 import React from "react";
-import { createStackNavigator } from "@react-navigation/stack";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { NavigatorScreenParams } from "@react-navigation/native";
 
 // Navigators imports
@@ -52,6 +52,7 @@ import FinancesManagement from "src/screens/DashboardUser/FinanceManagementScree
 import { GroupsStackNavigator } from "./GroupsStackNavigator";
 import FAQScreen from "src/screens/FAQ/FaqScreen";
 import { DashboardStackNavigator } from "./DashboardNavigator";
+import { GroupDetailScreen } from "src/screens/GroupDetailScreen";
 
 export type RootStackParamList = {
   // Auth Screens
@@ -61,7 +62,7 @@ export type RootStackParamList = {
   // Main Screens
   MainTabs: NavigatorScreenParams<MainTabParamList>;
   Orders: NavigatorScreenParams<OrdersStackParamList>;
-  Groups: NavigatorScreenParams<GroupsStackParamList>;
+  GroupDetailScreen: { groupId: string };
   UserDashboardScreen: NavigatorScreenParams<DashboardStackParamList>;
   CreateGroup: undefined;
   // FAQ
@@ -115,7 +116,7 @@ export type RootStackParamList = {
   Rewards: undefined;
 };
 
-const Stack = createStackNavigator<RootStackParamList>();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export const RootStackNavigator = () => {
   return (
@@ -124,7 +125,7 @@ export const RootStackNavigator = () => {
       screenOptions={{ headerShown: false }}
     >
       <Stack.Screen name="MainTabs" component={MainTabNavigator} />
-      <Stack.Screen name="Groups" component={GroupsStackNavigator} />
+      <Stack.Screen name="GroupDetailScreen" component={GroupDetailScreen} />
       <Stack.Screen
         name="Orders"
         component={OrdersStackNavigator}

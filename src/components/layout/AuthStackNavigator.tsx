@@ -1,7 +1,7 @@
 // TODO CHEQUEAR SI SE USA
 
 import React from "react";
-import { createStackNavigator } from "@react-navigation/stack";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { LoginScreen } from "../../screens/Login";
 import { RegisterScreen } from "../../screens/Register";
 
@@ -10,7 +10,7 @@ export type AuthStackParamList = {
   Register: undefined;
 };
 
-const Stack = createStackNavigator<AuthStackParamList>();
+const Stack = createNativeStackNavigator<AuthStackParamList>();
 
 export const AuthStackNavigator = () => {
   return (

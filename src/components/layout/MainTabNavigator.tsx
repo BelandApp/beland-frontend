@@ -12,12 +12,9 @@ import {
 
 import {
   HomeIcon,
-  QRIcon,
   WalletIcon,
   CatalogIcon,
-  OrderIcon,
   CommunityIcon,
-  GroupIcon,
 } from "@components/icons";
 
 import EventsScreen from "src/screens/Events/EventsScreen";
@@ -43,8 +40,8 @@ export const MainTabNavigator = () => {
       <Tab.Navigator
         tabBar={(props) => <CustomTabBar {...props} />}
         screenOptions={{
-          headerShown: false,
           tabBarHideOnKeyboard: true,
+          headerShown: false,
           tabBarStyle: {
             position: "absolute",
             backgroundColor: "transparent",
@@ -57,6 +54,7 @@ export const MainTabNavigator = () => {
           name="Home"
           component={HomeScreen}
           options={{
+            headerShown: false,
             tabBarLabel: "Home",
             tabBarIcon: ({ focused }) => (
               <HomeIcon color={focused ? "#000" : "#777"} />
@@ -68,6 +66,7 @@ export const MainTabNavigator = () => {
           name="Wallet"
           component={WalletScreen}
           options={{
+            headerShown: false,
             tabBarLabel: "Billetera",
             tabBarIcon: ({ focused }) => (
               <WalletIcon color={focused ? "#000" : "#777"} />
@@ -79,6 +78,7 @@ export const MainTabNavigator = () => {
           name="Catalog"
           component={CatalogScreen}
           options={{
+            headerShown: false,
             tabBarLabel: "Catalogo",
             tabBarIcon: ({ focused }) => (
               <CatalogIcon color={focused ? "#000" : "#777"} />
@@ -90,6 +90,7 @@ export const MainTabNavigator = () => {
           name="Events"
           component={EventsScreen}
           options={{
+            headerShown: false,
             tabBarLabel: "Eventos",
             tabBarIcon: ({ focused }) => (
               <TicketCheck color={focused ? "#000" : "#777"} />
