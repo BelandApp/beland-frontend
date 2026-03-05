@@ -68,8 +68,8 @@ export type RootStackParamList = {
   FAQ: undefined;
   // Payments
   CobrarScreen: undefined;
-  SendScreen: undefined;
-  ReceiveScreen: { id?: string };
+  SendScreen: { id?: string };
+  ReceiveScreen: undefined;
   HistoryScreen: undefined;
   WalletHistoryScreen: undefined;
   RechargeScreen: undefined;

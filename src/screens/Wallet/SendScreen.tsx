@@ -20,22 +20,17 @@ import { getBackendErrorMessage } from "src/services";
 import RecentRecipients from "./components/RecentRecipients";
 import { ThemedHeader } from "src/components/shared/headers/Header";
 import { CustomLoader } from "src/components";
+import { storage } from "src/stores";
+import { DeepLinkService } from "src/services/deepLink/deepLink.service";
 
 type Tab = "amount" | "contacts";
 
 const SendScreen = ({ route }: { route: any }) => {
   const id = route.params?.id;
-  const { navigate, goBack } = useCustomNavigation();
+  const { navigate } = useCustomNavigation();
   const { user, handleAuth0Login, isAuthenticated } = useAuth();
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("MainTabs", { screen: "Wallet" });
-    }
-  }, [isAuthenticated]);
+  const notify = useNotify();
 
-  if (!isAuthenticated) {
-    return <CustomLoader />;
-  }
   const { walletData, refreshAll } = useWallet();
   const { pricePerBeCoin, usdToBeCoins, beCoinsToUsd } = useBeCoinsPrice();
   const {
@@ -43,7 +38,7 @@ const SendScreen = ({ route }: { route: any }) => {
     loading: loadingRecipients,
     refetch: refetchRecipients,
   } = useRecentRecipients();
-  const notify = useNotify();
+
   // Estados principales
   const [activeTab, setActiveTab] = useState<Tab>("amount");
   const [amountUsd, setAmountUsd] = useState("");
@@ -100,6 +95,24 @@ const SendScreen = ({ route }: { route: any }) => {
     return beCoinsToUsd(walletData.balance);
   }, [walletData.balance, beCoinsToUsd]);
 
+  useEffect(() => {
+    if (id && !isAuthenticated) {
+      notify.confirm({
+        message: "Debes estar logueado para realizar transferencias",
+        onConfirm: async () => {
+          await DeepLinkService.setSendIntent(id);
+          navigate("Login");
+        },
+        onCancel: () => navigate("MainTabs", { screen: "Home" }),
+      });
+    } else if (!isAuthenticated) {
+      navigate("MainTabs", { screen: "Wallet" });
+    }
+  }, [isAuthenticated]);
+
+  if (!isAuthenticated) {
+    return <CustomLoader />;
+  }
   // Validar transferencia
   const validateTransfer = (): boolean => {
     const transferAmount = parseFloat(amountUsd);

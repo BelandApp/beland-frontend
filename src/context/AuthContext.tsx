@@ -14,6 +14,7 @@ import { Storage } from "src/services/auth/storage.service";
 import { getBackendErrorMessage } from "src/services";
 import { notify } from "src/hooks/notification/notify.external";
 import { clearStorage, resetStores } from "src/utils/logoutUtils";
+import { storage } from "src/stores";
 
 export type User = {
   id: string;
@@ -105,7 +106,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   });
   // Development URL:
   // NATIVE> exp://localhost:8081/--/callback WEB> http://localhost:8081
-  console.log(auth0Audience);
 
   const discovery = useAutoDiscovery(`https://${auth0Domain}`);
   const [request, response, promptAsync] = useAuthRequest(
