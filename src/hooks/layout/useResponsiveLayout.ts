@@ -7,9 +7,10 @@ interface ResponsiveLayout {
   isMobile: boolean;
   isTablet: boolean;
   isDesktop: boolean;
-  screenWidth: number;
   isWebMobile: boolean;
   isWebDesktop: boolean;
+  screenHeight: number;
+  screenWidth: number;
 }
 
 export const useResponsiveLayout = (): ResponsiveLayout => {
@@ -29,6 +30,7 @@ export const useResponsiveLayout = (): ResponsiveLayout => {
   }, []);
 
   const screenWidth = dimensions.width;
+  const screenHeight = dimensions.height;
   const isMobile = screenWidth < 768;
   const isTablet = screenWidth >= 768 && screenWidth < 1024;
   const isDesktop = screenWidth >= 1024;
@@ -45,5 +47,6 @@ export const useResponsiveLayout = (): ResponsiveLayout => {
     isTablet,
     isDesktop,
     screenWidth,
+    screenHeight,
   };
 };

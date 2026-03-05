@@ -8,8 +8,8 @@ const ConstructionGroups = () => {
   return (
     <ConstructionScreen
       title="Grupos"
-      message={`Actualmente estamos construyendo grupos y comunidades para ti
-         Pronto tendras novedades!`}
+      message={`Estamos construyendo Grupos y Comunidades para ti
+         Pronto tendrás novedades!`}
       icon={<Construction size={85} color={colors.brand.orange[300]} />}
     />
   );

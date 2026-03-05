@@ -14,7 +14,9 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = ({
 
   const handleNavigateFloatButton = () => {
     // State.index === 4 its groups tab
-    state.index === 4 ? navigate("CreateGroup") : navigate("QR");
+    // TODO ONLY NAVIGATE UNTIL GROUPS ITS BACK
+    // state.index === 4 ? navigate("CreateGroup") : navigate("QR");
+    navigate("QR");
   };
   return (
     <View style={styles.wrapper}>
@@ -64,7 +66,9 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = ({
         onPress={handleNavigateFloatButton}
       >
         <MaterialCommunityIcons
-          name={state.index !== 4 ? "qrcode" : "plus"}
+          // TODO ONLY QR UNTIL GROUPS ITS BACK
+          // name={state.index !== 4 ? "qrcode" : "plus"}
+          name={"qrcode"}
           size={26}
           color="#fff"
         />
