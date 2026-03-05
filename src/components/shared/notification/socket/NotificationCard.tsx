@@ -24,12 +24,13 @@ export const NotificationCard: React.FC<NotificationTypeProps> = ({
   const handleNavigate = () => {
     switch (notification.type) {
       case "order":
-        navigate("OrdersManagement");
+        navigate("UserDashboardScreen", { screen: "OrdersManagement" });
         break;
       case "finance":
-        navigate("FinancesManagement");
+        navigate("UserDashboardScreen", { screen: "FinancesManagement" });
         break;
       default:
+        navigate("UserDashboardScreen");
         break;
     }
     hideNotification();

@@ -14,7 +14,7 @@ import { useWallet } from "./useWalletData";
 import { useCustomNavigation, useNotify } from "src/hooks";
 import { useBeCoinsStore } from "src/stores";
 
-export const useCanjear = (navigation: any) => {
+export const useCanjear = () => {
   const { user, handleAuth0Login } = useAuth();
   const notify = useNotify();
   const { navigate } = useCustomNavigation();
@@ -172,7 +172,7 @@ export const useCanjear = (navigation: any) => {
   };
 
   const handleAddAccount = () => {
-    navigation.navigate("MainTabs", { screen: "Wallet" });
+    navigate("MainTabs", { screen: "Wallet" });
   };
 
   const handleSelectAccount = (account: WithdrawAccount) => {

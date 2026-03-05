@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     elevation: 16,
   },
   gradient: {
-    flex: 1,
+    flexGrow: 1,
     padding: 32,
     justifyContent: "space-between",
   },
@@ -221,16 +221,15 @@ const styles = StyleSheet.create({
   },
   qrPlaceholder: {
     alignItems: "center",
-    marginTop: 24,
   },
   qrText: {
     color: "#ffffff88",
     fontSize: 12,
-    marginTop: 8,
   },
   footer: {
     alignItems: "center",
-    paddingTop: 16,
+    marginTop: 2,
+    paddingTop: 2,
     borderTopWidth: 1,
     borderTopColor: "#ffffff22",
   },

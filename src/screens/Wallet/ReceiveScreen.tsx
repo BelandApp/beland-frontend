@@ -21,13 +21,21 @@ import { getBackendErrorMessage } from "src/services";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { useBeCoinsPrice } from "src/hooks";
 import { ThemedHeader } from "src/components/shared/headers/Header";
-
+import { CustomLoader } from "src/components";
 const ReceiveScreen = () => {
-  const { goBack } = useCustomNavigation();
-  const { walletData, wallet, refreshAll } = useWallet();
-  const { user } = useAuth();
-  const { beCoinsToUsd } = useBeCoinsPrice();
+  const { navigate } = useCustomNavigation();
+  const { user, isAuthenticated } = useAuth();
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("MainTabs", { screen: "Wallet" });
+    }
+  }, [isAuthenticated]);
 
+  if (!isAuthenticated) {
+    return <CustomLoader />;
+  }
+  const { walletData, wallet, refreshAll } = useWallet();
+  const { beCoinsToUsd } = useBeCoinsPrice();
   const [showToast, setShowToast] = useState(false);
   const [qrImage, setQrImage] = useState<string | null>(null);
   const [qrLoading, setQrLoading] = useState(false);
@@ -37,7 +45,6 @@ const ReceiveScreen = () => {
   const [aliasInput, setAliasInput] = useState("");
   const [savingAlias, setSavingAlias] = useState(false);
   const notify = useNotify();
-
   // Usar alias del backend (siempre en mayúsculas)
   const alias = walletData?.alias?.toUpperCase();
 
@@ -99,7 +106,9 @@ const ReceiveScreen = () => {
       const userName =
         user?.full_name || user?.email?.split("@")[0] || "Usuario";
       await Share.share({
-        message: `¡Hola! Soy ${userName} y puedes enviarme dinero en Beland usando mi alias: ${alias}`,
+        message: `Hola! Puedes enviarme dinero en Beland, sin importar tu institución bancaria y sin comisiones. Ingresa a LINK, a la opción enviar dinero y usa mi ALIAS: ${alias}
+Gracias! Un abrazo, ${userName} ♻️🌎 
+ https://beland.app/send/${alias}`,
         title: "Mi alias de Beland",
       });
     } catch (error) {
@@ -139,7 +148,7 @@ const ReceiveScreen = () => {
     <ScrollView style={styles.container}>
       <ThemedHeader
         title="Recibir Dinero"
-        onBackPress={() => goBack()}
+        onBackPress={() => navigate("MainTabs", { screen: "Wallet" })}
         canGoBack
       />
 
@@ -159,7 +168,9 @@ const ReceiveScreen = () => {
               style={styles.aliasBoxTouchable}
             >
               <Text style={styles.aliasValue}>
-                {alias || `Cargando${".".repeat(aliasLoadingDots)}`}
+                {alias !== null
+                  ? alias || `Cargando${".".repeat(aliasLoadingDots)}`
+                  : "Crea tu alias"}
               </Text>
               <View style={styles.pencilCircle}>
                 <MaterialCommunityIcons
@@ -258,7 +269,7 @@ const ReceiveScreen = () => {
       </View>
 
       {/* QR Code (solo para comercios) */}
-      {user?.role === "COMMERCE" && (
+      {user?.role_name === "COMMERCE" && (
         <View style={styles.qrSection}>
           <View style={styles.sectionHeader}>
             <MaterialCommunityIcons name="qrcode" size={20} color="#111827" />
@@ -340,7 +351,7 @@ const ReceiveScreen = () => {
                         const filename = `qr-beland-${Date.now()}.png`;
                         const downloadResumable = FileSystem.downloadAsync(
                           qrImage,
-                          FileSystem.documentDirectory + filename
+                          FileSystem.documentDirectory + filename,
                         );
                         await downloadResumable;
                         alert("QR guardado en tus archivos");

@@ -291,14 +291,6 @@ const SuperAdminPanel: React.FC = () => {
       screen: "organizations",
     },
     {
-      id: "inventory",
-      title: "Inventario",
-      description: "Items y stock de productos",
-      icon: "IN",
-      color: "#5AC8FA",
-      screen: "inventory",
-    },
-    {
       id: "recycling",
       title: "Reciclaje",
       description: "Precios y métricas de reciclaje",
@@ -343,23 +335,22 @@ const SuperAdminPanel: React.FC = () => {
 
   const handleSectionPress = (sectionId: string) => {
     setSelectedSection(sectionId);
-
     // Navegación real a las pantallas de gestión
     switch (sectionId) {
       case "events":
-        navigate("EventsManagement");
+        navigate("UserDashboardScreen", { screen: "EventsManagement" });
         break;
       case "users":
-        navigate("UsersManagement");
+        navigate("UserDashboardScreen", { screen: "UsersManagement" });
         break;
       case "orders":
-        navigate("OrdersManagement");
+        navigate("UserDashboardScreen", { screen: "OrdersManagement" });
         break;
       case "products":
-        navigate("ProductsManagement");
+        navigate("UserDashboardScreen", { screen: "ProductsManagement" });
         break;
       case "finances":
-        navigate("FinancesManagement");
+        navigate("UserDashboardScreen", { screen: "FinancesManagement" });
         break;
       default:
         Alert.alert(
@@ -402,7 +393,8 @@ const SuperAdminPanel: React.FC = () => {
         color: "#34C759",
         trend: "up" as const,
         percentage: 12,
-        onPress: () => navigate("UsersManagement"),
+        onPress: () =>
+          navigate("UserDashboardScreen", { screen: "UsersManagement" }),
       },
       {
         label: "Productos",
@@ -438,7 +430,8 @@ const SuperAdminPanel: React.FC = () => {
         color: "#AF52DE",
         trend: "up" as const,
         percentage: 20,
-        onPress: () => navigate("EventsManagement"),
+        onPress: () =>
+          navigate("UserDashboardScreen", { screen: "EventsManagement" }),
       },
       {
         label: "Ingresos",
@@ -545,7 +538,9 @@ const SuperAdminPanel: React.FC = () => {
             <Button
               title="Gestionar Usuarios"
               className="flex-grow w-full md:w-fit"
-              onPress={() => navigate("UsersManagement")}
+              onPress={() =>
+                navigate("UserDashboardScreen", { screen: "UsersManagement" })
+              }
             />
             <Button
               title="Crear Evento"

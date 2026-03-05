@@ -131,8 +131,10 @@ class ServicesServiceClass extends CoreApiService {
   /**
    * Delete a group service
    */
-  async deleteGroupService(groupServiceId: string): Promise<void> {
-    await this.delete(`${this.ENDPOINTS.GROUP_SERVICES}/${groupServiceId}`);
+  async cancelGroupService(groupServiceId: string): Promise<void> {
+    await this.post(
+      `${this.ENDPOINTS.GROUP_SERVICES}/cancelled/${groupServiceId}`,
+    );
   }
 }
 

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -15,14 +15,18 @@ import {
   PAYMENT_METHODS,
 } from "./hooks/useRecharge";
 import { ThemedHeader } from "src/components/shared/headers/Header";
-import { useUserBalance } from "src/hooks/useUserBalance";
-import { convertBeCoinsToUSD } from "src/constants/currency";
 
-import { BeCoinsBalance, Button, WrapperModal } from "src/components";
+import {
+  BeCoinsBalance,
+  Button,
+  CustomLoader,
+  WrapperModal,
+} from "src/components";
 import { notify } from "src/hooks/notification/notify.external";
 import { CopyToClipboard } from "src/utils/shareHelper";
-import { File } from "expo-file-system";
 import ThemedTabs from "src/components/shared/Tabs/ThemedTabs";
+import { useCustomNavigation } from "src/hooks";
+import { useAuth } from "src/context";
 
 const BankDetailRow = ({ label, value, isCopyable = false }: any) => (
   <View className="flex-col sm:flex-row justify-between py-2 border-b border-gray-100 dark:border-gray-800">
@@ -41,6 +45,18 @@ const BankDetailRow = ({ label, value, isCopyable = false }: any) => (
 );
 
 export default function RechargeScreen() {
+  const { navigate } = useCustomNavigation();
+  const { isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("MainTabs", { screen: "Wallet" });
+    }
+  }, [isAuthenticated]);
+
+  if (!isAuthenticated) {
+    return <CustomLoader />;
+  }
   const {
     amount,
     selectedPaymentMethod,
@@ -69,10 +85,11 @@ export default function RechargeScreen() {
     setModalPayphone,
     destroyPayphoneWidget,
   } = useRecharge();
+
   const handleBeforeClose = () => {
     return new Promise<boolean>((resolve) => {
       notify.confirm({
-        message: "Seguro que quieres salir? Perderás tu progreso",
+        message: "¿Seguro que quieres salir? Perderás tu progreso",
         onConfirm: () => resolve(true),
         onCancel: () => resolve(false),
       });
@@ -80,7 +97,11 @@ export default function RechargeScreen() {
   };
   return (
     <>
-      <ThemedHeader title="Recargar BeCoins" canGoBack />
+      <ThemedHeader
+        title="Recargar BeCoins"
+        canGoBack
+        onBackPress={() => navigate("MainTabs", { screen: "Wallet" })}
+      />
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="py-8 px-4">
           {/* Card Principal */}
@@ -395,7 +416,7 @@ export default function RechargeScreen() {
       <WrapperModal
         beforeClose={handleBeforeClose}
         content={
-          <ScrollView className="flex-1 px-6 pt-6">
+          <View>
             {/* Instrucciones */}
             <View className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800 mb-6">
               <View className="flex-row gap-2 mb-2">
@@ -527,7 +548,7 @@ export default function RechargeScreen() {
                 Ingresa el número de confirmación que aparece en tu comprobante.
               </Text>
             </View>
-          </ScrollView>
+          </View>
         }
         actions={
           <Button

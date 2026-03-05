@@ -2,24 +2,22 @@ import React, { useState, useMemo, useEffect } from "react";
 import {
   View,
   Text,
-  TextInput,
-  ScrollView,
   FlatList,
   Image,
   TouchableOpacity,
   RefreshControl,
-  Dimensions,
   Platform,
 } from "react-native";
 import { useGroupsNavigation, useGroups } from "./hooks";
 import Feather from "react-native-vector-icons/Feather";
-import { Button, ThemedHeader } from "src/components";
+import { Button, SearchBarInput, ThemedHeader } from "src/components";
 import { CustomLoader } from "@/components/shared/loader/Loader";
 import { GroupService, GroupPrivacy } from "@/services/GroupApiService";
 import { GroupCard } from "./components/GroupCard";
-import { point } from "leaflet";
+import { icon, point } from "leaflet";
 import { Plus, PlusCircle } from "lucide-react-native";
 import { green } from "react-native-reanimated/lib/typescript/Colors";
+import { useCustomNavigation } from "src/hooks";
 // Ícono según código de privacidad
 const getPrivacyIcon = (privacyCode: string) => {
   if (privacyCode === "public") return "globe";
@@ -70,15 +68,10 @@ export const GroupsScreen: React.FC = () => {
       .catch(() => setPrivacyOptions([]));
   }, []);
   const { navigateToCreateGroup } = useGroupsNavigation();
-  const { navigate } = require("@react-navigation/native").useNavigation();
-  const navigateToExploreGroups = () => {
-    navigate("GroupExplore");
-  };
+  const { navigate } = useCustomNavigation();
+
   const { groups, activeGroups, onRefresh, refreshing, loading } = useGroups();
-  // Forzar altura del listado en web mobile para diagnosticar scroll
-  const windowHeight = Dimensions.get("window").height;
-  // Reservar espacio para header + tabbar aproximado (ajusta si es necesario)
-  const listHeight = Math.max(400, windowHeight - 160);
+
   const [groupMembersCount, setGroupMembersCount] = useState<
     Record<string, number>
   >({});
@@ -120,7 +113,7 @@ export const GroupsScreen: React.FC = () => {
   if (!todosMisGrupos || todosMisGrupos.length === 0) {
     return (
       <>
-        <ThemedHeader title="Grupos" />
+        <ThemedHeader title="Grupos" canGoBack />
         <View className="flex-1 justify-center items-center bg-background-light px-4">
           <View className="items-center w-full">
             <View className="relative mb-8 mt-2 items-center justify-center">
@@ -153,7 +146,9 @@ export const GroupsScreen: React.FC = () => {
             <View className="flex md:flex-row gap-2">
               <Button
                 title=" Explorar grupos"
-                onPress={navigateToExploreGroups}
+                onPress={() => {
+                  navigate("Groups", { screen: "GroupExplore" });
+                }}
                 className="rounded-xl"
                 variant="secondary"
               />
@@ -182,123 +177,72 @@ export const GroupsScreen: React.FC = () => {
   });
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#F8F9FB" }}>
-      <View style={{ flex: 1 }}>
-        {/* Header */}
-        <ThemedHeader title="Grupos" />
-        <FlatList
-          style={{ height: listHeight, backgroundColor: "#F8F9FB" }}
-          nestedScrollEnabled={true}
-          stickyHeaderIndices={[0]}
-          ListHeaderComponentStyle={{ zIndex: 10 }}
-          contentContainerStyle={{
-            flexGrow: 1,
-            paddingBottom: 120,
-            paddingHorizontal: 0,
-          }}
-          data={filteredGroups}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <GroupCard
-              group={item}
-              variant="my-group"
-              onPress={() =>
-                navigate("GroupDetailScreen", { groupId: item.id })
-              }
-              privacyOptions={privacyOptions}
-              membersCount={groupMembersCount[item.id] || 0}
-              paymentType={item.payment_type}
-              isMember={true}
-              isOwner={item.is_leader}
+    <View className="flex-1 gap-2">
+      {/* Header */}
+      <ThemedHeader
+        title="Grupos"
+        buttons={
+          <>
+            <Button
+              variant="secondary"
+              title="Explorar grupos"
+              onPress={() => {
+                navigate("Groups", { screen: "GroupExplore" });
+              }}
+              icon={<Feather name="compass" size={24} color="white" />}
             />
-          )}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              colors={["#00e074"]}
+            <Button
+              variant="secondary"
+              title="Crear Grupo"
+              onPress={navigateToCreateGroup}
+              icon={<Feather name="plus" size={24} color="white" />}
             />
-          }
-          ListHeaderComponent={
-            <View style={{ backgroundColor: "#F8F9FB" }}>
-              <View className="flex-row items-center px-4 pt-2 pb-2 mt-2 justify-between bg-white">
-                <Text className="text-2xl font-bold text-text-main flex-1">
-                  Mis Grupos
-                </Text>
-                <TouchableOpacity
-                  className="flex-row items-center justify-center gap-2 rounded-xl border border-gray-200 h-10 px-4 active:scale-95"
-                  onPress={navigateToExploreGroups}
-                >
-                  <Feather name="compass" size={18} color="#00E074" />
-                  <Text className="text-primary font-bold text-sm">
-                    Explorar
-                  </Text>
-                </TouchableOpacity>
-              </View>
-              {/* Search & Filters */}
-              <View className="bg-white px-4 pb-4">
-                <View className="py-2">
-                  <View className="flex-row items-center bg-background-light rounded-xl px-4">
-                    <Feather name="search" size={20} color="#5e8d76" />
-                    <TextInput
-                      className="flex-1 h-12 px-2 text-base"
-                      placeholder="Buscar por nombre..."
-                      value={search}
-                      onChangeText={setSearch}
-                      placeholderTextColor="#8caea0"
-                    />
-                  </View>
-                </View>
-              </View>
-            </View>
-          }
-          ListEmptyComponent={
-            <Text className="text-center text-text-sec-light mt-10">
-              No se encontraron grupos
-            </Text>
-          }
+          </>
+        }
+      />
+
+      {/* Search Bar */}
+      <View className="px-2 py-1">
+        <SearchBarInput
+          onSearchChange={setSearch}
+          searchQuery={search}
+          placeholder="Buscar por nombre o categoría..."
         />
       </View>
-      {/* Botón flotante para crear grupo */}
-      <View
-        style={
-          (Platform.OS === "web"
-            ? {
-                position: "fixed" as any,
-                right: 10,
-                bottom: 100,
-                zIndex: 9999,
-                pointerEvents: "auto",
-              }
-            : {
-                position: "absolute" as any,
-                right: 24,
-                bottom: 32,
-                zIndex: 9999,
-                pointerEvents: "auto",
-              }) as any
+      <FlatList
+        data={filteredGroups}
+        keyExtractor={(item) => item.id}
+        showsHorizontalScrollIndicator={false}
+        renderItem={({ item }) => (
+          <GroupCard
+            group={item}
+            variant="my-group"
+            onPress={() =>
+              navigate("Groups", {
+                screen: "GroupDetailScreen",
+                params: { groupId: item.id },
+              })
+            }
+            privacyOptions={privacyOptions}
+            membersCount={groupMembersCount[item.id] || 0}
+            paymentType={item.payment_type}
+            isMember={true}
+            isOwner={item.is_leader}
+          />
+        )}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#00e074"]}
+          />
         }
-      >
-        <TouchableOpacity
-          style={{
-            height: 56,
-            width: 56,
-            borderRadius: 28,
-            backgroundColor: "#00E074",
-            alignItems: "center",
-            justifyContent: "center",
-            shadowColor: "#000",
-            shadowOpacity: 0.2,
-            shadowRadius: 8,
-            elevation: 8,
-          }}
-          onPress={navigateToCreateGroup}
-        >
-          <Feather name="plus" size={28} color="#fff" />
-        </TouchableOpacity>
-      </View>
+        ListEmptyComponent={
+          <Text className="text-center text-text-sec-light mt-10">
+            No se encontraron grupos
+          </Text>
+        }
+      />
     </View>
   );
 };

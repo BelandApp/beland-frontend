@@ -13,8 +13,11 @@ import {
 } from "react-native";
 import DashboardWrapper from "./components/DashboardWrapper";
 import { adminApiService, AdminUser } from "src/services/AdminApiService";
+import { ThemedHeader } from "src/components";
+import { useCustomNavigation } from "src/hooks";
 
 export const UsersManagementScreen: React.FC = () => {
+  const { navigate } = useCustomNavigation();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -43,7 +46,7 @@ export const UsersManagementScreen: React.FC = () => {
       console.error("Error loading initial data:", error);
       Alert.alert(
         "Error de Conexión",
-        "No se pudieron cargar los usuarios. Verifica tu conexión a internet."
+        "No se pudieron cargar los usuarios. Verifica tu conexión a internet.",
       );
     } finally {
       setLoading(false);
@@ -66,7 +69,7 @@ export const UsersManagementScreen: React.FC = () => {
       setTotalUsers(response.total || 0);
       setHasMorePages(
         (response.users?.length || 0) === 20 &&
-          page * 20 < (response.total || 0)
+          page * 20 < (response.total || 0),
       );
     } catch (error: any) {
       console.error("Error loading users:", error);
@@ -79,12 +82,12 @@ export const UsersManagementScreen: React.FC = () => {
 
   const handleToggleUserStatus = async (
     userId: string,
-    currentStatus: boolean
+    currentStatus: boolean,
   ) => {
     try {
       const newStatus = !currentStatus;
       console.log(
-        `Toggling user ${userId} from ${currentStatus} to ${newStatus}`
+        `Toggling user ${userId} from ${currentStatus} to ${newStatus}`,
       );
 
       const result = await adminApiService.blockUser(userId, newStatus);
@@ -92,13 +95,13 @@ export const UsersManagementScreen: React.FC = () => {
 
       setUsers((prev) =>
         prev.map((user) =>
-          user.id === userId ? { ...user, isBlocked: newStatus } : user
-        )
+          user.id === userId ? { ...user, isBlocked: newStatus } : user,
+        ),
       );
 
       Alert.alert(
         "Éxito",
-        `Usuario ${newStatus ? "bloqueado" : "desbloqueado"} correctamente`
+        `Usuario ${newStatus ? "bloqueado" : "desbloqueado"} correctamente`,
       );
     } catch (error: any) {
       console.error("Error toggling user status:", error);
@@ -106,7 +109,7 @@ export const UsersManagementScreen: React.FC = () => {
         "Error",
         `No se pudo ${
           !currentStatus ? "bloquear" : "desbloquear"
-        } el usuario. Verifica tu conexión.`
+        } el usuario. Verifica tu conexión.`,
       );
     }
   };
@@ -268,11 +271,18 @@ export const UsersManagementScreen: React.FC = () => {
   const activeUsers = users.filter((user) => !user.isBlocked).length;
   const blockedUsers = users.filter((user) => user.isBlocked).length;
   const adminUsers = users.filter((user) =>
-    user.role_name.toLowerCase().includes("admin")
+    user.role_name.toLowerCase().includes("admin"),
   ).length;
 
   return (
-    <DashboardWrapper title="Gestión de Usuarios" isLoading={loading}>
+    <View>
+      <ThemedHeader
+        title="Gestión de usuarios"
+        canGoBack
+        onBackPress={() =>
+          navigate("UserDashboardScreen", { screen: "Dashboard" })
+        }
+      />
       <View style={styles.container}>
         {/* Header con estadísticas */}
         <View style={styles.statsContainer}>
@@ -473,7 +483,7 @@ export const UsersManagementScreen: React.FC = () => {
           )}
         </ScrollView>
       </View>
-    </DashboardWrapper>
+    </View>
   );
 };
 

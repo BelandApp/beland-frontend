@@ -22,10 +22,11 @@ import {
   EventPassType,
 } from "src/services/AdminApiService";
 import { eventStore } from "@/stores";
-import { useNotify } from "src/hooks";
+import { useCustomNavigation, useNotify } from "src/hooks";
 import { getBackendErrorMessage } from "src/services";
-// TODO CHEQUEAR SI SE USA
+import { ThemedHeader } from "src/components";
 export const EventsManagementScreen: React.FC = () => {
+  const { navigate } = useCustomNavigation();
   const availableEvents = eventStore((s) => s.availableEvents);
   const setAvailableEvents = eventStore((s) => s.setAvailableEvents);
   const [loading, setLoading] = useState(true);
@@ -53,7 +54,7 @@ export const EventsManagementScreen: React.FC = () => {
   const [showQrModal, setShowQrModal] = useState(false);
   const [selectedQr, setSelectedQr] = useState<string | null>(null);
   const [windowWidth, setWindowWidth] = useState<number>(
-    Dimensions.get("window").width
+    Dimensions.get("window").width,
   );
 
   useEffect(() => {
@@ -78,7 +79,7 @@ export const EventsManagementScreen: React.FC = () => {
       setEventTypesError(
         "No se pudieron cargar los tipos de eventos desde el servidor. " +
           "Esto puede deberse a un problema temporal del backend. " +
-          "Los eventos se pueden crear sin especificar tipo por ahora."
+          "Los eventos se pueden crear sin especificar tipo por ahora.",
       );
       setEventTypes([]);
     }
@@ -114,7 +115,8 @@ export const EventsManagementScreen: React.FC = () => {
       setCurrentPage(page);
       setTotalEvents(response.total || 0);
       setHasMorePages(
-        (response.data?.length || 0) === 20 && page * 20 < (response.total || 0)
+        (response.data?.length || 0) === 20 &&
+          page * 20 < (response.total || 0),
       );
     } catch (error: any) {
       console.error("Error loading events:", error);
@@ -129,21 +131,21 @@ export const EventsManagementScreen: React.FC = () => {
 
   const handleToggleEventStatus = async (
     eventId: string,
-    currentStatus: boolean
+    currentStatus: boolean,
   ) => {
     try {
       const newStatus = !currentStatus;
 
       const result = await adminApiService.toggleEventPassStatus(
         eventId,
-        newStatus
+        newStatus,
       );
 
       try {
         setAvailableEvents(
           (availableEvents || []).map((event) =>
-            event.id === eventId ? { ...event, is_active: newStatus } : event
-          )
+            event.id === eventId ? { ...event, is_active: newStatus } : event,
+          ),
         );
       } catch (e) {}
     } catch (error: any) {
@@ -174,8 +176,8 @@ export const EventsManagementScreen: React.FC = () => {
   const handleEditSuccess = (updatedEvent: EventPass) => {
     setAvailableEvents(
       (availableEvents || []).map((event) =>
-        event.id === updatedEvent.id ? (updatedEvent as any) : event
-      )
+        event.id === updatedEvent.id ? (updatedEvent as any) : event,
+      ),
     );
     setEditingEvent(null);
   };
@@ -195,7 +197,7 @@ export const EventsManagementScreen: React.FC = () => {
       setLoading(true);
       await adminApiService.deleteEventPass(confirmDelete.id);
       setAvailableEvents(
-        (availableEvents || []).filter((e) => e.id !== confirmDelete.id)
+        (availableEvents || []).filter((e) => e.id !== confirmDelete.id),
       );
       setTotalEvents((prev) => prev - 1);
       notify.success({ message: "Evento eliminado correctamente" });
@@ -216,13 +218,13 @@ export const EventsManagementScreen: React.FC = () => {
               setLoading(true);
               await adminApiService.toggleEventPassStatus(
                 confirmDelete.id,
-                false
+                false,
               );
               // Actualizar store localmente
               setAvailableEvents(
                 (availableEvents || []).map((e) =>
-                  e.id === confirmDelete.id ? { ...e, is_active: false } : e
-                )
+                  e.id === confirmDelete.id ? { ...e, is_active: false } : e,
+                ),
               );
               notify.success({ message: "Evento desactivado correctamente" });
             } catch (err: any) {
@@ -281,7 +283,7 @@ export const EventsManagementScreen: React.FC = () => {
         const FileSystem = require("expo-file-system");
         const downloadRes = await FileSystem.downloadAsync(
           selectedQr,
-          FileSystem.documentDirectory + filename
+          FileSystem.documentDirectory + filename,
         );
         console.log("QR descargado en:", downloadRes.uri);
         notify.success({ message: "El QR se guardó en tus archivos." });
@@ -297,7 +299,7 @@ export const EventsManagementScreen: React.FC = () => {
     (event) =>
       event.name.toLowerCase().includes(searchText.toLowerCase()) ||
       event.description?.toLowerCase().includes(searchText.toLowerCase()) ||
-      event.event_city?.toLowerCase().includes(searchText.toLowerCase())
+      event.event_city?.toLowerCase().includes(searchText.toLowerCase()),
   );
 
   const formatDate = (dateString: string) => {
@@ -422,7 +424,14 @@ export const EventsManagementScreen: React.FC = () => {
   };
 
   return (
-    <DashboardWrapper title="Gestión de Eventos" isLoading={loading}>
+    <View>
+      <ThemedHeader
+        title="Gestión de usuarios"
+        canGoBack
+        onBackPress={() =>
+          navigate("UserDashboardScreen", { screen: "Dashboard" })
+        }
+      />
       <View style={styles.container}>
         {/* Header con estadísticas */}
         <View style={styles.statsContainer}>
@@ -440,7 +449,7 @@ export const EventsManagementScreen: React.FC = () => {
             <Text style={styles.statNumber}>
               {(availableEvents || []).reduce(
                 (sum, e) => sum + e.sold_tickets,
-                0
+                0,
               )}
             </Text>
             <Text style={styles.statLabel}>Tickets Vendidos</Text>
@@ -571,7 +580,7 @@ export const EventsManagementScreen: React.FC = () => {
           </View>
         </View>
       </Modal>
-    </DashboardWrapper>
+    </View>
   );
 };
 

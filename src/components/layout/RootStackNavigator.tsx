@@ -7,6 +7,7 @@ import { MainTabNavigator } from "./MainTabNavigator";
 import { OrdersStackNavigator } from "./OrdersStackNavigator";
 // Types imports
 import {
+  DashboardStackParamList,
   GroupsStackParamList,
   MainTabParamList,
   OrdersStackParamList,
@@ -50,6 +51,7 @@ import { HistoryScreen, RecyclingMapScreen } from "../../screens";
 import FinancesManagement from "src/screens/DashboardUser/FinanceManagementScreen";
 import { GroupsStackNavigator } from "./GroupsStackNavigator";
 import FAQScreen from "src/screens/FAQ/FaqScreen";
+import { DashboardStackNavigator } from "./DashboardNavigator";
 
 export type RootStackParamList = {
   // Auth Screens
@@ -60,12 +62,13 @@ export type RootStackParamList = {
   MainTabs: NavigatorScreenParams<MainTabParamList>;
   Orders: NavigatorScreenParams<OrdersStackParamList>;
   Groups: NavigatorScreenParams<GroupsStackParamList>;
+  UserDashboardScreen: NavigatorScreenParams<DashboardStackParamList>;
   CreateGroup: undefined;
   // FAQ
   FAQ: undefined;
   // Payments
   CobrarScreen: undefined;
-  SendScreen: undefined;
+  SendScreen: { id?: string };
   ReceiveScreen: undefined;
   HistoryScreen: undefined;
   WalletHistoryScreen: undefined;
@@ -90,11 +93,8 @@ export type RootStackParamList = {
   PayphoneSuccess: { toWalletId: string; amountPaymentId: string };
 
   // Users
-  Dashboard: undefined;
-  UserDashboardScreen: undefined;
   UserResources: undefined;
   CommerceDashboard: undefined;
-  Wallet: undefined;
   QR: { pendingRedemption?: any } | undefined;
   RecyclingMap: undefined;
   CanjearScreen: undefined;
@@ -103,13 +103,6 @@ export type RootStackParamList = {
     usdAmount: number;
   };
 
-  // Admin Management Screens
-  EventsManagement: undefined;
-  OrdersManagement: undefined;
-  OrderAdminDetail?: { orderId: string };
-  UsersManagement: undefined;
-  ProductsManagement: undefined;
-  FinancesManagement: undefined;
   MisEntradas: { tab: string | undefined };
   // Events Screens
   EventModal: { id: string };
@@ -167,7 +160,7 @@ export const RootStackNavigator = () => {
       />
       <Stack.Screen
         name="UserDashboardScreen"
-        component={UserDashboardScreen}
+        component={DashboardStackNavigator}
         options={{ headerShown: false }}
       />
       <Stack.Screen
@@ -212,36 +205,7 @@ export const RootStackNavigator = () => {
         component={NewPasswordScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen
-        name="EventsManagement"
-        component={EventsManagementScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="OrdersManagement"
-        component={OrdersManagementScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="OrderAdminDetail"
-        component={OrderAdminDetailScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="UsersManagement"
-        component={UsersManagementScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="ProductsManagement"
-        component={ProductsManagementScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="FinancesManagement"
-        component={FinancesManagement}
-        options={{ headerShown: false }}
-      />
+
       <Stack.Screen
         name="UseEventScreen"
         component={UseEventScreen}
@@ -273,29 +237,6 @@ export const RootStackNavigator = () => {
         name="FAQ"
         component={FAQScreen}
         options={{ headerShown: false }}
-      />
-      {/* Modales */}
-      <Stack.Screen
-        name="EventModal"
-        component={EventModal}
-        options={{
-          headerShown: false,
-          gestureEnabled: true,
-          presentation: "transparentModal",
-          animation: "slide_from_bottom",
-          animationTypeForReplace: "pop",
-        }}
-      />
-      <Stack.Screen
-        name="AcquiredEventModal"
-        component={AcquiredEventModal}
-        options={{
-          headerShown: false,
-          gestureEnabled: true,
-          presentation: "transparentModal",
-          animation: "slide_from_bottom",
-          animationTypeForReplace: "push",
-        }}
       />
     </Stack.Navigator>
   );

@@ -35,9 +35,10 @@ import {
 import Toast from "react-native-toast-message";
 import { ErrorBoundary } from "src/components/layout/ErrorBoundary";
 import { TooltipProvider } from "src/components/shared/tooltip/Tooltip.portal";
+import { DeepLinkService } from "src/services/deepLink/deepLink.service";
 
 const AppContent = () => {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   useBeCoinsAutoRefresh();
   const navigationRef =
     useRef<NavigationContainerRef<RootStackParamList>>(null);
@@ -49,7 +50,21 @@ const AppContent = () => {
   // Conexión global a sockets para notificaciones de pagos
   usePaymentSocket(() => {});
   useOrderSocket(() => {});
+  // deepLink intent
+  useEffect(() => {
+    const handlePendingIntent = async () => {
+      if (!isAuthenticated) return;
 
+      const intent = await DeepLinkService.getIntent();
+
+      if (intent) {
+        navigationRef.current?.navigate(intent.screen, intent.params);
+        await DeepLinkService.clearIntent();
+      }
+    };
+
+    handlePendingIntent();
+  }, [isAuthenticated]);
   // Conectar socket globalmente una sola vez usando el token almacenado
   useEffect(() => {
     let mounted = true;
@@ -94,12 +109,6 @@ const AppContent = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const handleQRPress = () => {
-    if (navigationRef.current) {
-      navigationRef.current.navigate("QR");
-    }
-  };
-
   // Detectar la tab activa dentro de MainTabs
   const getActiveTab = (
     state: NavigationState | undefined,
@@ -137,7 +146,7 @@ const AppContent = () => {
         MainTabs: "",
         PayphoneSuccess: "payphone-success",
         CanjearScreen: "canjear",
-        SendScreen: "send",
+        SendScreen: "send/:id?",
         ReceiveScreen: "receive",
         WalletHistoryScreen: "wallet-history",
         RechargeScreen: "recharge",
@@ -166,7 +175,6 @@ const AppContent = () => {
         <RootStackNavigator />
         <NotificationBanner />
         <Toast config={toastConfig} />
-        {shouldShowQRButton && <FloatingQRButton onPress={handleQRPress} />}
       </NavigationContainer>
     </View>
   );

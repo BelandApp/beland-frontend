@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   View,
   Text,
@@ -19,25 +19,30 @@ import { useNotify, useBeCoinsPrice, useRecentRecipients } from "src/hooks";
 import { getBackendErrorMessage } from "src/services";
 import RecentRecipients from "./components/RecentRecipients";
 import { ThemedHeader } from "src/components/shared/headers/Header";
+import { CustomLoader } from "src/components";
+import { storage } from "src/stores";
+import { DeepLinkService } from "src/services/deepLink/deepLink.service";
 
 type Tab = "amount" | "contacts";
 
-const SendScreen = () => {
-  const { navigate, goBack } = useCustomNavigation();
+const SendScreen = ({ route }: { route: any }) => {
+  const id = route.params?.id;
+  const { navigate } = useCustomNavigation();
+  const { user, handleAuth0Login, isAuthenticated } = useAuth();
+  const notify = useNotify();
+
   const { walletData, refreshAll } = useWallet();
-  const { user, handleAuth0Login } = useAuth();
   const { pricePerBeCoin, usdToBeCoins, beCoinsToUsd } = useBeCoinsPrice();
   const {
     recipients,
     loading: loadingRecipients,
     refetch: refetchRecipients,
   } = useRecentRecipients();
-  const notify = useNotify();
 
   // Estados principales
   const [activeTab, setActiveTab] = useState<Tab>("amount");
   const [amountUsd, setAmountUsd] = useState("");
-  const [address, setAddress] = useState("");
+  const [address, setAddress] = useState(id ?? "");
   const [isLoading, setIsLoading] = useState(false);
   const [recipientLoading, setRecipientLoading] = useState(false);
   const [recipientAliases, setRecipientAliases] = useState<
@@ -74,7 +79,7 @@ const SendScreen = () => {
           } catch (err) {
             // ignore individual fetch errors
           }
-        })
+        }),
       );
       if (mounted) setRecipientAliases(map);
     };
@@ -90,6 +95,24 @@ const SendScreen = () => {
     return beCoinsToUsd(walletData.balance);
   }, [walletData.balance, beCoinsToUsd]);
 
+  useEffect(() => {
+    if (id && !isAuthenticated) {
+      notify.confirm({
+        message: "Debes estar logueado para realizar transferencias",
+        onConfirm: async () => {
+          await DeepLinkService.setSendIntent(id);
+          navigate("Login");
+        },
+        onCancel: () => navigate("MainTabs", { screen: "Home" }),
+      });
+    } else if (!isAuthenticated) {
+      navigate("MainTabs", { screen: "Wallet" });
+    }
+  }, [isAuthenticated]);
+
+  if (!isAuthenticated) {
+    return <CustomLoader />;
+  }
   // Validar transferencia
   const validateTransfer = (): boolean => {
     const transferAmount = parseFloat(amountUsd);
@@ -129,7 +152,7 @@ const SendScreen = () => {
         await new Promise((resolve) => setTimeout(resolve, 1500));
         notify.success({
           message: `Se han enviado $${amountUsd} USD (${beCoinsAmount.toFixed(
-            2
+            2,
           )} BECOINS) a ${address}`,
         });
         refreshAll();
@@ -146,7 +169,7 @@ const SendScreen = () => {
 
         const transferResult = await WalletService.transferToAlias(
           recipientIdentifier,
-          beCoinsAmount
+          beCoinsAmount,
         );
 
         if (transferResult) {
@@ -352,7 +375,6 @@ const SendScreen = () => {
     <View style={styles.container}>
       <ThemedHeader
         title="Enviar Dinero"
-        onBackPress={() => goBack()}
         buttons={
           <TouchableOpacity
             onPress={() => navigate("QR")}
@@ -362,6 +384,7 @@ const SendScreen = () => {
           </TouchableOpacity>
         }
         canGoBack
+        onBackPress={() => navigate("MainTabs", { screen: "Wallet" })}
       />
 
       {/* Tabs */}

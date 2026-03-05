@@ -14,6 +14,7 @@ import { Storage } from "src/services/auth/storage.service";
 import { getBackendErrorMessage } from "src/services";
 import { notify } from "src/hooks/notification/notify.external";
 import { clearStorage, resetStores } from "src/utils/logoutUtils";
+import { storage } from "src/stores";
 
 export type User = {
   id: string;
@@ -29,7 +30,11 @@ export type User = {
   created_at?: string;
   updated_at?: string;
   auth0_id?: string;
-  role?: string;
+  role: {
+    name: string;
+    role_id: string;
+    description: string;
+  };
   role_name?: string;
   coins?: number;
 };
@@ -47,6 +52,7 @@ type AuthContextType = {
   isAuthenticated: boolean;
   canPerformAction: boolean;
   updateUser: (partial: Partial<User>) => void;
+  reloadUser: () => void;
   setUser: (user: User | null) => void; //TODO VER SI LO PODEMOS QUITAR PARA MAYOR SEGURIDAD
   requireAuth: (action: () => void | Promise<void>) => Promise<void>; //TODO VER SI LO PODEMOS QUITAR
 };
@@ -100,7 +106,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   });
   // Development URL:
   // NATIVE> exp://localhost:8081/--/callback WEB> http://localhost:8081
-  console.log(auth0Audience);
 
   const discovery = useAutoDiscovery(`https://${auth0Domain}`);
   const [request, response, promptAsync] = useAuthRequest(
@@ -209,7 +214,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     await action();
   };
-
+  const reloadUser = async () => {
+    if (!token) {
+      logout();
+      return;
+    }
+    const newUser = await authService.getCurrentUser(token);
+    setUser(newUser);
+  };
   const isAuthenticated = !!user && !!token;
   const canPerformAction = isAuthenticated;
 
@@ -227,6 +239,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         requireAuth,
         setUser,
         updateUser,
+        reloadUser,
       }}
     >
       {children}

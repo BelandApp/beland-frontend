@@ -19,6 +19,7 @@ import { useWalletActions } from "./hooks";
 import { containerStyles } from "./styles";
 import { useWallet } from "./hooks/useWalletData";
 import WithdrawAccounts from "./components/WithdrawAccounts";
+import { colors } from "src/design-system";
 
 export const WalletScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { user, isAuthenticated, handleAuth0Login, canPerformAction } =
@@ -102,7 +103,10 @@ export const WalletScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
               walletData={walletData}
               avatarUrl={user?.profile_picture_url}
             />
-            <WalletActions actions={mainWalletActions} />
+            <WalletActions
+              actions={mainWalletActions}
+              backgroundColor={colors.brand.orange[500]}
+            />
             {/* Preferencias de pago */}
 
             <WithdrawAccounts />

@@ -17,8 +17,8 @@ import {
 } from "react-native";
 import { Event } from "src/stores/Event";
 import { colors } from "src/styles";
-import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { useResponsiveLayout } from "@/hooks";
+import { AcquiredEventModal } from "../AcquiredEvent.modal";
 
 export const AcquiredEventCard: React.FC<Event> = ({
   id,
@@ -34,12 +34,9 @@ export const AcquiredEventCard: React.FC<Event> = ({
   holder_name,
   user_pass_id,
 }) => {
-  const { navigate } = useCustomNavigation();
-
+  const [isOpen, setIsOpen] = useState(false);
   if (!id || !user_pass_id) return null;
-  const handleNavigation = () => {
-    return navigate("AcquiredEventModal", { id_modal: user_pass_id });
-  };
+
   const [activeIndex, setActiveIndex] = useState(0);
   const { isMobile } = useResponsiveLayout();
 
@@ -53,98 +50,105 @@ export const AcquiredEventCard: React.FC<Event> = ({
         : [];
 
   return (
-    <Pressable
-      key={id}
-      onPress={handleNavigation}
-      style={[styles.card, isMobile && styles.cardMobileWeb]}
-    >
-      {/* Badge: usado/finalizado */}
-      {!user_attended &&
-        end_sale_date &&
-        new Date(end_sale_date).getTime() < Date.now() && (
-          <View style={[styles.badge, styles.badgeFinish]}>
-            <Text style={styles.badgeText}>Finalizado</Text>
+    <>
+      <Pressable
+        key={id}
+        onPress={() => setIsOpen(true)}
+        style={[styles.card, isMobile && styles.cardMobileWeb]}
+      >
+        {/* Badge: usado/finalizado */}
+        {!user_attended &&
+          end_sale_date &&
+          new Date(end_sale_date).getTime() < Date.now() && (
+            <View style={[styles.badge, styles.badgeFinish]}>
+              <Text style={styles.badgeText}>Finalizado</Text>
+            </View>
+          )}
+        {user_attended && (
+          <View style={[styles.badge, styles.badgeUsed]}>
+            <Text style={styles.badgeText}>Usado</Text>
           </View>
         )}
-      {user_attended && (
-        <View style={[styles.badge, styles.badgeUsed]}>
-          <Text style={styles.badgeText}>Usado</Text>
-        </View>
-      )}
 
-      {/* Image carousel */}
-      <View
-        style={[
-          styles.carouselWrapper,
-          { width: IMAGE_WIDTH, height: IMAGE_WIDTH },
-        ]}
-      >
-        <ScrollView
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          onMomentumScrollEnd={(e) => {
-            const x = e.nativeEvent.contentOffset.x;
-            const index = Math.round(x / IMAGE_WIDTH);
-            setActiveIndex(index);
-          }}
-          ref={useRef<ScrollView>(null)}
+        {/* Image carousel */}
+        <View
+          style={[
+            styles.carouselWrapper,
+            { width: IMAGE_WIDTH, height: IMAGE_WIDTH },
+          ]}
         >
-          {imgs.map((src: string, idx: number) => (
-            <Image
-              key={idx}
-              source={{ uri: src }}
-              style={[
-                styles.image,
-                { width: IMAGE_WIDTH, height: IMAGE_WIDTH },
-              ]}
-            />
-          ))}
-        </ScrollView>
-        <View style={styles.dotsContainer}>
-          {imgs.map((_, i: number) => (
-            <View
-              key={i}
-              style={[styles.dot, activeIndex === i && styles.dotActive]}
-            />
-          ))}
+          <ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={(e) => {
+              const x = e.nativeEvent.contentOffset.x;
+              const index = Math.round(x / IMAGE_WIDTH);
+              setActiveIndex(index);
+            }}
+            ref={useRef<ScrollView>(null)}
+          >
+            {imgs.map((src: string, idx: number) => (
+              <Image
+                key={idx}
+                source={{ uri: src }}
+                style={[
+                  styles.image,
+                  { width: IMAGE_WIDTH, height: IMAGE_WIDTH },
+                ]}
+              />
+            ))}
+          </ScrollView>
+          <View style={styles.dotsContainer}>
+            {imgs.map((_, i: number) => (
+              <View
+                key={i}
+                style={[styles.dot, activeIndex === i && styles.dotActive]}
+              />
+            ))}
+          </View>
         </View>
-      </View>
 
-      <View style={styles.content}>
-        <Text
-          style={[styles.eventName, isMobile && styles.eventNameMobile]}
-          numberOfLines={isMobile ? 3 : 2}
-          ellipsizeMode="tail"
-        >
-          {name}
-        </Text>
-
-        <View style={styles.metaRowSmall}>
-          <Calendar color={colors.textSecondary} />
-          <Text style={styles.metaText}>
-            {event_date ? new Date(event_date).toLocaleDateString() : ""}
+        <View style={styles.content}>
+          <Text
+            style={[styles.eventName, isMobile && styles.eventNameMobile]}
+            numberOfLines={isMobile ? 3 : 2}
+            ellipsizeMode="tail"
+          >
+            {name}
           </Text>
+
+          <View style={styles.metaRowSmall}>
+            <Calendar color={colors.textSecondary} />
+            <Text style={styles.metaText}>
+              {event_date ? new Date(event_date).toLocaleDateString() : ""}
+            </Text>
+          </View>
+
+          <View style={styles.metaRowSmall}>
+            <MapPin color={colors.textSecondary} />
+            <Text style={styles.metaText}>{event_place || event_city}</Text>
+          </View>
         </View>
 
-        <View style={styles.metaRowSmall}>
-          <MapPin color={colors.textSecondary} />
-          <Text style={styles.metaText}>{event_place || event_city}</Text>
+        <View style={[styles.rightCol, isMobile && styles.rightColMobile]}>
+          <Text style={styles.destLabel}>Destinado a</Text>
+          <Text
+            style={[styles.holderText, isMobile && styles.holderTextMobile]}
+            numberOfLines={isMobile ? 2 : 2}
+            ellipsizeMode="tail"
+          >
+            {holder_name}
+          </Text>
+          <SquareChevronUp color={colors.textSecondary} />
         </View>
-      </View>
-
-      <View style={[styles.rightCol, isMobile && styles.rightColMobile]}>
-        <Text style={styles.destLabel}>Destinado a</Text>
-        <Text
-          style={[styles.holderText, isMobile && styles.holderTextMobile]}
-          numberOfLines={isMobile ? 2 : 2}
-          ellipsizeMode="tail"
-        >
-          {holder_name}
-        </Text>
-        <SquareChevronUp color={colors.textSecondary} />
-      </View>
-    </Pressable>
+      </Pressable>
+      <AcquiredEventModal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        id={user_pass_id}
+      />
+    </>
   );
 };
 

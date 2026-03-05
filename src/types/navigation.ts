@@ -1,5 +1,14 @@
 import { NavigatorScreenParams } from "@react-navigation/native";
 
+export type DashboardStackParamList = {
+  Dashboard: undefined;
+  EventsManagement: undefined;
+  OrdersManagement: undefined;
+  OrderAdminDetail?: { orderId: string };
+  UsersManagement: undefined;
+  ProductsManagement: undefined;
+  FinancesManagement: undefined;
+};
 export type GroupsStackParamList = {
   GroupsList: undefined;
   CreateGroup: undefined;

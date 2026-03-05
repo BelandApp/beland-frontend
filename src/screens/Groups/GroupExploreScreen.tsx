@@ -222,7 +222,7 @@ const GroupExploreScreen = () => {
   };
 
   return (
-    <View className="flex-1 bg-background-light gap-2">
+    <View className="flex-1 gap-2">
       {/* Header */}
       <ThemedHeader
         canGoBack
@@ -231,11 +231,13 @@ const GroupExploreScreen = () => {
       />
 
       {/* Search Bar */}
-      <SearchBarInput
-        onSearchChange={setSearch}
-        searchQuery={search}
-        placeholder="Buscar por nombre o categoría..."
-      />
+      <View className="px-2 py-1">
+        <SearchBarInput
+          onSearchChange={setSearch}
+          searchQuery={search}
+          placeholder="Buscar por nombre o categoría..."
+        />
+      </View>
 
       {/* Filter Chips (sticky, scrollable horizontally, compact spacing) */}
       <View className="sticky top-16 z-10 bg-background-light/95">
@@ -244,7 +246,7 @@ const GroupExploreScreen = () => {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{
             paddingHorizontal: 12,
-            paddingTop: 8,
+
             paddingBottom: 8,
             alignItems: "center",
           }}
@@ -307,6 +309,7 @@ const GroupExploreScreen = () => {
         data={filteredGroups}
         keyExtractor={(item) => item.id}
         renderItem={renderGroup}
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}
         ListEmptyComponent={
           loading ? (

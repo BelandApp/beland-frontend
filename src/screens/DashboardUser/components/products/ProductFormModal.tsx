@@ -9,6 +9,7 @@ import {
   TextInput,
   ActivityIndicator,
   Image,
+  Platform,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { ProductService } from "@/services/core";
@@ -18,7 +19,23 @@ import type {
   UpdateProductDto,
   Category,
 } from "@/services/ProductApiService";
-import { useNotify, useBeCoinsPrice } from "@/hooks";
+import { useNotify, useBeCoinsPrice, useUploadImage } from "@/hooks";
+import {
+  Button,
+  CustomInput,
+  CustomLoader,
+  WrapperModal,
+} from "src/components";
+import { colors } from "src/design-system";
+import CustomPicker from "src/components/shared/input/Custom.picker";
+import { CloudinaryService } from "src/services";
+import {
+  ArrowDown,
+  ImageDown,
+  ImagePlus,
+  X,
+  XCircle,
+} from "lucide-react-native";
 
 interface ProductFormModalProps {
   visible: boolean;
@@ -45,6 +62,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
     price: 0,
     image_url: "",
     category_id: "",
+    quantity: 0,
   });
 
   // Categories
@@ -59,7 +77,8 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const [errors, setErrors] = useState<
     Partial<Record<keyof CreateProductDto, string>>
   >({});
-
+  const { pickImage, clearImage, previewUri, image, appendToFormData } =
+    useUploadImage();
   // Load form data when product changes
   useEffect(() => {
     if (product) {
@@ -70,6 +89,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         price: product.price,
         image_url: product.image_url || "",
         category_id: product.category_id || "",
+        quantity: product.stock,
       });
     } else {
       setFormData({
@@ -79,6 +99,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         price: 0,
         image_url: "",
         category_id: "",
+        quantity: 0,
       });
     }
     setErrors({});
@@ -131,7 +152,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
   const handleChange = (
     field: keyof CreateProductDto,
-    value: string | number
+    value: string | number,
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear error when user types
@@ -167,137 +188,124 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
     try {
       setLoading(true);
-
+      let payload = { ...formData };
+      if (image) {
+        const formImage = new FormData();
+        appendToFormData(formImage);
+        const new_image_url = await CloudinaryService.uploadImage(formImage);
+        payload = {
+          ...payload,
+          image_url: new_image_url,
+        };
+      }
       if (isEditing && product) {
         await ProductService.updateProduct(
           product.id,
-          formData as UpdateProductDto
+          payload as UpdateProductDto,
         );
         notify.success({ message: "Producto actualizado exitosamente" });
       } else {
-        await ProductService.createProduct(formData);
+        await ProductService.createProduct(payload);
         notify.success({ message: "Producto creado exitosamente" });
       }
-
-      onSuccess();
+      setFormData(payload);
+      setTimeout(() => {
+        onSuccess();
+      }, 1000);
     } catch (error: any) {
       console.error("Error saving product:", error);
       const message =
         error.response?.data?.message || "Error al guardar producto";
       notify.error({ message });
     } finally {
+      clearImage();
       setLoading(false);
     }
   };
-
+  const handleClose = () => {
+    clearImage();
+    setFormData({
+      name: "",
+      description: "",
+      cost: 0,
+      price: 0,
+      image_url: "",
+      category_id: "",
+      quantity: 0,
+    });
+    onClose();
+  };
+  const handleBeforeClose = () => {
+    return new Promise<boolean>((resolve) => {
+      notify.confirm({
+        message: "¿Seguro que quieres salir? Perderás tu progreso",
+        onConfirm: () => resolve(true),
+        onCancel: () => resolve(false),
+      });
+    });
+  };
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          {/* Header */}
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>
-              {isEditing ? "Editar Producto" : "Nuevo Producto"}
-            </Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <MaterialCommunityIcons name="close" size={24} color="#6b7280" />
-            </TouchableOpacity>
-          </View>
-
-          {/* Form */}
-          <ScrollView
-            style={styles.formContainer}
-            showsVerticalScrollIndicator={false}
-          >
-            {/* Nombre */}
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>
-                Nombre <Text style={styles.required}>*</Text>
-              </Text>
-              <TextInput
-                style={[styles.input, errors.name && styles.inputError]}
+    <>
+      <WrapperModal
+        beforeClose={handleBeforeClose}
+        isOpen={visible}
+        onClose={handleClose}
+        header={
+          <Text style={styles.modalTitle}>
+            {isEditing ? "Editar Producto" : "Nuevo Producto"}
+          </Text>
+        }
+        content={
+          <View>
+            <View style={styles.row}>
+              <CustomInput
+                label="Nombre"
+                required
+                variant="filled"
                 value={formData.name}
-                onChangeText={(text) => handleChange("name", text)}
-                placeholder="Ingresa el nombre del producto"
+                onChangeText={(value) => handleChange("name", value)}
+                error={errors.name}
               />
-              {errors.name && (
-                <Text style={styles.errorText}>{errors.name}</Text>
-              )}
-            </View>
-
-            {/* Descripción */}
-            <View style={styles.formGroup}>
-              <Text style={styles.label}>Descripción</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                value={formData.description}
-                onChangeText={(text) => handleChange("description", text)}
-                placeholder="Ingresa una descripción del producto"
-                multiline
-                numberOfLines={3}
+              <CustomInput
+                label="Stock"
+                required
+                variant="filled"
+                value={String(formData.quantity)}
+                onChangeText={(value) => handleChange("quantity", value)}
+                error={errors.quantity}
               />
             </View>
+            <CustomInput
+              label="Descripción"
+              required
+              variant="filled"
+              value={formData.description ?? ""}
+              onChangeText={(text) => handleChange("description", text)}
+              error={errors.description}
+            />
 
             {/* Precios en fila */}
             <View style={styles.row}>
-              {/* Costo */}
-              <View style={[styles.formGroup, styles.halfWidth]}>
-                <Text style={styles.label}>Costo (USD)</Text>
-                <TextInput
-                  style={[styles.input, errors.cost && styles.inputError]}
-                  value={formData.cost.toString()}
-                  onChangeText={(text) =>
-                    handleChange("cost", parseFloat(text) || 0)
-                  }
-                  placeholder="0.00"
-                  keyboardType="decimal-pad"
-                />
-                {errors.cost && (
-                  <Text style={styles.errorText}>{errors.cost}</Text>
-                )}
-              </View>
-
-              {/* Precio */}
-              <View
-                style={[
-                  styles.formGroup,
-                  styles.halfWidth,
-                  styles.secondColumn,
-                ]}
-              >
-                <Text style={styles.label}>
-                  Precio (USD) <Text style={styles.required}>*</Text>
-                </Text>
-                <TextInput
-                  style={[styles.input, errors.price && styles.inputError]}
-                  value={formData.price.toString()}
-                  onChangeText={(text) =>
-                    handleChange("price", parseFloat(text) || 0)
-                  }
-                  placeholder="0.00"
-                  keyboardType="decimal-pad"
-                />
-                {errors.price && (
-                  <Text style={styles.errorText}>{errors.price}</Text>
-                )}
-                {formData.price > 0 && (
-                  <View style={styles.conversionBadge}>
-                    <MaterialCommunityIcons
-                      name="cash-multiple"
-                      size={14}
-                      color="#7DA244"
-                    />
-                    <Text style={styles.conversionText}>
-                      ≈ {usdToBeCoins(formData.price).toFixed(2)} BC
-                    </Text>
-                  </View>
-                )}
-              </View>
+              <CustomInput
+                required
+                variant="filled"
+                label="Costo (USD)"
+                value={formData.cost.toString()}
+                onChangeText={(text) =>
+                  handleChange("cost", parseFloat(text) || 0)
+                }
+                error={errors.cost}
+              />
+              <CustomInput
+                required
+                variant="filled"
+                label="Precio (USD)"
+                value={formData.price.toString()}
+                onChangeText={(text) =>
+                  handleChange("price", parseFloat(text) || 0)
+                }
+                error={errors.price}
+              />
             </View>
 
             {/* Precio Becoins (Calculado automáticamente) */}
@@ -310,7 +318,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   <MaterialCommunityIcons
                     name="cash-multiple"
                     size={24}
-                    color="#7DA244"
+                    color={colors.brand.green[500]}
                   />
                   <Text style={styles.becoinsPreviewText}>
                     {usdToBeCoins(formData.price).toFixed(2)} BC
@@ -334,20 +342,22 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
             <View style={styles.formGroup}>
               <View style={styles.labelRow}>
                 <Text style={styles.label}>Categoría</Text>
-                <TouchableOpacity
-                  style={styles.addCategoryButton}
+
+                <Button
+                  variant="box"
+                  title="Agregar categoría"
                   onPress={() => setShowCategoryModal(true)}
-                >
-                  <MaterialCommunityIcons
-                    name="plus-circle"
-                    size={16}
-                    color="#7DA244"
-                  />
-                  <Text style={styles.addCategoryText}>Agregar categoría</Text>
-                </TouchableOpacity>
+                  icon={
+                    <MaterialCommunityIcons
+                      name="plus-circle"
+                      size={16}
+                      color="orange"
+                    />
+                  }
+                />
               </View>
               {loadingCategories ? (
-                <ActivityIndicator size="small" color="#7DA244" />
+                <CustomLoader title="Cargando categorías" />
               ) : (
                 <View style={styles.categoriesGrid}>
                   <TouchableOpacity
@@ -391,58 +401,59 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 </View>
               )}
             </View>
-
             {/* URL de Imagen */}
             <View style={styles.formGroup}>
-              <Text style={styles.label}>URL de Imagen</Text>
-              <TextInput
-                style={styles.input}
-                value={formData.image_url}
-                onChangeText={(text) => handleChange("image_url", text)}
-                placeholder="https://ejemplo.com/imagen.jpg"
-              />
-              {formData.image_url && (
-                <View style={styles.imagePreview}>
-                  <Image
-                    source={{ uri: formData.image_url }}
-                    style={styles.previewImage}
-                    resizeMode="cover"
-                  />
-                </View>
-              )}
+              <View style={styles.labelRow}>
+                <Text style={styles.label}>URL de Imagen</Text>
+                <Button
+                  title={formData.image_url ? "Cambiar imagen" : "Subir Image"}
+                  onPress={pickImage}
+                  className="w-fit"
+                  variant="box"
+                  icon={<ImagePlus color="orange" size={16} />}
+                />
+              </View>
+              <View style={[styles.row, { marginHorizontal: "auto" }]}>
+                {formData.image_url && (
+                  <View style={styles.imagePreview}>
+                    <Text>Anterior Imagen</Text>
+                    <Image
+                      source={{ uri: formData.image_url }}
+                      style={styles.previewImage}
+                      resizeMode="contain"
+                    />
+                  </View>
+                )}
+                {previewUri && (
+                  <View style={styles.imagePreview}>
+                    <Text>Nueva Imagen </Text>
+                    <Image
+                      source={{ uri: previewUri }}
+                      style={styles.previewImage}
+                      resizeMode="contain"
+                    />
+                  </View>
+                )}
+              </View>
             </View>
-          </ScrollView>
-
-          {/* Footer */}
-          <View style={styles.modalFooter}>
-            <TouchableOpacity
-              style={styles.cancelButton}
+          </View>
+        }
+        actions={
+          <View className="md:flex-row gap-2 mx-auto">
+            <Button
+              title="Cancelar"
+              variant="secondary"
               onPress={onClose}
               disabled={loading}
-            >
-              <Text style={styles.cancelButtonText}>Cancelar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.submitButton,
-                loading && styles.submitButtonDisabled,
-              ]}
+            />
+            <Button
+              title={isEditing ? "Actualizar" : "Crear"}
               onPress={handleSubmit}
               disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator color="#fff" size="small" />
-              ) : (
-                <Text style={styles.submitButtonText}>
-                  {isEditing ? "Actualizar" : "Crear"}
-                </Text>
-              )}
-            </TouchableOpacity>
+            />
           </View>
-        </View>
-      </View>
-
-      {/* Modal de Nueva Categoría */}
+        }
+      />
       <Modal
         visible={showCategoryModal}
         transparent
@@ -453,64 +464,44 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
           <View style={styles.categoryModalContent}>
             <View style={styles.categoryModalHeader}>
               <Text style={styles.categoryModalTitle}>Nueva Categoría</Text>
-              <TouchableOpacity
-                onPress={() => {
-                  setShowCategoryModal(false);
-                  setNewCategoryName("");
-                }}
-                style={styles.closeButton}
-              >
-                <MaterialCommunityIcons
-                  name="close"
-                  size={24}
-                  color="#6b7280"
-                />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.categoryModalBody}>
-              <Text style={styles.label}>
-                Nombre <Text style={styles.required}>*</Text>
-              </Text>
-              <TextInput
-                style={styles.input}
-                value={newCategoryName}
-                onChangeText={setNewCategoryName}
-                placeholder="Ingresa el nombre de la categoría"
-                autoFocus
+              <Button
+                variant="onlyIcon"
+                icon={<X color={colors.brand.orange[500]} size={24} />}
+                onPress={() => setShowCategoryModal(false)}
+                title="cerrar"
               />
             </View>
+            <CustomInput
+              label="Nombre"
+              variant="filled"
+              value={newCategoryName}
+              onChangeText={setNewCategoryName}
+              placeholder="Ingresa el nombre de la categoría"
+              required
+              autoFocus
+            />
 
             <View style={styles.categoryModalFooter}>
-              <TouchableOpacity
-                style={styles.cancelButton}
+              <Button
+                title="Cancelar"
+                variant="secondary"
                 onPress={() => {
                   setShowCategoryModal(false);
                   setNewCategoryName("");
                 }}
                 disabled={creatingCategory}
-              >
-                <Text style={styles.cancelButtonText}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.submitButton,
-                  creatingCategory && styles.submitButtonDisabled,
-                ]}
+              />
+
+              <Button
+                title={creatingCategory ? "Procesando " : "Crear Categoria"}
                 onPress={handleCreateCategory}
                 disabled={creatingCategory}
-              >
-                {creatingCategory ? (
-                  <ActivityIndicator color="#fff" size="small" />
-                ) : (
-                  <Text style={styles.submitButtonText}>Crear</Text>
-                )}
-              </TouchableOpacity>
+              />
             </View>
           </View>
         </View>
       </Modal>
-    </Modal>
+    </>
   );
 };
 
@@ -536,14 +527,14 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     width: "100%",
     maxWidth: 400,
+    gap: 8,
+    padding: 16,
   },
   categoryModalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
   },
   categoryModalTitle: {
     fontSize: 18,
@@ -555,10 +546,9 @@ const styles = StyleSheet.create({
   },
   categoryModalFooter: {
     flexDirection: "row",
-    justifyContent: "flex-end",
-    padding: 20,
-    borderTopWidth: 1,
-    borderTopColor: "#e5e7eb",
+    justifyContent: "space-between",
+    gap: 8,
+    alignItems: "center",
   },
   modalContent: {
     backgroundColor: "#fff",
@@ -591,6 +581,7 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: "row",
+    gap: 16,
   },
   halfWidth: {
     flex: 1,
@@ -599,7 +590,7 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   label: {
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: "600",
     color: "#374151",
     marginBottom: 6,
@@ -660,9 +651,9 @@ const styles = StyleSheet.create({
   becoinsPreviewContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f0f9ff",
+    backgroundColor: colors.brand.orange[100],
     borderWidth: 1,
-    borderColor: "#7DA244",
+    borderColor: colors.brand.orange[200],
     borderRadius: 8,
     padding: 16,
     marginBottom: 4,
@@ -670,7 +661,7 @@ const styles = StyleSheet.create({
   becoinsPreviewText: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#7DA244",
+    color: colors.brand.orange[500],
     marginLeft: 12,
   },
   labelRow: {
@@ -679,52 +670,42 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 8,
   },
-  addCategoryButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  addCategoryText: {
-    fontSize: 12,
-    color: "#7DA244",
-    fontWeight: "600",
-    marginLeft: 4,
-  },
   categoriesGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    marginHorizontal: -4,
+    gap: 12,
+    justifyContent: "center",
   },
   categoryButton: {
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 8,
     backgroundColor: "#f3f4f6",
-    margin: 4,
-    minWidth: "30%",
+    width: "30%",
     alignItems: "center",
   },
   categoryButtonActive: {
-    backgroundColor: "#7DA244",
+    backgroundColor: colors.brand.orange[500],
   },
   categoryButtonText: {
     fontSize: 13,
     color: "#6b7280",
     fontWeight: "500",
+    textAlign: "center",
+    marginVertical: "auto",
   },
   categoryButtonTextActive: {
     color: "#fff",
   },
 
   imagePreview: {
-    marginTop: 12,
     alignItems: "center",
   },
   previewImage: {
     width: 150,
     height: 150,
     borderRadius: 8,
+    backgroundColor: colors.background.secondary,
   },
   modalFooter: {
     flexDirection: "row",

@@ -13,7 +13,6 @@ import { preOrderType } from "../../hooks";
 import { UserAddress } from "src/services";
 import { convertUSDToBeCoins } from "src/constants";
 import { CartItem } from "src/stores";
-import { useResponsiveLayout } from "@/hooks";
 
 type ProcessingStepProps = {
   preOrder: preOrderType | null;
@@ -75,15 +74,8 @@ export const ConfirmOrder: React.FC<ProcessingStepProps> = ({
       </View>
     );
   }
-  const { isMobile } = useResponsiveLayout();
   return (
-    <ScrollView
-      contentContainerStyle={[
-        styles.container,
-        isMobile ? null : { flexGrow: 1 },
-      ]}
-      showsVerticalScrollIndicator={false}
-    >
+    <View>
       {/* Products Section */}
       <View style={styles.section}>
         <View style={styles.productsWrapper}>
@@ -205,7 +197,7 @@ export const ConfirmOrder: React.FC<ProcessingStepProps> = ({
           </View>
         </View>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
