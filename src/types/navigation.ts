@@ -10,6 +10,7 @@ export type DashboardStackParamList = {
   FinancesManagement: undefined;
 };
 export type GroupsStackParamList = {
+  Construction: undefined;
   GroupsList: undefined;
   CreateGroup: undefined;
   GroupExplore: undefined;

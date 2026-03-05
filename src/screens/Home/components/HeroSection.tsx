@@ -61,10 +61,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </TouchableOpacity>
           </View>
           <TouchableOpacity
-            onPress={() => navigate("Wallet")}
+            onPress={() => navigate("MainTabs", { screen: "Wallet" })}
             style={styles.logoContainer}
           >
-            <Ionicons name="wallet-outline" size={20} color="#F97316" />
+            <Ionicons name="wallet-outline" size={20} color="#F97316" />s
             <Text style={styles.logoText}>Beland Wallet</Text>
           </TouchableOpacity>
         </View>

@@ -10,16 +10,19 @@ import {
   GroupServicesHistoryScreen,
 } from "src/screens/Groups";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import ConstructionScreen from "src/screens/Construction/Construction.screen";
+import ConstructionGroups from "src/screens/Groups/ConstructionGroups";
 const Stack = createNativeStackNavigator<GroupsStackParamList>();
 
 export const GroupsStackNavigator = () => {
   return (
     <Stack.Navigator
-      initialRouteName="GroupsList"
+      initialRouteName="Construction"
       screenOptions={{
         headerShown: false,
       }}
     >
+      <Stack.Screen name="Construction" component={ConstructionGroups} />
       <Stack.Screen name="GroupsList" component={GroupsScreen} />
       <Stack.Screen name="GroupExplore" component={GroupExploreScreen} />
       <Stack.Screen name="GroupMembersScreen" component={GroupMembersScreen} />
