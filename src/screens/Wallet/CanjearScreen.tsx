@@ -17,14 +17,14 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { BeCoinIcon } from "src/components/icons/BeCoinIcon";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { convertUSDToBeCoins } from "src/constants";
+import { useAuth } from "src/context";
 
-interface CanjearScreenProps {
-  navigation: any;
-  route?: any;
-  balance?: number;
-}
-
-const CanjearScreen: React.FC<CanjearScreenProps> = ({ navigation }) => {
+const CanjearScreen = () => {
+  const { goBack, navigate } = useCustomNavigation();
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) {
+    return navigate("MainTabs", { screen: "Wallet" });
+  }
   const {
     // Estados
     amount,
@@ -58,9 +58,8 @@ const CanjearScreen: React.FC<CanjearScreenProps> = ({ navigation }) => {
     // Utilidades
     formatUSDPrice,
     convertBeCoinsToUSD,
-  } = useCanjear(navigation);
+  } = useCanjear();
 
-  const { goBack } = useCustomNavigation();
   // Estados de carga
   if (loadingAccounts) {
     return (
@@ -380,7 +379,7 @@ const CanjearScreen: React.FC<CanjearScreenProps> = ({ navigation }) => {
 
                 <TouchableOpacity
                   className="mt-3 bg-white dark:bg-gray-800 rounded-xl py-3 border border-gray-200 dark:border-gray-600"
-                  onPress={() => navigation.goBack()}
+                  onPress={() => goBack()}
                 >
                   <Text className="text-gray-700 dark:text-gray-300 font-medium text-center">
                     Cancelar

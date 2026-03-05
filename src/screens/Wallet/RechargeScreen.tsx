@@ -21,6 +21,7 @@ import { notify } from "src/hooks/notification/notify.external";
 import { CopyToClipboard } from "src/utils/shareHelper";
 import ThemedTabs from "src/components/shared/Tabs/ThemedTabs";
 import { useCustomNavigation } from "src/hooks";
+import { useAuth } from "src/context";
 
 const BankDetailRow = ({ label, value, isCopyable = false }: any) => (
   <View className="flex-col sm:flex-row justify-between py-2 border-b border-gray-100 dark:border-gray-800">
@@ -68,6 +69,10 @@ export default function RechargeScreen() {
     destroyPayphoneWidget,
   } = useRecharge();
   const { navigate } = useCustomNavigation();
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) {
+    return navigate("MainTabs", { screen: "Wallet" });
+  }
   const handleBeforeClose = () => {
     return new Promise<boolean>((resolve) => {
       notify.confirm({

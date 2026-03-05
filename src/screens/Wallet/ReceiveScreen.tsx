@@ -21,13 +21,14 @@ import { getBackendErrorMessage } from "src/services";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { useBeCoinsPrice } from "src/hooks";
 import { ThemedHeader } from "src/components/shared/headers/Header";
-
 const ReceiveScreen = () => {
   const { navigate } = useCustomNavigation();
+  const { user, isAuthenticated } = useAuth();
+  if (!isAuthenticated) {
+    return navigate("MainTabs", { screen: "Wallet" });
+  }
   const { walletData, wallet, refreshAll } = useWallet();
-  const { user } = useAuth();
   const { beCoinsToUsd } = useBeCoinsPrice();
-
   const [showToast, setShowToast] = useState(false);
   const [qrImage, setQrImage] = useState<string | null>(null);
   const [qrLoading, setQrLoading] = useState(false);
@@ -37,7 +38,6 @@ const ReceiveScreen = () => {
   const [aliasInput, setAliasInput] = useState("");
   const [savingAlias, setSavingAlias] = useState(false);
   const notify = useNotify();
-
   // Usar alias del backend (siempre en mayúsculas)
   const alias = walletData?.alias?.toUpperCase();
 

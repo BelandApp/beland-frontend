@@ -25,8 +25,11 @@ type Tab = "amount" | "contacts";
 const SendScreen = ({ route }: { route: any }) => {
   const id = route.params?.id;
   const { navigate, goBack } = useCustomNavigation();
+  const { user, handleAuth0Login, isAuthenticated } = useAuth();
+  if (!isAuthenticated) {
+    return navigate("MainTabs", { screen: "Wallet" });
+  }
   const { walletData, refreshAll } = useWallet();
-  const { user, handleAuth0Login } = useAuth();
   const { pricePerBeCoin, usdToBeCoins, beCoinsToUsd } = useBeCoinsPrice();
   const {
     recipients,
@@ -34,7 +37,6 @@ const SendScreen = ({ route }: { route: any }) => {
     refetch: refetchRecipients,
   } = useRecentRecipients();
   const notify = useNotify();
-
   // Estados principales
   const [activeTab, setActiveTab] = useState<Tab>("amount");
   const [amountUsd, setAmountUsd] = useState("");
