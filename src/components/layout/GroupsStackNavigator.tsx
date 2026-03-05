@@ -22,7 +22,6 @@ export const GroupsStackNavigator = () => {
     >
       <Stack.Screen name="GroupsList" component={GroupsScreen} />
       <Stack.Screen name="GroupExplore" component={GroupExploreScreen} />
-      <Stack.Screen name="GroupDetailScreen" component={GroupDetailScreen} />
       <Stack.Screen name="GroupMembersScreen" component={GroupMembersScreen} />
       <Stack.Screen
         name="GroupOrdersHistoryScreen"

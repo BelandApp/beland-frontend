@@ -199,9 +199,8 @@ const GroupExploreScreen = () => {
         group={item}
         variant="explore"
         onPress={() =>
-          navigate("Groups", {
-            screen: "GroupDetailScreen",
-            params: { groupId: item.id },
+          navigate("GroupDetailScreen", {
+            groupId: item.id,
           })
         }
         privacyOptions={privacyOptions}
@@ -308,7 +307,7 @@ const GroupExploreScreen = () => {
       keyExtractor={(item) => item.id}
       renderItem={renderGroup}
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}
+      contentContainerStyle={{ paddingBottom: 40 }}
       ListEmptyComponent={
         loading ? (
           <View style={{ paddingTop: 24 }}>

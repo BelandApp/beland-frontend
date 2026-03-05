@@ -52,6 +52,7 @@ import FinancesManagement from "src/screens/DashboardUser/FinanceManagementScree
 import { GroupsStackNavigator } from "./GroupsStackNavigator";
 import FAQScreen from "src/screens/FAQ/FaqScreen";
 import { DashboardStackNavigator } from "./DashboardNavigator";
+import { GroupDetailScreen } from "src/screens/GroupDetailScreen";
 
 export type RootStackParamList = {
   // Auth Screens
@@ -61,7 +62,7 @@ export type RootStackParamList = {
   // Main Screens
   MainTabs: NavigatorScreenParams<MainTabParamList>;
   Orders: NavigatorScreenParams<OrdersStackParamList>;
-  Groups: NavigatorScreenParams<GroupsStackParamList>;
+  GroupDetailScreen: { groupId: string };
   UserDashboardScreen: NavigatorScreenParams<DashboardStackParamList>;
   CreateGroup: undefined;
   // FAQ
@@ -124,11 +125,7 @@ export const RootStackNavigator = () => {
       screenOptions={{ headerShown: false }}
     >
       <Stack.Screen name="MainTabs" component={MainTabNavigator} />
-      <Stack.Screen
-        name="Groups"
-        options={{ headerShown: false }}
-        component={GroupsStackNavigator}
-      />
+      <Stack.Screen name="GroupDetailScreen" component={GroupDetailScreen} />
       <Stack.Screen
         name="Orders"
         component={OrdersStackNavigator}

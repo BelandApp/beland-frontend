@@ -83,7 +83,7 @@ export const GroupCard: React.FC<GroupCardProps> = ({
       <TouchableOpacity
         activeOpacity={0.7}
         onPress={onPress}
-        className="flex-row items-center bg-white p-3 rounded-2xl mb-3 shadow-sm border border-gray-100"
+        className="flex-row mx-2 items-center bg-white p-3 rounded-2xl mb-3 shadow-sm border border-gray-100"
       >
         {/* Compact Image (Left) */}
         <View className="h-14 w-14 rounded-xl bg-gray-100 overflow-hidden relative mr-3 shrink-0">
@@ -189,7 +189,7 @@ export const GroupCard: React.FC<GroupCardProps> = ({
     <TouchableOpacity
       activeOpacity={0.9}
       onPress={onPress}
-      className="bg-white rounded-2xl mb-4 shadow-sm border border-gray-100 overflow-hidden"
+      className="bg-white rounded-2xl mb-4 mx-2 shadow-sm border border-gray-100 overflow-hidden"
     >
       {/* Image Header */}
       <View className="h-32 w-full bg-gray-100 relative">
@@ -292,7 +292,7 @@ export const GroupCard: React.FC<GroupCardProps> = ({
           <TouchableOpacity
             onPress={onActionPress}
             disabled={actionDisabled}
-            className={`mt-4 w-full py-2.5 rounded-xl flex-row items-center justify-center ${
+            className={`mt-4 w-full mx-2 py-2.5 rounded-xl flex-row items-center justify-center ${
               actionDisabled
                 ? "bg-gray-100"
                 : "bg-primary shadow-sm active:bg-primary/90"

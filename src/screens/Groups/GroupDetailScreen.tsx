@@ -739,7 +739,7 @@ export const GroupDetailScreen = () => {
       {/* --- FOOTER ACTION BAR (Floating) --- */}
       {/* Only show if not in Tabs that have their own sub-navigation or actions, or keeps it consistent */}
       {activeTab === "info" && (
-        <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 shadow-lg flex-row gap-3">
+        <View className=" bg-white border-t border-gray-100 px-4 py-3 shadow-lg flex-row gap-3">
           {isMember ? (
             <TouchableOpacity
               onPress={() => setInviteModal(true)}

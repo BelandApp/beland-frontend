@@ -235,9 +235,8 @@ export const GroupsScreen: React.FC = () => {
           group={item}
           variant="my-group"
           onPress={() =>
-            navigate("Groups", {
-              screen: "GroupDetailScreen",
-              params: { groupId: item.id },
+            navigate("GroupDetailScreen", {
+              groupId: item.id,
             })
           }
           privacyOptions={privacyOptions}

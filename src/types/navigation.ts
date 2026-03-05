@@ -13,7 +13,6 @@ export type GroupsStackParamList = {
   GroupsList: undefined;
   CreateGroup: undefined;
   GroupExplore: undefined;
-  GroupDetailScreen: { groupId: string };
   GroupMembersScreen: { groupId: string; groupName?: string };
   GroupOrdersHistoryScreen: { groupId: string; groupName?: string };
   GroupServicesHistoryScreen: { groupId: string; groupName?: string };
