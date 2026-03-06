@@ -17,7 +17,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Feather from "react-native-vector-icons/Feather";
 // removed GroupMembersList import to render list inline for better web/mobile scroll control
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
-import { GroupService, GroupMember } from "@/services/GroupApiService";
+import { GroupService, GroupMember } from "src/services/groups/GroupApiService";
 import { useNotify } from "src/hooks";
 import { useAuth } from "src/context/AuthContext";
 import { CustomLoader } from "@/components/shared/loader/Loader";
@@ -202,7 +202,7 @@ const MemberOptionsModal: React.FC<MemberOptionsModalProps> = ({
                         day: "numeric",
                         month: "short",
                         year: "numeric",
-                      }
+                      },
                     );
                   })()}
                 </Text>
@@ -312,14 +312,15 @@ export const GroupMembersScreen = () => {
   const [inviteModal, setInviteModal] = useState(false);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [selectedMember, setSelectedMember] = useState<GroupMember | null>(
-    null
+    null,
   );
   const [optionsModal, setOptionsModal] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const notify = useNotify();
   const isCurrentUserLeader = members.some(
     (m) =>
-      (m.user?.id === user?.id || m.user_id === user?.id) && m.role === "LEADER"
+      (m.user?.id === user?.id || m.user_id === user?.id) &&
+      m.role === "LEADER",
   );
 
   const fetchMembers = async () => {
@@ -343,7 +344,7 @@ export const GroupMembersScreen = () => {
     if (filter !== "all") filtered = filtered.filter((m) => m.role === filter);
     if (search)
       filtered = filtered.filter((m) =>
-        (m.user?.name || "").toLowerCase().includes(search.toLowerCase())
+        (m.user?.name || "").toLowerCase().includes(search.toLowerCase()),
       );
     return filtered;
   }, [members, filter, search]);

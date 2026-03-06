@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, Image, TouchableOpacity, FlatList } from "react-native";
 import Feather from "react-native-vector-icons/Feather";
-import { GroupMember } from "@/services/GroupApiService";
+import { GroupMember } from "src/services/groups/GroupApiService";
 import { CustomLoader } from "@/components/shared/loader/Loader";
 
 interface GroupMembersListProps {

@@ -1,6 +1,5 @@
 import { useNavigation, NavigationProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-
 import { RootStackParamList } from "src/components/layout/RootStackNavigator";
 
 export const useCustomNavigation = () => {

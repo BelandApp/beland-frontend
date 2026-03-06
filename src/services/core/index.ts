@@ -67,7 +67,7 @@ export type {
   UpdateGroupDto,
   InviteToGroupDto,
   GroupQuery,
-} from "../GroupApiService";
+} from "../groups/GroupApiService";
 
 // Payment service
 export { PaymentService } from "../PaymentApiService";

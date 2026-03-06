@@ -5,7 +5,7 @@ import {
   GroupType,
   GroupPrivacy,
   PaymentType,
-} from "@/services/GroupApiService";
+} from "src/services/groups/GroupApiService";
 import { UserAddress } from "@/services/addressService";
 import { notify } from "src/hooks/notification/notify.external";
 import * as ImagePicker from "expo-image-picker";

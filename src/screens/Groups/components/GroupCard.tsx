@@ -1,7 +1,11 @@
 import React from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
 import Feather from "react-native-vector-icons/Feather";
-import { Group, GroupPrivacy, PaymentType } from "@/services/GroupApiService";
+import {
+  Group,
+  GroupPrivacy,
+  PaymentType,
+} from "src/services/groups/GroupApiService";
 
 interface GroupCardProps {
   group: Group;

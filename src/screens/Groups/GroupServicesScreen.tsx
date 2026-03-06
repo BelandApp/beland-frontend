@@ -19,7 +19,7 @@ import {
 } from "@/services/ServicesApiService";
 import { useNotify } from "@/hooks";
 import { LinearGradient } from "expo-linear-gradient";
-import { GroupService as GroupServiceAPI } from "@/services/GroupApiService";
+import { GroupService as GroupServiceAPI } from "src/services/groups/GroupApiService";
 
 interface GroupServicesScreenProps {
   groupId: string;

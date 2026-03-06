@@ -23,10 +23,8 @@ import {
   WalletSettingsScreen,
   PayphoneSuccessScreen,
 } from "@screens/Wallet";
-import { CreateGroupScreen } from "@screens/Groups/CreateGroupScreen";
 import { QRScannerScreen } from "@screens/QRScannerScreen";
 import PaymentScreen from "@screens/Payment/PaymentScreen";
-import UserDashboardScreen from "@screens/UserDashboardScreen";
 import UserResourcesScreen from "@screens/UserResources/UserResourcesScreen";
 import { LoginScreen } from "@screens/Login";
 import { RegisterScreen } from "@screens/Register";
@@ -39,13 +37,19 @@ import {
 } from "@screens/UseEventScreen";
 import { NewPaymentScreen, PaymentScreenRoute } from "@screens/NewPayment";
 // TODO arreglar pantallas en carpeta raiz
-import { HistoryScreen, RecyclingMapScreen } from "../../screens";
-import FAQScreen from "src/screens/FAQ/FaqScreen";
-import { DashboardStackNavigator } from "./DashboardNavigator";
-import { GroupDetailScreen } from "src/screens/GroupDetailScreen";
 import { Guard } from "src/guard/GuardRole";
 import { WalletGuestScreen } from "src/screens/Wallet/guardScreen/WalletGuestScreen";
 import TransferReceive from "src/screens/Wallet/TransferReceive";
+
+// TODO arreglar pantallas en carpeta raiz
+import {
+  CreateGroupScreen,
+  HistoryScreen,
+  RecyclingMapScreen,
+} from "../../screens";
+import FAQScreen from "src/screens/FAQ/FaqScreen";
+import { DashboardStackNavigator } from "./DashboardNavigator";
+import { GroupExploreScreen, GroupDetailScreen } from "@/screens/GroupStack";
 
 export type RootStackParamList = {
   // Auth Screens
@@ -55,9 +59,7 @@ export type RootStackParamList = {
   // Main Screens
   MainTabs: NavigatorScreenParams<MainTabParamList>;
   Orders: NavigatorScreenParams<OrdersStackParamList>;
-  GroupDetailScreen: { groupId: string };
   UserDashboardScreen: NavigatorScreenParams<DashboardStackParamList>;
-  CreateGroup: undefined;
   // FAQ
   FAQ: undefined;
   // Payments
@@ -106,6 +108,10 @@ export type RootStackParamList = {
   ConsumedEventScreen: { id: string; holder?: string };
   // Transfers
   TransferReceive: { id: string };
+  // Groups fuera del StackGroups para evitar TabBar
+  GroupCreate: undefined;
+  GroupExplore: undefined;
+  GroupDetail: { groupId: string; groupName?: string };
   // Chequear si son necesarios
   Rewards: undefined;
 };
@@ -119,7 +125,6 @@ export const RootStackNavigator = () => {
       screenOptions={{ headerShown: false }}
     >
       <Stack.Screen name="MainTabs" component={MainTabNavigator} />
-      <Stack.Screen name="GroupDetailScreen" component={GroupDetailScreen} />
       <Stack.Screen
         name="Orders"
         component={OrdersStackNavigator}
@@ -146,7 +151,7 @@ export const RootStackNavigator = () => {
         component={WalletHistoryScreen}
       />
       <Stack.Screen name="RechargeScreen" component={RechargeScreen} />
-      <Stack.Screen name="CreateGroup" component={CreateGroupScreen} />
+
       <Stack.Screen
         name="WalletSettingsScreen"
         component={WalletSettingsScreen}
@@ -251,6 +256,9 @@ export const RootStackNavigator = () => {
         options={{ headerShown: false }}
         component={TransferReceive}
       />
+      <Stack.Screen name="GroupCreate" component={CreateGroupScreen} />
+      <Stack.Screen name="GroupExplore" component={GroupExploreScreen} />
+      <Stack.Screen name="GroupDetail" component={GroupDetailScreen} />
     </Stack.Navigator>
   );
 };

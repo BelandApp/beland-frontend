@@ -24,7 +24,7 @@ import {
   ArrowRight,
 } from "lucide-react-native";
 import { useAuth } from "src/context/AuthContext";
-import { GroupService } from "@/services/GroupApiService";
+import { GroupService } from "src/services/groups/GroupApiService";
 import { ProductService } from "@/services/ProductApiService";
 import { OrderService } from "@/services/OrderApiService";
 import { Product, Category } from "src/types";

@@ -10,7 +10,7 @@ import {
   GroupService,
   GroupPurchaseCart,
   GroupPurchaseCartItem,
-} from "src/services/GroupApiService";
+} from "src/services/groups/GroupApiService";
 
 // Re-defined useGroupPurchaseCart to use Group's specific cart
 export const useGroupPurchaseCart = (
@@ -226,4 +226,4 @@ export const useGroupPurchaseCart = (
 export type {
   GroupPurchaseCart,
   GroupPurchaseCartItem,
-} from "src/services/GroupApiService";
+} from "src/services/groups/GroupApiService";

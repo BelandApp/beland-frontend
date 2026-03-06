@@ -9,7 +9,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { GroupService } from "../../services/GroupApiService";
+import { GroupService } from "../../services/groups/GroupApiService";
 import { useGroupOrders } from "../../hooks/useGroupOrders";
 import { useNotify } from "../../hooks/notification/useNotify";
 
@@ -64,23 +64,23 @@ export const GroupOrderModal: React.FC<GroupOrderModalProps> = ({
         codeUpper === "SPLIT"
           ? "Dividir por Consumo"
           : codeUpper === "EQUAL_SPLIT"
-          ? "Dividir Equitativamente"
-          : codeUpper === "FULL"
-          ? "Yo Pago Todo"
-          : description || "Método de Pago",
+            ? "Dividir Equitativamente"
+            : codeUpper === "FULL"
+              ? "Yo Pago Todo"
+              : description || "Método de Pago",
       icon:
         codeUpper === "SPLIT"
           ? "percent"
           : codeUpper === "EQUAL_SPLIT"
-          ? "scale-balance"
-          : "crown",
+            ? "scale-balance"
+            : "crown",
       description: description || "Método de pago del grupo",
     };
   };
 
   const paymentInfo = getPaymentTypeInfo(
     selectedGroup?.payment_type?.code,
-    selectedGroup?.payment_type?.description
+    selectedGroup?.payment_type?.description,
   );
 
   /**

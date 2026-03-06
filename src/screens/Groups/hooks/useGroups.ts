@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { useFocusEffect } from "@react-navigation/native";
-import { Group } from "@/services/GroupApiService";
+import { Group } from "src/services/groups/GroupApiService";
 import { GroupService } from "@/services";
 import { mapApiGroupToUi } from "src/utils/groupMapper";
 

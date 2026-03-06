@@ -17,7 +17,7 @@ import { AddressManagementModal } from "@/screens/DashboardUser/components/setti
 import { ShareGroupModal } from "@/components/shared/ShareGroupModal";
 import { useAuth } from "@/context";
 import { useCustomNavigation, useNotify } from "@/hooks";
-import { Group } from "@/services/GroupApiService";
+import { Group } from "src/services/groups/GroupApiService";
 import {
   Button,
   CustomInput,

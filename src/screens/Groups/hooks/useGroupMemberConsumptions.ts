@@ -6,11 +6,11 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "src/context/AuthContext";
 import { useNotify } from "src/hooks/notification/useNotify";
-import { GroupService } from "src/services/GroupApiService";
+import { GroupService } from "src/services/groups/GroupApiService";
 import type {
   GroupMemberConsumption,
   ConsumptionSummary,
-} from "src/services/GroupApiService";
+} from "src/services/groups/GroupApiService";
 
 export const useGroupMemberConsumptions = (groupId: string) => {
   const { user } = useAuth();

@@ -11,7 +11,7 @@ import {
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Feather from "react-native-vector-icons/Feather";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
-import { GroupService } from "@/services/GroupApiService";
+import { GroupService } from "src/services/groups/GroupApiService";
 import { useNotify } from "@/hooks";
 import { CustomLoader } from "@/components/shared/loader/Loader";
 
@@ -43,7 +43,7 @@ const GroupFinancialPanelScreenComponent = () => {
   const groupName = (route.params as any)?.groupName || "Grupo";
 
   const [financialData, setFinancialData] = useState<GroupFinancialData | null>(
-    null
+    null,
   );
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);

@@ -8,12 +8,12 @@ import {
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import Feather from "react-native-vector-icons/Feather";
-import { GroupService, Group } from "@/services/GroupApiService";
-import { GroupPrivacy } from "@/services/GroupApiService";
+import { GroupService, Group } from "src/services/groups/GroupApiService";
+import { GroupPrivacy } from "src/services/groups/GroupApiService";
 import { useAuth } from "@/context/AuthContext";
 import { CustomLoader } from "@/components/shared/loader/Loader";
-import { GroupCard } from "./components/GroupCard";
-import { getGroupTypeFeatherIcon } from "./GroupsScreen";
+import { GroupCard } from "../../Groups/components/GroupCard";
+import { getGroupTypeFeatherIcon } from "../../Groups/GroupsScreen";
 import { notify } from "@/hooks/notification/notify.external";
 import { useGroupPaymentTypes } from "@/hooks/useGroupPaymentTypes";
 import { useCustomNavigation } from "src/hooks";
@@ -26,7 +26,7 @@ const getPrivacyIcon = (privacyCode: string) => {
   return "lock";
 };
 
-const GroupExploreScreen = () => {
+export const GroupExploreScreen = () => {
   const { navigate } = useCustomNavigation();
   const [groups, setGroups] = useState<Group[]>([]);
   const [myGroupIds, setMyGroupIds] = useState<Set<string>>(new Set());
@@ -180,10 +180,7 @@ const GroupExploreScreen = () => {
       try {
         await GroupService.joinGroup(item.id, user.id);
         notify.success({ message: "¡Te has unido al grupo exitosamente!" });
-        navigate("Groups", {
-          screen: "GroupDetailScreen",
-          params: { groupId: item.id },
-        });
+        navigate("GroupDetail", { groupId: item.id });
         await reloadMyGroups();
       } catch (error: any) {
         const errorMsg =
@@ -198,11 +195,7 @@ const GroupExploreScreen = () => {
       <GroupCard
         group={item}
         variant="explore"
-        onPress={() =>
-          navigate("GroupDetailScreen", {
-            groupId: item.id,
-          })
-        }
+        onPress={() => navigate("GroupDetail", { groupId: item.id })}
         privacyOptions={privacyOptions}
         membersCount={membersCount}
         paymentType={
@@ -227,7 +220,12 @@ const GroupExploreScreen = () => {
           <ThemedHeader
             canGoBack
             title="Explorar Grupos"
-            onBackPress={() => navigate("Groups", { screen: "GroupsList" })}
+            onBackPress={() =>
+              navigate("MainTabs", {
+                screen: "Groups",
+                params: { screen: "GroupsList" },
+              })
+            }
           />
 
           {/* Search Bar */}

@@ -1,6 +1,7 @@
 // Suppress noisy development logs (console.log/info/debug/warn) early on.
 // Toggleable at runtime by setting `localStorage.SHOW_VERBOSE_LOGS = '1'` or 'true'.
 // We keep `console.error` so real errors still surface.
+// TODO ATER implement a babel remove console for logs
 try {
   const shouldShow = (() => {
     try {
