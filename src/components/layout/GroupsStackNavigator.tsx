@@ -1,7 +1,6 @@
 import React from "react";
 import { GroupsStackParamList } from "@/types/navigation";
-import { GroupsScreen } from "@/screens";
-import GroupExploreScreen from "@/screens/Groups/GroupExploreScreen";
+import GroupExploreScreen from "src/screens/GroupStack/Screens/GroupExploreScreen";
 import { GroupDetailScreen } from "@/screens/GroupDetailScreen";
 import GroupMembersScreen from "src/screens/Groups/GroupMembersScreen";
 import {
@@ -12,30 +11,31 @@ import {
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import ConstructionScreen from "src/screens/Construction/Construction.screen";
 import ConstructionGroups from "src/screens/Groups/ConstructionGroups";
+import GroupScreen from "src/screens/GroupStack/Group.screen";
+import { CreateGroupScreen } from "src/screens";
 const Stack = createNativeStackNavigator<GroupsStackParamList>();
 
 export const GroupsStackNavigator = () => {
   return (
     <Stack.Navigator
-      initialRouteName="Construction"
+      initialRouteName="GroupsList"
       screenOptions={{
         headerShown: false,
       }}
     >
-      <Stack.Screen name="Construction" component={ConstructionGroups} />
-      <Stack.Screen name="GroupsList" component={GroupsScreen} />
-      <Stack.Screen name="GroupExplore" component={GroupExploreScreen} />
-      <Stack.Screen name="GroupMembersScreen" component={GroupMembersScreen} />
+      <Stack.Screen name="GroupsList" component={GroupScreen} />
+
+      <Stack.Screen name="GroupMembers" component={GroupMembersScreen} />
       <Stack.Screen
-        name="GroupOrdersHistoryScreen"
+        name="GroupOrdersHistory"
         component={GroupOrdersHistoryScreen}
       />
       <Stack.Screen
-        name="GroupServicesHistoryScreen"
+        name="GroupServicesHistory"
         component={GroupServicesHistoryScreen}
       />
       <Stack.Screen
-        name="GroupFinancialPanelScreen"
+        name="GroupFinancialPanel"
         component={GroupFinancialPanelScreen}
       />
     </Stack.Navigator>

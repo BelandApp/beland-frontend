@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { GroupService, PaymentType } from "@/services/GroupApiService";
+import { GroupService, PaymentType } from "src/services/groups/GroupApiService";
 
 /**
  * Hook para cargar y cachear tipos de pago de grupos
@@ -32,10 +32,13 @@ export const useGroupPaymentTypes = () => {
 
   // Crear mapa de payment types cachedo con useMemo
   const paymentTypesMap = useMemo(() => {
-    return paymentTypesArray.reduce((acc, pt) => {
-      acc[pt.id] = pt;
-      return acc;
-    }, {} as Record<string, PaymentType>);
+    return paymentTypesArray.reduce(
+      (acc, pt) => {
+        acc[pt.id] = pt;
+        return acc;
+      },
+      {} as Record<string, PaymentType>,
+    );
   }, [paymentTypesArray]);
 
   return {

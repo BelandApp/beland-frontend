@@ -10,14 +10,11 @@ export type DashboardStackParamList = {
   FinancesManagement: undefined;
 };
 export type GroupsStackParamList = {
-  Construction: undefined;
   GroupsList: undefined;
-  CreateGroup: undefined;
-  GroupExplore: undefined;
-  GroupMembersScreen: { groupId: string; groupName?: string };
-  GroupOrdersHistoryScreen: { groupId: string; groupName?: string };
-  GroupServicesHistoryScreen: { groupId: string; groupName?: string };
-  GroupFinancialPanelScreen: { groupId: string; groupName?: string };
+  GroupMembers: { groupId: string; groupName?: string };
+  GroupOrdersHistory: { groupId: string; groupName?: string };
+  GroupServicesHistory: { groupId: string; groupName?: string };
+  GroupFinancialPanel: { groupId: string; groupName?: string };
 };
 
 export type OrdersStackParamList = {

@@ -14,8 +14,12 @@ import {
 import Feather from "react-native-vector-icons/Feather";
 import { ActionMenu } from "src/screens/Groups/components/ActionMenu";
 import { useRoute, RouteProp } from "@react-navigation/native";
-import { GroupService, Group, GroupMember } from "@/services/GroupApiService";
-import { GroupPrivacy } from "@/services/GroupApiService";
+import {
+  GroupService,
+  Group,
+  GroupMember,
+} from "src/services/groups/GroupApiService";
+import { GroupPrivacy } from "src/services/groups/GroupApiService";
 import { addressService, UserAddress } from "@/services/addressService";
 import * as Clipboard from "expo-clipboard";
 import { useCustomNavigation, useNotify } from "src/hooks";
@@ -24,8 +28,8 @@ import { reverseGeocode } from "@/services/mapboxService";
 import * as Linking from "expo-linking";
 import { Button, GroupMembersList } from "src/components";
 import { useAuth } from "src/context/AuthContext";
-import { GroupServicesScreen } from "./GroupServicesScreen";
-import { GroupPurchaseScreen } from "./GroupPurchaseScreen";
+import { GroupServicesScreen } from "../../Groups/GroupServicesScreen";
+import { GroupPurchaseScreen } from "../../Groups/GroupPurchaseScreen";
 import { Service } from "@/services/ServicesApiService";
 import { GroupServiceModal } from "@/components/modals/GroupServiceModal";
 import { ShareGroupModal } from "@/components/shared/ShareGroupModal";
@@ -267,11 +271,11 @@ export const GroupDetailScreen = () => {
           {
             label: "Gestión de miembros",
             onPress: () =>
-              navigate("Groups", {
-                screen: "GroupMembersScreen",
+              navigate("MainTabs", {
+                screen: "Groups",
                 params: {
-                  groupId,
-                  groupName: group?.name ?? "",
+                  screen: "GroupMembers",
+                  params: { groupId, groupName: group?.name ?? "" },
                 },
               }),
           },
@@ -652,11 +656,11 @@ export const GroupDetailScreen = () => {
               </Text>
               <TouchableOpacity
                 onPress={() =>
-                  navigate("Groups", {
-                    screen: "GroupMembersScreen",
+                  navigate("MainTabs", {
+                    screen: "Groups",
                     params: {
-                      groupId,
-                      groupName: group?.name ?? "",
+                      screen: "GroupMembers",
+                      params: { groupId, groupName: group?.name ?? "" },
                     },
                   })
                 }
@@ -674,11 +678,11 @@ export const GroupDetailScreen = () => {
             {members.length > 5 && (
               <TouchableOpacity
                 onPress={() =>
-                  navigate("Groups", {
-                    screen: "GroupMembersScreen",
+                  navigate("MainTabs", {
+                    screen: "Groups",
                     params: {
-                      groupId,
-                      groupName: group?.name ?? "",
+                      screen: "GroupMembers",
+                      params: { groupId, groupName: group?.name ?? "" },
                     },
                   })
                 }

@@ -13,7 +13,10 @@ import { useGroupsNavigation, useGroups } from "./hooks";
 import Feather from "react-native-vector-icons/Feather";
 import { Button, SearchBarInput, ThemedHeader } from "src/components";
 import { CustomLoader } from "@/components/shared/loader/Loader";
-import { GroupService, GroupPrivacy } from "@/services/GroupApiService";
+import {
+  GroupService,
+  GroupPrivacy,
+} from "src/services/groups/GroupApiService";
 import { GroupCard } from "./components/GroupCard";
 import { icon, point } from "leaflet";
 import { Plus, PlusCircle } from "lucide-react-native";

@@ -1,11 +1,12 @@
-import { CloudinaryService } from "./cloudinary/cloudinary.service";
-import { CoreApiService, PaginatedResponse } from "./core/ApiService";
+import { CloudinaryService } from "../cloudinary/cloudinary.service";
+import { CoreApiService, PaginatedResponse } from "../core/ApiService";
 
 // Group Types
 export interface GroupType {
   id: string;
   name: string;
   created_at: string;
+  image_url: string;
 }
 
 // Group Types
@@ -25,11 +26,20 @@ export interface Group {
   created_at: Date;
   updated_at: Date;
   deleted_at: Date;
-  event_at?: Date | string;
+  event_at: string;
   user_id: string;
-  group_type: GroupType | string;
+  group_type: GroupType;
   group_type_id: string;
   privacy_id: string;
+  privacy: {
+    allow_free_join: boolean;
+    code: string;
+    description: string;
+    id: string;
+    is_active: boolean;
+    is_visible: boolean;
+    name: string;
+  };
   payment_type_id?: string;
   payment_type?: PaymentType;
   event_pass_id: string;
@@ -293,13 +303,13 @@ class GroupServiceClass extends CoreApiService {
       page?: number;
       limit?: number;
     } = {},
-  ): Promise<PaginatedResponse<Group>> {
+  ): Promise<Group[]> {
     const queryString = this.buildQueryString(params);
     const endpoint = queryString
       ? `${this.ENDPOINTS.MY_GROUPS}?${queryString}`
       : this.ENDPOINTS.MY_GROUPS;
 
-    return this.get<PaginatedResponse<Group>>(endpoint);
+    return this.get<Group[]>(endpoint);
   }
 
   /**
