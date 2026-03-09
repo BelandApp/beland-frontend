@@ -1,15 +1,21 @@
 import { View, Text, Pressable, ListRenderItem, Image } from "react-native";
-import React from "react";
+import React, { useCallback } from "react";
 import { Group } from "src/services";
 import { Timer, Users } from "lucide-react-native";
 import { formatDateTime } from "../../helper/dateTransform";
+import { useCustomNavigation } from "src/hooks";
+type Props = {
+  item: Group;
+};
+const GroupListItem = React.memo(({ item }: Props) => {
+  const { navigate } = useCustomNavigation();
 
-const GroupListItem: ListRenderItem<Group> = ({ item }) => {
+  const handlePress = useCallback(() => {
+    navigate("GroupDetail", { groupId: item.id, groupName: item.name });
+  }, [navigate, item.id]);
   return (
     <Pressable
-      onPress={() => {
-        //navigate from useCustomNavigation() to GroupDetail item.id
-      }}
+      onPress={handlePress}
       className="m-2 flex-row gap-1 rounded-2xl shadow-lg elevation bg-background-light min-h-28"
     >
       <View>
@@ -34,11 +40,22 @@ const GroupListItem: ListRenderItem<Group> = ({ item }) => {
 
         {/* description */}
         <Text className="capitalize text-gray-600">{item.description}</Text>
+        {/* createdBy */}
+        <Text className="capitalize text-gray-600">
+          Creador: {item.user_id}
+        </Text>
         {/* Event Date */}
-        <View className="flex-row gap-1 items-center">
-          <Timer color="green" />
-          <Text>{formatDateTime(item.event_at)} hs.</Text>
-        </View>
+        {new Date(item.event_at) > new Date() ? (
+          <View className="flex-row gap-1 items-center">
+            <Timer color="green" />
+            <Text>{formatDateTime(item.event_at)} hs.</Text>
+          </View>
+        ) : (
+          <View className="flex-row gap-1 items-center">
+            <Timer color="red" />
+            <Text>Evento finalizado</Text>
+          </View>
+        )}
       </View>
       <View className="justify-between pb-2">
         {/* badge */}
@@ -62,6 +79,6 @@ const GroupListItem: ListRenderItem<Group> = ({ item }) => {
       </View>
     </Pressable>
   );
-};
+});
 
 export default GroupListItem;
