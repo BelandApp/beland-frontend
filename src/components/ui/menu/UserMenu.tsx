@@ -116,7 +116,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
         navigate("MisEntradas", { tab: "Próximos" });
         break;
       case "ORDERS":
-        navigate("UserDashboardScreen", { screen: "OrdersManagement" });
+        navigate("Orders", { screen: "OrdersList" });
         break;
       // DESACTIVADO TEMPORALMENTE POR DEFINIR FUNCIONALIDAD DE WALLET
       // case "WALLET":
