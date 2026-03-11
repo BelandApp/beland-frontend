@@ -63,7 +63,7 @@ export const OrderDetailScreen: React.FC = () => {
   // Local cached order from store (if any) - memoized so reference is stable
   const localOrder = useMemo(
     () => getOrderById(orderId),
-    [storeOrders, getOrderById, orderId]
+    [storeOrders, getOrderById, orderId],
   );
 
   // Fresh order fetched from API endpoint /orders/:id
@@ -116,14 +116,14 @@ export const OrderDetailScreen: React.FC = () => {
               console.warn(
                 "[OrderDetail] failed to fetch product for item",
                 it.product_id,
-                err
+                err,
               );
               // mark requested to avoid retry loops
               requestedProductIdsRef.current.add(it.product_id);
             }
 
             return it;
-          })
+          }),
         );
 
         if (!cancelled) {
@@ -171,7 +171,7 @@ export const OrderDetailScreen: React.FC = () => {
             ...apiData,
             // Map status from backend code to frontend code
             status: mapBackendStatusToFrontend(
-              apiData.status?.code || apiData.status
+              apiData.status?.code || apiData.status,
             ),
             // Map address to deliveryAddress
             deliveryAddress: apiData.address
@@ -255,7 +255,7 @@ export const OrderDetailScreen: React.FC = () => {
 
       if (statusChanged || updatedAtChanged) {
         console.log(
-          "[OrderDetail] Store order updated, refreshing from API..."
+          "[OrderDetail] Store order updated, refreshing from API...",
         );
         // Refresh from API to get latest data
         setApiOrder(undefined); // Force refetch
@@ -572,6 +572,27 @@ export const OrderDetailScreen: React.FC = () => {
           )}
         </View>
 
+        <View style={orderDetailStyles.card}>
+          <View style={orderDetailStyles.cardHeader}>
+            <View style={orderDetailStyles.cardIcon}>
+              <MaterialCommunityIcons
+                name={"information"}
+                size={20}
+                color={colors.belandGreen}
+              />
+            </View>
+            <Text style={orderDetailStyles.cardTitle}>¿Sabias Que?</Text>
+          </View>
+          <View>
+            <Text className="text-lg text-[#1C1C1E] font-semibold">
+              Si decidís reciclar estos productos con Beland recibirás el 2% de
+              su valor en Cashback!
+            </Text>
+            <Text className="text-xs italic text-[#8E8E93]">
+              Valor sujeto a tope de clausulas y condiciones
+            </Text>
+          </View>
+        </View>
         {/* Código de Entrega - Mostrar prominentemente si la orden no está entregada aún */}
         {(baseOrder.status === "pending" ||
           baseOrder.status === "preparing" ||
@@ -705,7 +726,7 @@ export const OrderDetailScreen: React.FC = () => {
                     {item.name ||
                       `Producto ${
                         (item.product_id || item.productId || item.id)?.slice(
-                          -8
+                          -8,
                         ) || "desconocido"
                       }`}
                   </Text>

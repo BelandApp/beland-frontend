@@ -393,6 +393,21 @@ const OrdersScreen: React.FC = () => {
         </View>
 
         <View style={ordersStyles.orderDetails}>
+          <View
+            style={[
+              ordersStyles.statusBadge,
+              { backgroundColor: getStatusColor(order.status) + "20" },
+            ]}
+          >
+            <Text
+              style={[
+                ordersStyles.statusBadgeText,
+                { color: getStatusColor(order.status) },
+              ]}
+            >
+              {getStatusText(order.status)}
+            </Text>
+          </View>
           <View style={ordersStyles.orderDetailRow}>
             <MaterialCommunityIcons
               name={
@@ -407,21 +422,6 @@ const OrdersScreen: React.FC = () => {
               {order.deliveryType === "home"
                 ? "Envío a domicilio"
                 : "Juntada circular"}
-            </Text>
-          </View>
-          <View
-            style={[
-              ordersStyles.statusBadge,
-              { backgroundColor: getStatusColor(order.status) + "20" },
-            ]}
-          >
-            <Text
-              style={[
-                ordersStyles.statusBadgeText,
-                { color: getStatusColor(order.status) },
-              ]}
-            >
-              {getStatusText(order.status)}
             </Text>
           </View>
         </View>
