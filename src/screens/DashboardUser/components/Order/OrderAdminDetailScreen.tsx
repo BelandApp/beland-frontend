@@ -246,12 +246,7 @@ export const OrderAdminDetailScreen: React.FC = () => {
       </View>
     );
   // Mapeo de datos de la orden usando la estructura real del backend
-  // NOTA: code es el código de confirmación de 4 dígitos, NO el ID de la orden
-  const orderNumber = order?.order_number
-    ? `BL-${String(order.order_number).padStart(6, "0")}`
-    : orderId
-      ? `#${String(orderId).substring(0, 8).toUpperCase()}`
-      : "---";
+
   const createdAt = order?.created_at ? new Date(order.created_at) : null;
 
   // Usuario - mapear desde order.user
@@ -337,10 +332,10 @@ export const OrderAdminDetailScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <ThemedHeader
-        title={`Orden ${orderNumber}`}
+        title={`Orden ${order.order_number}`}
         canGoBack
         onBackPress={() =>
-          navigate("UserDashboardScreen", { screen: "Dashboard" })
+          navigate("UserDashboardScreen", { screen: "OrdersManagement" })
         }
       />
       <ScrollView contentContainerStyle={styles.content}>
@@ -661,7 +656,7 @@ export const OrderAdminDetailScreen: React.FC = () => {
         visible={modalDelivery}
         onClose={() => setModalDelivery(false)}
         onConfirm={deliverOrder}
-        orderNumber={orderNumber}
+        orderNumber={order.id}
       />
       {/* Recollect Modal */}
       <RecolectModal
