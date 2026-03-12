@@ -791,6 +791,12 @@ export const OrderDetailScreen: React.FC = () => {
                 {formatCurrency(baseOrder.subtotal)}
               </Text>
             </View>
+            <View style={orderDetailStyles.summaryRow}>
+              <Text style={orderDetailStyles.summaryLabel}>Envio:</Text>
+              <Text style={orderDetailStyles.summaryValue}>
+                {formatCurrency(baseOrder.delivery_cost)}
+              </Text>
+            </View>
             {/* Mostrar total en becoins si está disponible */}
             {(baseOrder.becoinsUsed || (baseOrder as any).total_becoin) && (
               <View style={orderDetailStyles.summaryRow}>
