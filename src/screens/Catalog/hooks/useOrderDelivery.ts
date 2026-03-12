@@ -23,6 +23,8 @@ export type preOrderType = {
   address: UserAddress;
   addressId: string;
   cost: number;
+  duration_min: number;
+  distance_km: number;
 };
 
 export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
@@ -129,7 +131,9 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
         products: backendItems, // Usar items del backend
         address: address,
         addressId: id,
-        cost: deliveryCost.cost || 2.5,
+        cost: deliveryCost.cost || 1,
+        duration_min: deliveryCost.durationMin,
+        distance_km: deliveryCost.distanceKm,
       });
       setStep("processing");
     } catch (e) {
@@ -170,7 +174,12 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
         await core.put(
           `/carts/address/${cart.id}?address_id=${selectedAddressId}`,
         );
-
+        // Actualizar costo de envio
+        await core.put(`carts/delivery/${cart.id}`, {
+          duration_min: preOrder?.duration_min,
+          distance_km: preOrder?.distance_km,
+          delivery_cost: preOrder?.cost,
+        });
         // Usar items del backend, no del store local
         const backendItems = cart.items.map((item: any) => ({
           id: item.product_id,

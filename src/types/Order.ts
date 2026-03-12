@@ -51,6 +51,8 @@ export interface Order {
   // Información de entrega
   deliveryType: DeliveryType;
   deliveryAddress?: DeliveryAddress; // Solo si es home delivery
+  delivery_cost: string;
+
   groupId?: string; // Solo si es group delivery
 
   // Estados y fechas

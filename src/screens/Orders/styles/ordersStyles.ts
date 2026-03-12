@@ -314,10 +314,11 @@ export const ordersStyles = StyleSheet.create({
   },
   statusIndicator: {
     width: 20,
-    height: 20,
-    borderRadius: 10,
+    height: 21,
+    borderRadius: 50,
     justifyContent: "center",
     alignItems: "center",
+    flexDirection: "row",
   },
   orderDate: {
     fontSize: 14,
@@ -347,7 +348,7 @@ export const ordersStyles = StyleSheet.create({
   orderDetailRow: {
     flexDirection: "row",
     alignItems: "center",
-    flex: 1,
+    // flex: 1,
   },
   orderDetailText: {
     fontSize: 14,
