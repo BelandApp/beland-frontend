@@ -15,7 +15,7 @@ export const walletCardStyles = StyleSheet.create({
   walletContent: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
   },
   walletLeft: {
     flex: 1,
@@ -26,10 +26,10 @@ export const walletCardStyles = StyleSheet.create({
     marginBottom: 8,
   },
   balanceContainer: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: "column",
+    alignItems: "flex-start",
     gap: 8,
-    marginBottom: 8,
+    marginVertical: 8,
   },
   balanceAmount: {
     fontSize: 32,
@@ -38,7 +38,9 @@ export const walletCardStyles = StyleSheet.create({
   },
   estimatedValue: {
     fontSize: 14,
-    color: colors.textSecondary,
+    color: colors.textPrimary,
+    fontWeight: "600",
+    minWidth: 25,
   },
   avatarContainer: {
     alignItems: "center",

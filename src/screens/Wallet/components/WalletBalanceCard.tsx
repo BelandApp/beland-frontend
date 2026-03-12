@@ -38,31 +38,61 @@ export const WalletBalanceCard: React.FC<WalletBalanceCardProps> = ({
           >
             USD$ {walletData.estimatedValue}
           </Text>
-          <View style={walletCardStyles.balanceContainer}>
-            <BeCoinIcon width={24} height={24} />
-            {!hideEstimated && (
-              <Text style={walletCardStyles.estimatedValue}>
-                {isNaN(walletData.balance)
-                  ? "0"
-                  : Math.floor(walletData.balance)}
+          <View className="gap-2 my-2 ">
+            <View className="md:flex-row gap-2 md:items-center">
+              <View className="flex-row gap-2 items-center md:justify-between">
+                {!hideEstimated && (
+                  <Text style={walletCardStyles.estimatedValue}>
+                    {isNaN(walletData.balance)
+                      ? "0"
+                      : Math.floor(walletData.balance)}
+                  </Text>
+                )}
+                <BeCoinIcon width={24} height={24} />
+              </View>
+              <Text className="text-gray-500">
+                <Text className="font-semibold text-gray-600">
+                  Becoins Amarillas:{" "}
+                </Text>
+                Compras en la app + transferencia Fiat
               </Text>
-            )}
-            <BeCoinIcon width={24} height={24} color={"green"} />
-            {!hideEstimated && (
-              <Text style={walletCardStyles.estimatedValue}>
-                {isNaN(walletData.becoin_green)
-                  ? "0"
-                  : Math.floor(walletData.becoin_green)}
+            </View>
+            <View className="md:flex-row gap-2 md:items-center">
+              <View className="flex-row gap-2 items-center md:justify-between ">
+                {!hideEstimated && (
+                  <Text style={walletCardStyles.estimatedValue}>
+                    {isNaN(walletData.becoin_green)
+                      ? "0"
+                      : Math.floor(walletData.becoin_green)}
+                  </Text>
+                )}
+                <BeCoinIcon width={24} height={24} color={"green"} />
+              </View>
+              <Text className="text-gray-500">
+                <Text className="font-semibold text-gray-600">
+                  Becoins Verdes:{" "}
+                </Text>
+                Compras en la app + transferencia Fiat
               </Text>
-            )}
-            <BeCoinIcon width={24} height={24} color={"orange"} />
-            {!hideEstimated && (
-              <Text style={walletCardStyles.estimatedValue}>
-                {isNaN(walletData.becoin_orange)
-                  ? "0"
-                  : Math.floor(walletData.becoin_orange)}
+            </View>
+            <View className="md:flex-row gap-2 md:items-center">
+              <View className="flex-row gap-2 items-center md:justify-between">
+                {!hideEstimated && (
+                  <Text style={walletCardStyles.estimatedValue}>
+                    {isNaN(walletData.becoin_orange)
+                      ? "0"
+                      : Math.floor(walletData.becoin_orange)}
+                  </Text>
+                )}
+                <BeCoinIcon width={24} height={24} color={"orange"} />
+              </View>
+              <Text className="text-gray-500">
+                <Text className="font-semibold text-gray-600">
+                  Becoins Naranja:{" "}
+                </Text>
+                Compras en la app + transferencia Fiat
               </Text>
-            )}
+            </View>
           </View>
         </View>
         <View style={walletCardStyles.avatarContainer}>
