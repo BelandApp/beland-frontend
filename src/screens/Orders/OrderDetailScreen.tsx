@@ -571,7 +571,7 @@ export const OrderDetailScreen: React.FC = () => {
             </View>
           )}
         </View>
-
+        {/* Card info */}
         <View style={orderDetailStyles.card}>
           <View style={orderDetailStyles.cardHeader}>
             <View style={orderDetailStyles.cardIcon}>
@@ -585,8 +585,9 @@ export const OrderDetailScreen: React.FC = () => {
           </View>
           <View>
             <Text className="text-lg text-[#1C1C1E] font-semibold">
-              Si decidís reciclar estos productos con Beland recibirás el 2% de
-              su valor en Cashback!
+              Si nos entregas tus residuos inorgánicos, limpios y secos, cuando
+              te entreguemos tu pedido. Recibirás el 2% de tu compra en
+              Cashback!
             </Text>
             <Text className="text-xs italic text-[#8E8E93]">
               Valor sujeto a tope de clausulas y condiciones
