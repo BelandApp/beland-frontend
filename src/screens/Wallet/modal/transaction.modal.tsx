@@ -24,6 +24,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
   const receiptRef = useRef<View>(null);
   if (!transaction) return null;
   const { info } = useTransactionInfo(transaction);
+  console.log(info);
   const shareReceipt = async () => {
     try {
       const node = receiptRef.current;
@@ -127,20 +128,29 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                 </>
               )}
 
-              {transaction.type.name === "SALE_BELAND" && (
+              {transaction.type.code === "PURCHASE_BELAND" && (
                 <>
                   <Text className="text-sm text-gray-500 mb-1">
                     Detalle de compra
                   </Text>
                   {info?.map((item, index) => (
-                    <Text key={index} className="text-base">
-                      {item.cantidad} × {item.producto}
-                    </Text>
+                    <View
+                      key={index}
+                      className="justify-between items-center flex-row"
+                    >
+                      <Text className="text-base">
+                        {item.cantidad} × {item.producto}
+                      </Text>
+                      <Text className="text-base font-semibold self-end">
+                        ${item.price} c/u
+                      </Text>
+                    </View>
                   ))}
                 </>
               )}
             </View>
             <View className="items-center mt-6 gap-1">
+              <Text>Total</Text>
               <Text
                 className="text-3xl font-bold"
                 style={{ color: transaction.type.color }}
@@ -150,7 +160,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
               </Text>
 
               <Text className="text-sm text-gray-500">
-                ≈ USD{" "}
+                ≈ USD${" "}
                 {convertBeCoinsToUSD(transaction.amount_becoin).toFixed(2)}
               </Text>
             </View>

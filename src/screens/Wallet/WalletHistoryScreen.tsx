@@ -31,7 +31,6 @@ export default function WalletHistoryScreen() {
     { id: "pago", label: "Compras", icon: "credit-card-minus" },
   ];
   const renderItemTransactions = ({ item }: { item: Transaction }) => {
-    console.log("el item", item);
     return (
       <Pressable onPress={() => setModalOpen(item)}>
         <TransactionCard transaction={item} />
