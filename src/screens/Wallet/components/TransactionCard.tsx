@@ -10,6 +10,7 @@ import { Card } from "../../../components/ui/Card";
 import { BeCoinIcon } from "../../../components/icons/BeCoinIcon";
 import { User } from "src/context";
 import { formatTransactionDate } from "src/utils/dateTransform";
+import { convertBeCoinsToUSD } from "src/constants";
 
 interface TransactionCardProps {
   transaction: Transaction;
@@ -18,7 +19,12 @@ export const getAmountPrefix = (type: Transaction["type"]) => {
   const { code } = type;
 
   // 1. Códigos que siempre restan, sin importar el usuario
-  const globalNegatives = ["DONATION_SEND", "PURCHASE_EVENTPASS"];
+  const globalNegatives = [
+    "DONATION_SEND",
+    "PURCHASE_EVENTPASS",
+    "PURCHASE_BELAND",
+    "SERVICE_BELAND",
+  ];
   if (globalNegatives.includes(code)) return "-";
 
   return "+";
@@ -31,10 +37,8 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
       <View style={styles.content}>
         <View style={styles.leftSection}>
           <View
-            style={[
-              styles.iconContainer,
-              { backgroundColor: `${transaction.type.color}` },
-            ]}
+            style={[styles.iconContainer]}
+            className="shadow-beland-orange-300 shadow"
           >
             <MaterialCommunityIcons
               name={transaction.type.icon as any}
@@ -53,10 +57,9 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
         </View>
         <View style={styles.rightSection}>
           <View style={styles.amountContainer}>
-            <BeCoinIcon width={16} height={16} />
             <Text style={[styles.amount, { color: transaction.type.color }]}>
-              {getAmountPrefix(transaction.type)}
-              {transaction.amount_becoin}
+              {getAmountPrefix(transaction.type)} $
+              {convertBeCoinsToUSD(transaction.amount_becoin)}
             </Text>
           </View>
           <View

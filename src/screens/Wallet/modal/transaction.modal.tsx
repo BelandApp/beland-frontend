@@ -85,11 +85,8 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                   color={transaction.type.color}
                 />
               </View>
-              <Text
-                className="text-lg font-semibold capitalize"
-                style={{ color: transaction.type.color }}
-              >
-                {transaction.type.description}
+              <Text className="text-lg font-semibold capitalize">
+                {transaction.type.name}
               </Text>
             </View>
 
@@ -100,6 +97,12 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
         }
         content={
           <View className="rounded-t-xl px-4 gap-3">
+            <View className="mx-auto items-center">
+              <Text>{transaction.type.description}</Text>
+              <Text className="text-xs text-gray-500">
+                Creada el {formatTransactionDate(transaction.created_at)}
+              </Text>
+            </View>
             <View className="items-center mt-3 gap-1">
               <View
                 className="px-3 py-1 rounded-full"
@@ -107,16 +110,12 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                   backgroundColor: transaction.status.color,
                 }}
               >
-                <Text
-                  className="text-sm font-medium capitalize"
-                  style={{ color: transaction.status.color }}
-                >
+                <Text className="text-sm font-medium capitalize">
                   {transaction.status.name}
                 </Text>
               </View>
-
               <Text className="text-xs text-gray-500">
-                {formatTransactionDate(transaction.created_at)}
+                {transaction.status.updated_at}
               </Text>
             </View>
             <View className="mt-4 rounded-xl bg-gray-50 px-4 py-3 gap-2">

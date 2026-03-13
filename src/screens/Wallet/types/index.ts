@@ -36,6 +36,7 @@ export interface Transaction {
     name: string;
     color: string;
     description: string;
+    updated_at: string;
   };
   from?: string;
   to?: string;
