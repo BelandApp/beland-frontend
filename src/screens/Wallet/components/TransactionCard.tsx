@@ -1,68 +1,31 @@
 import React from "react";
 import { View, Text } from "react-native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import {
+  FontAwesome6,
+  Ionicons,
+  MaterialCommunityIcons,
+} from "@expo/vector-icons";
 import { Transaction } from "../types";
 import { Card } from "../../../components/ui/Card";
 import { BeCoinIcon } from "../../../components/icons/BeCoinIcon";
+import { User } from "src/context";
+import { formatTransactionDate } from "src/utils/dateTransform";
 
 interface TransactionCardProps {
   transaction: Transaction;
 }
-export const getTransactionIcon = (type: Transaction["type"]) => {
-  // Si es transferencia recibida, mostrar icono de entrada
-  if (type === "receive") return "arrow-down-left";
-  if (type === "transferencia") return "arrow-up-right";
-  if (type === "recarga") return "plus-circle";
-  if (type === "canje") return "swap-horizontal";
-  if (type === "pago") return "credit-card-minus";
-  if (type === "collection") return "cash-plus";
-  return "help-circle";
-};
-export const getTransactionColor = (type: Transaction["type"]) => {
-  // Si es transferencia recibida, mostrar verde
-  if (type === "receive" || type === "collection") return "#4caf50";
-  if (type === "transferencia" || type === "pago") return "#f44336";
-  if (type === "recarga") return "#2196f3";
-  if (type === "canje") return "#ff9800";
-  return "#666";
-};
-
 export const getAmountPrefix = (type: Transaction["type"]) => {
-  // Si es transferencia recibida, mostrar '+'
-  if (type === "receive" || type === "collection" || type === "recarga")
-    return "+";
-  if (type === "transferencia" || type === "pago") return "-";
-  return "";
-};
+  const { code } = type;
 
-export const getStatusColor = (status: Transaction["status"]) => {
-  switch (status) {
-    case "exitoso":
-      return "#4caf50";
-    case "pendiente":
-      return "#ff9800";
-    case "error":
-      return "#f44336";
-    default:
-      return "#666";
-  }
+  // 1. Códigos que siempre restan, sin importar el usuario
+  const globalNegatives = ["DONATION_SEND", "PURCHASE_EVENTPASS"];
+  if (globalNegatives.includes(code)) return "-";
+
+  return "+";
 };
 export const TransactionCard: React.FC<TransactionCardProps> = ({
   transaction,
 }) => {
-  // Forzar monto positivo para transferencias recibidas y usar el campo preferido
-  const resolvedAmount =
-    transaction.amount_becoin !== undefined
-      ? Number(transaction.amount_becoin)
-      : transaction.amount_beicon !== undefined
-        ? Number(transaction.amount_beicon)
-        : Number(transaction.amount || 0);
-
-  const displayAmount =
-    transaction.type === "receive" || transaction.type === "collection"
-      ? Math.abs(resolvedAmount)
-      : resolvedAmount;
-
   return (
     <Card style={styles.container}>
       <View style={styles.content}>
@@ -70,39 +33,36 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
           <View
             style={[
               styles.iconContainer,
-              { backgroundColor: `${getTransactionColor(transaction.type)}20` },
+              { backgroundColor: `${transaction.type.color}` },
             ]}
           >
             <MaterialCommunityIcons
-              name={getTransactionIcon(transaction.type) as any}
-              size={20}
-              color={getTransactionColor(transaction.type)}
+              name={transaction.type.icon as any}
+              color={transaction.type.color}
+              size={24}
             />
           </View>
           <View style={styles.textContainer}>
             <Text style={styles.description} numberOfLines={1}>
-              {transaction.description}
+              {transaction.type.name}
             </Text>
-            <Text style={styles.date}>{transaction.date}</Text>
+            <Text style={styles.date}>
+              {formatTransactionDate(transaction.created_at)}
+            </Text>
           </View>
         </View>
         <View style={styles.rightSection}>
           <View style={styles.amountContainer}>
             <BeCoinIcon width={16} height={16} />
-            <Text
-              style={[
-                styles.amount,
-                { color: getTransactionColor(transaction.type) },
-              ]}
-            >
+            <Text style={[styles.amount, { color: transaction.type.color }]}>
               {getAmountPrefix(transaction.type)}
-              {String(Math.abs(displayAmount))}
+              {transaction.amount_becoin}
             </Text>
           </View>
           <View
             style={[
               styles.statusIndicator,
-              { backgroundColor: getStatusColor(transaction.status) },
+              { backgroundColor: transaction.status.color },
             ]}
           />
         </View>

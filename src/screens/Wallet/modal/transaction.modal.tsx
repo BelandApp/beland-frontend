@@ -5,17 +5,14 @@ import { View, Text, Pressable, Platform } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SquareChevronDown } from "lucide-react-native";
 import { convertBeCoinsToUSD } from "src/constants";
-import {
-  getAmountPrefix,
-  getStatusColor,
-  getTransactionColor,
-  getTransactionIcon,
-} from "../components/TransactionCard";
+import { getAmountPrefix } from "../components/TransactionCard";
 import { captureRef } from "react-native-view-shot";
 import * as Sharing from "expo-sharing";
 import { useTransactionInfo } from "../hooks/useTransactionInfo";
 import TransactionReceipt from "../shot/TransactionReceipt";
 import { useRef } from "react";
+import { useAuth } from "src/context";
+import { formatTransactionDate } from "src/utils/dateTransform";
 type TransactionModalProps = {
   transaction: Transaction | null;
   onClose: () => void;
@@ -74,7 +71,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
       <WrapperModal
         isOpen={transaction !== null}
         onClose={onClose}
-        headerBackgroundColor={getTransactionColor(transaction?.type)}
+        headerBackgroundColor={transaction.type.color}
         header={
           <View className="flex-row items-center justify-between px-2 py-3">
             <View className="flex-row items-center gap-3">
@@ -83,16 +80,16 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                 style={{ backgroundColor: "rgba(255,255,255,0.2)" }}
               >
                 <MaterialCommunityIcons
-                  name={getTransactionIcon(transaction.type) as any}
+                  name={transaction.type.icon as any}
                   size={22}
-                  color={getTransactionColor(transaction?.type)}
+                  color={transaction.type.color}
                 />
               </View>
               <Text
                 className="text-lg font-semibold capitalize"
-                style={{ color: getTransactionColor(transaction?.type) }}
+                style={{ color: transaction.type.color }}
               >
-                {transaction.description}
+                {transaction.type.description}
               </Text>
             </View>
 
@@ -107,39 +104,31 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
               <View
                 className="px-3 py-1 rounded-full"
                 style={{
-                  backgroundColor: getStatusColor(transaction.status) + "22",
+                  backgroundColor: transaction.status.color,
                 }}
               >
                 <Text
                   className="text-sm font-medium capitalize"
-                  style={{ color: getStatusColor(transaction.status) }}
+                  style={{ color: transaction.status.color }}
                 >
-                  {transaction.status}
+                  {transaction.status.name}
                 </Text>
               </View>
 
-              <Text className="text-xs text-gray-500">{transaction.date}</Text>
+              <Text className="text-xs text-gray-500">
+                {formatTransactionDate(transaction.created_at)}
+              </Text>
             </View>
             <View className="mt-4 rounded-xl bg-gray-50 px-4 py-3 gap-2">
-              {transaction.type === "transferencia" && (
+              {transaction.type.name === "transferencia" && (
                 <>
                   <Text className="text-sm text-gray-500">Transferencia</Text>
                   <Text className="text-base">De: {transaction.from}</Text>
                   <Text className="text-base">Hacia: {transaction.to}</Text>
                 </>
               )}
-              {transaction.type === "canje" && (
-                <Text className="text-center">{transaction.description}</Text>
-              )}
-              {transaction.type === "recarga" && (
-                <Text
-                  className="text-center font-medium"
-                  style={{ color: getTransactionColor(transaction.type) }}
-                >
-                  {transaction.type_description}
-                </Text>
-              )}
-              {transaction.type === "pago" && (
+
+              {transaction.type.name === "SALE_BELAND" && (
                 <>
                   <Text className="text-sm text-gray-500 mb-1">
                     Detalle de compra
@@ -155,7 +144,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
             <View className="items-center mt-6 gap-1">
               <Text
                 className="text-3xl font-bold"
-                style={{ color: getTransactionColor(transaction.type) }}
+                style={{ color: transaction.type.color }}
               >
                 {getAmountPrefix(transaction.type)}
                 {transaction.amount_becoin} Becoin
@@ -163,7 +152,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
 
               <Text className="text-sm text-gray-500">
                 ≈ USD{" "}
-                {convertBeCoinsToUSD(transaction.amount_beicon).toFixed(2)}
+                {convertBeCoinsToUSD(transaction.amount_becoin).toFixed(2)}
               </Text>
             </View>
             <Text className="text-xs text-gray-400 text-center mt-4">
