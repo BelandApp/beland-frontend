@@ -165,6 +165,10 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
               </Text>
             </View>
             <Text className="text-xs text-gray-400 text-center mt-4">
+              Saldo después de la operación: Usd$
+              {convertBeCoinsToUSD(Number(transaction.post_balance)).toFixed(2)}
+            </Text>
+            <Text className="text-xs text-gray-400 text-center mt-4">
               ID: {transaction.id}
             </Text>
           </View>

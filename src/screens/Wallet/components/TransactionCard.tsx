@@ -11,6 +11,12 @@ import { BeCoinIcon } from "../../../components/icons/BeCoinIcon";
 import { User } from "src/context";
 import { formatTransactionDate } from "src/utils/dateTransform";
 import { convertBeCoinsToUSD } from "src/constants";
+import { position } from "html2canvas/dist/types/css/property-descriptors/position";
+import {
+  borderBottomLeftRadius,
+  borderTopRightRadius,
+} from "html2canvas/dist/types/css/property-descriptors/border-radius";
+import { CheckCircle, Watch } from "lucide-react-native";
 
 interface TransactionCardProps {
   transaction: Transaction;
@@ -34,6 +40,20 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
 }) => {
   return (
     <Card style={styles.container}>
+      {/* badge */}
+      <View
+        style={[
+          styles.statusIndicator,
+          { backgroundColor: transaction.status.color },
+        ]}
+      >
+        {transaction.status.code === "COMPLETED" && (
+          <CheckCircle size={12} color={"white"} />
+        )}
+        {transaction.status.code === "PENDING" && (
+          <Watch size={12} color={"white"} />
+        )}
+      </View>
       <View style={styles.content}>
         <View style={styles.leftSection}>
           <View
@@ -59,15 +79,9 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
           <View style={styles.amountContainer}>
             <Text style={[styles.amount, { color: transaction.type.color }]}>
               {getAmountPrefix(transaction.type)} $
-              {convertBeCoinsToUSD(transaction.amount_becoin)}
+              {convertBeCoinsToUSD(transaction.amount_becoin).toFixed(2)}
             </Text>
           </View>
-          <View
-            style={[
-              styles.statusIndicator,
-              { backgroundColor: transaction.status.color },
-            ]}
-          />
         </View>
       </View>
     </Card>
@@ -77,7 +91,7 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
 const styles = {
   container: {
     marginBottom: 8,
-    padding: 12,
+    position: "relative" as const,
   },
   content: {
     flexDirection: "row" as const,
@@ -112,6 +126,7 @@ const styles = {
   },
   rightSection: {
     alignItems: "flex-end" as const,
+    justifyContent: "center" as const,
   },
   amountContainer: {
     flexDirection: "row" as const,
@@ -124,8 +139,14 @@ const styles = {
     marginLeft: 4,
   },
   statusIndicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 40,
+    height: 20,
+    borderTopRightRadius: 12,
+    borderBottomLeftRadius: 12,
+    position: "absolute" as const,
+    top: -20,
+    right: -20,
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
   },
 };
