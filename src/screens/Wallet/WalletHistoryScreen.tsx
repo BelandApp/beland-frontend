@@ -2,10 +2,8 @@ import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
-  TextInput,
   ActivityIndicator,
   FlatList,
 } from "react-native";
@@ -17,6 +15,7 @@ import { Pressable } from "react-native";
 import { Transaction } from "./types";
 import TransactionModal from "./modal/transaction.modal";
 import { useCustomNavigation } from "src/hooks";
+import { useAuth } from "src/context";
 export default function WalletHistoryScreen() {
   const { transactions, loadingTransactions } = useWallet();
   const [searchText, setSearchText] = useState("");
@@ -31,7 +30,6 @@ export default function WalletHistoryScreen() {
     { id: "canje", label: "Canjes", icon: "swap-horizontal" },
     { id: "pago", label: "Compras", icon: "credit-card-minus" },
   ];
-
   const renderItemTransactions = ({ item }: { item: Transaction }) => {
     return (
       <Pressable onPress={() => setModalOpen(item)}>
@@ -40,11 +38,11 @@ export default function WalletHistoryScreen() {
     );
   };
   const filteredTransactions = (transactions ?? []).filter((transaction) => {
-    const matchesSearch = transaction.description
+    const matchesSearch = transaction.type.name
       .toLowerCase()
       .includes(searchText.toLowerCase());
     const matchesFilter =
-      filterType === "all" || transaction.type === filterType;
+      filterType === "all" || transaction.type.name === filterType;
     return matchesSearch && matchesFilter;
   });
 

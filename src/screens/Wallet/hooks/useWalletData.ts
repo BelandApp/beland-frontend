@@ -4,7 +4,6 @@ import { useBeCoinsStore } from "@/stores";
 import { WalletService, PaymentService, Wallet } from "@services/core";
 import { getBackendErrorMessage } from "src/services";
 import { notify } from "src/hooks/notification/notify.external";
-import { mapBackendTransactionToFrontend } from "./useWalletTransactions";
 import { Transaction } from "../types";
 export type WalletDataType = {
   balance: number;
@@ -68,7 +67,7 @@ export const useWallet = () => {
     try {
       const { data } = await WalletService.getTransactions(1, 20, walletId);
       console.log("Fetched transactions:", data);
-      setTransactions(data.map(mapBackendTransactionToFrontend));
+      setTransactions(data);
     } catch (err) {
       notify.error({ message: getBackendErrorMessage(err) });
     } finally {

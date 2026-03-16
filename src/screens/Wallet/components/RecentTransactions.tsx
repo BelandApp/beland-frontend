@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, ActivityIndicator, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  Pressable,
+} from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { TransactionCard } from "./TransactionCard";
 import { Transaction } from "../types";
@@ -15,9 +21,9 @@ interface RecentTransactionsProps {
 export const RecentTransactions: React.FC<RecentTransactionsProps> = ({
   transactions,
   isLoading = false,
-}) => {  const { navigate } = useCustomNavigation();
-const [modalTransaction, setModalOpen] = useState<Transaction | null>(null);
-
+}) => {
+  const { navigate } = useCustomNavigation();
+  const [modalTransaction, setModalOpen] = useState<Transaction | null>(null);
   const handleViewAll = () => {
     navigate("WalletHistoryScreen");
   };

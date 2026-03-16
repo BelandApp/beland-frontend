@@ -6,7 +6,7 @@ interface CardProps {
   children: React.ReactNode;
   title?: string;
   subtitle?: string;
-  icon?: string;
+  icon?: React.ReactNode;
   style?: ViewStyle;
   titleStyle?: TextStyle;
   elevated?: boolean;
