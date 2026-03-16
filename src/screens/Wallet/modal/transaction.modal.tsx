@@ -12,7 +12,7 @@ import { useTransactionInfo } from "../hooks/useTransactionInfo";
 import TransactionReceipt from "../shot/TransactionReceipt";
 import { useRef } from "react";
 import { useAuth } from "src/context";
-import { formatTransactionDate } from "src/utils/dateTransform";
+import { DateToParagraphAndHour } from "src/utils/dateTransform";
 type TransactionModalProps = {
   transaction: Transaction | null;
   onClose: () => void;
@@ -101,7 +101,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
             <View className="mx-auto items-center">
               <Text>{transaction.type.description}</Text>
               <Text className="text-xs text-gray-500">
-                Creada el {formatTransactionDate(transaction.created_at)}
+                Creada el {DateToParagraphAndHour(transaction.created_at)}
               </Text>
             </View>
             <View className="items-center mt-3 gap-1">

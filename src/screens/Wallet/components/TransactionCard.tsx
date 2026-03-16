@@ -9,7 +9,7 @@ import { Transaction } from "../types";
 import { Card } from "../../../components/ui/Card";
 import { BeCoinIcon } from "../../../components/icons/BeCoinIcon";
 import { User } from "src/context";
-import { formatTransactionDate } from "src/utils/dateTransform";
+import { DateToParagraphAndHour } from "src/utils/dateTransform";
 import { convertBeCoinsToUSD } from "src/constants";
 import { position } from "html2canvas/dist/types/css/property-descriptors/position";
 import {
@@ -71,7 +71,7 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
               {transaction.type.name}
             </Text>
             <Text style={styles.date}>
-              {formatTransactionDate(transaction.created_at)}
+              {DateToParagraphAndHour(transaction.created_at)}
             </Text>
           </View>
         </View>
