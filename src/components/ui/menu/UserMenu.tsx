@@ -95,8 +95,9 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   }, [menuVisible]);
   const handleLogout = async () => {
     setMenuVisible(false);
-    await logout();
-    navigate("Login");
+    logout();
+    notify.info({ message: "Cerrando sesión..." });
+    navigate("MainTabs", { screen: "Home" });
   };
 
   const toggleMenu = () => {
