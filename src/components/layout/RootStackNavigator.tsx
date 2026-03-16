@@ -53,6 +53,7 @@ import { GroupsStackNavigator } from "./GroupsStackNavigator";
 import FAQScreen from "src/screens/FAQ/FaqScreen";
 import { DashboardStackNavigator } from "./DashboardNavigator";
 import { GroupDetailScreen } from "src/screens/GroupDetailScreen";
+import TransferReceive from "src/screens/Wallet/TransferReceive";
 
 export type RootStackParamList = {
   // Auth Screens
@@ -111,7 +112,8 @@ export type RootStackParamList = {
   UseEventScreen: { id: string };
   QrUseEventScreen: { id: string };
   ConsumedEventScreen: { id: string; holder?: string };
-
+  // Transfers
+  TransferReceive: { transferId: string };
   // Chequear si son necesarios
   Rewards: undefined;
 };
@@ -237,6 +239,11 @@ export const RootStackNavigator = () => {
       <Stack.Screen
         name="FAQ"
         component={FAQScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="TransferReceive"
+        component={TransferReceive}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

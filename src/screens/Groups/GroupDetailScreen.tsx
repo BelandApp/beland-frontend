@@ -267,11 +267,14 @@ export const GroupDetailScreen = () => {
           {
             label: "Gestión de miembros",
             onPress: () =>
-              navigate("Groups", {
-                screen: "GroupMembersScreen",
+              navigate("MainTabs", {
+                screen: "Groups",
                 params: {
-                  groupId,
-                  groupName: group?.name ?? "",
+                  screen: "GroupMembersScreen",
+                  params: {
+                    groupId: group.id,
+                    groupName: group.name,
+                  },
                 },
               }),
           },
@@ -652,11 +655,14 @@ export const GroupDetailScreen = () => {
               </Text>
               <TouchableOpacity
                 onPress={() =>
-                  navigate("Groups", {
-                    screen: "GroupMembersScreen",
+                  navigate("MainTabs", {
+                    screen: "Groups",
                     params: {
-                      groupId,
-                      groupName: group?.name ?? "",
+                      screen: "GroupMembersScreen",
+                      params: {
+                        groupId: group.id,
+                        groupName: group.name,
+                      },
                     },
                   })
                 }
@@ -674,11 +680,14 @@ export const GroupDetailScreen = () => {
             {members.length > 5 && (
               <TouchableOpacity
                 onPress={() =>
-                  navigate("Groups", {
-                    screen: "GroupMembersScreen",
+                  navigate("MainTabs", {
+                    screen: "Groups",
                     params: {
-                      groupId,
-                      groupName: group?.name ?? "",
+                      screen: "GroupMembersScreen",
+                      params: {
+                        groupId: group.id,
+                        groupName: group.name,
+                      },
                     },
                   })
                 }
