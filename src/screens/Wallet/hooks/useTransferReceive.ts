@@ -7,7 +7,7 @@ import { TransfersService } from "src/services/financial/Transfer.service";
 export const useTransferReceive = (transactionId: string) => {
   const [transfer, setTransfer] = useState<Transaction | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<"NotUII" | "other" | null>(null);
+  const [error, setError] = useState<"NotUII" | "401" | "other" | null>(null);
   useEffect(() => {
     const loadTransaction = async () => {
       try {
@@ -17,9 +17,9 @@ export const useTransferReceive = (transactionId: string) => {
       } catch (error: any) {
         if (error?.status === 400) {
           setError("NotUII");
+        } else if (error?.status == 401) {
+          setError("401");
         } else {
-          const message = getBackendErrorMessage(error);
-          notify.error({ message });
           setError("other");
         }
         setLoading(false);

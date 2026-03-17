@@ -22,11 +22,11 @@ export const TransferReceive = () => {
   const route = useRoute<RouteProp<{ params: TransferType }, "params">>();
   const id = route.params.transferId;
   const { navigate } = useCustomNavigation();
-  const { isAuthenticated, status } = useAuth();
+  const { status } = useAuth();
   const { transfer, loading, error } = useTransferReceive(id);
-  console.log(status, loading, transfer);
+
   useEffect(() => {
-    if (!isAuthenticated && status === "unauthenticated") {
+    if (status === "unauthenticated") {
       notify.confirm({
         message: "Debes estar logueado para visualizar transferencias",
         onConfirm: async () => {
@@ -36,8 +36,8 @@ export const TransferReceive = () => {
         onCancel: () => navigate("MainTabs", { screen: "Home" }),
       });
     }
-  }, [isAuthenticated, status]);
-  if (!isAuthenticated && status === "unauthenticated")
+  }, [status]);
+  if (status === "unauthenticated" || error === "401")
     return (
       <React.Fragment>
         <ThemedHeader
@@ -59,7 +59,7 @@ export const TransferReceive = () => {
         </View>
       </React.Fragment>
     );
-  if (error)
+  if (error === "NotUII" || error === "other")
     return (
       <React.Fragment>
         <ThemedHeader
