@@ -100,7 +100,7 @@ const SendScreen = ({ route }: { route: any }) => {
       notify.confirm({
         message: "Debes estar logueado para realizar transferencias",
         onConfirm: async () => {
-          await DeepLinkService.setSendIntent(id);
+          await DeepLinkService.setIntent({ screen: "Send", id });
           navigate("Login");
         },
         onCancel: () => navigate("MainTabs", { screen: "Home" }),

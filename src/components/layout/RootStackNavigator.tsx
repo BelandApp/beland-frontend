@@ -113,7 +113,7 @@ export type RootStackParamList = {
   QrUseEventScreen: { id: string };
   ConsumedEventScreen: { id: string; holder?: string };
   // Transfers
-  TransferReceive: { transferId: string };
+  TransferReceive: { id: string };
   // Chequear si son necesarios
   Rewards: undefined;
 };

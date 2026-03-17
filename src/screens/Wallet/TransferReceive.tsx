@@ -17,20 +17,20 @@ import { DIEGO_NUMBER, shareTextOnWhatsApp } from "src/utils/shareHelper";
 import { useAuth } from "src/context";
 import { notify } from "src/hooks/notification/notify.external";
 import { DeepLinkService } from "src/services/deepLink/deepLink.service";
-type TransferType = { transferId: string };
+type TransferType = { id: string };
 export const TransferReceive = () => {
   const route = useRoute<RouteProp<{ params: TransferType }, "params">>();
-  const id = route.params.transferId;
+  const id = route.params.id;
   const { navigate } = useCustomNavigation();
-  const { status } = useAuth();
+  const { isAuthenticated, status } = useAuth();
   const { transfer, loading, error } = useTransferReceive(id);
-
+  console.log(status, isAuthenticated);
   useEffect(() => {
-    if (status === "unauthenticated") {
+    if (!isAuthenticated && status === "unauthenticated") {
       notify.confirm({
         message: "Debes estar logueado para visualizar transferencias",
         onConfirm: async () => {
-          await DeepLinkService.setSendIntent(id);
+          await DeepLinkService.setIntent({ screen: "TransferReceive", id });
           navigate("Login");
         },
         onCancel: () => navigate("MainTabs", { screen: "Home" }),
@@ -77,7 +77,7 @@ export const TransferReceive = () => {
             icon={<PhoneCall color={"white"} />}
             onPress={() => {
               shareTextOnWhatsApp({
-                message: `Estoy teniendo problemas con la transferencia de ID: ${route.params.transferId}, podrían verificarla?`,
+                message: `Estoy teniendo problemas con la transferencia de ID: ${route.params.id}, podrían verificarla?`,
                 phone: DIEGO_NUMBER,
               });
             }}

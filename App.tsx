@@ -158,7 +158,7 @@ const AppContent = () => {
         GroupsScreen: "Groups",
         PaymentScreen: "payment",
         UserResources: "user-resources",
-        TransferReceive: "TransferReceive/:transferId",
+        TransferReceive: "TransferReceive/:id",
         Login: "Login",
         Register: "Register",
       },
