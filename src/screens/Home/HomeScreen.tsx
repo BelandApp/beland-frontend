@@ -54,12 +54,7 @@ export const HomeScreen = () => {
               data={{ bottlesRecycled: userStats?.bottlesRecycled ?? 0 }}
               onPress={navigateRecyclingMapPress}
             />
-            <Button
-              title={"Ver transferencia"}
-              onPress={() =>
-                navigate("TransferReceive", { transferId: "asasas" })
-              }
-            />
+
             <FeatureCard type="delivery" onPress={navigateDelivery} />
             <FeatureCard type="community" onPress={navigateCommunity} />
             <FeatureCard type="faq" onPress={navigateFaq} />
