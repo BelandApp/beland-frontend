@@ -4,6 +4,36 @@ import * as Clipboard from "expo-clipboard";
 import { captureRef } from "react-native-view-shot";
 import { notify } from "src/hooks/notification/notify.external";
 
+export const DIEGO_NUMBER = "+593995269974";
+export type TextOnWhatsAppType = {
+  message: string;
+  phone: string;
+};
+export const shareTextOnWhatsApp = async ({
+  message,
+  phone = DIEGO_NUMBER,
+}: TextOnWhatsAppType) => {
+  try {
+    if (Platform.OS === "web") {
+      const webUrl = `https://wa.me/${phone}?text=${message}`;
+      console.log(webUrl);
+      window.open(webUrl, "_blank");
+      return;
+    }
+    const appUrl = `whatsapp://send?${phone}?text=${message}`;
+    const canOpen = await Linking.canOpenURL(appUrl);
+    if (canOpen) {
+      await Linking.openURL(appUrl);
+    } else {
+      // fallback
+      // await Share.share({ message });
+    }
+  } catch (error) {
+    console.error("Error al compartir en WhatsApp:", error);
+    notify.error({ message: "Error al compartir en WhatsApp" });
+    throw error;
+  }
+};
 export interface ShareGroupData {
   groupName: string;
   groupId: string;

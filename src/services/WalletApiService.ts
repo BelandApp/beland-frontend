@@ -9,6 +9,7 @@ import {
   CoreApiService,
   PaginatedResponse,
 } from "./core/ApiService";
+import { User } from "src/context";
 
 // Wallet Types
 export interface Wallet {
@@ -23,6 +24,7 @@ export interface Wallet {
   qr?: string;
   private_key_encrypted?: string;
   created_at: string;
+  user?: User;
 }
 
 export interface RechargeRequest {
