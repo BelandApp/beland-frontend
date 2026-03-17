@@ -293,7 +293,7 @@ export const shareToTikTok = async (
  * Muestra un menú de opciones para compartir
  */
 export const showShareOptions = async (
-  data: ShareGroupData,
+  data: any,
   onOptionSelected?: (option: string) => void,
 ): Promise<void> => {
   try {
