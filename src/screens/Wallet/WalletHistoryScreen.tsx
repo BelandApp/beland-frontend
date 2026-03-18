@@ -15,7 +15,6 @@ import { Pressable } from "react-native";
 import { Transaction } from "./types";
 import TransactionModal from "./modal/transaction.modal";
 import { useCustomNavigation } from "src/hooks";
-import { useAuth } from "src/context";
 export default function WalletHistoryScreen() {
   const { transactions, loadingTransactions } = useWallet();
   const [searchText, setSearchText] = useState("");

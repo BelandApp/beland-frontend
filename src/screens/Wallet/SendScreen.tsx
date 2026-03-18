@@ -488,9 +488,9 @@ const SendScreen = ({ route }: { route: any }) => {
         content={
           <View className="m-auto mt-10">
             <View className="flex-row gap-2 mx-auto my-6">
-              <ArrowUpRight color="orange" size="35" />
+              <ArrowUpRight color="orange" size="45" />
               <BeCoinIcon />
-              <ArrowDownRight color="orange" size="35" />
+              <ArrowDownRight color="orange" size="45" />
             </View>
             <Text className="text-xl">
               La transferencia de
@@ -499,7 +499,7 @@ const SendScreen = ({ route }: { route: any }) => {
               ya fue procesada correctamente
             </Text>
             <Text className="mt-2 text-lg text-center">
-              ¿Te gustaría compartir?
+              ¿Te gustaría compartirla?
             </Text>
           </View>
         }

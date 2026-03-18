@@ -24,7 +24,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
   const receiptRef = useRef<View>(null);
   if (!transaction) return null;
   const { info } = useTransactionInfo(transaction);
-  console.log(info);
+  console.log(transaction);
   const shareReceipt = async () => {
     try {
       const node = receiptRef.current;
@@ -120,7 +120,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
               </Text>
             </View>
             <View className="mt-4 rounded-xl bg-gray-50 px-4 py-3 gap-2">
-              {transaction.type.name === "transferencia" && (
+              {transaction.type.code === "TRANSFER_SEND" && (
                 <>
                   <Text className="text-sm text-gray-500">Transferencia</Text>
                   <Text className="text-base">De: {transaction.from}</Text>
