@@ -231,6 +231,7 @@ const WithdrawAccounts = () => {
         <FlatList
           horizontal
           data={accounts}
+          showsHorizontalScrollIndicator={false}
           renderItem={renderAccountCard}
           keyExtractor={(item) => item.id}
           contentContainerClassName="gap-2 p-4"
