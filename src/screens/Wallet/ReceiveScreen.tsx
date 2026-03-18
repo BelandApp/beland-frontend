@@ -147,7 +147,7 @@ Gracias! Un abrazo, ${userName} ♻️🌎 `,
   return (
     <ScrollView style={styles.container}>
       <ThemedHeader
-        title="Recibir Dinero"
+        title="Recibir Becoins"
         onBackPress={() => navigate("MainTabs", { screen: "Wallet" })}
         canGoBack
       />

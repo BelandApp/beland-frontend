@@ -67,7 +67,7 @@ export const MainTabNavigator = () => {
           component={WalletScreen}
           options={{
             headerShown: false,
-            tabBarLabel: "Billetera",
+            tabBarLabel: "Becoins",
             tabBarIcon: ({ focused }) => (
               <WalletIcon color={focused ? "#000" : "#777"} />
             ),

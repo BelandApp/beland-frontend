@@ -49,12 +49,10 @@ export const WalletScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         <ThemedHeader title="Billetera" />
         <View style={styles.authRequiredContainer}>
           <View style={styles.authRequiredContent}>
-            <Text style={styles.authRequiredTitle}>
-              💰 Tu Billetera Digital
-            </Text>
+            <Text style={styles.authRequiredTitle}>💰 Tus Becoins</Text>
             <Text style={styles.authRequiredSubtitle}>
-              Gestiona tus BeCoins, realiza recargas y transacciones de forma
-              segura
+              Aqui vas a poder Gestionar tus BeCoins, realiza recargas y
+              transacciones de forma segura
             </Text>
 
             <View style={styles.authRequiredFeatures}>
@@ -80,7 +78,7 @@ export const WalletScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             </TouchableOpacity>
 
             <Text style={styles.authRequiredFooter}>
-              Crea tu cuenta gratuita y comienza a usar tu billetera digital
+              Crea tu cuenta gratuita y comienza a usar tus becoins
             </Text>
           </View>
         </View>
@@ -91,7 +89,7 @@ export const WalletScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
       <View style={{ flex: 1 }}>
-        <ThemedHeader title="Billetera" />
+        <ThemedHeader title="Mis Becoins" />
         <ScrollView
           showsVerticalScrollIndicator={false}
           style={{ flex: 1, backgroundColor: "#fff" }}
@@ -99,10 +97,7 @@ export const WalletScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           keyboardShouldPersistTaps="handled"
         >
           <View style={containerStyles.content}>
-            <WalletBalanceCard
-              walletData={walletData}
-              avatarUrl={user?.profile_picture_url}
-            />
+            <WalletBalanceCard walletData={walletData} />
             <WalletActions
               actions={mainWalletActions}
               backgroundColor={colors.brand.orange[500]}

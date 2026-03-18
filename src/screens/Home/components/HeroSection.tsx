@@ -65,7 +65,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             style={styles.logoContainer}
           >
             <Ionicons name="wallet-outline" size={20} color="#F97316" />
-            <Text style={styles.logoText}>Beland Wallet</Text>
+            <Text style={styles.logoText}>Mis Becoins</Text>
           </TouchableOpacity>
         </View>
 

@@ -6,18 +6,17 @@ import { WalletData } from "../types";
 import { walletCardStyles } from "../styles";
 import { colors } from "src/design-system";
 import { convertBeCoinsToUSD } from "src/constants";
+import { Info } from "lucide-react-native";
+import { Tooltip } from "src/components";
 
 interface WalletBalanceCardProps {
   walletData: WalletData;
   backgroundColor?: string;
-  avatarUrl?: string;
-  accentColor?: string;
 }
 
 export const WalletBalanceCard: React.FC<WalletBalanceCardProps> = ({
   walletData,
   backgroundColor,
-  avatarUrl,
 }) => {
   const [hideEstimated, setHideEstimated] = useState(false);
   const [totalOtherCoins, setTotalOthersCoins] = useState(
@@ -54,8 +53,7 @@ export const WalletBalanceCard: React.FC<WalletBalanceCardProps> = ({
                 <Text className="font-semibold text-gray-600">
                   Becoins Amarillas:{" "}
                 </Text>
-                úsalas para comprar dentro de la app, o extráelas en dólares a
-                tu cuenta bancaria.
+                úsalas para comprar dentro del ecosistema Beland.
               </Text>
             </View>
             <View>
@@ -78,13 +76,17 @@ export const WalletBalanceCard: React.FC<WalletBalanceCardProps> = ({
                 )}
                 <BeCoinIcon width={24} height={24} color={"green"} />
               </View>
-              <Text className="text-gray-500">
-                <Text className="font-semibold text-gray-600">
-                  Becoins Verdes:{" "}
-                </Text>
-                úsala para comprar dentro de la app, o canjéalas por Becoins
-                amarillas.
+
+              <Text className="font-semibold text-gray-600">
+                Becoins Verdes
               </Text>
+              <Tooltip
+                text="Úsala para comprar dentro de la app, o canjéalas por Becoins
+                amarillas."
+                direction="top"
+              >
+                <Info color={"orange"} />
+              </Tooltip>
             </View>
             <View className="md:flex-row gap-2 md:items-center">
               <View className="flex-row gap-2 items-center md:justify-between">
@@ -98,12 +100,15 @@ export const WalletBalanceCard: React.FC<WalletBalanceCardProps> = ({
                 )}
                 <BeCoinIcon width={24} height={24} color={"orange"} />
               </View>
-              <Text className="text-gray-500">
-                <Text className="font-semibold text-gray-600">
-                  Becoins Naranja:{" "}
-                </Text>
-                úsalas para comprar dentro de la app.
+              <Text className="font-semibold text-gray-600">
+                Becoins Naranja
               </Text>
+              <Tooltip
+                text="Úsala para comprar dentro de la app."
+                direction="top"
+              >
+                <Info color={"orange"} />
+              </Tooltip>
             </View>
           </View>
         </View>
