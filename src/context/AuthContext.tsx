@@ -14,7 +14,6 @@ import { Storage } from "src/services/auth/storage.service";
 import { getBackendErrorMessage } from "src/services";
 import { notify } from "src/hooks/notification/notify.external";
 import { clearStorage, resetStores } from "src/utils/logoutUtils";
-import { storage } from "src/stores";
 
 export type User = {
   id: string;
@@ -38,11 +37,11 @@ export type User = {
   role_name?: string;
   coins?: number;
 };
-
+type StatusType = "checking" | "authenticated" | "unauthenticated";
 type AuthContextType = {
   user: User | null;
   token: string | null;
-  isLoading: boolean;
+  status: StatusType;
   loginWithEmail: (
     email: string,
     password: string,
@@ -83,7 +82,7 @@ export const AuthContext = createContext<AuthContextType | undefined>(
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [status, setStatus] = useState<StatusType>("checking");
   useEffect(() => {
     (async () => {
       const savedToken = await TokenService.getToken();
@@ -92,11 +91,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           const me = await authService.getCurrentUser(savedToken);
           setToken(savedToken);
           setUser(me);
+          setStatus("authenticated");
         } catch (e) {
           await TokenService.clearToken();
+          setStatus("unauthenticated");
         }
       }
-      setIsLoading(false);
+      setStatus("unauthenticated");
     })();
   }, []);
 
@@ -147,6 +148,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               await TokenService.saveToken(me.token);
               setToken(me.token);
               setUser(me.user);
+              setStatus("authenticated");
             } else {
               throw new Error("accessToken no recibido.");
             }
@@ -157,8 +159,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(null);
         setToken(null);
         notify.error({ message: "Error al iniciar sesión." });
-      } finally {
-        setIsLoading(false);
+        setStatus("unauthenticated");
       }
     };
 
@@ -166,25 +167,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [response]);
 
   const loginWithEmail = async (email: string, password: string) => {
-    setIsLoading(true);
     try {
       const newToken = await authService.loginWithEmail(email, password);
       await TokenService.saveToken(newToken);
       setToken(newToken);
       const userData = await authService.getCurrentUser(newToken);
       setUser(userData);
+      setStatus("authenticated");
       return { token: newToken };
     } catch (error) {
       const message = getBackendErrorMessage(error);
       notify.error({ message });
+      setStatus("unauthenticated");
       return { token: null };
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const handleAuth0Login = async () => {
-    setIsLoading(true);
     await promptAsync();
   };
 
@@ -196,6 +195,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     setUser(null);
     setToken(null);
+    setStatus("unauthenticated");
   };
 
   const updateUser = (partial: Partial<User>) => {
@@ -205,7 +205,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
   };
   const requireAuth = async (action: () => void | Promise<void>) => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated && status === "unauthenticated") {
       notify.confirm({
         message: "Debes iniciar sesión para adquirir",
         onConfirm: () => handleAuth0Login(),
@@ -230,7 +230,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       value={{
         user,
         token,
-        isLoading,
+        status,
         loginWithEmail,
         handleAuth0Login,
         logout,

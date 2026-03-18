@@ -8,6 +8,9 @@ import {
 } from "react-native";
 import { Package, ChevronRight, Clock } from "lucide-react-native";
 import { OrderService, Order } from "src/services/OrderApiService";
+import { DateToTextClose } from "src/utils/dateTransform";
+import { useCustomNavigation } from "src/hooks";
+import { convertUSDToBeCoins } from "src/constants";
 
 interface RecentOrdersListProps {
   limit?: number;
@@ -20,7 +23,7 @@ export const RecentOrdersList: React.FC<RecentOrdersListProps> = ({
 }) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const { navigate } = useCustomNavigation();
   useEffect(() => {
     loadOrders();
   }, []);
@@ -56,29 +59,12 @@ export const RecentOrdersList: React.FC<RecentOrdersListProps> = ({
     }
   };
 
-  const getStatusText = (order: any): string => {
+  const getStatusText = (order: Order): string => {
     return order.status?.name || "En proceso";
   };
 
-  const getStatusCode = (order: any): string => {
+  const getStatusCode = (order: Order): string => {
     return order.status?.code || "PENDING";
-  };
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 0) return "Hoy";
-    if (diffDays === 1) return "Ayer";
-    if (diffDays < 7) return `Hace ${diffDays} días`;
-
-    return date.toLocaleDateString("es-ES", {
-      day: "2-digit",
-      month: "short",
-    });
   };
 
   if (loading) {
@@ -115,14 +101,23 @@ export const RecentOrdersList: React.FC<RecentOrdersListProps> = ({
       </View>
 
       <View style={styles.ordersList}>
-        {orders.map((order: any) => {
+        {orders.map((order: Order) => {
           const orderDate = order.created_at;
           const statusText = getStatusText(order);
           const statusCode = getStatusCode(order);
           const statusColor = getStatusColor(statusCode);
 
           return (
-            <TouchableOpacity key={order.id} style={styles.orderItem}>
+            <TouchableOpacity
+              key={order.id}
+              style={styles.orderItem}
+              onPress={() =>
+                navigate("Orders", {
+                  screen: "OrderDetail",
+                  params: { orderId: order.id },
+                })
+              }
+            >
               <View style={styles.orderLeft}>
                 <View
                   style={[
@@ -134,23 +129,21 @@ export const RecentOrdersList: React.FC<RecentOrdersListProps> = ({
                 </View>
                 <View style={styles.orderInfo}>
                   <Text style={styles.orderNumber}>
-                    #{order.code || order.id.slice(0, 8)}
+                    #{order.id.slice(0, 8)}
                   </Text>
                   <View style={styles.orderMeta}>
                     <Clock size={12} color="#999" />
                     <Text style={styles.orderDate}>
-                      {formatDate(orderDate)}
+                      {DateToTextClose(orderDate)}
                     </Text>
                   </View>
                 </View>
               </View>
 
               <View style={styles.orderRight}>
-                <Text style={styles.orderPrice}>
-                  ${parseFloat(order.total_amount || 0).toFixed(2)}
-                </Text>
+                <Text style={styles.orderPrice}>${order.total_amount}</Text>
                 <Text style={styles.orderPriceBC}>
-                  {parseFloat(order.total_becoin || 0).toFixed(0)} BC
+                  {convertUSDToBeCoins(order.total_amount)} BC
                 </Text>
                 <View
                   style={[styles.statusBadge, { backgroundColor: statusColor }]}

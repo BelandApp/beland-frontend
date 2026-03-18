@@ -10,6 +10,8 @@ import { ThemedHeader } from "src/components/shared/headers/Header";
 import { convertBeCoinsToUSD } from "src/constants";
 import { WalletActions } from "../Wallet";
 import { colors } from "src/design-system";
+import { useCustomNavigation } from "src/hooks";
+import { Button } from "src/components";
 
 export const HomeScreen = () => {
   const {
@@ -31,6 +33,7 @@ export const HomeScreen = () => {
     ? lockedBalance
     : undefined;
   const { mainWalletActions } = useWalletActions();
+  const { navigate } = useCustomNavigation();
   return (
     <View style={styles.container}>
       <ThemedHeader title="Inicio" logo />
@@ -51,6 +54,7 @@ export const HomeScreen = () => {
               data={{ bottlesRecycled: userStats?.bottlesRecycled ?? 0 }}
               onPress={navigateRecyclingMapPress}
             />
+
             <FeatureCard type="delivery" onPress={navigateDelivery} />
             <FeatureCard type="community" onPress={navigateCommunity} />
             <FeatureCard type="faq" onPress={navigateFaq} />

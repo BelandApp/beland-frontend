@@ -3,12 +3,13 @@
  * Handles wallets, transfers, recharges, and payment amounts
  */
 
+import { Transaction } from "src/screens/Wallet";
 import {
   adaptSequelizePagination,
   CoreApiService,
   PaginatedResponse,
 } from "./core/ApiService";
-import { Transaction } from "./TransactionApiService";
+import { User } from "src/context";
 
 // Wallet Types
 export interface Wallet {
@@ -23,6 +24,7 @@ export interface Wallet {
   qr?: string;
   private_key_encrypted?: string;
   created_at: string;
+  user?: User;
 }
 
 export interface RechargeRequest {

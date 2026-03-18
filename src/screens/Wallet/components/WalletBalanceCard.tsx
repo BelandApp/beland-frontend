@@ -5,6 +5,7 @@ import { BeCoinIcon } from "../../../components/icons/BeCoinIcon";
 import { WalletData } from "../types";
 import { walletCardStyles } from "../styles";
 import { colors } from "src/design-system";
+import { convertBeCoinsToUSD } from "src/constants";
 
 interface WalletBalanceCardProps {
   walletData: WalletData;
@@ -17,9 +18,12 @@ export const WalletBalanceCard: React.FC<WalletBalanceCardProps> = ({
   walletData,
   backgroundColor,
   avatarUrl,
-  accentColor,
 }) => {
   const [hideEstimated, setHideEstimated] = useState(false);
+  const [totalOtherCoins, setTotalOthersCoins] = useState(
+    Number(walletData.becoin_green) + Number(walletData.becoin_orange),
+  );
+
   return (
     <Card
       style={{
@@ -30,14 +34,10 @@ export const WalletBalanceCard: React.FC<WalletBalanceCardProps> = ({
       <View style={walletCardStyles.walletContent}>
         <View style={walletCardStyles.walletLeft}>
           <Text style={walletCardStyles.availableLabel}>Disponible:</Text>
-          <Text
-            style={[
-              walletCardStyles.balanceAmount,
-              accentColor ? { color: accentColor } : {},
-            ]}
-          >
+          <Text style={[walletCardStyles.balanceAmount]}>
             USD$ {walletData.estimatedValue}
           </Text>
+          <View className="w-full h-0.5 bg-slate-200  rounded-md my-1" />
           <View className="gap-2 my-2 ">
             <View className="md:flex-row gap-2 md:items-center">
               <View className="flex-row gap-2 items-center md:justify-between">
@@ -54,7 +54,16 @@ export const WalletBalanceCard: React.FC<WalletBalanceCardProps> = ({
                 <Text className="font-semibold text-gray-600">
                   Becoins Amarillas:{" "}
                 </Text>
-                Compras en la app + transferencia Fiat
+                úsalas para comprar dentro de la app, o extráelas en dólares a
+                tu cuenta bancaria.
+              </Text>
+            </View>
+            <View>
+              <Text style={walletCardStyles.availableLabel}>
+                Disponible para canje:
+              </Text>
+              <Text className="text-lg font-semibold text-[#1F2937]">
+                USD$ {convertBeCoinsToUSD(totalOtherCoins)}
               </Text>
             </View>
             <View className="md:flex-row gap-2 md:items-center">
@@ -63,7 +72,8 @@ export const WalletBalanceCard: React.FC<WalletBalanceCardProps> = ({
                   <Text style={walletCardStyles.estimatedValue}>
                     {isNaN(walletData.becoin_green)
                       ? "0"
-                      : Math.floor(walletData.becoin_green)}
+                      : Math.floor(walletData.becoin_green)}{" "}
+                    (Usd$ {convertBeCoinsToUSD(walletData.becoin_green)})
                   </Text>
                 )}
                 <BeCoinIcon width={24} height={24} color={"green"} />
@@ -72,7 +82,8 @@ export const WalletBalanceCard: React.FC<WalletBalanceCardProps> = ({
                 <Text className="font-semibold text-gray-600">
                   Becoins Verdes:{" "}
                 </Text>
-                Compras en la app + transferencia Fiat
+                úsala para comprar dentro de la app, o canjéalas por Becoins
+                amarillas.
               </Text>
             </View>
             <View className="md:flex-row gap-2 md:items-center">
@@ -81,7 +92,8 @@ export const WalletBalanceCard: React.FC<WalletBalanceCardProps> = ({
                   <Text style={walletCardStyles.estimatedValue}>
                     {isNaN(walletData.becoin_orange)
                       ? "0"
-                      : Math.floor(walletData.becoin_orange)}
+                      : Math.floor(walletData.becoin_orange)}{" "}
+                    (Usd$ {convertBeCoinsToUSD(walletData.becoin_orange)})
                   </Text>
                 )}
                 <BeCoinIcon width={24} height={24} color={"orange"} />
@@ -90,50 +102,10 @@ export const WalletBalanceCard: React.FC<WalletBalanceCardProps> = ({
                 <Text className="font-semibold text-gray-600">
                   Becoins Naranja:{" "}
                 </Text>
-                Compras en la app + transferencia Fiat
+                úsalas para comprar dentro de la app.
               </Text>
             </View>
           </View>
-        </View>
-        <View style={walletCardStyles.avatarContainer}>
-          {avatarUrl ? (
-            <View style={walletCardStyles.walletAvatar}>
-              <Image
-                source={
-                  typeof avatarUrl === "string" ? { uri: avatarUrl } : avatarUrl
-                }
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  borderRadius: 40,
-                }}
-                resizeMode="cover"
-              />
-            </View>
-          ) : (
-            <View style={walletCardStyles.walletAvatar}>
-              <View
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  borderRadius: 40,
-                  backgroundColor: "rgba(255,255,255,0.5)",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 24,
-                    fontWeight: "bold",
-                    color: "#666",
-                  }}
-                >
-                  👤
-                </Text>
-              </View>
-            </View>
-          )}
         </View>
       </View>
     </Card>

@@ -1,3 +1,5 @@
+import { Wallet } from "src/services/WalletApiService";
+
 export interface WalletData {
   balance: number;
   becoin_green: number;
@@ -38,6 +40,8 @@ export interface Transaction {
     description: string;
     updated_at: string;
   };
+  wallet: Wallet;
+  related_wallet: Wallet;
   from?: string;
   to?: string;
 }

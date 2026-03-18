@@ -52,7 +52,8 @@ type MenuRoutes =
   | "ORDERS"
   | "WALLET"
   | "ORDERSADMIN"
-  | "FINANCESADMIN";
+  | "FINANCESADMIN"
+  | "EVENTADMIN";
 export const UserMenu: React.FC<UserMenuProps> = ({
   style,
   variant = "compact",
@@ -94,8 +95,9 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   }, [menuVisible]);
   const handleLogout = async () => {
     setMenuVisible(false);
-    await logout();
-    navigate("Login");
+    logout();
+    notify.info({ message: "Cerrando sesión..." });
+    navigate("MainTabs", { screen: "Home" });
   };
 
   const toggleMenu = () => {
@@ -127,6 +129,9 @@ export const UserMenu: React.FC<UserMenuProps> = ({
         break;
       case "ORDERSADMIN":
         navigate("UserDashboardScreen", { screen: "OrdersManagement" });
+        break;
+      case "EVENTADMIN":
+        navigate("UserDashboardScreen", { screen: "EventsManagement" });
         break;
     }
   };
@@ -410,6 +415,13 @@ export const UserMenu: React.FC<UserMenuProps> = ({
           variant="box"
           icon={<Landmark size={18} color="#333" />}
           onPress={() => handleNavigate("FINANCESADMIN")}
+          className="justify-start"
+        />
+        <Button
+          title="Eventos"
+          variant="box"
+          icon={<Landmark size={18} color="#333" />}
+          onPress={() => handleNavigate("EVENTADMIN")}
           className="justify-start"
         />
       </View>

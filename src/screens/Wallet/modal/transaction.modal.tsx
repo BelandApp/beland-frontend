@@ -12,7 +12,7 @@ import { useTransactionInfo } from "../hooks/useTransactionInfo";
 import TransactionReceipt from "../shot/TransactionReceipt";
 import { useRef } from "react";
 import { useAuth } from "src/context";
-import { formatTransactionDate } from "src/utils/dateTransform";
+import { DateToParagraphAndHour } from "src/utils/dateTransform";
 type TransactionModalProps = {
   transaction: Transaction | null;
   onClose: () => void;
@@ -24,7 +24,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
   const receiptRef = useRef<View>(null);
   if (!transaction) return null;
   const { info } = useTransactionInfo(transaction);
-  console.log(info);
+  console.log(transaction);
   const shareReceipt = async () => {
     try {
       const node = receiptRef.current;
@@ -101,7 +101,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
             <View className="mx-auto items-center">
               <Text>{transaction.type.description}</Text>
               <Text className="text-xs text-gray-500">
-                Creada el {formatTransactionDate(transaction.created_at)}
+                Creada el {DateToParagraphAndHour(transaction.created_at)}
               </Text>
             </View>
             <View className="items-center mt-3 gap-1">
@@ -120,7 +120,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
               </Text>
             </View>
             <View className="mt-4 rounded-xl bg-gray-50 px-4 py-3 gap-2">
-              {transaction.type.name === "transferencia" && (
+              {transaction.type.code === "TRANSFER_SEND" && (
                 <>
                   <Text className="text-sm text-gray-500">Transferencia</Text>
                   <Text className="text-base">De: {transaction.from}</Text>

@@ -19,16 +19,25 @@ import { useNotify, useBeCoinsPrice, useRecentRecipients } from "src/hooks";
 import { getBackendErrorMessage } from "src/services";
 import RecentRecipients from "./components/RecentRecipients";
 import { ThemedHeader } from "src/components/shared/headers/Header";
-import { CustomLoader } from "src/components";
+import { BeCoinIcon, Button, CustomLoader, WrapperModal } from "src/components";
 import { storage } from "src/stores";
 import { DeepLinkService } from "src/services/deepLink/deepLink.service";
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  CheckCheck,
+  Share,
+  Share2,
+} from "lucide-react-native";
+import { shareTextOnWhatsApp, showShareOptions } from "src/utils/shareHelper";
+import { share } from "src/utils/Share";
 
 type Tab = "amount" | "contacts";
 
 const SendScreen = ({ route }: { route: any }) => {
   const id = route.params?.id;
   const { navigate } = useCustomNavigation();
-  const { user, handleAuth0Login, isAuthenticated } = useAuth();
+  const { user, handleAuth0Login, isAuthenticated, status } = useAuth();
   const notify = useNotify();
 
   const { walletData, refreshAll } = useWallet();
@@ -43,15 +52,13 @@ const SendScreen = ({ route }: { route: any }) => {
   const [activeTab, setActiveTab] = useState<Tab>("amount");
   const [amountUsd, setAmountUsd] = useState("");
   const [address, setAddress] = useState(id ?? "");
+  const [shareMessage, setShareMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [recipientLoading, setRecipientLoading] = useState(false);
   const [recipientAliases, setRecipientAliases] = useState<
     Record<string, string>
   >({});
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-
-  // Verificar modo demo
-  const useDemoMode = Constants.expoConfig?.extra?.useDemoMode === "true";
+  const [modal, setModal] = useState<"confirm" | "share" | null>(null);
 
   // Calcular equivalente en BeCoins
   const beCoinsAmount = useMemo(() => {
@@ -96,11 +103,11 @@ const SendScreen = ({ route }: { route: any }) => {
   }, [walletData.balance, beCoinsToUsd]);
 
   useEffect(() => {
-    if (id && !isAuthenticated) {
+    if (id && !isAuthenticated && status === "unauthenticated") {
       notify.confirm({
         message: "Debes estar logueado para realizar transferencias",
         onConfirm: async () => {
-          await DeepLinkService.setSendIntent(id);
+          await DeepLinkService.setIntent({ screen: "Send", id });
           navigate("Login");
         },
         onCancel: () => navigate("MainTabs", { screen: "Home" }),
@@ -143,55 +150,41 @@ const SendScreen = ({ route }: { route: any }) => {
   const handleSend = async () => {
     if (!validateTransfer()) return;
 
-    setShowConfirmModal(false);
+    setModal("confirm");
     setIsLoading(true);
 
     try {
-      if (useDemoMode) {
-        notify.info({ message: "Estás en modo DEMO" });
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        notify.success({
-          message: `Se han enviado $${amountUsd} USD (${beCoinsAmount.toFixed(
-            2,
-          )} BECOINS) a ${address}`,
+      if (!user?.email) {
+        notify.confirm({
+          message: "Debes iniciar sesión para transferir",
+          onConfirm: () => handleAuth0Login(),
         });
-        refreshAll();
-      } else {
-        if (!user?.email) {
-          notify.confirm({
-            message: "Debes iniciar sesión para transferir",
-            onConfirm: () => handleAuth0Login(),
-          });
-          return;
-        }
-
-        const recipientIdentifier = address.trim().toUpperCase();
-
-        const transferResult = await WalletService.transferToAlias(
-          recipientIdentifier,
-          beCoinsAmount,
-        );
-
-        if (transferResult) {
-          notify.success({
-            message: `Transferencia exitosa de $${amountUsd} USD a ${address}`,
-          });
-          refreshAll();
-
-          // Esperar un momento antes de recargar contactos para dar tiempo a que se registre en la BD
-          setTimeout(() => {
-            refetchRecipients();
-          }, 1500);
-        }
+        return;
       }
 
-      // Limpiar formulario
-      setAmountUsd("");
-      setAddress("");
+      const recipientIdentifier = address.trim().toUpperCase();
+
+      const transferResult = await WalletService.transferToAlias(
+        recipientIdentifier,
+        beCoinsAmount,
+      );
+
+      if (transferResult) {
+        const message = `Te acabo de realizar una transferencia: https://beland.app/TransferReceive/${transferResult.id}`;
+        setShareMessage(message);
+        setModal("share");
+        refreshAll();
+
+        // Esperar un momento antes de recargar contactos para dar tiempo a que se registre en la BD
+        setTimeout(() => {
+          refetchRecipients();
+        }, 1500);
+      }
     } catch (error) {
       console.error("Error en transferencia:", error);
       const message = getBackendErrorMessage(error);
       notify.error({ message: message || "Error en transferencia" });
+      setModal(null);
     } finally {
       setIsLoading(false);
     }
@@ -324,7 +317,7 @@ const SendScreen = ({ route }: { route: any }) => {
           { opacity: amountUsd && address && !isLoading ? 1 : 0.5 },
         ]}
         disabled={!amountUsd || !address || isLoading}
-        onPress={() => setShowConfirmModal(true)}
+        onPress={() => setModal("confirm")}
       >
         {isLoading ? (
           <ActivityIndicator color="#fff" />
@@ -433,10 +426,10 @@ const SendScreen = ({ route }: { route: any }) => {
 
       {/* Modal de confirmación */}
       <Modal
-        visible={showConfirmModal}
+        visible={modal === "confirm"}
         transparent
         animationType="fade"
-        onRequestClose={() => setShowConfirmModal(false)}
+        onRequestClose={() => setModal(null)}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -467,7 +460,7 @@ const SendScreen = ({ route }: { route: any }) => {
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={styles.modalButtonCancel}
-                onPress={() => setShowConfirmModal(false)}
+                onPress={() => setModal(null)}
               >
                 <Text style={styles.modalButtonCancelText}>Cancelar</Text>
               </TouchableOpacity>
@@ -481,6 +474,56 @@ const SendScreen = ({ route }: { route: any }) => {
           </View>
         </View>
       </Modal>
+      <WrapperModal
+        isOpen={modal === "share"}
+        onClose={() => setModal(null)}
+        header={
+          <View className="flex-row items-center gap-2">
+            <CheckCheck color={"green"} />
+            <Text className="text-lg font-semibold">
+              Transferencia realizada correctamente
+            </Text>
+          </View>
+        }
+        content={
+          <View className="m-auto mt-10">
+            <View className="flex-row gap-2 mx-auto my-6">
+              <ArrowUpRight color="orange" size="45" />
+              <BeCoinIcon />
+              <ArrowDownRight color="orange" size="45" />
+            </View>
+            <Text className="text-xl">
+              La transferencia de
+              <Text className="font-bold"> USD$ {amountUsd} </Text>a
+              <Text className="italic"> {address} </Text>
+              ya fue procesada correctamente
+            </Text>
+            <Text className="mt-2 text-lg text-center">
+              ¿Te gustaría compartirla?
+            </Text>
+          </View>
+        }
+        actions={
+          <View className="flex-row gap-2 mx-auto">
+            <Button
+              title="Cerrar"
+              variant="secondary"
+              onPress={() => {
+                setModal(null);
+                navigate("MainTabs", { screen: "Wallet" });
+              }}
+            />
+            <Button
+              icon={<Share2 color="white" size="20" />}
+              title="Compartir"
+              onPress={() => {
+                if (!shareMessage) return;
+                share({ message: shareMessage });
+              }}
+            />
+          </View>
+        }
+      />
     </View>
   );
 };

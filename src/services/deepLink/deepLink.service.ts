@@ -1,13 +1,16 @@
 import { storage } from "src/stores";
 
 const DEEPLINK_KEY = "pending_deeplink";
-
+type SetIntentType = {
+  screen: string;
+  id: string;
+};
 export const DeepLinkService = {
-  async setSendIntent(id: string) {
+  async setIntent({ screen, id }: SetIntentType) {
     await storage.setItem(
       DEEPLINK_KEY,
       JSON.stringify({
-        screen: "SendScreen",
+        screen,
         params: { id },
       }),
     );

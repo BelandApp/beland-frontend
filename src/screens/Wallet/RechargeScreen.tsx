@@ -48,15 +48,6 @@ export default function RechargeScreen() {
   const { navigate } = useCustomNavigation();
   const { isAuthenticated } = useAuth();
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("MainTabs", { screen: "Wallet" });
-    }
-  }, [isAuthenticated]);
-
-  if (!isAuthenticated) {
-    return <CustomLoader />;
-  }
   const {
     amount,
     selectedPaymentMethod,
@@ -95,6 +86,16 @@ export default function RechargeScreen() {
       });
     });
   };
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("MainTabs", { screen: "Wallet" });
+    }
+  }, [isAuthenticated]);
+
+  if (!isAuthenticated) {
+    return <CustomLoader />;
+  }
   return (
     <>
       <ThemedHeader

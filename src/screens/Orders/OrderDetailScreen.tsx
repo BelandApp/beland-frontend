@@ -20,6 +20,7 @@ import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { RouteProp, useRoute } from "@react-navigation/native";
 import { useNotify } from "../../hooks/notification/useNotify";
 import { ThemedHeader } from "src/components";
+import { DateToTextClose } from "src/utils/dateTransform";
 
 type OrderDetailScreenRouteProp = RouteProp<
   OrdersStackParamList,
@@ -385,32 +386,6 @@ export const OrderDetailScreen: React.FC = () => {
     }
   };
 
-  const formatDate = (date: Date | string | undefined): string => {
-    if (!date) return "Fecha no disponible";
-
-    const dateObj = typeof date === "string" ? new Date(date) : date;
-
-    // Check if date is valid
-    if (isNaN(dateObj.getTime())) return "Fecha inválida";
-
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - dateObj.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 1) return "Hoy";
-    if (diffDays === 2) return "Ayer";
-    if (diffDays <= 7) return `Hace ${diffDays - 1} días`;
-
-    return dateObj.toLocaleDateString("es-ES", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
   // Safe currency formatter: acepta number | string | undefined and evita llamar toFixed sobre undefined
   const formatCurrency = (amount?: number | string | null): string => {
     if (amount === null || amount === undefined || amount === "")
@@ -529,11 +504,11 @@ export const OrderDetailScreen: React.FC = () => {
             <View style={orderDetailStyles.heroInfo}>
               <Text style={orderDetailStyles.orderId}>
                 {baseOrder.order_number
-                  ? `BL-${String(baseOrder.order_number).padStart(6, "0")}`
+                  ? `#${String(baseOrder.order_number).padStart(6, "0")}`
                   : `#${baseOrder.id.substring(0, 8).toUpperCase()}`}
               </Text>
               <Text style={orderDetailStyles.orderDate}>
-                {formatDate(baseOrder.createdAt)}
+                {DateToTextClose(String(baseOrder.createdAt))}
               </Text>
             </View>
             <View style={orderDetailStyles.statusContainer}>
