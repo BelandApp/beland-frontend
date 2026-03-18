@@ -107,9 +107,8 @@ const ReceiveScreen = () => {
       const userName =
         user?.full_name || user?.email?.split("@")[0] || "Usuario";
       await Share.share({
-        message: `Hola! Puedes enviarme dinero en Beland, sin importar tu institución bancaria y sin comisiones. Ingresa a LINK, a la opción enviar dinero y usa mi ALIAS: ${alias}
-Gracias! Un abrazo, ${userName} ♻️🌎 
- https://beland.app/send/${alias}`,
+        message: `Hola! Puedes enviarme dinero en Beland, sin importar tu institución bancaria y sin comisiones. Ingresa a https://beland.app/send/${alias}, a la opción enviar dinero y usa mi ALIAS: ${alias}
+Gracias! Un abrazo, ${userName} ♻️🌎 `,
         title: "Mi alias de Beland",
       });
     } catch (error) {

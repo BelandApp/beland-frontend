@@ -60,9 +60,6 @@ const SendScreen = ({ route }: { route: any }) => {
   >({});
   const [modal, setModal] = useState<"confirm" | "share" | null>(null);
 
-  // Verificar modo demo
-  const useDemoMode = Constants.expoConfig?.extra?.useDemoMode === "true";
-
   // Calcular equivalente en BeCoins
   const beCoinsAmount = useMemo(() => {
     const usd = parseFloat(amountUsd);
