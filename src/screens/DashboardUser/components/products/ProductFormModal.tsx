@@ -271,6 +271,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 required
                 variant="filled"
                 value={String(formData.quantity)}
+                keyboardType="decimal-pad"
                 onChangeText={(value) => handleChange("quantity", value)}
                 error={errors.quantity}
               />
@@ -289,8 +290,8 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               <CustomInput
                 required
                 variant="filled"
+                keyboardType="decimal-pad"
                 label="Costo (USD)"
-                keyboardType="numbers-and-punctuation"
                 value={formData.cost.toString()}
                 onChangeText={(num) => handleChange("cost", num)}
                 error={errors.cost}
