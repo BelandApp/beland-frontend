@@ -292,9 +292,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 label="Costo (USD)"
                 keyboardType="numbers-and-punctuation"
                 value={formData.cost.toString()}
-                onChangeText={(text) =>
-                  handleChange("cost", parseFloat(text) || 0)
-                }
+                onChangeText={(num) => handleChange("cost", num)}
                 error={errors.cost}
               />
               <CustomInput
@@ -303,9 +301,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 keyboardType="decimal-pad"
                 label="Precio (USD)"
                 value={formData.price.toString()}
-                onChangeText={(text) =>
-                  handleChange("price", parseFloat(text) || 0)
-                }
+                onChangeText={(num) => handleChange("price", num)}
                 error={errors.price}
               />
             </View>
