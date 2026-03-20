@@ -290,6 +290,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 required
                 variant="filled"
                 label="Costo (USD)"
+                keyboardType="numbers-and-punctuation"
                 value={formData.cost.toString()}
                 onChangeText={(text) =>
                   handleChange("cost", parseFloat(text) || 0)
@@ -299,6 +300,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               <CustomInput
                 required
                 variant="filled"
+                keyboardType="decimal-pad"
                 label="Precio (USD)"
                 value={formData.price.toString()}
                 onChangeText={(text) =>
@@ -439,7 +441,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
           </View>
         }
         actions={
-          <View className="md:flex-row gap-2 mx-auto">
+          <View className="flex-row gap-2 mx-auto">
             <Button
               title="Cancelar"
               variant="secondary"
