@@ -136,7 +136,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </View>
 
           {/* Locked Balance */}
-          {locked_balance && locked_balance > 0 && (
+          {locked_balance && locked_balance > 0 ? (
             <View style={styles.footerItemRight}>
               <View style={styles.lockedIconContainer}>
                 <Ionicons name="lock-closed" size={12} color="#94A3B8" />
@@ -149,7 +149,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 </Text>
               </View>
             </View>
-          )}
+          ) : null}
         </View>
       </LinearGradient>
     </View>
