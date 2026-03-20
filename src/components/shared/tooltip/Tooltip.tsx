@@ -6,7 +6,7 @@ interface Props {
   text: string;
   duration?: number;
   children: React.ReactNode;
-  direction: "top" | "bottom" | "left" | "right";
+  direction?: "top" | "bottom" | "left" | "right";
 }
 
 export const Tooltip: React.FC<Props> = ({
@@ -16,10 +16,20 @@ export const Tooltip: React.FC<Props> = ({
   duration = 2000,
 }) => {
   const ref = useRef<any>(null);
-  const { setTooltip } = useTooltip();
+  const { tooltip, setTooltip } = useTooltip();
+
+  const isTouchDevice =
+    Platform.OS !== "web" ||
+    (typeof window !== "undefined" && "ontouchstart" in window);
 
   const show = () => {
     if (!ref.current) return;
+
+    // 🔁 toggle
+    if (tooltip?.text === text) {
+      setTooltip(null);
+      return;
+    }
 
     if (Platform.OS === "web") {
       const rect = ref.current.getBoundingClientRect();
@@ -33,6 +43,11 @@ export const Tooltip: React.FC<Props> = ({
         direction,
         visible: true,
       });
+
+      if (isTouchDevice && duration) {
+        setTimeout(() => setTooltip(null), duration);
+      }
+
       return;
     }
 
@@ -50,18 +65,24 @@ export const Tooltip: React.FC<Props> = ({
         visible: true,
       });
 
-      setTimeout(() => setTooltip(null), duration);
+      if (duration) {
+        setTimeout(() => setTooltip(null), duration);
+      }
     });
   };
 
-  const hide = () => Platform.OS === "web" && setTooltip(null);
+  const hide = () => {
+    if (!isTouchDevice) {
+      setTooltip(null);
+    }
+  };
 
   return (
     <Pressable
       ref={ref}
-      onPress={Platform.OS !== "web" ? show : undefined}
-      onHoverIn={Platform.OS === "web" ? show : undefined}
-      onHoverOut={Platform.OS === "web" ? hide : undefined}
+      onPress={isTouchDevice ? show : undefined}
+      onHoverIn={isTouchDevice ? show : undefined}
+      onHoverOut={isTouchDevice ? hide : undefined}
     >
       {children}
     </Pressable>
