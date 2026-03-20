@@ -40,7 +40,6 @@ export const walletCardStyles = StyleSheet.create({
     fontSize: 14,
     color: colors.textPrimary,
     fontWeight: "600",
-    minWidth: 25,
   },
   avatarContainer: {
     alignItems: "center",
