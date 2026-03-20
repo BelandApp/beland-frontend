@@ -17,6 +17,7 @@ import {
   borderTopRightRadius,
 } from "html2canvas/dist/types/css/property-descriptors/border-radius";
 import { CheckCircle, Watch } from "lucide-react-native";
+import { colors } from "src/design-system";
 
 interface TransactionCardProps {
   transaction: Transaction;
@@ -77,10 +78,20 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
         </View>
         <View style={styles.rightSection}>
           <View style={styles.amountContainer}>
-            <Text style={[styles.amount, { color: transaction.type.color }]}>
-              {getAmountPrefix(transaction.type)} $
-              {convertBeCoinsToUSD(transaction.amount_becoin).toFixed(2)}
+            <Text
+              style={[
+                styles.amount,
+                {
+                  color:
+                    Number(transaction.amount_becoin) > 0
+                      ? colors.brand.green[500]
+                      : colors.semantic.error[500],
+                },
+              ]}
+            >
+              {convertBeCoinsToUSD(transaction.amount_becoin).toFixed(2)}{" "}
             </Text>
+            <BeCoinIcon />
           </View>
         </View>
       </View>

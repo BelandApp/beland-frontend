@@ -1,21 +1,23 @@
 import { useEffect, useState } from "react";
 import { Transaction } from "../types";
 import { CoreApiService } from "src/services";
+import { Event } from "src/stores";
 const _core = new CoreApiService();
-export type InfoItems = {
+export type ProductItems = {
   producto: string;
   cantidad: number;
   price: string;
   image_url: string;
 };
 export const useTransactionInfo = (transaction: Transaction) => {
-  const [info, setInfo] = useState<InfoItems[] | null>(null);
+  const [products, setProducts] = useState<ProductItems[] | null>(null);
+  const [eventInfo, setEventInfo] = useState<Event | null>(null);
   useEffect(() => {
-    const fetchTransactionInfo = async () => {
+    const fetchSellInfo = async () => {
       const ORDER_ID = transaction?.reference;
       const cleanId = ORDER_ID.split(/-(.*)/s)[1];
       const res = await _core.get("orders/" + cleanId);
-      setInfo(
+      setProducts(
         res.items.map((item: any) => ({
           producto: item.product.name,
           cantidad: item.quantity,
@@ -24,7 +26,15 @@ export const useTransactionInfo = (transaction: Transaction) => {
         })),
       );
     };
-    if (transaction.type.code === "PURCHASE_BELAND") fetchTransactionInfo();
+    const featchEventInfo = async () => {
+      const EVENT_ID = transaction?.reference;
+      const cleanId = EVENT_ID.split(/-(.*)/s)[1];
+      console.log("llamando eventos id:", cleanId);
+      const res = await _core.get("event-pass/" + cleanId);
+      setEventInfo(res);
+    };
+    if (transaction.type.code === "PURCHASE_BELAND") fetchSellInfo();
+    if (transaction.type.code === "PURCHASE_EVENTPASS") featchEventInfo();
   }, []);
-  return { info };
+  return { productsInfo: products, eventInfo };
 };
