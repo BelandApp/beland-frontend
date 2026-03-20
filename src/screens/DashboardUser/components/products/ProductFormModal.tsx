@@ -4,12 +4,8 @@ import {
   Text,
   StyleSheet,
   Modal,
-  ScrollView,
   TouchableOpacity,
-  TextInput,
-  ActivityIndicator,
   Image,
-  Platform,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { ProductService } from "@/services/core";
@@ -27,15 +23,9 @@ import {
   WrapperModal,
 } from "src/components";
 import { colors } from "src/design-system";
-import CustomPicker from "src/components/shared/input/Custom.picker";
+
 import { CloudinaryService } from "src/services";
-import {
-  ArrowDown,
-  ImageDown,
-  ImagePlus,
-  X,
-  XCircle,
-} from "lucide-react-native";
+import { ImagePlus, X } from "lucide-react-native";
 
 interface ProductFormModalProps {
   visible: boolean;
@@ -150,10 +140,10 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
     }
   };
 
-  const handleChange = (
-    field: keyof CreateProductDto,
-    value: string | number,
-  ) => {
+  const handleChange = (field: keyof CreateProductDto, value: string) => {
+    if (value.includes(",")) {
+      value = value.replace(",", ".");
+    }
     setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear error when user types
     if (errors[field]) {
