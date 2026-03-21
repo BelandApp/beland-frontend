@@ -28,13 +28,13 @@ export const HeaderStyles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   text: {
-    fontSize: Dimensions.get("window").width > 700 ? 24 : 12,
+    fontSize: Dimensions.get("window").width > 430 ? 24 : 12,
     fontWeight: "bold",
     color: "#FFFFFF",
   },
   subtitle: {
     color: "#FFFFFF",
-    fontSize: Dimensions.get("window").width > 700 ? 18 : 10,
+    fontSize: Dimensions.get("window").width > 430 ? 18 : 10,
   },
   centerText: {
     alignItems: "center",

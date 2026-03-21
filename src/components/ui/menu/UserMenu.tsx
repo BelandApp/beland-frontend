@@ -21,6 +21,8 @@ import {
   UserRound,
   Landmark,
   Info,
+  TicketCheck,
+  ShoppingBag,
 } from "lucide-react-native";
 import { authService } from "@/services";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
@@ -55,7 +57,8 @@ type MenuRoutes =
   | "ORDERSADMIN"
   | "FINANCESADMIN"
   | "EVENTADMIN"
-  | "FAQ";
+  | "FAQ"
+  | "PRODUCTADMIN";
 export const UserMenu: React.FC<UserMenuProps> = ({
   style,
   variant = "compact",
@@ -137,6 +140,9 @@ export const UserMenu: React.FC<UserMenuProps> = ({
         break;
       case "FAQ":
         navigate("FAQ");
+        break;
+      case "PRODUCTADMIN":
+        navigate("UserDashboardScreen", { screen: "ProductsManagement" });
         break;
     }
   };
@@ -404,6 +410,14 @@ export const UserMenu: React.FC<UserMenuProps> = ({
           onPress={() => handleNavigate("DASHBOARD")}
           className="justify-start"
         />
+
+        <Button
+          title="FAQs"
+          onPress={() => handleNavigate("FAQ")}
+          variant="box"
+          icon={<Info size={18} color="#333" />}
+          className="justify-start"
+        />
       </View>
     ),
     SUPERADMIN: (
@@ -432,8 +446,23 @@ export const UserMenu: React.FC<UserMenuProps> = ({
         <Button
           title="Eventos"
           variant="box"
-          icon={<Landmark size={18} color="#333" />}
+          icon={<TicketCheck size={18} color="#333" />}
           onPress={() => handleNavigate("EVENTADMIN")}
+          className="justify-start"
+        />
+        <Button
+          title="Productos"
+          variant="box"
+          icon={<ShoppingBag size={18} color="#333" />}
+          onPress={() => handleNavigate("PRODUCTADMIN")}
+          className="justify-start"
+        />
+
+        <Button
+          title="FAQs"
+          onPress={() => handleNavigate("FAQ")}
+          variant="box"
+          icon={<Info size={18} color="#333" />}
           className="justify-start"
         />
       </View>
