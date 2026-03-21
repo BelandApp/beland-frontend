@@ -1,4 +1,4 @@
-import { Platform, StyleSheet } from "react-native";
+import { Dimensions, Platform, StyleSheet } from "react-native";
 import { colors } from "src/styles";
 
 export const HeaderStyles = StyleSheet.create({
@@ -27,8 +27,15 @@ export const HeaderStyles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "flex-end",
   },
-  text: { fontSize: 24, fontWeight: "bold", color: "#FFFFFF" },
-  subtitle: { color: "#FFFFFF" },
+  text: {
+    fontSize: Dimensions.get("window").width > 700 ? 24 : 12,
+    fontWeight: "bold",
+    color: "#FFFFFF",
+  },
+  subtitle: {
+    color: "#FFFFFF",
+    fontSize: Dimensions.get("window").width > 700 ? 18 : 10,
+  },
   centerText: {
     alignItems: "center",
   },
