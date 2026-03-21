@@ -37,7 +37,7 @@ export type User = {
   role_name?: string;
   coins?: number;
 };
-type StatusType = "checking" | "authenticated" | "unauthenticated";
+type StatusType = "checking" | "authenticated" | "unauthenticated" | "loading";
 type AuthContextType = {
   user: User | null;
   token: string | null;
@@ -88,6 +88,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const savedToken = await TokenService.getToken();
       if (savedToken) {
         try {
+          setStatus("loading");
           const me = await authService.getCurrentUser(savedToken);
           setToken(savedToken);
           setUser(me);
@@ -141,6 +142,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               discovery,
             );
             if (tokenResponse.accessToken) {
+              setStatus("loading");
+
               await TokenService.saveToken(tokenResponse.accessToken);
               let me = await authService.exchangeAuth0Token(
                 tokenResponse.accessToken,
@@ -168,6 +171,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const loginWithEmail = async (email: string, password: string) => {
     try {
+      setStatus("loading");
       const newToken = await authService.loginWithEmail(email, password);
       await TokenService.saveToken(newToken);
       setToken(newToken);
@@ -184,15 +188,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const handleAuth0Login = async () => {
+    setStatus("loading");
     await promptAsync();
   };
 
   const logout = async () => {
+    setStatus("loading");
     await clearStorage(Storage);
     resetStores();
-
     await TokenService.clearToken();
-
     setUser(null);
     setToken(null);
     setStatus("unauthenticated");
