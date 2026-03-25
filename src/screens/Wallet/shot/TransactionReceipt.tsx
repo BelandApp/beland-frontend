@@ -2,14 +2,16 @@ import { View, Text } from "react-native";
 import { Transaction } from "../types";
 import { convertBeCoinsToUSD } from "src/constants";
 import { forwardRef } from "react";
-import { InfoItems } from "../hooks/useTransactionInfo";
 import { colors } from "src/design-system";
+import { ProductItems } from "../hooks/useTransactionInfo";
+import { Event } from "src/stores";
 type Props = {
   transaction: Transaction;
-  info: InfoItems[] | null;
+  products: ProductItems[] | null;
+  eventInfo: Event | null;
 };
 export const TransactionReceipt = forwardRef<View, Props>(
-  ({ transaction, info }, ref) => {
+  ({ transaction, products, eventInfo }, ref) => {
     return (
       <View
         ref={ref}
@@ -41,19 +43,29 @@ export const TransactionReceipt = forwardRef<View, Props>(
           </Text>
         </View>
 
-        {info && (
-          <View className="mt-4 gap-2">
-            <Text>Descripción: {transaction.type.description}</Text>
+        <View className="mt-4 gap-2">
+          <Text>Descripción: {transaction.type.description}</Text>
 
-            {info?.map((item, index) => (
-              <Text key={index} className="text-base">
-                {item.cantidad} × {item.producto}
-              </Text>
-            ))}
-            <Text>Estado: {transaction.status.name}</Text>
-            <Text>ID: {transaction.id}</Text>
-          </View>
-        )}
+          {products?.map((item, index) => (
+            <Text key={index} className="text-base">
+              {item.cantidad} × {item.producto}
+            </Text>
+          ))}
+          {eventInfo && (
+            <Text className="text-center">
+              Entrada para el Evento {eventInfo?.name}
+            </Text>
+          )}
+          <Text
+            style={{
+              color:
+                transaction.status.code === "COMPLETED" ? "green" : "orange",
+            }}
+          >
+            Estado: {transaction.status.name}
+          </Text>
+          <Text>ID: {transaction.id}</Text>
+        </View>
       </View>
     );
   },

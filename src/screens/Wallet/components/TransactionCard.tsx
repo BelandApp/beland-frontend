@@ -7,6 +7,7 @@ import { DateToParagraphAndHour } from "src/utils/dateTransform";
 import { convertBeCoinsToUSD } from "src/constants";
 import { CheckCircle, Watch } from "lucide-react-native";
 import { colors } from "src/design-system";
+import { BeCoinIcon } from "src/components";
 
 interface TransactionCardProps {
   transaction: Transaction;
@@ -67,6 +68,7 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
             >
               {convertBeCoinsToUSD(transaction.amount_becoin).toFixed(2)} $
             </Text>
+            <BeCoinIcon />
           </View>
         </View>
       </View>

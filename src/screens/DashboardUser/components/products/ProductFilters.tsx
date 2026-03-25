@@ -11,6 +11,7 @@ import {
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import type { Category } from "@/services/ProductApiService";
 import { useResponsiveLayout } from "@/hooks";
+import { Button } from "src/components";
 
 export interface ProductFiltersProps {
   categories: Category[];
@@ -252,11 +253,16 @@ export const ProductFilters: React.FC<ProductFiltersProps> = ({
       </View>
 
       {/* Botón Resetear */}
-      {hasActiveFilters && (
-        <TouchableOpacity style={styles.resetButton} onPress={onReset}>
-          <MaterialCommunityIcons name="refresh" size={18} color="#7DA244" />
-          <Text style={styles.resetButtonText}>Resetear Filtros</Text>
-        </TouchableOpacity>
+      {hasActiveFilters.length > 0 && (
+        <Button
+          title="Resetear filtros"
+          onPress={onReset}
+          icon={
+            <MaterialCommunityIcons name="refresh" size={18} color="#7DA244" />
+          }
+          style={styles.categoryChip}
+          textStyle={{ color: "#7DA244" }}
+        />
       )}
     </View>
   );

@@ -19,7 +19,7 @@ import {
 
 import EventsScreen from "src/screens/Events/EventsScreen";
 import { CustomTabBar } from "./customTabBar/CustomTabBar";
-import { TicketCheck } from "lucide-react-native";
+import { ShoppingBag, TicketCheck } from "lucide-react-native";
 
 const Tab = createBottomTabNavigator();
 
@@ -81,7 +81,7 @@ export const MainTabNavigator = () => {
             headerShown: false,
             tabBarLabel: "Catalogo",
             tabBarIcon: ({ focused }) => (
-              <CatalogIcon color={focused ? "#000" : "#777"} />
+              <ShoppingBag color={focused ? "#000" : "#777"} />
             ),
           }}
         />

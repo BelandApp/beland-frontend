@@ -20,6 +20,9 @@ import {
   ArrowRight,
   UserRound,
   Landmark,
+  Info,
+  TicketCheck,
+  ShoppingBag,
 } from "lucide-react-native";
 import { authService } from "@/services";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
@@ -53,14 +56,16 @@ type MenuRoutes =
   | "WALLET"
   | "ORDERSADMIN"
   | "FINANCESADMIN"
-  | "EVENTADMIN";
+  | "EVENTADMIN"
+  | "FAQ"
+  | "PRODUCTADMIN";
 export const UserMenu: React.FC<UserMenuProps> = ({
   style,
   variant = "compact",
   iconColor = "#fff",
 }) => {
   const { navigate } = useCustomNavigation();
-  const { user, isLoading, logout, reloadUser } = useAuth();
+  const { user, logout, reloadUser, status } = useAuth();
   const notify = useNotify();
   const [menuVisible, setMenuVisible] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -132,6 +137,12 @@ export const UserMenu: React.FC<UserMenuProps> = ({
         break;
       case "EVENTADMIN":
         navigate("UserDashboardScreen", { screen: "EventsManagement" });
+        break;
+      case "FAQ":
+        navigate("FAQ");
+        break;
+      case "PRODUCTADMIN":
+        navigate("UserDashboardScreen", { screen: "ProductsManagement" });
         break;
     }
   };
@@ -305,7 +316,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
     }
   };
 
-  if (isLoading) {
+  if (status === "loading") {
     return (
       <TouchableOpacity
         onPress={handleLogout}
@@ -370,6 +381,13 @@ export const UserMenu: React.FC<UserMenuProps> = ({
           icon={<Settings size={18} color="#333" />}
           className="justify-start"
         />
+        <Button
+          title="FAQs"
+          onPress={() => handleNavigate("FAQ")}
+          variant="box"
+          icon={<Info size={18} color="#333" />}
+          className="justify-start"
+        />
         {/* Mostrar opción solo si el usuario NO es comerciante */}
 
         {user.role.name !== "COMERCIO" && (
@@ -390,6 +408,14 @@ export const UserMenu: React.FC<UserMenuProps> = ({
           variant="box"
           icon={<LayoutDashboard size={18} color="#333" />}
           onPress={() => handleNavigate("DASHBOARD")}
+          className="justify-start"
+        />
+
+        <Button
+          title="FAQs"
+          onPress={() => handleNavigate("FAQ")}
+          variant="box"
+          icon={<Info size={18} color="#333" />}
           className="justify-start"
         />
       </View>
@@ -420,8 +446,23 @@ export const UserMenu: React.FC<UserMenuProps> = ({
         <Button
           title="Eventos"
           variant="box"
-          icon={<Landmark size={18} color="#333" />}
+          icon={<TicketCheck size={18} color="#333" />}
           onPress={() => handleNavigate("EVENTADMIN")}
+          className="justify-start"
+        />
+        <Button
+          title="Productos"
+          variant="box"
+          icon={<ShoppingBag size={18} color="#333" />}
+          onPress={() => handleNavigate("PRODUCTADMIN")}
+          className="justify-start"
+        />
+
+        <Button
+          title="FAQs"
+          onPress={() => handleNavigate("FAQ")}
+          variant="box"
+          icon={<Info size={18} color="#333" />}
           className="justify-start"
         />
       </View>
@@ -435,6 +476,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
           onPress={() => handleNavigate("DASHBOARD")}
           className="justify-start"
         />
+        {/* TODO: ELIMINAR UNA VEZ SE SOLUCIONE */}
         <Button
           title="Hacerme comerciante"
           onPress={handleOpenOrganizationModal}
@@ -447,6 +489,13 @@ export const UserMenu: React.FC<UserMenuProps> = ({
           onPress={handleDeleteOrganization}
           variant="box"
           icon={<Store size={18} color="#333" />}
+          className="justify-start"
+        />
+        <Button
+          title="FAQs"
+          onPress={() => handleNavigate("FAQ")}
+          variant="box"
+          icon={<Info size={18} color="#333" />}
           className="justify-start"
         />
       </View>
