@@ -75,7 +75,8 @@ export const WalletBalanceCard: React.FC<WalletBalanceCardProps> = ({
                 )}
                 <BeCoinIcon width={24} height={24} color={"green"} />
                 <Text>
-                  (Usd$ {convertBeCoinsToUSD(walletData.becoin_green)})
+                  (Usd${" "}
+                  {convertBeCoinsToUSD(walletData.becoin_green).toFixed(2)})
                 </Text>
 
                 <Text className="font-semibold text-gray-600">
@@ -101,7 +102,8 @@ export const WalletBalanceCard: React.FC<WalletBalanceCardProps> = ({
                 )}
                 <BeCoinIcon width={24} height={24} color={"orange"} />
                 <Text>
-                  (Usd$ {convertBeCoinsToUSD(walletData.becoin_orange)})
+                  (Usd${" "}
+                  {convertBeCoinsToUSD(walletData.becoin_orange).toFixed(2)})
                 </Text>
                 <Text className="font-semibold text-gray-600">
                   Becoins Naranja
