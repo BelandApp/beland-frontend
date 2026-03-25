@@ -4,25 +4,23 @@ import { useBeCoinsStore } from "@/stores";
 import { WalletService, PaymentService, Wallet } from "@services/core";
 import { getBackendErrorMessage } from "src/services";
 import { notify } from "src/hooks/notification/notify.external";
-import { Transaction } from "../types";
-export type WalletDataType = {
-  balance: number;
-  becoin_green: number;
-  becoin_orange: number;
-  locked_balance: number;
-  alias: string;
-  estimatedValue: string;
-};
+import { Transaction, WalletData } from "../types";
 
 export const useWallet = () => {
   const { user } = useAuth();
   const { syncFromBackend, balance } = useBeCoinsStore();
-
   const [wallet, setWallet] = useState<Wallet | null>(null);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [walletId, setWalletId] = useState<string | null>(null);
-
   const [loadingWallet, setLoadingWallet] = useState(false);
+
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const LIMIT = 20;
+
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [totalTransactions, setTotalTransactions] = useState("");
+
   const [loadingTransactions, setLoadingTransactions] = useState(false);
 
   /** -----------------------------------------
@@ -60,20 +58,48 @@ export const useWallet = () => {
   /** -----------------------------------------
    *  FETCH: TRANSACTIONS
    ------------------------------------------*/
-  const fetchTransactions = useCallback(async () => {
-    if (!walletId) return;
-    setLoadingTransactions(true);
+  const fetchTransactions = useCallback(
+    async (pageToLoad = 1, isLoadMore = false) => {
+      if (!walletId) return;
 
-    try {
-      const { data } = await WalletService.getTransactions(1, 20, walletId);
-      console.log("Fetched transactions:", data);
-      setTransactions(data);
-    } catch (err) {
-      notify.error({ message: getBackendErrorMessage(err) });
-    } finally {
-      setLoadingTransactions(false);
-    }
-  }, [walletId]);
+      if (isLoadMore) {
+        setLoadingMore(true);
+      } else {
+        setLoadingTransactions(true);
+      }
+
+      try {
+        const { data, total } = await WalletService.getTransactions(
+          pageToLoad,
+          LIMIT,
+          walletId,
+        );
+
+        setTotalTransactions(total);
+
+        setTransactions((prev) => (isLoadMore ? [...prev, ...data] : data));
+
+        // calcular si hay más páginas
+        const totalLoaded =
+          (isLoadMore ? transactions.length : 0) + data.length;
+        setHasMore(totalLoaded < total);
+
+        setPage(pageToLoad);
+      } catch (err) {
+        notify.error({ message: getBackendErrorMessage(err) });
+      } finally {
+        setLoadingTransactions(false);
+        setLoadingMore(false);
+      }
+    },
+    [walletId, transactions.length],
+  );
+
+  const loadMoreTransactions = () => {
+    if (loadingMore || loadingTransactions || !hasMore) return;
+
+    fetchTransactions(page + 1, true);
+  };
 
   /** -----------------------------------------
    *  INITIAL LOAD
@@ -88,7 +114,13 @@ export const useWallet = () => {
    *  LOAD TRANSACTIONS WHEN walletId EXISTS
    ------------------------------------------*/
   useEffect(() => {
-    if (walletId) fetchTransactions();
+    if (!walletId) return;
+
+    setPage(1);
+    setHasMore(true);
+    setTransactions([]);
+
+    fetchTransactions(1, false);
   }, [walletId]);
 
   /** -----------------------------------------
@@ -99,7 +131,7 @@ export const useWallet = () => {
     fetchTransactions();
   };
 
-  const walletData: WalletDataType = {
+  const walletData: WalletData = {
     balance,
     becoin_green: wallet?.becoin_green ?? 0,
     becoin_orange: wallet?.becoin_orange ?? 0,
@@ -111,8 +143,12 @@ export const useWallet = () => {
     walletData,
     wallet,
     transactions,
+    totalTransactions,
     loadingWallet,
     loadingTransactions,
+    loadingMore,
+    hasMore,
+    loadMoreTransactions,
     refreshAll,
   };
 };
