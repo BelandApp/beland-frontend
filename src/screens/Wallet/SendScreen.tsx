@@ -480,9 +480,7 @@ const SendScreen = ({ route }: { route: any }) => {
         header={
           <View className="flex-row items-center gap-2">
             <CheckCheck color={"green"} />
-            <Text className="text-lg font-semibold">
-              Transferencia realizada correctamente
-            </Text>
+            <Text className="text-lg font-semibold">Compartir</Text>
           </View>
         }
         content={
