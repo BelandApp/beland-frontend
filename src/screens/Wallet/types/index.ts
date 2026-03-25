@@ -42,6 +42,7 @@ export interface Transaction {
   };
   wallet: Wallet;
   related_wallet: Wallet;
+  related_wallet_id: string;
   from?: string;
   to?: string;
 }

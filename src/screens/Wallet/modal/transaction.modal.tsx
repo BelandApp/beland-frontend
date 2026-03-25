@@ -1,30 +1,32 @@
 import { Button, WrapperModal } from "src/components";
 import { Transaction } from "../types";
 import { View, Text, Pressable, Platform } from "react-native";
-
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SquareChevronDown } from "lucide-react-native";
 import { convertBeCoinsToUSD } from "src/constants";
-import { getAmountPrefix } from "../components/TransactionCard";
 import { captureRef } from "react-native-view-shot";
 import * as Sharing from "expo-sharing";
 import { useTransactionInfo } from "../hooks/useTransactionInfo";
 import TransactionReceipt from "../shot/TransactionReceipt";
 import { useRef } from "react";
-import { useAuth } from "src/context";
 import { DateToParagraphAndHour } from "src/utils/dateTransform";
+import { Wallet } from "src/services/WalletApiService";
+import { colors } from "src/design-system";
 type TransactionModalProps = {
   transaction: Transaction | null;
+  walletTransfers?: Wallet | null;
   onClose: () => void;
 };
 const TransactionModal: React.FC<TransactionModalProps> = ({
   transaction,
+  walletTransfers,
   onClose,
 }) => {
   const receiptRef = useRef<View>(null);
   if (!transaction) return null;
+
   const { info } = useTransactionInfo(transaction);
-  console.log(transaction);
+  console.log("transaction:", transaction);
   const shareReceipt = async () => {
     try {
       const node = receiptRef.current;
@@ -104,6 +106,64 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                 Creada el {DateToParagraphAndHour(transaction.created_at)}
               </Text>
             </View>
+
+            {transaction.type.code === "TRANSFER_SEND" &&
+              walletTransfers != undefined && (
+                <View className="mt-4 rounded-xl bg-gray-50 px-4 py-3 gap-2">
+                  <Text className="text-sm text-gray-500">Transferencia</Text>
+                  <Text className="text-base">
+                    De: {walletTransfers.user?.full_name}
+                  </Text>
+                  <Text className="text-base">
+                    Hacia: {transaction.wallet.user?.full_name}
+                  </Text>
+                </View>
+              )}
+
+            {transaction.type.code === "PURCHASE_BELAND" && (
+              <View className="mt-4 rounded-xl bg-gray-50 px-4 py-3 gap-2">
+                <Text className="text-sm text-gray-500 mb-1">
+                  Detalle de compra
+                </Text>
+                {info?.map((item, index) => (
+                  <View
+                    key={index}
+                    className="justify-between items-center flex-row"
+                  >
+                    <Text className="text-base">
+                      {item.cantidad} × {item.producto}
+                    </Text>
+                    <Text className="text-base font-semibold self-end">
+                      ${item.price} c/u
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+            <View className="items-center mt-6 gap-1">
+              <Text>Total</Text>
+              <Text
+                className="text-3xl font-bold"
+                style={{
+                  color:
+                    Number(transaction.amount_becoin) > 0
+                      ? colors.brand.green[500]
+                      : colors.semantic.error[500],
+                }}
+              >
+                {transaction.amount_becoin} Becoin
+              </Text>
+
+              <Text className="text-sm text-gray-500">
+                ≈ USD${" "}
+                {convertBeCoinsToUSD(transaction.amount_becoin).toFixed(2)}
+              </Text>
+            </View>
+            <Text className="text-xs text-gray-400 text-center">
+              Saldo después de la operación: Usd$
+              {convertBeCoinsToUSD(Number(transaction.post_balance)).toFixed(2)}
+            </Text>
+
             <View className="items-center mt-3 gap-1">
               <View
                 className="px-3 py-1 rounded-full"
@@ -119,55 +179,6 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                 {transaction.status.updated_at}
               </Text>
             </View>
-            <View className="mt-4 rounded-xl bg-gray-50 px-4 py-3 gap-2">
-              {transaction.type.code === "TRANSFER_SEND" && (
-                <>
-                  <Text className="text-sm text-gray-500">Transferencia</Text>
-                  <Text className="text-base">De: {transaction.from}</Text>
-                  <Text className="text-base">Hacia: {transaction.to}</Text>
-                </>
-              )}
-
-              {transaction.type.code === "PURCHASE_BELAND" && (
-                <>
-                  <Text className="text-sm text-gray-500 mb-1">
-                    Detalle de compra
-                  </Text>
-                  {info?.map((item, index) => (
-                    <View
-                      key={index}
-                      className="justify-between items-center flex-row"
-                    >
-                      <Text className="text-base">
-                        {item.cantidad} × {item.producto}
-                      </Text>
-                      <Text className="text-base font-semibold self-end">
-                        ${item.price} c/u
-                      </Text>
-                    </View>
-                  ))}
-                </>
-              )}
-            </View>
-            <View className="items-center mt-6 gap-1">
-              <Text>Total</Text>
-              <Text
-                className="text-3xl font-bold"
-                style={{ color: transaction.type.color }}
-              >
-                {getAmountPrefix(transaction.type)}
-                {transaction.amount_becoin} Becoin
-              </Text>
-
-              <Text className="text-sm text-gray-500">
-                ≈ USD${" "}
-                {convertBeCoinsToUSD(transaction.amount_becoin).toFixed(2)}
-              </Text>
-            </View>
-            <Text className="text-xs text-gray-400 text-center mt-4">
-              Saldo después de la operación: Usd$
-              {convertBeCoinsToUSD(Number(transaction.post_balance)).toFixed(2)}
-            </Text>
             <Text className="text-xs text-gray-400 text-center mt-4">
               ID: {transaction.id}
             </Text>

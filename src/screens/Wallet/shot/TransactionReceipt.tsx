@@ -1,9 +1,9 @@
 import { View, Text } from "react-native";
 import { Transaction } from "../types";
-import { getAmountPrefix } from "../components/TransactionCard";
 import { convertBeCoinsToUSD } from "src/constants";
 import { forwardRef } from "react";
 import { InfoItems } from "../hooks/useTransactionInfo";
+import { colors } from "src/design-system";
 type Props = {
   transaction: Transaction;
   info: InfoItems[] | null;
@@ -25,8 +25,15 @@ export const TransactionReceipt = forwardRef<View, Props>(
         </Text>
 
         <View className="items-center mt-4">
-          <Text className="text-3xl font-bold">
-            {getAmountPrefix(transaction.type)}
+          <Text
+            className="text-3xl font-bold"
+            style={{
+              color:
+                Number(transaction.amount_becoin) > 0
+                  ? colors.brand.green[500]
+                  : colors.semantic.error[500],
+            }}
+          >
             {transaction.amount_becoin} Becoin
           </Text>
           <Text className="text-sm text-gray-500">
@@ -34,17 +41,19 @@ export const TransactionReceipt = forwardRef<View, Props>(
           </Text>
         </View>
 
-        <View className="mt-4 gap-2">
-          <Text>Descripción: {transaction.type.description}</Text>
+        {info && (
+          <View className="mt-4 gap-2">
+            <Text>Descripción: {transaction.type.description}</Text>
 
-          {info?.map((item, index) => (
-            <Text key={index} className="text-base">
-              {item.cantidad} × {item.producto}
-            </Text>
-          ))}
-          <Text>Estado: {transaction.status.name}</Text>
-          <Text>ID: {transaction.id}</Text>
-        </View>
+            {info?.map((item, index) => (
+              <Text key={index} className="text-base">
+                {item.cantidad} × {item.producto}
+              </Text>
+            ))}
+            <Text>Estado: {transaction.status.name}</Text>
+            <Text>ID: {transaction.id}</Text>
+          </View>
+        )}
       </View>
     );
   },

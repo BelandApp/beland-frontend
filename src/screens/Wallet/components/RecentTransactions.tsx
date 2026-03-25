@@ -12,6 +12,9 @@ import { Transaction } from "../types";
 import { recentTransactionsStyles } from "../styles";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import TransactionModal from "../modal/transaction.modal";
+import { getBackendErrorMessage, WalletService } from "src/services";
+import { Wallet } from "src/services/WalletApiService";
+import { notify } from "src/hooks/notification/notify.external";
 
 interface RecentTransactionsProps {
   transactions: Transaction[];
@@ -26,6 +29,9 @@ export const RecentTransactions: React.FC<RecentTransactionsProps> = ({
   const [modalTransaction, setModalOpen] = useState<Transaction | null>(null);
   const handleViewAll = () => {
     navigate("WalletHistoryScreen");
+  };
+  const openModal = (transaction: Transaction) => {
+    setModalOpen(transaction);
   };
 
   if (isLoading) {
@@ -77,7 +83,7 @@ export const RecentTransactions: React.FC<RecentTransactionsProps> = ({
         <View style={recentTransactionsStyles.transactionsList}>
           {transactions.slice(0, 3).map((transaction) => (
             <Pressable
-              onPress={() => setModalOpen(transaction)}
+              onPress={() => openModal(transaction)}
               key={transaction.id}
             >
               <TransactionCard transaction={transaction} />

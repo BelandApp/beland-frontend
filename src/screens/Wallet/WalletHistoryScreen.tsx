@@ -15,11 +15,15 @@ import { Pressable } from "react-native";
 import { Transaction } from "./types";
 import TransactionModal from "./modal/transaction.modal";
 import { useCustomNavigation } from "src/hooks";
+import { getBackendErrorMessage, WalletService } from "src/services";
+import { Wallet } from "src/services/WalletApiService";
+import { notify } from "src/hooks/notification/notify.external";
 export default function WalletHistoryScreen() {
   const { transactions, loadingTransactions } = useWallet();
   const [searchText, setSearchText] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
   const [modalTransaction, setModalOpen] = useState<Transaction | null>(null);
+  const [walletTransfers, setWalletTransfers] = useState<Wallet | null>(null);
   const { navigate } = useCustomNavigation();
   const filterOptions = [
     { id: "all", label: "Todas", icon: "format-list-bulleted" },
@@ -29,9 +33,14 @@ export default function WalletHistoryScreen() {
     { id: "canje", label: "Canjes", icon: "swap-horizontal" },
     { id: "pago", label: "Compras", icon: "credit-card-minus" },
   ];
+
   const renderItemTransactions = ({ item }: { item: Transaction }) => {
     return (
-      <Pressable onPress={() => setModalOpen(item)}>
+      <Pressable
+        onPress={() => {
+          setModalOpen(item);
+        }}
+      >
         <TransactionCard transaction={item} />
       </Pressable>
     );
@@ -59,7 +68,7 @@ export default function WalletHistoryScreen() {
       />
 
       {/* Search and Filters */}
-      <View className="p-4">
+      <View className="px-4 pt-2">
         {/* Search Bar */}
         <SearchBarInput
           placeholder="Buscar transacciones..."
@@ -98,7 +107,7 @@ export default function WalletHistoryScreen() {
       </View>
 
       {/* Transactions List */}
-      <ScrollView className="flex-1 px-3">
+      <View className="flex-1 px-3">
         {loadingTransactions ? (
           <View className="items-center justify-center py-16">
             <ActivityIndicator size="large" color="#F88D2A" />
@@ -123,11 +132,12 @@ export default function WalletHistoryScreen() {
         ) : (
           <FlatList
             data={transactions}
+            showsVerticalScrollIndicator={false}
             renderItem={renderItemTransactions}
             keyExtractor={(item) => item.id}
           />
         )}
-      </ScrollView>
+      </View>
 
       {/* Summary */}
       {!loadingTransactions && filteredTransactions.length > 0 && (
@@ -140,7 +150,11 @@ export default function WalletHistoryScreen() {
       {modalTransaction !== null && (
         <TransactionModal
           transaction={modalTransaction}
-          onClose={() => setModalOpen(null)}
+          walletTransfers={walletTransfers}
+          onClose={() => {
+            setModalOpen(null);
+            setWalletTransfers(null);
+          }}
         />
       )}
     </View>
