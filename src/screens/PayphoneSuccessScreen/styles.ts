@@ -8,7 +8,7 @@ import { textAlign } from "html2canvas/dist/types/css/property-descriptors/text-
 export const styles = {
   card: {
     marginTop: 40,
-    boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.12)",
+    // boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.12)",
     border: `2px solid ${colors.belandGreen}`,
   },
 

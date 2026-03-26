@@ -6,6 +6,7 @@ import React from "react";
 import { styles } from "../styles";
 import type { TransactionStatus } from "../types";
 import { STATUS_MESSAGES } from "../constants";
+import { Text } from "react-native";
 
 interface StatusTitleProps {
   status: string;
@@ -25,8 +26,10 @@ export const StatusTitle: React.FC<StatusTitleProps> = ({
   const isError = !isSuccess;
 
   return (
-    <h2 style={isSuccess ? styles.title.success : styles.title.error}>
+    <Text
+      className={`font-semibold text-lg ${isSuccess ? "text-green-500" : "text-red-500"}`}
+    >
       {status}
-    </h2>
+    </Text>
   );
 };

@@ -12,6 +12,7 @@ import { WalletActions } from "../Wallet";
 import { colors } from "src/design-system";
 import { useCustomNavigation } from "src/hooks";
 import { Button } from "src/components";
+import { useAuth } from "src/context";
 
 export const HomeScreen = () => {
   const {
@@ -20,6 +21,7 @@ export const HomeScreen = () => {
     navigateDelivery,
     navigateFaq,
   } = useDashboardNavigation();
+  const { isAuthenticated } = useAuth();
   const { userStats } = useDashboardData();
   const { getBeCoinsInUSD } = useBeCoinsStore();
   const { loadingWallet: loading, transactions, walletData } = useWallet();
@@ -33,7 +35,6 @@ export const HomeScreen = () => {
     ? lockedBalance
     : undefined;
   const { mainWalletActions } = useWalletActions();
-  const { navigate } = useCustomNavigation();
   return (
     <View style={styles.container}>
       <ThemedHeader title="Inicio" logo />
@@ -43,10 +44,12 @@ export const HomeScreen = () => {
       >
         <View style={styles.content}>
           <HeroSection wallet={walletData} isLoading={loading} />
-          <WalletActions
-            actions={mainWalletActions}
-            backgroundColor={colors.brand.orange[500]}
-          />
+          {isAuthenticated && (
+            <WalletActions
+              actions={mainWalletActions}
+              backgroundColor={colors.brand.orange[500]}
+            />
+          )}
 
           <View style={styles.featuresGrid}>
             <FeatureCard

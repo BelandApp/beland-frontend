@@ -65,7 +65,7 @@ export function usePayphoneConfirmation() {
         // 1. Confirmar transacción con Payphone
         const payphoneData = await confirmPayphoneTransaction(
           Number(idParam),
-          clientTxIdParam
+          clientTxIdParam,
         );
 
         if (payphoneData.transactionStatus !== "Approved") {
@@ -76,7 +76,7 @@ export function usePayphoneConfirmation() {
         }
 
         // 2. Validar usuario
-        if (!user?.email || !user?.id) {
+        if (!user) {
           setStatus("Usuario no autenticado");
           setLoading(false);
           return;
@@ -112,7 +112,7 @@ export function usePayphoneConfirmation() {
             payphoneData,
             generatedClientTxId,
             finalToWalletId,
-            finalAmountPaymentId || undefined
+            finalAmountPaymentId || undefined,
           );
 
           console.log("[PayphoneSuccess] Payload pago QR:", payload);
@@ -121,11 +121,11 @@ export function usePayphoneConfirmation() {
           try {
             backendResult = await WalletService.createPurchaseRecharge(
               finalToWalletId,
-              payload
+              payload,
             );
             console.log(
               "[PayphoneSuccess] Respuesta backend pago QR:",
-              backendResult
+              backendResult,
             );
           } catch (error) {
             console.error("[PayphoneSuccess] Error en pago QR:", error);
@@ -138,14 +138,14 @@ export function usePayphoneConfirmation() {
           // Recarga
           const rechargeData = createRechargePayload(
             payphoneData,
-            generatedClientTxId
+            generatedClientTxId,
           );
 
           try {
             backendResult = await WalletService.createRecharge(rechargeData);
             console.log(
               "[PayphoneSuccess] Respuesta backend recarga:",
-              backendResult
+              backendResult,
             );
           } catch (error) {
             console.error("[PayphoneSuccess] Error en recarga:", error);
@@ -173,7 +173,7 @@ export function usePayphoneConfirmation() {
             const userCardPayload = createUserCardPayload(
               payphoneData,
               Number(user.id),
-              user.email
+              user.email,
             );
 
             const authToken = await TokenService.getToken();
@@ -203,7 +203,7 @@ export function usePayphoneConfirmation() {
           if (!finalToWalletId) {
             redirectAfterDelay(
               REDIRECT_URLS.WALLET_MAIN,
-              TIMING.REDIRECT_DELAY
+              TIMING.REDIRECT_DELAY,
             );
           }
         }, TIMING.SUCCESS_MESSAGE_DELAY);
@@ -212,7 +212,7 @@ export function usePayphoneConfirmation() {
         setStatus(
           error instanceof Error && error.message.includes("token")
             ? STATUS_MESSAGES.NO_PAYPHONE_TOKEN
-            : STATUS_MESSAGES.REJECTED_OR_CANCELLED
+            : STATUS_MESSAGES.REJECTED_OR_CANCELLED,
         );
         clearQRPaymentData();
       } finally {

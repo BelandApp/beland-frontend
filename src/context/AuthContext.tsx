@@ -17,34 +17,19 @@ import { clearStorage, resetStores } from "src/utils/logoutUtils";
 import { Wallet } from "src/services/WalletApiService";
 
 export type User = {
+  id: string;
   address: string;
-  auth0_id?: string;
-  cart: any;
   city?: string;
   country?: string;
   created_at?: string;
-  delete_at: string;
   email: string;
   full_name: string;
-  id: string;
   isBlocked: boolean;
-  oauth_provider: string;
   phone?: string;
   profile_picture_url?: string;
   profiles: string[];
-  username?: string;
-  state?: string;
-  zip_code?: string;
-  updated_at?: string;
-  role: {
-    name: string;
-    role_id: string;
-    description: string;
-    is_active: boolean;
-  };
   role_name?: string;
   total_weight_recycled: string;
-  wallet: Wallet;
 };
 
 export enum UserRole {
@@ -255,11 +240,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(newUser);
   };
   const isAuthenticated = !!user && !!token;
-
   const getUserRole = (): UserRole | null => {
     if (!user) return null;
 
-    const rawRole = user.role?.name;
+    const rawRole = user.role_name;
     return rawRole?.toUpperCase() as UserRole;
   };
 

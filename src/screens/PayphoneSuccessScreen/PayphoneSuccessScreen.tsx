@@ -16,7 +16,7 @@ import {
   RedirectMessage,
 } from "./components";
 import { styles } from "./styles";
-import { Button, Card, ThemedHeader } from "src/components";
+import { Button, Card, CustomLoader, ThemedHeader } from "src/components";
 import { View } from "react-native";
 import { useCustomNavigation } from "src/hooks";
 
@@ -24,17 +24,16 @@ export default function PayphoneSuccessScreen() {
   const { id, clientTxId, status, loading, walletBalance } =
     usePayphoneConfirmation();
   const { navigate } = useCustomNavigation();
-
   return (
     <View className="min-h-screen">
       <ThemedHeader canGoBack />
-      <div>
+      <View>
         <Card style={styles.card}>
           {/* Título */}
           <StatusTitle status={status} loading={loading} />
 
           {/* Spinner de carga */}
-          {loading && <LoadingSpinner />}
+          {loading && <CustomLoader />}
 
           {/* Estado de la transacción */}
           <StatusInfo status={status} loading={loading} />
@@ -53,7 +52,7 @@ export default function PayphoneSuccessScreen() {
           onPress={() => navigate("MainTabs", { screen: "Home" })}
           style={{ margin: "auto" }}
         />
-      </div>
+      </View>
     </View>
   );
 }

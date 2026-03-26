@@ -126,9 +126,9 @@ export const UserMenu: React.FC<UserMenuProps> = ({
         navigate("Orders", { screen: "OrdersList" });
         break;
       // DESACTIVADO TEMPORALMENTE POR DEFINIR FUNCIONALIDAD DE WALLET
-      // case "WALLET":
-      //   navigate("WalletSettingsScreen");
-      //   break;
+      case "WALLET":
+        navigate("WalletSettingsScreen");
+        break;
       case "FINANCESADMIN":
         navigate("UserDashboardScreen", { screen: "FinancesManagement" });
         break;
@@ -374,13 +374,14 @@ export const UserMenu: React.FC<UserMenuProps> = ({
           icon={<PackageIcon size={18} color="#333" />}
           className="justify-start"
         />
-        <Button
+        {/* TODO ARREGLAR WALLET SETTINGS */}
+        {/* <Button
           title="Mi wallet"
           onPress={() => handleNavigate("WALLET")}
           variant="box"
           icon={<Settings size={18} color="#333" />}
           className="justify-start"
-        />
+        /> */}
         <Button
           title="FAQs"
           onPress={() => handleNavigate("FAQ")}
@@ -390,7 +391,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
         />
         {/* Mostrar opción solo si el usuario NO es comerciante */}
 
-        {user.role.name !== "COMERCIO" && (
+        {/* {user.role.name !== "COMERCIO" && (
           <Button
             title="Hacerme comerciante"
             onPress={handleOpenOrganizationModal}
@@ -398,7 +399,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
             icon={<Store size={18} color="#333" />}
             className="justify-start"
           />
-        )}
+        )} */}
       </View>
     ),
     ADMIN: (
@@ -550,16 +551,14 @@ export const UserMenu: React.FC<UserMenuProps> = ({
                         styles.menuRoleBadge,
                         {
                           backgroundColor:
-                            user.role_name === "COMMERCE" ||
-                            user.role_name === "Comercio"
+                            user.role_name === "COMMERCE"
                               ? "#4CAF50"
                               : "#FF6B35",
                         },
                       ]}
                     >
                       <Text style={styles.menuRoleBadgeText}>
-                        {user.role_name === "COMMERCE" ||
-                        user.role_name === "Comercio"
+                        {user.role_name === "COMMERCE"
                           ? "Comerciante"
                           : user.role_name}
                       </Text>
