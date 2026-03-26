@@ -54,6 +54,8 @@ import FAQScreen from "src/screens/FAQ/FaqScreen";
 import { DashboardStackNavigator } from "./DashboardNavigator";
 import { GroupDetailScreen } from "src/screens/GroupDetailScreen";
 import TransferReceive from "src/screens/Wallet/TransferReceive";
+import { Guard } from "src/guard/GuardRole";
+import { WalletGuestScreen } from "src/screens/Wallet/guardScreen/WalletGuestScreen";
 
 export type RootStackParamList = {
   // Auth Screens
@@ -135,7 +137,19 @@ export const RootStackNavigator = () => {
       />
       <Stack.Screen name="CanjearScreen" component={CanjearScreen} />
 
-      <Stack.Screen name="SendScreen" component={SendScreen} />
+      <Stack.Screen name="SendScreen">
+        {(props) => (
+          <Guard
+            intent={{
+              screen: "SendScreen",
+              id: props.route.params.id,
+            }}
+            fallback={<WalletGuestScreen />}
+          >
+            <SendScreen {...props} />
+          </Guard>
+        )}
+      </Stack.Screen>
       <Stack.Screen
         name="WalletHistoryScreen"
         component={WalletHistoryScreen}
@@ -241,11 +255,19 @@ export const RootStackNavigator = () => {
         component={FAQScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen
-        name="TransferReceive"
-        component={TransferReceive}
-        options={{ headerShown: false }}
-      />
+      <Stack.Screen name="TransferReceive" options={{ headerShown: false }}>
+        {(props) => (
+          <Guard
+            intent={{
+              screen: "TransferReceive",
+              id: props.route.params.id,
+            }}
+            fallback={<WalletGuestScreen />}
+          >
+            <SendScreen {...props} />
+          </Guard>
+        )}
+      </Stack.Screen>
     </Stack.Navigator>
   );
 };

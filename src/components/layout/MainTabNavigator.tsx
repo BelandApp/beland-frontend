@@ -20,6 +20,8 @@ import {
 import EventsScreen from "src/screens/Events/EventsScreen";
 import { CustomTabBar } from "./customTabBar/CustomTabBar";
 import { ShoppingBag, TicketCheck } from "lucide-react-native";
+import { useAuth } from "src/context";
+import { WalletGuestScreen } from "src/screens/Wallet/guardScreen/WalletGuestScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -34,7 +36,7 @@ export const MainTabNavigator = () => {
     completeTour,
     skipTour,
   } = useOnboardingTour();
-
+  const { isAuthenticated } = useAuth();
   return (
     <>
       <Tab.Navigator
@@ -64,7 +66,7 @@ export const MainTabNavigator = () => {
 
         <Tab.Screen
           name="Wallet"
-          component={WalletScreen}
+          component={isAuthenticated ? WalletScreen : WalletGuestScreen}
           options={{
             headerShown: false,
             tabBarLabel: "Becoins",

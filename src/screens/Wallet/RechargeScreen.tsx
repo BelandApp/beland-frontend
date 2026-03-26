@@ -46,7 +46,6 @@ const BankDetailRow = ({ label, value, isCopyable = false }: any) => (
 
 export default function RechargeScreen() {
   const { navigate } = useCustomNavigation();
-  const { isAuthenticated } = useAuth();
 
   const {
     amount,
@@ -87,15 +86,6 @@ export default function RechargeScreen() {
     });
   };
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("MainTabs", { screen: "Wallet" });
-    }
-  }, [isAuthenticated]);
-
-  if (!isAuthenticated) {
-    return <CustomLoader />;
-  }
   return (
     <>
       <ThemedHeader

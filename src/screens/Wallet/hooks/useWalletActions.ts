@@ -67,7 +67,7 @@ export const useWalletActions = () => {
     icon: SendIcon,
     color: "#DC2626",
     bgColor: "#FEE2E2",
-    onPress: () => navigate("SendScreen"),
+    onPress: () => navigate("SendScreen", { id: "0" }),
   });
 
   // Acciones secundarias - sin historial ya que está integrado en la vista principal

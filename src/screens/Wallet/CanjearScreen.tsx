@@ -20,17 +20,8 @@ import { convertUSDToBeCoins } from "src/constants";
 import { useAuth } from "src/context";
 
 const CanjearScreen = () => {
-  const { goBack, navigate } = useCustomNavigation();
-  const { isAuthenticated } = useAuth();
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("MainTabs", { screen: "Wallet" });
-    }
-  }, [isAuthenticated]);
+  const { goBack } = useCustomNavigation();
 
-  if (!isAuthenticated) {
-    return <CustomLoader />;
-  }
   const {
     // Estados
     amount,

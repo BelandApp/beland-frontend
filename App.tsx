@@ -58,7 +58,10 @@ const AppContent = () => {
       const intent = await DeepLinkService.getIntent();
 
       if (intent) {
-        navigationRef.current?.navigate(intent.screen, intent.params);
+        navigationRef.current?.reset({
+          index: 0,
+          routes: [{ name: intent.screen, params: intent.params }],
+        });
         await DeepLinkService.clearIntent();
       }
     };

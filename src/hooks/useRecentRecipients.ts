@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { TransactionService, RecentRecipient } from "@services/core";
+import { useAuth } from "src/context";
 
 /**
  * Hook para obtener los contactos recientes a los que se ha transferido
  */
 export const useRecentRecipients = () => {
+  const { isAuthenticated } = useAuth();
   const [recipients, setRecipients] = useState<RecentRecipient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +30,7 @@ export const useRecentRecipients = () => {
   };
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     fetchRecipients();
   }, []);
 

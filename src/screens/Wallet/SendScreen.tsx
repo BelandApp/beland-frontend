@@ -20,8 +20,6 @@ import { getBackendErrorMessage } from "src/services";
 import RecentRecipients from "./components/RecentRecipients";
 import { ThemedHeader } from "src/components/shared/headers/Header";
 import { BeCoinIcon, Button, CustomLoader, WrapperModal } from "src/components";
-import { storage } from "src/stores";
-import { DeepLinkService } from "src/services/deepLink/deepLink.service";
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -37,7 +35,7 @@ type Tab = "amount" | "contacts";
 const SendScreen = ({ route }: { route: any }) => {
   const id = route.params?.id;
   const { navigate } = useCustomNavigation();
-  const { user, handleAuth0Login, isAuthenticated, status } = useAuth();
+  const { user, handleAuth0Login } = useAuth();
   const notify = useNotify();
 
   const { walletData, refreshAll } = useWallet();
@@ -102,24 +100,6 @@ const SendScreen = ({ route }: { route: any }) => {
     return beCoinsToUsd(walletData.balance);
   }, [walletData.balance, beCoinsToUsd]);
 
-  useEffect(() => {
-    if (id && !isAuthenticated && status === "unauthenticated") {
-      notify.confirm({
-        message: "Debes estar logueado para realizar transferencias",
-        onConfirm: async () => {
-          await DeepLinkService.setIntent({ screen: "Send", id });
-          navigate("Login");
-        },
-        onCancel: () => navigate("MainTabs", { screen: "Home" }),
-      });
-    } else if (!isAuthenticated) {
-      navigate("MainTabs", { screen: "Wallet" });
-    }
-  }, [isAuthenticated]);
-
-  if (!isAuthenticated) {
-    return <CustomLoader />;
-  }
   // Validar transferencia
   const validateTransfer = (): boolean => {
     const transferAmount = parseFloat(amountUsd);

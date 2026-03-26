@@ -14,29 +14,55 @@ import { Storage } from "src/services/auth/storage.service";
 import { getBackendErrorMessage } from "src/services";
 import { notify } from "src/hooks/notification/notify.external";
 import { clearStorage, resetStores } from "src/utils/logoutUtils";
+import { Wallet } from "src/services/WalletApiService";
 
 export type User = {
-  id: string;
+  address: string;
+  auth0_id?: string;
+  cart: any;
+  city?: string;
+  country?: string;
+  created_at?: string;
+  delete_at: string;
   email: string;
   full_name: string;
-  username?: string;
+  id: string;
+  isBlocked: boolean;
+  oauth_provider: string;
   phone?: string;
   profile_picture_url?: string;
-  country?: string;
-  city?: string;
+  profiles: string[];
+  username?: string;
   state?: string;
   zip_code?: string;
-  created_at?: string;
   updated_at?: string;
-  auth0_id?: string;
   role: {
     name: string;
     role_id: string;
     description: string;
+    is_active: boolean;
   };
   role_name?: string;
-  coins?: number;
+  total_weight_recycled: string;
+  wallet: Wallet;
 };
+
+export enum UserRole {
+  SUPERADMIN = "SUPERADMIN",
+  ADMIN = "ADMIN",
+  LEADER = "LEADER",
+  EMPRESA = "EMPRESA",
+  USER = "USER",
+}
+
+const rolePermissions: Record<UserRole, string[]> = {
+  SUPERADMIN: ["*"],
+  ADMIN: ["manage_users", "view_dashboard"],
+  LEADER: ["view_team"],
+  EMPRESA: ["manage_company"],
+  USER: ["basic_access"],
+};
+
 type StatusType = "checking" | "authenticated" | "unauthenticated" | "loading";
 type AuthContextType = {
   user: User | null;
@@ -49,10 +75,10 @@ type AuthContextType = {
   handleAuth0Login: () => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
-  canPerformAction: boolean;
   updateUser: (partial: Partial<User>) => void;
   reloadUser: () => void;
-  setUser: (user: User | null) => void; //TODO VER SI LO PODEMOS QUITAR PARA MAYOR SEGURIDAD
+  hasRole: (roles: UserRole | UserRole[]) => boolean | typeof rolePermissions;
+  getUserRole: () => UserRole | null;
   requireAuth: (action: () => void | Promise<void>) => Promise<void>; //TODO VER SI LO PODEMOS QUITAR
 };
 WebBrowser.maybeCompleteAuthSession();
@@ -227,7 +253,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(newUser);
   };
   const isAuthenticated = !!user && !!token;
-  const canPerformAction = isAuthenticated;
+
+  const getUserRole = (): UserRole | null => {
+    if (!user) return null;
+
+    const rawRole = user.role_name || user.role?.name;
+    return rawRole?.toUpperCase() as UserRole;
+  };
+
+  const hasRole = (roles: UserRole | UserRole[]) => {
+    if (!user) return false;
+
+    const userRole = getUserRole();
+    if (!userRole) return false;
+
+    if (Array.isArray(roles)) {
+      return roles.includes(userRole);
+    }
+
+    return userRole === roles;
+  };
+
+  const hasPermission = (permission: string) => {
+    const role = getUserRole();
+    if (!role) return false;
+
+    const permissions = rolePermissions[role];
+
+    return permissions.includes("*") || permissions.includes(permission);
+  };
 
   return (
     <AuthContext.Provider
@@ -239,11 +293,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         handleAuth0Login,
         logout,
         isAuthenticated,
-        canPerformAction,
         requireAuth,
-        setUser,
         updateUser,
         reloadUser,
+        hasRole,
+        getUserRole,
       }}
     >
       {children}

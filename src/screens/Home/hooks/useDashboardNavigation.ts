@@ -14,7 +14,7 @@ export const useDashboardNavigation = () => {
   };
 
   const navigateSend = () => {
-    navigate("SendScreen");
+    navigate("SendScreen", { id: "0" });
   };
 
   const navigateExchange = () => {
