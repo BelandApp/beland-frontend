@@ -160,7 +160,6 @@ export default function WalletHistoryScreen() {
       {modalTransaction !== null && (
         <TransactionModal
           transaction={modalTransaction}
-          walletTransfers={walletTransfers}
           onClose={() => {
             setModalOpen(null);
             setWalletTransfers(null);
