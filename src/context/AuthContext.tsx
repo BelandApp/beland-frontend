@@ -123,8 +123,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           await TokenService.clearToken();
           setStatus("unauthenticated");
         }
+      } else {
+        setStatus("unauthenticated");
       }
-      setStatus("unauthenticated");
     })();
   }, []);
 
