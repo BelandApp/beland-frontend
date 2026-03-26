@@ -107,6 +107,7 @@ export const AuthContext = createContext<AuthContextType | undefined>(
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  console.log("usuario:", user);
   const [token, setToken] = useState<string | null>(null);
   const [status, setStatus] = useState<StatusType>("checking");
   useEffect(() => {
@@ -258,7 +259,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const getUserRole = (): UserRole | null => {
     if (!user) return null;
 
-    const rawRole = user.role_name || user.role?.name;
+    const rawRole = user.role?.name;
     return rawRole?.toUpperCase() as UserRole;
   };
 
