@@ -68,7 +68,6 @@ export function usePayphoneConfirmation() {
         );
 
         if (payphoneData.transactionStatus !== "Approved") {
-          alert(payphoneData.transactionStatus);
           setStatus(STATUS_MESSAGES.REJECTED_OR_CANCELLED);
           clearQRPaymentData();
           setLoading(false);
@@ -148,13 +147,9 @@ export function usePayphoneConfirmation() {
               backendResult,
             );
           } catch (error: any) {
-            if (error.statusCode === 409) {
-              console.log("Error 409 recarga ya realizada");
-              setStatus(STATUS_MESSAGES.ALREADY_PROCESS);
-            }
             console.error("[PayphoneSuccess] Error en recarga:", error);
-            backendResult = null;
             setStatus(STATUS_MESSAGES.ALREADY_PROCESS);
+            backendResult = null;
             setLoading(false);
           }
         }
@@ -215,11 +210,16 @@ export function usePayphoneConfirmation() {
         }, TIMING.SUCCESS_MESSAGE_DELAY);
       } catch (error) {
         console.error("[PayphoneSuccess] Error general:", error);
-        setStatus(
-          error instanceof Error && error.message.includes("token")
-            ? STATUS_MESSAGES.NO_PAYPHONE_TOKEN
-            : STATUS_MESSAGES.REJECTED_OR_CANCELLED,
-        );
+        if (error instanceof Error && error.message.includes("token")) {
+          setStatus(STATUS_MESSAGES.NO_PAYPHONE_TOKEN);
+        } else if (
+          error instanceof Error &&
+          error.message.includes("procesada")
+        ) {
+          setStatus(STATUS_MESSAGES.ALREADY_PROCESS);
+        } else {
+          setStatus(STATUS_MESSAGES.REJECTED_OR_CANCELLED);
+        }
         clearQRPaymentData();
       } finally {
         clearQRPaymentData();
