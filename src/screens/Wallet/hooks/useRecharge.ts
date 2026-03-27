@@ -5,6 +5,7 @@ import { useThemedTabs } from "src/components";
 import { notify } from "src/hooks/notification/notify.external";
 import { BackendPaymentAccount, getBackendErrorMessage } from "src/services";
 import { CloudinaryService } from "src/services/cloudinary/cloudinary.service";
+import { generateClientTransactionId } from "src/screens/PayphoneSuccessScreen/utils/helpers";
 
 // Tipos
 export interface PaymentMethod {
@@ -177,10 +178,10 @@ export function useRecharge() {
       }
 
       localStorage.setItem("payphone_token", payphoneToken);
-
+      const clientTransactionId = generateClientTransactionId();
       const payphoneConfig = {
         token: payphoneToken,
-        clientTransactionId: `TX-${Date.now()}`,
+        clientTransactionId: clientTransactionId,
         amount: parseInt(amount) * 100,
         amountWithoutTax: parseInt(amount) * 100,
         currency: "USD",
