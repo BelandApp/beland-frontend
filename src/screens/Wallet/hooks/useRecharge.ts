@@ -6,10 +6,12 @@ import { notify } from "src/hooks/notification/notify.external";
 import { BackendPaymentAccount, getBackendErrorMessage } from "src/services";
 import { CloudinaryService } from "src/services/cloudinary/cloudinary.service";
 import { generateClientTransactionId } from "src/screens/PayphoneSuccessScreen/utils/helpers";
+import { usePayment } from "src/hooks/payment/usePayment.web";
+import { useAuth } from "src/context";
 
 // Tipos
 export interface PaymentMethod {
-  id: "PAYPHONE" | "BANK_TRANSFER";
+  id: "PAYPHONE" | "BANK_TRANSFER" | "STRIPE";
   name: string;
   icon: string;
   badge?: string;
@@ -40,22 +42,22 @@ export interface PaymentAccount {
   user_id: string;
 }
 // Constantes
-export const PRESET_AMOUNTS = [1, 2, 5, 10, 20];
+export const PRESET_AMOUNTS = [5, 10, 25, 100];
 
 export const PAYMENT_METHODS: PaymentMethod[] = [
   {
-    id: "PAYPHONE",
-    name: "Payphone",
+    id: "STRIPE",
+    name: "Tarjeta Crédito/Débito",
     icon: "card",
     badge: "Instantáneo",
     badgeColor: "green",
-    description: "Tarjeta Crédito/Débito",
+    description: "Visa / Mastercard",
   },
   {
     id: "BANK_TRANSFER",
     name: "Transferencia Bancaria",
     icon: "business",
-    badge: "1-2 días",
+    badge: "48 horas hábiles",
     badgeColor: "gray",
     description: "Operación manual",
   },
@@ -116,6 +118,7 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
   const normalizedAmount = paramsAmount ? Number(paramsAmount).toFixed(2) : "";
 
   const [amount, setAmount] = useState(normalizedAmount);
+  const { user } = useAuth();
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<PaymentMethodId | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -125,6 +128,7 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
   const usdAmount = Number(amount) || 0;
   const processingFee = 0;
   const totalAmount = usdAmount + processingFee;
+  const { pay } = usePayment();
 
   // Validación
   const isValid = amount && selectedPaymentMethod && Number(amount) > 0;
@@ -364,11 +368,18 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
 
   const handleProceedToPayment = async () => {
     if (!isValid) return;
-
+    if (!user) return;
     if (selectedPaymentMethod === "PAYPHONE") {
       await handlePayphonePayment();
     } else if (selectedPaymentMethod === "BANK_TRANSFER") {
       setShowBankTransferModal(true);
+    } else if (selectedPaymentMethod === "STRIPE") {
+      const result = await pay(Number(amount), user.id);
+      if (result.success) {
+        notify.info({ message: "Procesando el pago, te avisaremos" });
+      } else {
+        notify.error({ message: "No se pudo procesal el pago" });
+      }
     }
   };
 

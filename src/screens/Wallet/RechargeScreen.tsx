@@ -97,62 +97,33 @@ export const RechargeScreen = ({ route }: { route: any }) => {
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="py-8 px-4">
           {/* Card Principal */}
-          <View className="bg-white dark:bg-gray-800 rounded-3xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <View className="bg-white  rounded-3xl shadow-lg border border-gray-200  overflow-hidden">
             {/* Sección de Monto */}
             <View
               className="p-8 border-b border-gray-200 dark:border-gray-700"
               style={{ position: "relative" }}
             >
-              {/* Header con Saldo: pill centrado encima en móvil, alineado a la derecha en escritorio */}
-              <BeCoinsBalance
-                size="medium"
-                variant="header"
-                style={{ marginLeft: "auto" }}
-              />
-
-              {/* Input de Monto */}
-              <View className="mb-12">
-                <View className="flex-row items-center">
-                  <Text className="text-5xl text-gray-400 dark:text-gray-500 font-light">
-                    $
-                  </Text>
-                  <TextInput
-                    className="flex-1 text-7xl font-bold text-gray-900 dark:text-white ml-3"
-                    placeholder="0.00"
-                    placeholderTextColor="#D1D5DB"
-                    keyboardType="numeric"
-                    value={amount}
-                    onChangeText={handleAmountChange}
-                  />
-                  <View className="border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1 bg-gray-50 dark:bg-gray-700">
-                    <Text className="text-sm font-bold text-gray-400 dark:text-gray-500">
-                      USD
-                    </Text>
-                  </View>
-                </View>
-              </View>
-
               {/* Montos Rápidos */}
               <View>
-                <Text className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-4">
-                  Montos rápidos
+                <Text className=" font-semibold text-gray-800 uppercase tracking-wider mb-4">
+                  Selecciona el monto de monedas a comprar:
                 </Text>
                 <View className="flex-row gap-3">
                   {PRESET_AMOUNTS.map((presetAmount) => (
                     <TouchableOpacity
                       key={presetAmount}
                       onPress={() => handlePresetAmount(presetAmount)}
-                      className={`flex-1 py-3 rounded-xl border ${
+                      className={`flex-1 py-10 rounded-xl border ${
                         amount === presetAmount.toString()
                           ? "bg-orange-500 border-orange-500 shadow-lg"
-                          : "border-gray-200 dark:border-gray-700 active:border-orange-500"
+                          : "border-orange-200  active:border-orange-500"
                       }`}
                     >
                       <Text
                         className={`text-center text-base font-medium ${
                           amount === presetAmount.toString()
                             ? "text-white font-semibold"
-                            : "text-gray-600 dark:text-gray-300"
+                            : "text-gray-800 "
                         }`}
                       >
                         ${presetAmount}
@@ -164,7 +135,7 @@ export const RechargeScreen = ({ route }: { route: any }) => {
             </View>
 
             {/* Sección de Método de Pago */}
-            <View className="p-8 bg-gray-50/50 dark:bg-gray-800/20">
+            <View className="p-8 ">
               <Text className="text-lg font-bold text-gray-900 dark:text-white mb-6">
                 Método{PAYMENT_METHODS.length > 1 ? "s" : ""} de pago
               </Text>
