@@ -68,7 +68,7 @@ export function usePayphoneConfirmation() {
         );
 
         if (payphoneData.transactionStatus !== "Approved") {
-alert("Transaccion rechazada por payphone")
+          alert(payphoneData.transactionStatus);
           setStatus(STATUS_MESSAGES.REJECTED_OR_CANCELLED);
           clearQRPaymentData();
           setLoading(false);
@@ -143,12 +143,15 @@ alert("Transaccion rechazada por payphone")
 
           try {
             backendResult = await WalletService.createRecharge(rechargeData);
-alert(backendResult)
             console.log(
               "[PayphoneSuccess] Respuesta backend recarga:",
               backendResult,
             );
-          } catch (error) {
+          } catch (error: any) {
+            if (error.statusCode === 409) {
+              console.log("Error 409 recarga ya realizada");
+              setStatus(STATUS_MESSAGES.ALREADY_PROCESS);
+            }
             console.error("[PayphoneSuccess] Error en recarga:", error);
             backendResult = null;
             setStatus(STATUS_MESSAGES.ALREADY_PROCESS);
@@ -230,7 +233,7 @@ alert(backendResult)
       setStatus(STATUS_MESSAGES.INVALID_URL_PARAMS);
       setLoading(false);
     }
-  }, [user]);
+  }, []);
 
   return {
     id,

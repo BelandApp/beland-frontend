@@ -20,7 +20,6 @@ import { Button, Card, CustomLoader, ThemedHeader } from "src/components";
 import { View } from "react-native";
 import { useCustomNavigation } from "src/hooks";
 import { PhoneCall } from "lucide-react-native";
-import { openWhatsapp } from "src/utils/contactLink";
 import { DIEGO_NUMBER, shareTextOnWhatsApp } from "src/utils/shareHelper";
 import { STATUS_MESSAGES } from "./constants";
 
