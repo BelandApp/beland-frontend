@@ -23,10 +23,9 @@ import {
   redirectAfterDelay,
 } from "../utils/helpers";
 import { STATUS_MESSAGES, TIMING, REDIRECT_URLS } from "../constants";
-import type { TransactionStatus } from "../types";
 
 export function usePayphoneConfirmation() {
-  const { user } = useAuth();
+  const { user, status: userStatus } = useAuth();
 
   const [id, setId] = useState<string | null>(null);
   const [clientTxId, setClientTxId] = useState<string | null>(null);
@@ -76,7 +75,7 @@ export function usePayphoneConfirmation() {
         }
 
         // 2. Validar usuario
-        if (!user) {
+        if (!user && userStatus === "unauthenticated") {
           setStatus("Usuario no autenticado");
           setLoading(false);
           return;
@@ -88,7 +87,7 @@ export function usePayphoneConfirmation() {
           const wallet = await WalletService.getCurrentUserWallet();
           walletId = wallet?.id;
         } catch (e) {
-          setStatus(STATUS_MESSAGES.REJECTED_OR_CANCELLED);
+          setStatus(STATUS_MESSAGES.NO_WALLET);
           setLoading(false);
           return;
         }
@@ -168,11 +167,11 @@ export function usePayphoneConfirmation() {
         }
 
         // 8. Guardar tarjeta si viene cardToken
-        if (payphoneData.cardToken) {
+        if (payphoneData.cardToken && user) {
           try {
             const userCardPayload = createUserCardPayload(
               payphoneData,
-              Number(user.id),
+              user.id,
               user.email,
             );
 

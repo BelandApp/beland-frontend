@@ -90,7 +90,7 @@ export function encryptCardHolder(cardHolder: string): string {
  */
 export async function confirmPayphoneTransaction(
   id: number,
-  clientTxId: string
+  clientTxId: string,
 ): Promise<PayphoneConfirmResponse> {
   const payphoneToken = localStorage.getItem(LOCAL_STORAGE_KEYS.PAYPHONE_TOKEN);
 
@@ -119,7 +119,7 @@ export async function confirmPayphoneTransaction(
  */
 export function createRechargePayload(
   payphoneData: PayphoneConfirmResponse,
-  clientTransactionId: string
+  clientTransactionId: string,
 ): BackendRechargePayload {
   const amountUsd = Number(payphoneData.amount) / 100;
 
@@ -138,7 +138,7 @@ export function createPaymentPayload(
   payphoneData: PayphoneConfirmResponse,
   clientTransactionId: string,
   walletId: string,
-  amountPaymentId?: string
+  amountPaymentId?: string,
 ): BackendPaymentPayload {
   const basePayload = createRechargePayload(payphoneData, clientTransactionId);
 
@@ -158,13 +158,13 @@ export function createPaymentPayload(
  * Guarda el payload en sessionStorage para debugging
  */
 export function savePayloadToSessionStorage(
-  payload: BackendPaymentPayload
+  payload: BackendPaymentPayload,
 ): void {
   if (typeof window !== "undefined" && window.sessionStorage) {
     try {
       window.sessionStorage.setItem(
         SESSION_STORAGE_KEYS.BACKEND_QR_PAYLOAD,
-        JSON.stringify(payload)
+        JSON.stringify(payload),
       );
     } catch (e) {
       console.warn("No se pudo guardar el payload en sessionStorage", e);
@@ -180,7 +180,7 @@ export function saveBackendResponseToSessionStorage(response: any): void {
     try {
       window.sessionStorage.setItem(
         SESSION_STORAGE_KEYS.BACKEND_QR_RESPONSE,
-        JSON.stringify(response)
+        JSON.stringify(response),
       );
     } catch (e) {
       console.warn("No se pudo guardar la respuesta en sessionStorage", e);
@@ -193,8 +193,8 @@ export function saveBackendResponseToSessionStorage(response: any): void {
  */
 export function createUserCardPayload(
   payphoneData: PayphoneConfirmResponse,
-  userId: number,
-  email: string
+  userId: string,
+  email: string,
 ): UserCardPayload {
   const encryptedCardHolder = encryptCardHolder(payphoneData.cardHolder || "");
 
