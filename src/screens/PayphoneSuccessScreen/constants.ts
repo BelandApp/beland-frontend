@@ -27,6 +27,7 @@ export const API_ENDPOINTS = {
 
 // Transaction Status Messages
 export const STATUS_MESSAGES = {
+  ALREADY_PROCESS: "Ya fue procesado correctamente la recarga",
   PENDING: "Pendiente",
   PAYMENT_SUCCESS: "Pago exitoso",
   RECHARGE_SUCCESS: "Recarga exitosa",

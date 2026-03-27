@@ -149,6 +149,8 @@ export function usePayphoneConfirmation() {
           } catch (error) {
             console.error("[PayphoneSuccess] Error en recarga:", error);
             backendResult = null;
+            setStatus(STATUS_MESSAGES.ALREADY_PROCESS);
+            setLoading(false);
           }
         }
 
@@ -215,6 +217,7 @@ export function usePayphoneConfirmation() {
         );
         clearQRPaymentData();
       } finally {
+        clearQRPaymentData();
         setLoading(false);
       }
     }
