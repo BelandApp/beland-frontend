@@ -83,7 +83,7 @@ const PaymentScreen: React.FC = () => {
   // Estados principales
   const [selectedMethod, setSelectedMethod] = useState<
     "payphone" | "becoin" | "bank_transfer"
-  >("payphone");
+  >("becoin");
   const [showBankTransferModal, setShowBankTransferModal] = useState(false);
   const [appliedRedemption, setAppliedRedemption] = useState<
     Redemption | RealUserResource | null
