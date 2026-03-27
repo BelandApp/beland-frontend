@@ -93,7 +93,7 @@ export function usePayphoneConfirmation() {
         }
 
         // 4. Preparar datos de transacción
-        const generatedClientTxId = generateClientTransactionId();
+
         const amountUsd = Number(payphoneData.amount) / 100;
 
         if (!validateAmount(amountUsd)) {
@@ -109,7 +109,6 @@ export function usePayphoneConfirmation() {
           // Pago QR
           const payload = createPaymentPayload(
             payphoneData,
-            generatedClientTxId,
             finalToWalletId,
             finalAmountPaymentId || undefined,
           );
@@ -135,10 +134,7 @@ export function usePayphoneConfirmation() {
           clearQRPaymentData();
         } else {
           // Recarga
-          const rechargeData = createRechargePayload(
-            payphoneData,
-            generatedClientTxId,
-          );
+          const rechargeData = createRechargePayload(payphoneData);
 
           try {
             backendResult = await WalletService.createRecharge(rechargeData);

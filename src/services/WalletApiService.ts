@@ -30,7 +30,7 @@ export interface Wallet {
 export interface RechargeRequest {
   amountUsd: number;
   referenceCode: string;
-  clientTransactionId: string;
+  clientTransactionId: number;
   payphone_transactionId: number;
 }
 
@@ -207,7 +207,7 @@ class WalletServiceClass extends CoreApiService {
       amountUsd: number;
       referenceCode: string;
       payphone_transactionId: number;
-      clientTransactionId: string;
+      clientTransactionId: number;
       wallet_id: string;
       amount_payment_id?: string;
     },
@@ -430,7 +430,7 @@ class WalletServiceClass extends CoreApiService {
       amountUsd: amountUsd,
       referenceCode: referenceCode,
       payphone_transactionId: Date.now(),
-      clientTransactionId: clientTransactionId,
+      clientTransactionId: Number(clientTransactionId),
     };
 
     return this.createRecharge(rechargeData);
@@ -464,7 +464,7 @@ class WalletServiceClass extends CoreApiService {
       amountUsd: amountNum,
       referenceCode: `RCH-${Date.now()}`,
       payphone_transactionId: Date.now(),
-      clientTransactionId: clientTransactionId,
+      clientTransactionId: Number(clientTransactionId),
     };
 
     return this.createRecharge(payload);
