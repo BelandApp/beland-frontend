@@ -165,7 +165,7 @@ export default function RechargeScreen() {
             {/* Sección de Método de Pago */}
             <View className="p-8 bg-gray-50/50 dark:bg-gray-800/20">
               <Text className="text-lg font-bold text-gray-900 dark:text-white mb-6">
-                Método de pago
+                Método{PAYMENT_METHODS.length > 1 ? "s" : ""} de pago
               </Text>
 
               {/* Lista de Métodos de Pago */}

@@ -45,11 +45,11 @@ export const PRESET_AMOUNTS = [1, 2, 5, 10, 20];
 export const PAYMENT_METHODS: PaymentMethod[] = [
   {
     id: "PAYPHONE",
-    name: "Tarjeta Crédito/Débito",
+    name: "Payphone",
     icon: "card",
     badge: "Instantáneo",
     badgeColor: "green",
-    description: "Visa / Mastercard ",
+    description: "Tarjeta Crédito/Débito",
   },
   {
     id: "BANK_TRANSFER",
@@ -57,7 +57,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     icon: "business",
     badge: "1-2 días",
     badgeColor: "gray",
-    description: "Sin comisiones",
+    description: "Operación manual",
   },
 ];
 type PaymentMethodId = PaymentMethod["id"];
