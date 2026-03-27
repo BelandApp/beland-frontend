@@ -92,7 +92,6 @@ export const AuthContext = createContext<AuthContextType | undefined>(
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  console.log("usuario:", user);
   const [token, setToken] = useState<string | null>(null);
   const [status, setStatus] = useState<StatusType>("checking");
   useEffect(() => {

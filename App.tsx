@@ -7,7 +7,6 @@ import { View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import * as NavigationBar from "expo-navigation-bar";
 import { setStatusBarHidden } from "expo-status-bar";
-
 import {
   NavigationContainer,
   NavigationContainerRef,
@@ -18,7 +17,6 @@ import {
   RootStackNavigator,
   RootStackParamList,
 } from "./src/components/layout/RootStackNavigator";
-import { FloatingQRButton } from "./src/components/ui/FloatingQRButton";
 import { useAuth, AuthProvider } from "src/context";
 import { TokenService } from "src/services/auth/token.service";
 import { SocketService } from "src/services/SocketService";
@@ -36,6 +34,7 @@ import Toast from "react-native-toast-message";
 import { ErrorBoundary } from "src/components/layout/ErrorBoundary";
 import { TooltipProvider } from "src/components/shared/tooltip/Tooltip.portal";
 import { DeepLinkService } from "src/services/deepLink/deepLink.service";
+import { StripeProviderWrapper } from "src/providers/stripe.provider";
 
 const AppContent = () => {
   const { user, isAuthenticated } = useAuth();
@@ -188,16 +187,18 @@ const App = () => {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <NotificationProvider>
-          {/* <SocketStatus /> */}
-          <Toast config={toastConfig} />
-          <ErrorBoundary>
-            <TooltipProvider>
-              <AppContent />
-            </TooltipProvider>
-          </ErrorBoundary>
-          <GlobalNotification />
-        </NotificationProvider>
+        <StripeProviderWrapper>
+          <NotificationProvider>
+            {/* <SocketStatus /> */}
+            <Toast config={toastConfig} />
+            <ErrorBoundary>
+              <TooltipProvider>
+                <AppContent />
+              </TooltipProvider>
+            </ErrorBoundary>
+            <GlobalNotification />
+          </NotificationProvider>
+        </StripeProviderWrapper>
       </AuthProvider>
     </SafeAreaProvider>
   );
