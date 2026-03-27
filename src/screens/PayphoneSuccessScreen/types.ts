@@ -33,7 +33,7 @@ export interface BackendRechargePayload {
   amountUsd: number;
   referenceCode: string;
   payphone_transactionId: number;
-  clientTransactionId: number;
+  clientTransactionId: string;
 }
 
 export interface BackendPaymentPayload extends BackendRechargePayload {

@@ -110,6 +110,7 @@ export function usePayphoneConfirmation() {
           const payload = createPaymentPayload(
             payphoneData,
             finalToWalletId,
+            clientTxIdParam,
             finalAmountPaymentId || undefined,
           );
 
@@ -134,7 +135,10 @@ export function usePayphoneConfirmation() {
           clearQRPaymentData();
         } else {
           // Recarga
-          const rechargeData = createRechargePayload(payphoneData);
+          const rechargeData = createRechargePayload(
+            payphoneData,
+            clientTxIdParam,
+          );
 
           try {
             backendResult = await WalletService.createRecharge(rechargeData);

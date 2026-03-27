@@ -119,6 +119,7 @@ export async function confirmPayphoneTransaction(
  */
 export function createRechargePayload(
   payphoneData: PayphoneConfirmResponse,
+  clientTxIdParam: string,
 ): BackendRechargePayload {
   const amountUsd = Number(payphoneData.amount) / 100;
 
@@ -126,7 +127,7 @@ export function createRechargePayload(
     amountUsd,
     referenceCode: payphoneData.reference,
     payphone_transactionId: payphoneData.transactionId,
-    clientTransactionId: payphoneData.transactionId,
+    clientTransactionId: clientTxIdParam,
   };
 }
 
@@ -136,9 +137,10 @@ export function createRechargePayload(
 export function createPaymentPayload(
   payphoneData: PayphoneConfirmResponse,
   walletId: string,
+  clientTxIdParam: string,
   amountPaymentId?: string,
 ): BackendPaymentPayload {
-  const basePayload = createRechargePayload(payphoneData);
+  const basePayload = createRechargePayload(payphoneData, clientTxIdParam);
 
   const payload: BackendPaymentPayload = {
     ...basePayload,
