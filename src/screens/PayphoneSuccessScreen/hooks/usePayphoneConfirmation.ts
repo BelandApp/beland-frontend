@@ -68,6 +68,7 @@ export function usePayphoneConfirmation() {
         );
 
         if (payphoneData.transactionStatus !== "Approved") {
+alert(payphondata.transactionStatus)
           setStatus(STATUS_MESSAGES.REJECTED_OR_CANCELLED);
           clearQRPaymentData();
           setLoading(false);
@@ -142,6 +143,7 @@ export function usePayphoneConfirmation() {
 
           try {
             backendResult = await WalletService.createRecharge(rechargeData);
+alert(backendResult)
             console.log(
               "[PayphoneSuccess] Respuesta backend recarga:",
               backendResult,
