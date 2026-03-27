@@ -68,7 +68,7 @@ export function usePayphoneConfirmation() {
         );
 
         if (payphoneData.transactionStatus !== "Approved") {
-alert(payphondata.transactionStatus)
+alert("Transaccion rechazada por payphone")
           setStatus(STATUS_MESSAGES.REJECTED_OR_CANCELLED);
           clearQRPaymentData();
           setLoading(false);
