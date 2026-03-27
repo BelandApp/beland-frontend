@@ -167,7 +167,10 @@ export const QRScannerScreen = () => {
           // COMENTADO PARA PRUEBRAS
 //return;
         }
+//apagamos la camara HECHO EN PRUEBAS
         setLoading(false);
+setScanned(true);
+    setIsActive(false);
         navigate("PaymentScreen", { paymentData });
       } catch (err: any) {
         setLoading(false);
