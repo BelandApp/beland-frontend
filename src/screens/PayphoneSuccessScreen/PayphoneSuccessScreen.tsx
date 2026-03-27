@@ -57,7 +57,7 @@ export default function PayphoneSuccessScreen() {
             onPress={() => navigate("MainTabs", { screen: "Home" })}
             style={{ margin: "auto" }}
           />
-          {isTrouble && (
+          {isTrouble && !loading && (
             <Button
               title="Tengo problemas"
               icon={<PhoneCall />}
