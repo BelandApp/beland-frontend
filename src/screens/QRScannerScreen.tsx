@@ -164,7 +164,8 @@ export const QRScannerScreen = () => {
             "El código QR escaneado pertenece a una cuenta administrativa y no corresponde a una máquina de cobro."
           );
           // No navegar al payment screen para evitar estados extraños
-          return;
+          // COMENTADO PARA PRUEBRAS
+//return;
         }
         setLoading(false);
         navigate("PaymentScreen", { paymentData });
