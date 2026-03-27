@@ -151,6 +151,7 @@ export function usePayphoneConfirmation() {
             setStatus(STATUS_MESSAGES.ALREADY_PROCESS);
             backendResult = null;
             setLoading(false);
+            return;
           }
         }
 
