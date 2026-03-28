@@ -362,6 +362,7 @@ export function useRecharge() {
     return () => {
       if (Platform.OS === "web") {
         clearPayphoneStorage();
+destroyPayphoneWidget();
       }
     };
   }, []);
