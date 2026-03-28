@@ -91,7 +91,7 @@ export default function RechargeScreen() {
       <ThemedHeader
         title="Recargar BeCoins"
         canGoBack
-        onBackPress={() => navigate("MainTabs", { screen: "Wallet" })}
+        onBackPress={() => {destroyPayphoneWidget();navigate("MainTabs", { screen: "Wallet" })}}
       />
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="py-8 px-4">
