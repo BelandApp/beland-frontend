@@ -24,7 +24,7 @@ import { ThemedHeader } from "src/components/shared/headers/Header";
 import { CustomLoader } from "src/components";
 const ReceiveScreen = () => {
   const { navigate } = useCustomNavigation();
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
 
   const { walletData, wallet, refreshAll } = useWallet();
   const { beCoinsToUsd } = useBeCoinsPrice();
@@ -85,15 +85,6 @@ const ReceiveScreen = () => {
     fetchQr();
   }, [user?.id]);
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("MainTabs", { screen: "Wallet" });
-    }
-  }, [isAuthenticated]);
-
-  if (!isAuthenticated) {
-    return <CustomLoader />;
-  }
   const handleCopy = async () => {
     if (alias) {
       await Clipboard.setStringAsync(alias);

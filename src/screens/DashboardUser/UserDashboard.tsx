@@ -1,5 +1,5 @@
 import React from "react";
-import { useAuth } from "src/context";
+import { useAuth, UserRole } from "src/context";
 import SuperAdminPanel from "./components/panels/SuperAdminPanel";
 import AdminPanel from "./components/panels/AdminPanel";
 import LeaderPanel from "./components/panels/LeaderPanel";
@@ -10,10 +10,10 @@ import { Button } from "src/components";
 import { useCustomNavigation } from "src/hooks";
 
 export const UserDashboard: React.FC = () => {
-  const { user, isLoading } = useAuth();
+  const { user, status, getUserRole } = useAuth();
   const { navigate } = useCustomNavigation();
 
-  if (isLoading) {
+  if (status === "loading") {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color="#007AFF" />
@@ -34,32 +34,23 @@ export const UserDashboard: React.FC = () => {
     );
   }
 
-  // Normalizar el rol: `user.role` puede ser string o un objeto { name }
-  const rawRole =
-    typeof (user as any).role === "string"
-      ? (user as any).role
-      : (user as any).role?.name ||
-        (user as any).role?.role_name ||
-        (user as any).role_name ||
-        "USER";
-
-  const role = rawRole.toString().toUpperCase();
+  // normalizar el Role
+  const role = getUserRole();
 
   switch (role) {
-    case "SUPERADMIN":
+    case UserRole.SUPERADMIN:
       return <SuperAdminPanel />;
-    case "ADMIN":
+    case UserRole.ADMIN:
       return <AdminPanel />;
-    case "LEADER":
+    case UserRole.LEADER:
       return <LeaderPanel />;
-    case "EMPRESA":
+    case UserRole.EMPRESA:
       return <EmpresaPanel />;
-    case "USER":
+    case UserRole.USER:
       return <UserPanel />;
     default:
       console.error("[UserDashboard] rol desconocido:", {
         role,
-        rawRole,
         user,
       });
       return (

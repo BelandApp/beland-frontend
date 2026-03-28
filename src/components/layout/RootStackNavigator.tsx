@@ -39,20 +39,13 @@ import {
   ConsumedEventScreen,
 } from "@screens/UseEventScreen";
 import { NewPaymentScreen, PaymentScreenRoute } from "@screens/NewPayment";
-import {
-  EventsManagementScreen,
-  UsersManagementScreen,
-  OrdersManagementScreen,
-  OrderAdminDetailScreen,
-  ProductsManagementScreen,
-} from "@screens/DashboardUser";
 // TODO arreglar pantallas en carpeta raiz
 import { HistoryScreen, RecyclingMapScreen } from "../../screens";
-import FinancesManagement from "src/screens/DashboardUser/FinanceManagementScreen";
-import { GroupsStackNavigator } from "./GroupsStackNavigator";
 import FAQScreen from "src/screens/FAQ/FaqScreen";
 import { DashboardStackNavigator } from "./DashboardNavigator";
 import { GroupDetailScreen } from "src/screens/GroupDetailScreen";
+import { Guard } from "src/guard/GuardRole";
+import { WalletGuestScreen } from "src/screens/Wallet/guardScreen/WalletGuestScreen";
 import TransferReceive from "src/screens/Wallet/TransferReceive";
 
 export type RootStackParamList = {
@@ -135,7 +128,19 @@ export const RootStackNavigator = () => {
       />
       <Stack.Screen name="CanjearScreen" component={CanjearScreen} />
 
-      <Stack.Screen name="SendScreen" component={SendScreen} />
+      <Stack.Screen name="SendScreen">
+        {(props) => (
+          <Guard
+            intent={{
+              screen: "SendScreen",
+              id: props.route.params.id,
+            }}
+            fallback={<WalletGuestScreen />}
+          >
+            <SendScreen {...props} />
+          </Guard>
+        )}
+      </Stack.Screen>
       <Stack.Screen
         name="WalletHistoryScreen"
         component={WalletHistoryScreen}
@@ -243,8 +248,8 @@ export const RootStackNavigator = () => {
       />
       <Stack.Screen
         name="TransferReceive"
-        component={TransferReceive}
         options={{ headerShown: false }}
+        component={TransferReceive}
       />
     </Stack.Navigator>
   );

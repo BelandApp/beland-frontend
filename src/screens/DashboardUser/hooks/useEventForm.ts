@@ -124,10 +124,10 @@ export function useEventForm(initial?: PartialEventForm) {
               "Debe haber al menos 1 entrada disponible";
           else delete newErrors.limit_tickets;
           break;
-        case "price_becoin":
+        case "price_dollar":
           if (value < 0)
-            newErrors.price_becoin = "El precio no puede ser negativo";
-          else delete newErrors.price_becoin;
+            newErrors.price_dollar = "El precio no puede ser negativo";
+          else delete newErrors.price_dollar;
           break;
       }
       setErrors(newErrors);
@@ -171,8 +171,8 @@ export function useEventForm(initial?: PartialEventForm) {
       }
       if (!form.limit_tickets || form.limit_tickets < 1)
         newErrors.limit_tickets = "Debe haber al menos 1 entrada disponible";
-      if (form.price_becoin !== undefined && form.price_becoin < 0)
-        newErrors.price_becoin = "El precio no puede ser negativo";
+      if (form.price_dollar !== undefined && form.price_dollar < 0)
+        newErrors.price_dollar = "El precio no puede ser negativo";
       setErrors(newErrors);
       return Object.keys(newErrors).length === 0;
     },

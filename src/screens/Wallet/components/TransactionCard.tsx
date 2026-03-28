@@ -1,40 +1,18 @@
 import React from "react";
 import { View, Text } from "react-native";
-import {
-  FontAwesome6,
-  Ionicons,
-  MaterialCommunityIcons,
-} from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Transaction } from "../types";
 import { Card } from "../../../components/ui/Card";
-import { BeCoinIcon } from "../../../components/icons/BeCoinIcon";
-import { User } from "src/context";
 import { DateToParagraphAndHour } from "src/utils/dateTransform";
 import { convertBeCoinsToUSD } from "src/constants";
-import { position } from "html2canvas/dist/types/css/property-descriptors/position";
-import {
-  borderBottomLeftRadius,
-  borderTopRightRadius,
-} from "html2canvas/dist/types/css/property-descriptors/border-radius";
 import { CheckCircle, Watch } from "lucide-react-native";
+import { colors } from "src/design-system";
+import { BeCoinIcon } from "src/components";
 
 interface TransactionCardProps {
   transaction: Transaction;
 }
-export const getAmountPrefix = (type: Transaction["type"]) => {
-  const { code } = type;
 
-  // 1. Códigos que siempre restan, sin importar el usuario
-  const globalNegatives = [
-    "DONATION_SEND",
-    "PURCHASE_EVENTPASS",
-    "PURCHASE_BELAND",
-    "SERVICE_BELAND",
-  ];
-  if (globalNegatives.includes(code)) return "-";
-
-  return "+";
-};
 export const TransactionCard: React.FC<TransactionCardProps> = ({
   transaction,
 }) => {
@@ -77,10 +55,20 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
         </View>
         <View style={styles.rightSection}>
           <View style={styles.amountContainer}>
-            <Text style={[styles.amount, { color: transaction.type.color }]}>
-              {getAmountPrefix(transaction.type)} $
-              {convertBeCoinsToUSD(transaction.amount_becoin).toFixed(2)}
+            <Text
+              style={[
+                styles.amount,
+                {
+                  color:
+                    Number(transaction.amount_becoin) > 0
+                      ? colors.brand.green[500]
+                      : colors.semantic.error[500],
+                },
+              ]}
+            >
+              {convertBeCoinsToUSD(transaction.amount_becoin).toFixed(2)} $
             </Text>
+            <BeCoinIcon />
           </View>
         </View>
       </View>

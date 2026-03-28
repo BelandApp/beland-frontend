@@ -57,7 +57,7 @@ export interface SessionStorageData {
 }
 
 export interface UserCardPayload {
-  user_id: number;
+  user_id: string;
   email: string;
   phoneNumber?: string;
   documentId?: string;

@@ -27,10 +27,12 @@ export const API_ENDPOINTS = {
 
 // Transaction Status Messages
 export const STATUS_MESSAGES = {
+  ALREADY_PROCESS: "Ya fue procesado correctamente la recarga",
   PENDING: "Pendiente",
   PAYMENT_SUCCESS: "Pago exitoso",
   RECHARGE_SUCCESS: "Recarga exitosa",
   REJECTED_OR_CANCELLED: "Transacción rechazada o cancelada",
+  NO_WALLET: "No pudimos encontrar tu billetera",
   NO_PAYPHONE_TOKEN: "No se encontró el token de Payphone en localStorage.",
   INVALID_AMOUNT: "El monto recibido de Payphone es inválido.",
   INVALID_URL_PARAMS: "Parámetros inválidos en la URL",

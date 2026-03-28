@@ -10,7 +10,6 @@ const MAPBOX_ACCESS_TOKEN =
 
 const GEOCODING_API = "https://api.mapbox.com/geocoding/v5/mapbox.places";
 const SEARCH_BOX_API = "https://api.mapbox.com/search/searchbox/v1";
-console.log("token", process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN);
 export type MapboxSuggestion = {
   id: string;
   name: string;
@@ -58,7 +57,7 @@ export async function searchAddressSuggestions(
     country?: string; // ISO 3166 alpha-2 country code (e.g., 'py', 'ar', 'br')
     language?: string; // BCP 47 language code (e.g., 'es', 'en')
     limit?: number;
-  }
+  },
 ): Promise<MapboxSuggestion[]> {
   if (!query || query.trim().length < 2) return [];
   if (!MAPBOX_ACCESS_TOKEN) {
@@ -79,7 +78,7 @@ export async function searchAddressSuggestions(
     if (options?.proximity) {
       params.append(
         "proximity",
-        `${options.proximity.longitude},${options.proximity.latitude}`
+        `${options.proximity.longitude},${options.proximity.latitude}`,
       );
     }
 
@@ -89,7 +88,7 @@ export async function searchAddressSuggestions(
     }
 
     const url = `${GEOCODING_API}/${encodeURIComponent(
-      query.trim()
+      query.trim(),
     )}.json?${params.toString()}`;
     const response = await fetch(url);
 
@@ -169,7 +168,7 @@ export async function searchAddressSuggestions(
  */
 export async function reverseGeocode(
   latitude: number,
-  longitude: number
+  longitude: number,
 ): Promise<MapboxPlace | null> {
   if (!MAPBOX_ACCESS_TOKEN) {
     console.warn("Mapbox access token is missing");
@@ -237,10 +236,9 @@ export async function forwardGeocode(
   options?: {
     country?: string;
     proximity?: { longitude: number; latitude: number };
-  }
+  },
 ): Promise<MapboxPlace | null> {
   if (!MAPBOX_ACCESS_TOKEN) {
-    
     console.warn("Mapbox access token is missing");
     return null;
   }
@@ -259,12 +257,12 @@ export async function forwardGeocode(
     if (options?.proximity) {
       params.append(
         "proximity",
-        `${options.proximity.longitude},${options.proximity.latitude}`
+        `${options.proximity.longitude},${options.proximity.latitude}`,
       );
     }
 
     const url = `${GEOCODING_API}/${encodeURIComponent(
-      address
+      address,
     )}.json?${params.toString()}`;
     const response = await fetch(url);
 

@@ -1,9 +1,9 @@
 import { storage } from "src/stores";
 
 const DEEPLINK_KEY = "pending_deeplink";
-type SetIntentType = {
+export type SetIntentType = {
   screen: string;
-  id: string;
+  id: string | undefined;
 };
 export const DeepLinkService = {
   async setIntent({ screen, id }: SetIntentType) {

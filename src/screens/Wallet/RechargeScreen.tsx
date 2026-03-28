@@ -46,7 +46,6 @@ const BankDetailRow = ({ label, value, isCopyable = false }: any) => (
 
 export default function RechargeScreen() {
   const { navigate } = useCustomNavigation();
-  const { isAuthenticated } = useAuth();
 
   const {
     amount,
@@ -87,21 +86,18 @@ export default function RechargeScreen() {
     });
   };
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("MainTabs", { screen: "Wallet" });
-    }
-  }, [isAuthenticated]);
-
-  if (!isAuthenticated) {
-    return <CustomLoader />;
-  }
   return (
     <>
       <ThemedHeader
         title="Recargar BeCoins"
         canGoBack
-        onBackPress={() => navigate("MainTabs", { screen: "Wallet" })}
+        onBackPress={() => {
+  destroyPayphoneWidget();
+
+  setTimeout(() => {
+    navigate("MainTabs", { screen: "Wallet" });
+  }, 0);
+}}
       />
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="py-8 px-4">
@@ -175,7 +171,7 @@ export default function RechargeScreen() {
             {/* Sección de Método de Pago */}
             <View className="p-8 bg-gray-50/50 dark:bg-gray-800/20">
               <Text className="text-lg font-bold text-gray-900 dark:text-white mb-6">
-                Método de pago
+                Método{PAYMENT_METHODS.length > 1 ? "s" : ""} de pago
               </Text>
 
               {/* Lista de Métodos de Pago */}

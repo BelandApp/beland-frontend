@@ -5,6 +5,7 @@ import { useThemedTabs } from "src/components";
 import { notify } from "src/hooks/notification/notify.external";
 import { BackendPaymentAccount, getBackendErrorMessage } from "src/services";
 import { CloudinaryService } from "src/services/cloudinary/cloudinary.service";
+import { generateClientTransactionId } from "src/screens/PayphoneSuccessScreen/utils/helpers";
 
 // Tipos
 export interface PaymentMethod {
@@ -44,11 +45,11 @@ export const PRESET_AMOUNTS = [1, 2, 5, 10, 20];
 export const PAYMENT_METHODS: PaymentMethod[] = [
   {
     id: "PAYPHONE",
-    name: "Tarjeta Crédito/Débito",
+    name: "Payphone",
     icon: "card",
     badge: "Instantáneo",
     badgeColor: "green",
-    description: "Visa / Mastercard ",
+    description: "Tarjeta Crédito/Débito",
   },
   {
     id: "BANK_TRANSFER",
@@ -56,7 +57,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     icon: "business",
     badge: "1-2 días",
     badgeColor: "gray",
-    description: "Sin comisiones",
+    description: "Operación manual",
   },
 ];
 type PaymentMethodId = PaymentMethod["id"];
@@ -177,10 +178,10 @@ export function useRecharge() {
       }
 
       localStorage.setItem("payphone_token", payphoneToken);
-
+      const clientTransactionId = generateClientTransactionId();
       const payphoneConfig = {
         token: payphoneToken,
-        clientTransactionId: `TX-${Date.now()}`,
+        clientTransactionId: clientTransactionId,
         amount: parseInt(amount) * 100,
         amountWithoutTax: parseInt(amount) * 100,
         currency: "USD",
@@ -361,6 +362,7 @@ export function useRecharge() {
     return () => {
       if (Platform.OS === "web") {
         clearPayphoneStorage();
+destroyPayphoneWidget();
       }
     };
   }, []);

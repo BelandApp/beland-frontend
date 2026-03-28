@@ -4,6 +4,7 @@
 
 import React from "react";
 import { styles } from "../styles";
+import { View, Text } from "react-native";
 
 interface TransactionInfoProps {
   id: string | null;
@@ -16,16 +17,20 @@ export const TransactionInfo: React.FC<TransactionInfoProps> = ({
 }) => {
   return (
     <>
-      <div style={styles.infoSection}>
-        <span style={styles.infoLabel}>ID de transacción:</span>
+      <View style={styles.infoSection}>
+        <Text className="text-beland-green-400 font-medium">
+          ID de transacción:
+        </Text>
         <br />
-        <span style={styles.infoValue}>{id ?? "No disponible"}</span>
-      </div>
-      <div style={styles.infoSection}>
-        <span style={styles.infoLabel}>Client Transaction ID:</span>
+        <Text style={styles.infoValue}>{id ?? "No disponible"}</Text>
+      </View>
+      <View style={styles.infoSection}>
+        <Text className="text-beland-green-400 font-medium">
+          Client Transaction ID:
+        </Text>
         <br />
-        <span style={styles.infoValue}>{clientTxId ?? "No disponible"}</span>
-      </div>
+        <Text style={styles.infoValue}>{clientTxId ?? "No disponible"}</Text>
+      </View>
     </>
   );
 };

@@ -1,4 +1,4 @@
-import { View, Text, Image } from "react-native";
+import { View, Text, Image, Dimensions } from "react-native";
 import React, { useEffect } from "react";
 import {
   BeCoinIcon,
@@ -7,7 +7,7 @@ import {
   CustomLoader,
   ThemedHeader,
 } from "src/components";
-import { useCustomNavigation } from "src/hooks";
+import { useCustomNavigation, useResponsiveLayout } from "src/hooks";
 import { useTransferReceive } from "./hooks/useTransferReceive";
 import { RouteProp, useRoute, useRoutePath } from "@react-navigation/native";
 import { convertBeCoinsToUSD } from "src/constants";
@@ -24,7 +24,7 @@ export const TransferReceive = () => {
   const { navigate } = useCustomNavigation();
   const { isAuthenticated, status } = useAuth();
   const { transfer, loading, error } = useTransferReceive(id);
-  console.log(status, isAuthenticated);
+  const { screenHeight } = useResponsiveLayout();
   useEffect(() => {
     if (!isAuthenticated && status === "unauthenticated") {
       notify.confirm({
@@ -94,33 +94,43 @@ export const TransferReceive = () => {
         canGoBack
         onBackPress={() => navigate("MainTabs", { screen: "Home" })}
       />
-      <Card>
-        <View className="flex-row gap-1 items-center mx-auto">
-          <Image
-            source={{ uri: transfer.related_wallet.user?.profile_picture_url }}
-            style={{ width: 20, height: 20, borderRadius: 50 }}
-          />
-          <Text className="text-xl font-bold italic ">
-            {transfer.related_wallet.user?.full_name}
+      <Card
+        style={{
+          height: screenHeight - 200,
+        }}
+      >
+        <View className="justify-between h-full">
+          <View className="md:flex-row gap-1 items-center mx-auto">
+            <Image
+              source={{
+                uri: transfer.related_wallet.user?.profile_picture_url,
+              }}
+              style={{ width: 20, height: 20, borderRadius: 50 }}
+            />
+            <Text className="text-xl font-bold italic ">
+              {transfer.related_wallet.user?.full_name}
+            </Text>
+            <Text className="text-lg font-semibold">
+              regaló una GiftCard a {transfer.wallet.user?.full_name} de:
+            </Text>
+          </View>
+          <Text className="text-slate-900 font-semibold text-center text-2xl my-4">
+            USD$ {convertBeCoinsToUSD(transfer.amount_becoin)}
           </Text>
-          <Text className="text-lg font-semibold"> te transfirió:</Text>
+          <View className="flex-row gap-1 items-center mx-auto">
+            <Text>Equivale a {transfer.amount_becoin}</Text>
+            <BeCoinIcon />
+          </View>
+          <Text className="text-slate-400 text-center mt-2">
+            {DateToParagraphAndHour(transfer.created_at)}
+          </Text>
+          <View className="w-full h-0.5 bg-slate-200 my-4" />
+          <Button
+            title="Usar mis Becoins"
+            onPress={() => navigate("MainTabs", { screen: "Catalog" })}
+            className="mx-auto"
+          />
         </View>
-        <Text className="text-slate-900 font-semibold text-center text-2xl my-4">
-          USD$ {convertBeCoinsToUSD(transfer.amount_becoin)}
-        </Text>
-        <View className="flex-row gap-1 items-center mx-auto">
-          <Text>Equivale a {transfer.amount_becoin}</Text>
-          <BeCoinIcon />
-        </View>
-        <Text className="text-slate-400 text-center">
-          {DateToParagraphAndHour(transfer.created_at)}
-        </Text>
-        <View className="w-full h-0.5 bg-slate-200 my-2" />
-        <Button
-          title="Usar mis Becoins"
-          onPress={() => navigate("MainTabs", { screen: "Catalog" })}
-          className="mx-auto"
-        />
       </Card>
     </React.Fragment>
   );

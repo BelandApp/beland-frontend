@@ -1,9 +1,16 @@
 import { useState, useEffect } from "react";
 import { Alert } from "react-native";
 import { PaymentMethod, PaymentPreferencesData } from "../types";
-import { WithdrawAccount, WithdrawService } from "src/services";
+import {
+  getBackendErrorMessage,
+  WalletService,
+  WithdrawAccount,
+  WithdrawService,
+} from "src/services";
 import { notify } from "src/hooks/notification/notify.external";
 import useAddWithdrawAccount from "./useAddWithdrawAccount";
+import { TransactionService } from "src/services/TransactionApiService";
+import { Wallet } from "src/services/WalletApiService";
 
 export type ModalsAccountType = "addAccount" | "detailAccount" | "none";
 
@@ -12,7 +19,6 @@ export const usePaymentPreferences = () => {
   const [account, setAccount] = useState<WithdrawAccount | null>(null);
   const [loading, setLoading] = useState(false);
   const [modal, setModal] = useState<ModalsAccountType>("none");
-  const [showAccountDetails, setShowAccountDetails] = useState(false);
 
   const loadAccounts = async (force?: boolean) => {
     if (accounts && !force) return;
@@ -29,6 +35,7 @@ export const usePaymentPreferences = () => {
   useEffect(() => {
     loadAccounts();
   }, []);
+
   const openModal = (type: ModalsAccountType, item?: WithdrawAccount) => {
     if (item) {
       setAccount(item);
@@ -112,7 +119,6 @@ export const usePaymentPreferences = () => {
     loadAccounts,
     loading,
     modal,
-    showAccountDetails,
     //handlers
     openModal,
     handleDelete,

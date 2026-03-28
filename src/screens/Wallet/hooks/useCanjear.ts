@@ -26,7 +26,7 @@ export const useCanjear = () => {
   const [withdrawAccounts, setWithdrawAccounts] = useState<WithdrawAccount[]>(
     [],
   );
-  const [loadingAccounts, setLoadingAccounts] = useState(true);
+  const [loadingAccounts, setLoadingAccounts] = useState(false);
   const [showAccountSelector, setShowAccountSelector] = useState(false);
 
   const { balance, locked_balance, setBalance, getBeCoinsInUSD } =
@@ -35,6 +35,7 @@ export const useCanjear = () => {
 
   /** ---------------- LOAD ACCOUNTS ---------------- */
   useEffect(() => {
+    if (!user) return;
     loadWithdrawAccounts();
   }, []);
 

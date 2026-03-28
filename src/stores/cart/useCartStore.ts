@@ -189,8 +189,6 @@ export const useCartStore = create<CartStore>((set, get) => ({
         }
       }
 
-      console.log("serverCart", serverCart);
-
       // Handle case where cart has no items (newly created cart)
       const serverItems = (serverCart.items || []).map((item: any) => ({
         id: item.product_id,

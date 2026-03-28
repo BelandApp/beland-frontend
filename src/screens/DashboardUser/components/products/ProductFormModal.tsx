@@ -4,12 +4,8 @@ import {
   Text,
   StyleSheet,
   Modal,
-  ScrollView,
   TouchableOpacity,
-  TextInput,
-  ActivityIndicator,
   Image,
-  Platform,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { ProductService } from "@/services/core";
@@ -27,15 +23,9 @@ import {
   WrapperModal,
 } from "src/components";
 import { colors } from "src/design-system";
-import CustomPicker from "src/components/shared/input/Custom.picker";
+
 import { CloudinaryService } from "src/services";
-import {
-  ArrowDown,
-  ImageDown,
-  ImagePlus,
-  X,
-  XCircle,
-} from "lucide-react-native";
+import { ImagePlus, X } from "lucide-react-native";
 
 interface ProductFormModalProps {
   visible: boolean;
@@ -150,10 +140,10 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
     }
   };
 
-  const handleChange = (
-    field: keyof CreateProductDto,
-    value: string | number,
-  ) => {
+  const handleChange = (field: keyof CreateProductDto, value: string) => {
+    if (value.includes(",")) {
+      value = value.replace(",", ".");
+    }
     setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear error when user types
     if (errors[field]) {
@@ -271,6 +261,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 required
                 variant="filled"
                 value={String(formData.quantity)}
+                keyboardType="decimal-pad"
                 onChangeText={(value) => handleChange("quantity", value)}
                 error={errors.quantity}
               />
@@ -289,21 +280,19 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               <CustomInput
                 required
                 variant="filled"
+                keyboardType="decimal-pad"
                 label="Costo (USD)"
                 value={formData.cost.toString()}
-                onChangeText={(text) =>
-                  handleChange("cost", parseFloat(text) || 0)
-                }
+                onChangeText={(num) => handleChange("cost", num)}
                 error={errors.cost}
               />
               <CustomInput
                 required
                 variant="filled"
+                keyboardType="decimal-pad"
                 label="Precio (USD)"
                 value={formData.price.toString()}
-                onChangeText={(text) =>
-                  handleChange("price", parseFloat(text) || 0)
-                }
+                onChangeText={(num) => handleChange("price", num)}
                 error={errors.price}
               />
             </View>
@@ -439,7 +428,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
           </View>
         }
         actions={
-          <View className="md:flex-row gap-2 mx-auto">
+          <View className="flex-row gap-2 mx-auto">
             <Button
               title="Cancelar"
               variant="secondary"

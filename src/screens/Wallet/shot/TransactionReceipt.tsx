@@ -1,15 +1,17 @@
 import { View, Text } from "react-native";
 import { Transaction } from "../types";
-import { getAmountPrefix } from "../components/TransactionCard";
 import { convertBeCoinsToUSD } from "src/constants";
 import { forwardRef } from "react";
-import { InfoItems } from "../hooks/useTransactionInfo";
+import { colors } from "src/design-system";
+import { ProductItems } from "../hooks/useTransactionInfo";
+import { Event } from "src/stores";
 type Props = {
   transaction: Transaction;
-  info: InfoItems[] | null;
+  products: ProductItems[] | null;
+  eventInfo: Event | null;
 };
 export const TransactionReceipt = forwardRef<View, Props>(
-  ({ transaction, info }, ref) => {
+  ({ transaction, products, eventInfo }, ref) => {
     return (
       <View
         ref={ref}
@@ -25,8 +27,15 @@ export const TransactionReceipt = forwardRef<View, Props>(
         </Text>
 
         <View className="items-center mt-4">
-          <Text className="text-3xl font-bold">
-            {getAmountPrefix(transaction.type)}
+          <Text
+            className="text-3xl font-bold"
+            style={{
+              color:
+                Number(transaction.amount_becoin) > 0
+                  ? colors.brand.green[500]
+                  : colors.semantic.error[500],
+            }}
+          >
             {transaction.amount_becoin} Becoin
           </Text>
           <Text className="text-sm text-gray-500">
@@ -37,12 +46,24 @@ export const TransactionReceipt = forwardRef<View, Props>(
         <View className="mt-4 gap-2">
           <Text>Descripción: {transaction.type.description}</Text>
 
-          {info?.map((item, index) => (
+          {products?.map((item, index) => (
             <Text key={index} className="text-base">
               {item.cantidad} × {item.producto}
             </Text>
           ))}
-          <Text>Estado: {transaction.status.name}</Text>
+          {eventInfo && (
+            <Text className="text-center">
+              Entrada para el Evento {eventInfo?.name}
+            </Text>
+          )}
+          <Text
+            style={{
+              color:
+                transaction.status.code === "COMPLETED" ? "green" : "orange",
+            }}
+          >
+            Estado: {transaction.status.name}
+          </Text>
           <Text>ID: {transaction.id}</Text>
         </View>
       </View>

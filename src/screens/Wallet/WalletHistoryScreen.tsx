@@ -15,35 +15,47 @@ import { Pressable } from "react-native";
 import { Transaction } from "./types";
 import TransactionModal from "./modal/transaction.modal";
 import { useCustomNavigation } from "src/hooks";
+import { Wallet } from "src/services/WalletApiService";
+import { useTransactionFilters } from "./hooks/useTransactionsFilteres";
 export default function WalletHistoryScreen() {
-  const { transactions, loadingTransactions } = useWallet();
-  const [searchText, setSearchText] = useState("");
-  const [filterType, setFilterType] = useState<string>("all");
+  const {
+    transactions,
+    loadingTransactions,
+    totalTransactions,
+    loadMoreTransactions,
+    loadingMore,
+  } = useWallet();
   const [modalTransaction, setModalOpen] = useState<Transaction | null>(null);
+  const [walletTransfers, setWalletTransfers] = useState<Wallet | null>(null);
   const { navigate } = useCustomNavigation();
+  const {
+    searchText,
+    setSearchText,
+    filterType,
+    setFilterType,
+    filteredTransactions,
+  } = useTransactionFilters(transactions);
   const filterOptions = [
     { id: "all", label: "Todas", icon: "format-list-bulleted" },
-    { id: "transferencia", label: "Enviados", icon: "arrow-up-right" },
+    { id: "transfer", label: "Enviados", icon: "arrow-up-right" },
     { id: "receive", label: "Recibidos", icon: "arrow-down-left" },
     { id: "recarga", label: "Recargas", icon: "plus-circle" },
     { id: "canje", label: "Canjes", icon: "swap-horizontal" },
-    { id: "pago", label: "Compras", icon: "credit-card-minus" },
+    { id: "PURCHASE", label: "Compras", icon: "credit-card-minus" },
+    { id: "ingresos", label: "Ingresos", icon: "arrow-down-bold" },
+    { id: "egresos", label: "Egresos", icon: "arrow-up-bold" },
   ];
   const renderItemTransactions = ({ item }: { item: Transaction }) => {
     return (
-      <Pressable onPress={() => setModalOpen(item)}>
+      <Pressable
+        onPress={() => {
+          setModalOpen(item);
+        }}
+      >
         <TransactionCard transaction={item} />
       </Pressable>
     );
   };
-  const filteredTransactions = (transactions ?? []).filter((transaction) => {
-    const matchesSearch = transaction.type.name
-      .toLowerCase()
-      .includes(searchText.toLowerCase());
-    const matchesFilter =
-      filterType === "all" || transaction.type.name === filterType;
-    return matchesSearch && matchesFilter;
-  });
 
   const handleFilterPress = (type: string) => {
     setFilterType(type);
@@ -59,7 +71,7 @@ export default function WalletHistoryScreen() {
       />
 
       {/* Search and Filters */}
-      <View className="p-4">
+      <View className="px-4 pt-2">
         {/* Search Bar */}
         <SearchBarInput
           placeholder="Buscar transacciones..."
@@ -98,7 +110,7 @@ export default function WalletHistoryScreen() {
       </View>
 
       {/* Transactions List */}
-      <ScrollView className="flex-1 px-3">
+      <View className="flex-1 px-3">
         {loadingTransactions ? (
           <View className="items-center justify-center py-16">
             <ActivityIndicator size="large" color="#F88D2A" />
@@ -122,25 +134,36 @@ export default function WalletHistoryScreen() {
           </View>
         ) : (
           <FlatList
-            data={transactions}
+            data={filteredTransactions}
+            showsVerticalScrollIndicator={false}
             renderItem={renderItemTransactions}
             keyExtractor={(item) => item.id}
+            onEndReached={loadMoreTransactions}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={
+              loadingMore ? (
+                <ActivityIndicator size="small" color="#F88D2A" />
+              ) : null
+            }
           />
         )}
-      </ScrollView>
+      </View>
 
       {/* Summary */}
       {!loadingTransactions && filteredTransactions.length > 0 && (
         <View className="px-4 py-2 border-t border-gray-200">
           <Text className="text-center text-sm text-gray-500">
-            {filteredTransactions.length} transacción(es) encontrada(s)
+            {totalTransactions} transacción(es) encontrada(s)
           </Text>
         </View>
       )}
       {modalTransaction !== null && (
         <TransactionModal
           transaction={modalTransaction}
-          onClose={() => setModalOpen(null)}
+          onClose={() => {
+            setModalOpen(null);
+            setWalletTransfers(null);
+          }}
         />
       )}
     </View>

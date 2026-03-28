@@ -5,6 +5,8 @@
 import React from "react";
 import { styles } from "../styles";
 import { STATUS_MESSAGES } from "../constants";
+import { Text, View } from "react-native";
+import { colors } from "src/design-system";
 
 interface StatusInfoProps {
   status: string;
@@ -21,16 +23,18 @@ export const StatusInfo: React.FC<StatusInfoProps> = ({ status, loading }) => {
   const displayStatus = loading
     ? STATUS_MESSAGES.PENDING
     : isSuccess
-    ? status
-    : status;
+      ? status
+      : status;
 
   return (
-    <div style={styles.statusSection}>
-      <span style={styles.statusLabel}>Estado:</span>
-      <br />
-      <span style={styles.statusValue(loading, isSuccess, isError)}>
+    <View style={styles.statusSection} className="mb-7 flex-row">
+      <Text className="font-semibold">Estado:</Text>
+
+      <Text
+        className={`font-semibold text-lg ${loading && colors.text.secondary} ${isSuccess && colors.semantic.success[500]} ${isError && colors.semantic.error[500]}`}
+      >
         {displayStatus}
-      </span>
-    </div>
+      </Text>
+    </View>
   );
 };

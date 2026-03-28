@@ -71,22 +71,25 @@ export const WalletBalanceCard: React.FC<WalletBalanceCardProps> = ({
                     {isNaN(walletData.becoin_green)
                       ? "0"
                       : Math.floor(walletData.becoin_green)}{" "}
-                    (Usd$ {convertBeCoinsToUSD(walletData.becoin_green)})
                   </Text>
                 )}
                 <BeCoinIcon width={24} height={24} color={"green"} />
-              </View>
+                <Text>
+                  (Usd${" "}
+                  {convertBeCoinsToUSD(walletData.becoin_green).toFixed(2)})
+                </Text>
 
-              <Text className="font-semibold text-gray-600">
-                Becoins Verdes
-              </Text>
-              <Tooltip
-                text="Úsala para comprar dentro de la app, o canjéalas por Becoins
+                <Text className="font-semibold text-gray-600">
+                  Becoins Verdes
+                </Text>
+                <Tooltip
+                  text="Úsala para comprar dentro de la app, o canjéalas por Becoins
                 amarillas."
-                direction="top"
-              >
-                <Info color={"orange"} />
-              </Tooltip>
+                  direction="top"
+                >
+                  <Info color={"orange"} />
+                </Tooltip>
+              </View>
             </View>
             <View className="md:flex-row gap-2 md:items-center">
               <View className="flex-row gap-2 items-center md:justify-between">
@@ -95,20 +98,23 @@ export const WalletBalanceCard: React.FC<WalletBalanceCardProps> = ({
                     {isNaN(walletData.becoin_orange)
                       ? "0"
                       : Math.floor(walletData.becoin_orange)}{" "}
-                    (Usd$ {convertBeCoinsToUSD(walletData.becoin_orange)})
                   </Text>
                 )}
                 <BeCoinIcon width={24} height={24} color={"orange"} />
+                <Text>
+                  (Usd${" "}
+                  {convertBeCoinsToUSD(walletData.becoin_orange).toFixed(2)})
+                </Text>
+                <Text className="font-semibold text-gray-600">
+                  Becoins Naranja
+                </Text>
+                <Tooltip
+                  text="Úsala para comprar dentro de la app."
+                  direction="top"
+                >
+                  <Info color={"orange"} />
+                </Tooltip>
               </View>
-              <Text className="font-semibold text-gray-600">
-                Becoins Naranja
-              </Text>
-              <Tooltip
-                text="Úsala para comprar dentro de la app."
-                direction="top"
-              >
-                <Info color={"orange"} />
-              </Tooltip>
             </View>
           </View>
         </View>

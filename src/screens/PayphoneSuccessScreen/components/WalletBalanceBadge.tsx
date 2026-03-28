@@ -4,6 +4,7 @@
 
 import React from "react";
 import { styles } from "../styles";
+import { View, Text } from "react-native";
 
 interface WalletBalanceBadgeProps {
   balance: number | null;
@@ -15,8 +16,8 @@ export const WalletBalanceBadge: React.FC<WalletBalanceBadgeProps> = ({
   if (balance === null) return null;
 
   return (
-    <div style={styles.balanceBadge}>
-      <b>Saldo actualizado: {balance} BeCoins</b>
-    </div>
+    <View style={styles.balanceBadge}>
+      <Text className="font-bold">Saldo actualizado: {balance} BeCoins</Text>
+    </View>
   );
 };
