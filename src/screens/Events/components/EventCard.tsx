@@ -21,7 +21,7 @@ export const EventCard: React.FC<Event> = ({
   event_date,
   event_place,
   event_city,
-  price_becoin,
+  price_dollar,
   end_sale_date,
   user_attended,
 }) => {
@@ -99,13 +99,13 @@ export const EventCard: React.FC<Event> = ({
             <View style={styles.priceSection}>
               <View style={styles.textContainer}>
                 <BadgeDollarSign color={colors.belandOrange} />
-                <Text style={styles.eventPrice}>{price_becoin} Becoin</Text>
+                <Text style={styles.eventPrice}>{price_dollar} Usd</Text>
               </View>
               {/* Badge de precio en USD más distintivo */}
               <View style={styles.usdBadge}>
                 <Text style={styles.usdBadgeLabel}>≈ </Text>
                 <Text style={styles.usdBadgePrice}>
-                  ${formatUSDPrice(convertBeCoinsToUSD(Number(price_becoin)))}
+                  ${formatUSDPrice(convertBeCoinsToUSD(Number(price_dollar)))}
                 </Text>
                 <Text style={styles.usdBadgeCurrency}> USD</Text>
               </View>
