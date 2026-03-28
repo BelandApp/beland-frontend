@@ -79,7 +79,7 @@ export default function EventFormModal({
     longitude: undefined,
     event_date: new Date(),
     limit_tickets: 100,
-    price_becoin: 0,
+    price_dollar: 0,
     discount: 0,
     is_refundable: true,
     refund_days_limit: 3,
@@ -89,9 +89,9 @@ export default function EventFormModal({
   const prevPriceRef = useRef<number>(0);
 
   useEffect(() => {
-    const p = Number(form.price_becoin) || 0;
+    const p = Number(form.price_dollar) || 0;
     if (p > 0) prevPriceRef.current = p;
-  }, [form.price_becoin]);
+  }, [form.price_dollar]);
 
   useEffect(() => {
     if (editingEvent) {
@@ -116,8 +116,8 @@ export default function EventFormModal({
       }
       setField("limit_tickets", editingEvent.limit_tickets as any);
       setField(
-        "price_becoin",
-        parseFloat((editingEvent as any).price_becoin as any) || (0 as any)
+        "price_dollar",
+        parseFloat((editingEvent as any).price_dollar as any) || (0 as any)
       );
 
       const existingImages: string[] = [];
@@ -215,7 +215,7 @@ export default function EventFormModal({
     }
     const v = parseFloat(sanitized) || 0;
     if (v > 0) prevPriceRef.current = v;
-    setField("price_becoin", v as any);
+    setField("price_dollar", v as any);
   };
 
   return (
@@ -514,18 +514,18 @@ export default function EventFormModal({
                       </View>
                       <TextInput
                         value={
-                          typeof form.price_becoin === "number"
-                            ? `${form.price_becoin}`
-                            : `${(form.price_becoin as any) || 0}`
+                          typeof form.price_dollar === "number"
+                            ? `${form.price_dollar}`
+                            : `${(form.price_dollar as any) || 0}`
                         }
                         onChangeText={handlePriceChange}
                         className="w-full pl-10 bg-gray-50 rounded-lg py-2"
                         keyboardType="numeric"
                         maxLength={10}
                       />
-                      {errors?.price_becoin ? (
+                      {errors?.price_dollar ? (
                         <Text className="text-sm text-red-600 mt-1">
-                          {errors.price_becoin}
+                          {errors.price_dollar}
                         </Text>
                       ) : null}
                     </View>
@@ -534,31 +534,31 @@ export default function EventFormModal({
                   <View className="flex-row items-center justify-between pt-2">
                     <View>
                       <Text className="text-sm font-medium">
-                        {Number(form.price_becoin) === 0
+                        {Number(form.price_dollar) === 0
                           ? "Evento gratuito"
                           : "Evento de pago"}
                       </Text>
                       <Text className="text-xs text-text-secondary-light">
-                        {Number(form.price_becoin) === 0
+                        {Number(form.price_dollar) === 0
                           ? "No se requiere pago para la entrada"
                           : "Pago requerido para la entrada"}
                       </Text>
                     </View>
                     <TouchableOpacity
                       onPress={() => {
-                        const current = Number(form.price_becoin) || 0;
+                        const current = Number(form.price_dollar) || 0;
                         if (current === 0) {
-                          setField("price_becoin", prevPriceRef.current || 1);
+                          setField("price_dollar", prevPriceRef.current || 1);
                         } else {
                           prevPriceRef.current = current;
-                          setField("price_becoin", 0 as any);
+                          setField("price_dollar", 0 as any);
                         }
                       }}
                       className="items-center"
                     >
                       <View
                         className={`w-14 h-8 rounded-full p-1 ${
-                          Number(form.price_becoin) === 0
+                          Number(form.price_dollar) === 0
                             ? "bg-gray-200"
                             : "bg-primary"
                         }`}
@@ -572,7 +572,7 @@ export default function EventFormModal({
                             transform: [
                               {
                                 translateX:
-                                  Number(form.price_becoin) === 0 ? 0 : 22,
+                                  Number(form.price_dollar) === 0 ? 0 : 22,
                               },
                             ],
                           }}
