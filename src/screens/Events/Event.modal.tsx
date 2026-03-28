@@ -38,7 +38,7 @@ export const EventModal: React.FC<EventModalType> = ({
   const { getEvent } = eventStore();
   const event = getEvent(id);
   const { navigate } = useCustomNavigation();
-  const { canPerformAction, handleAuth0Login } = useAuth();
+  const { handleAuth0Login,status } = useAuth();
   const [visibleImage, setVisibleImage] = useState(0);
 
   const allImages = useMemo(() => {
@@ -58,7 +58,7 @@ export const EventModal: React.FC<EventModalType> = ({
     end_sale_date,
     limit_tickets,
     sold_tickets,
-    price_becoin,
+    price_dollar,
     is_refundable,
     refund_days_limit,
     image_url,
@@ -82,7 +82,7 @@ export const EventModal: React.FC<EventModalType> = ({
   };
 
   const handleBuy = async () => {
-    if (!canPerformAction) {
+    if (status==="unauthorized") {
       notify.confirm({
         message: "Debe iniciar sesión para adquirir",
         onConfirm: handleAuth0Login,
@@ -96,11 +96,11 @@ export const EventModal: React.FC<EventModalType> = ({
         id,
         name,
         quantity: 1,
-        price: Number(price_becoin),
-        condition: "Llevar elementos reciclables al evento",
+        price: Number(price_dollar),
+        condition: "",
       },
       onSuccessEndpoint: "",
-      total_amount: Number(price_becoin),
+      total_amount: Number(price_dollar),
       canBuyForOthers: true,
     });
   };
@@ -177,12 +177,12 @@ export const EventModal: React.FC<EventModalType> = ({
             <View style={styles.section}>
               <View style={styles.infoRow}>
                 <DollarSign size={18} color={colors.primary} />
-                <Text style={styles.infoStrong}>{price_becoin} Becoins</Text>
+                <Text style={styles.infoStrong}>{price_dollar} Becoins</Text>
               </View>
 
               <View style={styles.usdPriceBadge}>
                 <Text style={styles.usdPriceText}>
-                  ≈ ${formatUSDPrice(convertBeCoinsToUSD(Number(price_becoin)))}{" "}
+                  ≈ ${formatUSDPrice(convertBeCoinsToUSD(Number(price_dollar)))}{" "}
                   USD
                 </Text>
               </View>
