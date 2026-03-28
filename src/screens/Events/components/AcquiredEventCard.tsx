@@ -28,7 +28,7 @@ export const AcquiredEventCard: React.FC<Event> = ({
   event_date,
   event_place,
   event_city,
-  price_becoin,
+  price_dollar,
   end_sale_date,
   user_attended,
   holder_name,
