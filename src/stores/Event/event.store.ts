@@ -16,7 +16,7 @@ export type BasicEvent ={
   start_sale_date: Date | string;
   end_sale_date: Date | string;
   limit_tickets: number;
-  price_becoin: string;
+  price_dollar: string;
   discount: string;
   total_becoin: string;
   is_active: boolean;
