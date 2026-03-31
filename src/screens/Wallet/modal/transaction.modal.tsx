@@ -29,23 +29,11 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
     let sender = "";
     let receiver = "";
     if (transaction.type.code === "GIFTCARD_SEND") {
-      sender =
-        transaction.wallet.user?.full_name ??
-        transaction.wallet.user?.username ??
-        "";
-      receiver =
-        transaction.related_wallet.user?.full_name ??
-        transaction.related_wallet.user?.full_name ??
-        "";
+      sender = transaction.wallet.user?.full_name ?? "";
+      receiver = transaction.related_wallet.user?.full_name ?? "";
     } else if (transaction.type.code === "GIFTCARD_RECEIVED") {
-      receiver =
-        transaction.wallet.user?.full_name ??
-        transaction.wallet.user?.username ??
-        "";
-      sender =
-        transaction.related_wallet.user?.full_name ??
-        transaction.related_wallet.user?.full_name ??
-        "";
+      receiver = transaction.wallet.user?.full_name ?? "";
+      sender = transaction.related_wallet.user?.full_name ?? "";
     }
     return { sender, receiver };
   };
@@ -115,10 +103,6 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                 {transaction.type.name}
               </Text>
             </View>
-
-            <Pressable onPress={onClose} hitSlop={10}>
-              <SquareChevronDown color="white" size={26} />
-            </Pressable>
           </View>
         }
         content={

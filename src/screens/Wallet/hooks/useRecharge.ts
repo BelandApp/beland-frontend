@@ -46,7 +46,7 @@ export const PRESET_AMOUNTS = [5, 10, 25, 100];
 export const PAYMENT_METHODS: PaymentMethod[] = [
   {
     id: "PAYPHONE",
-    name: "Tarjeta Crédito/Débito",
+    name: "PAYPHONE",
     icon: "card",
     badge: "Instantáneo",
     badgeColor: "green",
@@ -54,7 +54,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
   },
   {
     id: "STRIPE",
-    name: "Tarjeta Crédito/Débito",
+    name: "STRIPE",
     icon: "card",
     badge: "Instantáneo",
     badgeColor: "green",
@@ -69,7 +69,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     description: "Sin comisiones",
   },
 ];
-type PaymentMethodId = PaymentMethod["id"];
+export type PaymentMethodId = PaymentMethod["id"];
 
 // Función para cargar el script Payphone en web
 function loadPayphoneScript(): Promise<void> {
@@ -137,9 +137,12 @@ export function useRecharge() {
 
   // Handlers
   const handleAmountChange = (value: string) => {
-    // Solo permitir números
-    const cleanValue = value.replace(/[^0-9]/g, "");
-    setAmount(cleanValue);
+    // Permite números con hasta 2 decimales
+    const regex = /^\d*(\.\d{0,2})?$/;
+
+    if (regex.test(value)) {
+      setAmount(value);
+    }
   };
 
   const handlePresetAmount = (presetAmount: number) => {
