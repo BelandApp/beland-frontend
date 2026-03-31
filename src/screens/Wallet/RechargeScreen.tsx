@@ -2,11 +2,10 @@ import React from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   ScrollView,
   Platform,
-  Image,
+  TextInput,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -16,10 +15,8 @@ import {
 } from "./hooks/useRecharge";
 import { ThemedHeader } from "src/components/shared/headers/Header";
 
-import { BeCoinsBalance, Button, WrapperModal } from "src/components";
+import { Button } from "src/components";
 import { notify } from "src/hooks/notification/notify.external";
-import { CopyToClipboard } from "src/utils/shareHelper";
-import ThemedTabs from "src/components/shared/Tabs/ThemedTabs";
 import { useCustomNavigation } from "src/hooks";
 
 const BankDetailRow = ({ label, value, isCopyable = false }: any) => (
@@ -37,6 +34,9 @@ const BankDetailRow = ({ label, value, isCopyable = false }: any) => (
     </View>
   </View>
 );
+import BankTransferModal from "./modal/bankTransfer.modal";
+import SelectorPayment from "./components/SelectorPayment";
+import { CopyToClipboard } from "src/utils/shareHelper";
 
 export const RechargeScreen = ({ route }: { route: any }) => {
   const paramsAmount = route.params?.paramsAmount;
@@ -71,16 +71,6 @@ export const RechargeScreen = ({ route }: { route: any }) => {
     destroyPayphoneWidget,
   } = useRecharge({ paramsAmount });
 
-  const handleBeforeClose = () => {
-    return new Promise<boolean>((resolve) => {
-      notify.confirm({
-        message: "¿Seguro que quieres salir? Perderás tu progreso",
-        onConfirm: () => resolve(true),
-        onCancel: () => resolve(false),
-      });
-    });
-  };
-
   return (
     <>
       <ThemedHeader
@@ -97,18 +87,30 @@ export const RechargeScreen = ({ route }: { route: any }) => {
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="py-8 px-4">
           {/* Card Principal */}
-          <View className="bg-white  rounded-3xl shadow-lg border border-gray-200  overflow-hidden">
-            {/* Sección de Monto */}
-            <View
-              className="p-8 border-b border-gray-200 dark:border-gray-700"
-              style={{ position: "relative" }}
-            >
+          <View className="bg-white rounded-3xl shadow-lg border border-gray-200 ">
+            <View className="p-8">
+              <View className="mb-12">
+                <View className="flex-row items-center">
+                  <Text className="text-3xl text-gray-400 font-light">
+                    USD$
+                  </Text>
+                  <TextInput
+                    id="amount"
+                    className=" text-7xl font-bold text-gray-900 ml-3"
+                    placeholder="0.00"
+                    placeholderTextColor="#D1D5DB"
+                    keyboardType="numeric"
+                    value={amount}
+                    onChangeText={handleAmountChange}
+                  />
+                </View>
+              </View>
               {/* Montos Rápidos */}
               <View>
-                <Text className=" font-semibold text-gray-800 uppercase tracking-wider mb-4">
-                  Selecciona el monto de monedas a comprar:
+                <Text className="font-semibold text-gray-800 uppercase tracking-wider mb-4">
+                  Montos Predefinidos:
                 </Text>
-                <View className="flex-row gap-3">
+                <View className="md:flex-row gap-3">
                   {PRESET_AMOUNTS.map((presetAmount) => (
                     <TouchableOpacity
                       key={presetAmount}
@@ -123,7 +125,7 @@ export const RechargeScreen = ({ route }: { route: any }) => {
                         className={`text-center text-base font-medium ${
                           amount === presetAmount.toString()
                             ? "text-white font-semibold"
-                            : "text-gray-800 "
+                            : "text-gray-800"
                         }`}
                       >
                         ${presetAmount}
@@ -141,95 +143,25 @@ export const RechargeScreen = ({ route }: { route: any }) => {
               </Text>
 
               {/* Lista de Métodos de Pago */}
-              {PAYMENT_METHODS.map((method, index) => (
-                <TouchableOpacity
-                  key={method.id}
-                  onPress={() => handlePaymentMethodSelect(method.id)}
-                  className={`flex-row items-center p-4 rounded-xl ${
-                    index < PAYMENT_METHODS.length - 1 ? "mb-4" : ""
-                  } ${
-                    selectedPaymentMethod === method.id
-                      ? "border-2 border-orange-500 bg-white dark:bg-gray-800 shadow-md"
-                      : "border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
-                  }`}
-                >
-                  <View
-                    className={`w-12 h-12 rounded-full ${
-                      selectedPaymentMethod === method.id
-                        ? "bg-orange-50 dark:bg-gray-700"
-                        : "bg-gray-100 dark:bg-gray-700"
-                    } items-center justify-center mr-4`}
-                  >
-                    <Ionicons
-                      name={method.icon as any}
-                      size={24}
-                      color={
-                        selectedPaymentMethod === method.id
-                          ? "#F97316"
-                          : "#9CA3AF"
-                      }
-                    />
-                  </View>
-                  <View className="flex-1">
-                    <View className="flex-row justify-between items-center mb-0.5">
-                      <Text className="text-sm font-bold text-gray-900 dark:text-white">
-                        {method.name}
-                      </Text>
-                      {method.badge && (
-                        <View
-                          className={`px-2 py-0.5 rounded-full ${
-                            method.badgeColor === "green"
-                              ? "bg-green-100 dark:bg-green-900/40"
-                              : "bg-gray-100 dark:bg-gray-700"
-                          }`}
-                        >
-                          <Text
-                            className={`text-[10px] font-bold ${
-                              method.badgeColor === "green"
-                                ? "text-green-700 dark:text-green-400"
-                                : "text-gray-600 dark:text-gray-400"
-                            }`}
-                          >
-                            {method.badge}
-                          </Text>
-                        </View>
-                      )}
-                    </View>
-                    {method.description && (
-                      <Text className="text-xs text-gray-500 dark:text-gray-400">
-                        {method.description}
-                      </Text>
-                    )}
-                  </View>
-                  <View
-                    className={`w-5 h-5 rounded-full ${
-                      selectedPaymentMethod === method.id
-                        ? "bg-orange-500 border-2 border-orange-500"
-                        : "border-2 border-gray-300 dark:border-gray-500"
-                    } items-center justify-center ml-2`}
-                  >
-                    {selectedPaymentMethod === method.id && (
-                      <Ionicons name="checkmark" size={10} color="white" />
-                    )}
-                  </View>
-                </TouchableOpacity>
-              ))}
-
+              <SelectorPayment
+                handlePaymentMethodSelect={handlePaymentMethodSelect}
+                selectedPaymentMethod={selectedPaymentMethod}
+              />
               {/* Resumen y Botón */}
-              <View className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+              <View className="mt-8 pt-8 ">
                 {/* Resumen de la Orden */}
                 {amount && Number(amount) > 0 && (
-                  <View className="bg-gray-100 dark:bg-gray-900/30 rounded-2xl p-5 mb-6">
-                    <Text className="text-base font-bold text-gray-900 dark:text-white mb-4">
+                  <View className="bg-gray-100  rounded-2xl p-5 mb-6">
+                    <Text className="text-base font-bold text-gray-900  mb-4">
                       Resumen de la orden
                     </Text>
 
                     {/* Monto de recarga */}
                     <View className="flex-row justify-between mb-3">
-                      <Text className="text-sm text-gray-600 dark:text-gray-400">
+                      <Text className="text-sm text-gray-600 ">
                         Monto de recarga
                       </Text>
-                      <Text className="text-sm font-semibold text-gray-900 dark:text-white">
+                      <Text className="text-sm font-semibold text-gray-900 ">
                         ${usdAmount.toFixed(2)} USD
                       </Text>
                     </View>
@@ -237,10 +169,10 @@ export const RechargeScreen = ({ route }: { route: any }) => {
                     {/* Comisión */}
                     {selectedPaymentMethod === "PAYPHONE" && (
                       <View className="flex-col md:flex-row justify-between mb-3">
-                        <Text className="text-sm text-gray-600 dark:text-gray-400">
+                        <Text className="text-sm text-gray-600 ">
                           Comisión de terceros
                         </Text>
-                        <View className="bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-md">
+                        <View className="bg-green-50  px-2 py-1 rounded-md">
                           <Text className="text-sm font-bold text-orange-600 dark:text-orange-400">
                             Te lo devolvemos en Orange Becoins (6%)
                           </Text>
@@ -249,22 +181,22 @@ export const RechargeScreen = ({ route }: { route: any }) => {
                     )}
 
                     <View className="flex-row justify-between mb-3">
-                      <Text className="text-sm text-gray-600 dark:text-gray-400">
+                      <Text className="text-sm text-gray-600 ">
                         Comisión Beland
                       </Text>
-                      <View className="bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-md">
-                        <Text className="text-sm font-bold text-green-600 dark:text-green-400">
+                      <View className="bg-green-50  px-2 py-1 rounded-md">
+                        <Text className="text-sm font-bold text-green-600 ">
                           Gratis (0%)
                         </Text>
                       </View>
                     </View>
 
                     {/* Divisor */}
-                    <View className="h-px bg-gray-200 dark:border-gray-700 my-3" />
+                    <View className="h-px bg-gray-200 my-3" />
 
                     {/* Total */}
                     <View className="flex-row justify-between mb-4">
-                      <Text className="text-base font-bold text-gray-900 dark:text-white">
+                      <Text className="text-base font-bold text-gray-900 ">
                         Total
                       </Text>
                       <Text className="text-lg font-bold text-orange-500">
@@ -273,12 +205,12 @@ export const RechargeScreen = ({ route }: { route: any }) => {
                     </View>
 
                     {/* BeCoins a recibir */}
-                    <View className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/30 rounded-xl p-3 ">
+                    <View className="bg-blue-50 border-blue-200 rounded-xl p-3 ">
                       <View className="flex flex-col md:flex-row w-full justify-center items-center gap-1">
-                        <Text className="text-sm text-gray-700 dark:text-gray-300 text-center">
+                        <Text className="text-sm text-gray-700 text-center">
                           Recibirás
                         </Text>
-                        <Text className="text-base font-bold text-yellow-600 dark:text-yellow-400">
+                        <Text className="text-base font-bold text-yellow-600 ">
                           {selectedPaymentMethod === "PAYPHONE"
                             ? `${beCoinsAmount - beCoinsAmount * 0.06} BeCoins`
                             : `${beCoinsAmount} Becoins`}
@@ -286,10 +218,10 @@ export const RechargeScreen = ({ route }: { route: any }) => {
 
                         {selectedPaymentMethod === "PAYPHONE" && (
                           <>
-                            <Text className="px-1 text-sm text-gray-700 dark:text-gray-300">
+                            <Text className="px-1 text-sm text-gray-700">
                               y
                             </Text>
-                            <Text className="text-base font-bold text-orange-600 dark:text-orange-400">
+                            <Text className="text-base font-bold text-orange-600">
                               {beCoinsAmount * 0.06} Orange Becoins
                             </Text>
                             <Ionicons
@@ -306,7 +238,7 @@ export const RechargeScreen = ({ route }: { route: any }) => {
                           </>
                         )}
                       </View>
-                      <Text className="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
+                      <Text className="text-xs text-gray-500 text-center mt-1">
                         1 BeCoin = $0.05 USD
                       </Text>
                     </View>
@@ -338,15 +270,13 @@ export const RechargeScreen = ({ route }: { route: any }) => {
                     className={`w-full py-4 px-6 rounded-xl items-center mb-4 ${
                       isValid
                         ? "bg-orange-500 active:bg-orange-600 shadow-lg"
-                        : "bg-gray-300 dark:bg-gray-700"
+                        : "bg-gray-300 "
                     }`}
                   >
                     <View className="flex-row items-center gap-2">
                       <Text
                         className={`font-bold text-lg ${
-                          isValid
-                            ? "text-white"
-                            : "text-gray-500 dark:text-gray-400"
+                          isValid ? "text-white" : "text-gray-600 "
                         }`}
                       >
                         {selectedPaymentMethod === "BANK_TRANSFER"
@@ -374,157 +304,22 @@ export const RechargeScreen = ({ route }: { route: any }) => {
           </View>
         </View>
       </ScrollView>
-
       {/* MODAL DE TRANSFERENCIA BANCARIA */}
-      <WrapperModal
-        beforeClose={handleBeforeClose}
-        content={
-          <View>
-            {/* Instrucciones */}
-            <View className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800 mb-6">
-              <View className="flex-row gap-2 mb-2">
-                <Ionicons name="information-circle" size={20} color="#3B82F6" />
-                <Text className="  font-bold flex-1">Pasos para recargar:</Text>
-              </View>
-              <Text className=" text-sm ml-7">
-                1. Realiza la transferencia por el monto exacto de{" "}
-                <Text className="font-bold">${usdAmount.toFixed(2)}</Text>. El
-                exceso no sera tenido en cuenta por el sistema.
-              </Text>
-              <Text className=" text-sm ml-7 mt-1">
-                2. Toma una captura o foto del comprobante.
-              </Text>
-              <Text className=" text-sm ml-7 mt-1">
-                3. Sube la foto y escribe el número de referencia bancaria
-                abajo.
-              </Text>
-            </View>
-            <View className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800">
-              <ThemedTabs tabs={tabs} onTabChange={onTabChange} />
-              {/* Datos de la Cuenta */}
-              {selectedPaymentAccount && (
-                <View>
-                  <Text className="text-sm font-semibold  uppercase tracking-wider mb-4">
-                    Datos Bancarios
-                  </Text>
-
-                  <BankDetailRow
-                    label="Banco"
-                    value={selectedPaymentAccount.bank}
-                  />
-                  <BankDetailRow
-                    label="Tipo de Cuenta"
-                    value={selectedPaymentAccount.type_account}
-                  />
-                  <BankDetailRow
-                    label="Número de Cuenta"
-                    value={selectedPaymentAccount.nro_account}
-                    isCopyable
-                  />
-                  <BankDetailRow
-                    label="Beneficiario"
-                    value={selectedPaymentAccount.accountHolder}
-                  />
-                  <BankDetailRow
-                    label="C.I. / RUC"
-                    value={selectedPaymentAccount.ruc}
-                    isCopyable
-                  />
-                  <BankDetailRow
-                    label="Correo"
-                    value={selectedPaymentAccount.email}
-                  />
-                </View>
-              )}
-            </View>
-
-            {/* Subir Comprobante */}
-            <View className="mb-6">
-              <Text className="text-base font-bold  my-3">
-                Subir Comprobante
-              </Text>
-              <TouchableOpacity
-                onPress={() => pickImage()}
-                className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800 items-center justify-center min-h-[150px]"
-              >
-                {image && previewUri ? (
-                  <View className="items-center">
-                    {/* Note: Image requires uri */}
-                    {/* In Expo ImagePicker result structure: result.assets[0].uri */}
-                    <Text className="text-green-600 font-bold mb-2">
-                      Imagen seleccionada:
-                    </Text>
-                    <Image
-                      source={{ uri: previewUri }}
-                      style={{
-                        width: 100,
-                        height: 100,
-                        borderRadius: 8,
-                        objectFit: "cover",
-                      }}
-                    />
-                    <Text className="text-xs text-center text-gray-500 mb-2">
-                      {imageName}
-                    </Text>
-                    <Ionicons
-                      name="checkmark-circle"
-                      size={40}
-                      color="#22C55E"
-                    />
-                    <Text className="text-xs text-gray-900 mt-2">
-                      Toque para cambiar
-                    </Text>
-                  </View>
-                ) : (
-                  <>
-                    <View className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl  border-blue-100 dark:border-blue-800 mb-2 ">
-                      <Ionicons
-                        name="cloud-upload-outline"
-                        size={24}
-                        color="#F97316"
-                      />
-                    </View>
-                    <Text className="text-gray-600 dark:text-gray-900 font-medium">
-                      Subir foto del comprobante
-                    </Text>
-                    <Text className="text-xs text-gray-400 mt-1">
-                      JPG, PNG o PDF
-                    </Text>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
-
-            {/* Número de Referencia */}
-            <View className="mb-20">
-              <Text className="text-base font-bold mb-3">
-                Número de Referencia / Transacción Bancaria
-              </Text>
-              <TextInput
-                value={referenceId}
-                onChangeText={setReferenceId}
-                placeholder="Ej: 12345678"
-                placeholderTextColor="#9CA3AF"
-                className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800 py-3 text-gray-900 text-base"
-              />
-              <Text className="text-xs text-gray-500 mt-2 ml-1">
-                Ingresa el número de confirmación que aparece en tu comprobante.
-              </Text>
-            </View>
-          </View>
-        }
-        actions={
-          <Button
-            title={isLoading ? "Procesando..." : "Confirmar Transferencia"}
-            onPress={handleBankTransferPayment}
-            disabled={isLoading || !referenceId}
-          />
-        }
-        isOpen={showBankTransferModal}
-        header={
-          <Text className="text-xl font-bold">Transferencia Bancaria</Text>
-        }
-        onClose={() => setShowBankTransferModal(false)}
+      <BankTransferModal
+        handleBankTransferPayment={handleBankTransferPayment}
+        image={image}
+        imageName={imageName}
+        isLoading={isLoading}
+        onTabChange={onTabChange}
+        tabs={tabs}
+        pickImage={pickImage}
+        previewUri={previewUri}
+        referenceId={referenceId}
+        setReferenceId={setReferenceId}
+        selectedPaymentAccount={selectedPaymentAccount}
+        setShowBankTransferModal={setShowBankTransferModal}
+        showBankTransferModal={showBankTransferModal}
+        usdAmount={usdAmount}
       />
     </>
   );
