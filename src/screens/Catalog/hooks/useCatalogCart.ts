@@ -6,46 +6,47 @@ import { ProductCardType } from "../components/ProductCard";
 import { notify } from "src/hooks/notification/notify.external";
 
 export const useCatalogCart = () => {
-  const { canPerformAction, handleAuth0Login, isAuthenticated } = useAuth();
+  const { handleAuth0Login, isAuthenticated } = useAuth();
   const [showCart, setShowCart] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  const { syncCart } = useCartStore();
   const [addingProductId, setAddingProductId] = useState<string | null>(null);
-  const { addProduct, items: cartProducts } = useCartStore();
+  const {
+    addProduct,
+    items: cartProducts,
+    syncCart,
+    totalUSD,
+  } = useCartStore();
 
   // Manejar agregar producto al carrito
-  const handleAddProduct = useCallback(
-    async (product: ProductCardType) => {
-      setIsSyncing(true);
-      // Normalizar campo de imagen
-      const imageField =
-        (product as any).image_url || (product as any).image || "";
-      setAddingProductId(product.id);
-      if (product.stock < 1) {
-        notify.error({
-          message: "Nos quedamos sin stock",
-          message2: "Lo sentimos",
-        });
-        return;
-      }
-      addProduct({
-        id: product.id,
-        name: product.name,
-        price: Number((product as any).price),
-        quantity: 1,
-        image: imageField,
+  const handleAddProduct = useCallback(async (product: ProductCardType) => {
+    setIsSyncing(true);
+    // Normalizar campo de imagen
+    const imageField =
+      (product as any).image_url || (product as any).image || "";
+    setAddingProductId(product.id);
+    if (product.stock < 1) {
+      notify.error({
+        message: "Nos quedamos sin stock",
+        message2: "Lo sentimos",
       });
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setAddingProductId(null);
-      notify.cartItem({
-        message: "Producto agregado al carrito",
-        message2: "Ir al carrito",
-        onConfirm: () => setShowCart(true),
-      });
-      setIsSyncing(false);
-    },
-    [canPerformAction],
-  );
+      return;
+    }
+    addProduct({
+      id: product.id,
+      name: product.name,
+      price: Number((product as any).price),
+      quantity: 1,
+      image: imageField,
+    });
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setAddingProductId(null);
+    notify.cartItem({
+      message: "Producto agregado al carrito",
+      message2: "Ir al carrito",
+      onConfirm: () => setShowCart(true),
+    });
+    setIsSyncing(false);
+  }, []);
 
   // Abrir/cerrar carrito
   const openCart = () => {
@@ -63,6 +64,7 @@ export const useCatalogCart = () => {
     isSyncing,
     isAuthenticated,
     addingProductId,
+    totalUSD,
     // Actions
     handleAddProduct,
     openCart,

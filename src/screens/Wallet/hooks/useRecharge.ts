@@ -108,9 +108,12 @@ function loadPayphoneScript(): Promise<void> {
   });
 }
 
+type useRechargeType = {
+  paramsAmount: string;
+};
 // Hook personalizado
-export function useRecharge() {
-  const [amount, setAmount] = useState("");
+export function useRecharge({ paramsAmount }: useRechargeType) {
+  const [amount, setAmount] = useState(paramsAmount ?? "");
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<PaymentMethodId | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -362,7 +365,7 @@ export function useRecharge() {
     return () => {
       if (Platform.OS === "web") {
         clearPayphoneStorage();
-destroyPayphoneWidget();
+        destroyPayphoneWidget();
       }
     };
   }, []);

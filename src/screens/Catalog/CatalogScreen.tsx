@@ -32,9 +32,11 @@ import { buildCatalogTabs, CatalogTabs } from "./components/catalogTab";
 import { containerStyles } from "./styles";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Pagination } from "src/components/shared/pagination/Pagination";
+import { useWallet } from "../Wallet";
 
 export const CatalogScreen = () => {
   const { navigate } = useCustomNavigation();
+  const { walletData } = useWallet();
   const {
     handleAddProduct,
     cartProducts,
@@ -44,6 +46,7 @@ export const CatalogScreen = () => {
     closeCart,
     showCart,
     addingProductId,
+    totalUSD,
   } = useCatalogCart();
   const notify = useNotify();
   const { searchText, setSearchText, filters, setFilters } =
@@ -67,7 +70,8 @@ export const CatalogScreen = () => {
   useEffect(() => {
     scrollRef.current?.scrollTo({ y: 0, animated: true });
   }, [pagination.page]);
-
+  const estimatedDebt = Number(totalUSD()) - Number(walletData.estimatedValue);
+  console.log("Deuda estimada", estimatedDebt);
   return (
     <>
       {/* Header */}
@@ -155,7 +159,7 @@ export const CatalogScreen = () => {
         onClose={closeCart}
         onNavigateToRecharge={() => {
           closeCart();
-          navigate("RechargeScreen");
+          navigate("RechargeScreen", { paramsAmount: String(estimatedDebt) });
         }}
         onCheckout={async () => {
           if (!isAuthenticated) {
