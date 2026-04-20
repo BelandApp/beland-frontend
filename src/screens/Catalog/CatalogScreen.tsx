@@ -34,7 +34,9 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Pagination } from "src/components/shared/pagination/Pagination";
 import { useWallet } from "../Wallet";
 
-export const CatalogScreen = () => {
+export const CatalogScreen = ({ route }: { route: any }) => {
+  const comeFromRecharge = route.params?.comeFromRecharge;
+
   const { navigate } = useCustomNavigation();
   const { walletData } = useWallet();
   const {
@@ -48,6 +50,15 @@ export const CatalogScreen = () => {
     addingProductId,
     totalUSD,
   } = useCatalogCart();
+  useEffect(() => {
+    if (comeFromRecharge) {
+      openCart();
+    }
+  }, [comeFromRecharge, openCart]);
+  useEffect(() => {
+    console.log("MOUNT CatalogScreen");
+    return () => console.log("UNMOUNT CatalogScreen");
+  }, []);
   const notify = useNotify();
   const { searchText, setSearchText, filters, setFilters } =
     useCatalogFilters();
@@ -71,7 +82,6 @@ export const CatalogScreen = () => {
     scrollRef.current?.scrollTo({ y: 0, animated: true });
   }, [pagination.page]);
   const estimatedDebt = Number(totalUSD()) - Number(walletData.estimatedValue);
-  console.log("Deuda estimada", estimatedDebt);
   return (
     <>
       {/* Header */}

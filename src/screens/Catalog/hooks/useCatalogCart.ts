@@ -7,15 +7,14 @@ import { notify } from "src/hooks/notification/notify.external";
 
 export const useCatalogCart = () => {
   const { handleAuth0Login, isAuthenticated } = useAuth();
-  const [showCart, setShowCart] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [addingProductId, setAddingProductId] = useState<string | null>(null);
-  const {
-    addProduct,
-    items: cartProducts,
-    syncCart,
-    totalUSD,
-  } = useCartStore();
+  const addProduct = useCartStore((state) => state.addProduct);
+  const totalUSD = useCartStore((state) => state.totalUSD);
+  const cartProducts = useCartStore((state) => state.items);
+  const showCart = useCartStore((state) => state.showCart);
+  const setShowCart = useCartStore((state) => state.setShowCart);
+  const syncCart = useCartStore((state) => state.syncCart);
 
   // Manejar agregar producto al carrito
   const handleAddProduct = useCallback(async (product: ProductCardType) => {
@@ -47,16 +46,20 @@ export const useCatalogCart = () => {
     });
     setIsSyncing(false);
   }, []);
-
-  // Abrir/cerrar carrito
   const openCart = () => {
+    console.log("se abrio");
     setIsSyncing(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setShowCart(true);
-    syncCart().then(() => setIsSyncing(false));
   };
-  const closeCart = useCallback(() => setShowCart(false), []);
-
+  useEffect(() => {
+    if (showCart) {
+      syncCart().then(() => setIsSyncing(false));
+    }
+  }, [showCart]);
+  const closeCart = () => {
+    setShowCart(false);
+  };
   return {
     // State
     showCart,
@@ -66,9 +69,9 @@ export const useCatalogCart = () => {
     addingProductId,
     totalUSD,
     // Actions
-    handleAddProduct,
     openCart,
     closeCart,
+    handleAddProduct,
     handleAuth0Login,
   };
 };

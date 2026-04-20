@@ -31,7 +31,7 @@ export type OrdersStackParamList = {
 export type MainTabParamList = {
   Home: undefined;
   Wallet: undefined;
-  Catalog: undefined;
+  Catalog: { comeFromRecharge?: boolean };
   Community: undefined;
   Groups: NavigatorScreenParams<GroupsStackParamList>;
 };
