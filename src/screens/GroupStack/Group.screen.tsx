@@ -64,13 +64,17 @@ export const GroupScreen = () => {
       ListHeaderComponent={
         <React.Fragment>
           <ThemedHeader title="Grupos" />
-          <ThemedTabs tabs={tabs} onTabChange={onTabChange} />
-          <SearchBarInput
-            searchQuery={search}
-            onSearchChange={setSearch}
-            placeholder="Buscar por nombre..."
-            styleContainer={{ marginTop: 4, marginHorizontal: 16 }}
-          />
+          {!hasNoGroups && (
+            <>
+              <ThemedTabs tabs={tabs} onTabChange={onTabChange} />
+              <SearchBarInput
+                searchQuery={search}
+                onSearchChange={setSearch}
+                placeholder="Buscar por nombre..."
+                styleContainer={{ marginTop: 4, marginHorizontal: 16 }}
+              />
+            </>
+          )}
         </React.Fragment>
       }
       showsVerticalScrollIndicator={false}
@@ -93,9 +97,9 @@ export const GroupScreen = () => {
                 source={{
                   uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuA4N_ZsKNWSdlE8ZSCcyRHk3LtrbeN68wQll9_elKK53ia_bisDkguRt0mi8B-bD2k_YjQkJvPDCxSmqHqbfKiNvDJ_o2yMmMIXn9VAIJpEdoaKiX8C89MiStbEh7IEcEZ4eXgp3Fal98gM3Qi-h7HuybKV0iU6BEDSQh_1ZaRINnZppuHFE2TVsbAItxxRIFWNyYrTAJdenzvqgiRWw5if2pi0CRPyYQnlw0Hbj3x2anlMY-OZzMSw4Z6LbIDOZaOWU1hubT_5S-Q",
                 }}
-                className=" rounded-full border-4 border-white shadow-xl"
+                className="rounded-full border-4 border-white shadow-xl"
                 resizeMode="cover"
-                style={{ height: screenHeight / 3, width: screenWidth / 4 }}
+                style={{ height: screenHeight / 4, width: screenWidth / 4 }}
               />
             </View>
             <Text className="text-center text-2xl">
