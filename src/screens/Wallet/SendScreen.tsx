@@ -304,7 +304,7 @@ const SendScreen = ({ route }: { route: any }) => {
         ) : (
           <>
             <MaterialCommunityIcons name="send" size={20} color="#fff" />
-            <Text style={styles.sendButtonText}>ENVIAR TRANSFERENCIA</Text>
+            <Text style={styles.sendButtonText}>ENVIAR GIFT CARD</Text>
           </>
         )}
       </TouchableOpacity>
