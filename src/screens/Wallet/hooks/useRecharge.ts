@@ -113,7 +113,9 @@ type useRechargeType = {
 };
 // Hook personalizado
 export function useRecharge({ paramsAmount }: useRechargeType) {
-  const [amount, setAmount] = useState(paramsAmount ?? "");
+  const normalizedAmount = paramsAmount ? Number(paramsAmount).toFixed(2) : "";
+
+  const [amount, setAmount] = useState(normalizedAmount);
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<PaymentMethodId | null>(null);
   const [isLoading, setIsLoading] = useState(false);
