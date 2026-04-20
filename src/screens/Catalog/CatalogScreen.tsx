@@ -55,10 +55,7 @@ export const CatalogScreen = ({ route }: { route: any }) => {
       openCart();
     }
   }, [comeFromRecharge, openCart]);
-  useEffect(() => {
-    console.log("MOUNT CatalogScreen");
-    return () => console.log("UNMOUNT CatalogScreen");
-  }, []);
+
   const notify = useNotify();
   const { searchText, setSearchText, filters, setFilters } =
     useCatalogFilters();
@@ -82,6 +79,7 @@ export const CatalogScreen = ({ route }: { route: any }) => {
     scrollRef.current?.scrollTo({ y: 0, animated: true });
   }, [pagination.page]);
   const estimatedDebt = Number(totalUSD()) - Number(walletData.estimatedValue);
+  const formattedAmount = estimatedDebt.toFixed(2);
   return (
     <>
       {/* Header */}
@@ -169,7 +167,7 @@ export const CatalogScreen = ({ route }: { route: any }) => {
         onClose={closeCart}
         onNavigateToRecharge={() => {
           closeCart();
-          navigate("RechargeScreen", { paramsAmount: String(estimatedDebt) });
+          navigate("RechargeScreen", { paramsAmount: formattedAmount });
         }}
         onCheckout={async () => {
           if (!isAuthenticated) {

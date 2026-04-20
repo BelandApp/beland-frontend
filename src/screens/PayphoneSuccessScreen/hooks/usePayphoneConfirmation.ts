@@ -23,10 +23,12 @@ import {
   redirectAfterDelay,
 } from "../utils/helpers";
 import { STATUS_MESSAGES, TIMING, REDIRECT_URLS } from "../constants";
+import { useCustomNavigation } from "src/hooks";
 
 export function usePayphoneConfirmation() {
   const { user, status: userStatus } = useAuth();
-
+  const { navigate } = useCustomNavigation();
+  const comeFromRecharge = localStorage.getItem("comeFromRecharge");
   const [id, setId] = useState<string | null>(null);
   const [clientTxId, setClientTxId] = useState<string | null>(null);
   const [status, setStatus] = useState<string>(STATUS_MESSAGES.PENDING);
@@ -202,13 +204,20 @@ export function usePayphoneConfirmation() {
           setStatus(successStatus);
 
           // Redirigir solo para recargas
-          if (!finalToWalletId) {
+          if (!finalToWalletId && !comeFromRecharge) {
             redirectAfterDelay(
               REDIRECT_URLS.WALLET_MAIN,
               TIMING.REDIRECT_DELAY,
             );
           }
         }, TIMING.SUCCESS_MESSAGE_DELAY);
+
+        if (comeFromRecharge) {
+          navigate("MainTabs", {
+            screen: "Catalog",
+            params: { comeFromRecharge: true },
+          });
+        }
       } catch (error) {
         console.error("[PayphoneSuccess] Error general:", error);
         if (error instanceof Error && error.message.includes("token")) {
