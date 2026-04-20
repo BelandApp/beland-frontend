@@ -40,8 +40,6 @@ import { NewPaymentScreen, PaymentScreenRoute } from "@screens/NewPayment";
 import { Guard } from "src/guard/GuardRole";
 import { WalletGuestScreen } from "src/screens/Wallet/guardScreen/WalletGuestScreen";
 import TransferReceive from "src/screens/Wallet/TransferReceive";
-
-// TODO arreglar pantallas en carpeta raiz
 import {
   CreateGroupScreen,
   HistoryScreen,
