@@ -18,7 +18,14 @@ import Constants from "expo-constants";
 
 import { notify } from "src/hooks/notification/notify.external";
 import { useCustomNavigation } from "src/hooks";
-
+import BankTransferModal from "./modal/bankTransfer.modal";
+import SelectorPayment from "./components/SelectorPayment";
+import { CopyToClipboard } from "src/utils/shareHelper";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements } from "@stripe/react-stripe-js";
+import { StripeCheckout } from "./components/StripeCheckout";
+const stripe_key = Constants.expoConfig?.extra?.stripePublishableKey as string;
+const stripePromise = loadStripe(stripe_key);
 const BankDetailRow = ({ label, value, isCopyable = false }: any) => (
   <View className="flex-col sm:flex-row justify-between py-2 border-b border-gray-100 dark:border-gray-800">
     <Text className="text-gray-900 text-sm">{label}</Text>
@@ -34,19 +41,9 @@ const BankDetailRow = ({ label, value, isCopyable = false }: any) => (
     </View>
   </View>
 );
-import BankTransferModal from "./modal/bankTransfer.modal";
-import SelectorPayment from "./components/SelectorPayment";
-import { CopyToClipboard } from "src/utils/shareHelper";
-import { loadStripe } from "@stripe/stripe-js";
-import { Elements } from "@stripe/react-stripe-js";
-import { StripeCheckout } from "./components/StripeCheckout";
-const stripe_key = Constants.expoConfig?.extra
-  ?.EXPO_PUBLIC_STRIPE_KEY as string;
-
 export const RechargeScreen = ({ route }: { route: any }) => {
   const paramsAmount = route.params?.paramsAmount;
   const { navigate } = useCustomNavigation();
-  const stripePromise = loadStripe(stripe_key);
 
   const {
     amount,
@@ -73,7 +70,6 @@ export const RechargeScreen = ({ route }: { route: any }) => {
     tabs,
     onTabChange,
   } = useRecharge({ paramsAmount });
-
   return (
     <>
       <ThemedHeader
@@ -168,7 +164,7 @@ export const RechargeScreen = ({ route }: { route: any }) => {
                     </View>
 
                     {/* Comisión */}
-                    {selectedPaymentMethod === "STRIPE" && (
+                    {selectedPaymentMethod != "BANK_TRANSFER" && (
                       <View className="flex-col md:flex-row justify-between mb-3">
                         <Text className="text-sm text-gray-600 ">
                           Comisión de terceros
@@ -217,7 +213,7 @@ export const RechargeScreen = ({ route }: { route: any }) => {
                             : `${beCoinsAmount} Becoins`}
                         </Text>
 
-                        {selectedPaymentMethod === "STRIPE" && (
+                        {selectedPaymentMethod != "BANK_TRANSFER" && (
                           <>
                             <Text className="px-1 text-sm text-gray-700">
                               y
@@ -245,7 +241,8 @@ export const RechargeScreen = ({ route }: { route: any }) => {
                     </View>
                   </View>
                 )}
-                {/* Contenedor STRIPE en Web */}
+
+                {/* Botón de Stripe */}
                 {Platform.OS === "web" &&
                   selectedPaymentMethod === "STRIPE" &&
                   clientSecret && (
@@ -253,34 +250,36 @@ export const RechargeScreen = ({ route }: { route: any }) => {
                       <StripeCheckout clientSecret={clientSecret} />
                     </Elements>
                   )}
-                {/* Botón de Recargar */}(
-                <TouchableOpacity
-                  disabled={!isValid}
-                  onPress={handleProceedToPayment}
-                  className={`w-full py-4 px-6 rounded-xl items-center mb-4 ${
-                    isValid
-                      ? "bg-orange-500 active:bg-orange-600 shadow-lg"
-                      : "bg-gray-300 "
-                  }`}
-                >
-                  <View className="flex-row items-center gap-2">
-                    <Text
-                      className={`font-bold text-lg ${
-                        isValid ? "text-white" : "text-gray-600 "
-                      }`}
-                    >
-                      {selectedPaymentMethod === "BANK_TRANSFER"
-                        ? "Ver datos de cuenta"
-                        : "Recargar ahora"}
-                    </Text>
-                    <Ionicons
-                      name="arrow-forward"
-                      size={24}
-                      color={isValid ? "white" : "#9CA3AF"}
-                    />
-                  </View>
-                </TouchableOpacity>
-                ){/* Texto de seguridad */}
+
+                {!clientSecret && (
+                  <TouchableOpacity
+                    disabled={!isValid}
+                    onPress={handleProceedToPayment}
+                    className={`w-full py-4 px-6 rounded-xl items-center mb-4 ${
+                      isValid
+                        ? "bg-orange-500 active:bg-orange-600 shadow-lg"
+                        : "bg-gray-300 "
+                    }`}
+                  >
+                    <View className="flex-row items-center gap-2">
+                      <Text
+                        className={`font-bold text-lg ${
+                          isValid ? "text-white" : "text-gray-600 "
+                        }`}
+                      >
+                        {selectedPaymentMethod === "BANK_TRANSFER"
+                          ? "Ver datos de cuenta"
+                          : "Recargar ahora"}
+                      </Text>
+                      <Ionicons
+                        name="arrow-forward"
+                        size={24}
+                        color={isValid ? "white" : "#9CA3AF"}
+                      />
+                    </View>
+                  </TouchableOpacity>
+                )}
+                {/* Texto de seguridad */}
                 <View className="flex-row justify-center items-center gap-2">
                   <Ionicons name="lock-closed" size={14} color="#9CA3AF" />
                   <Text className="text-xs text-gray-400 dark:text-gray-500">

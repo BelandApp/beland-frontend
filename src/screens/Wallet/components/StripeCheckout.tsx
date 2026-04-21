@@ -26,7 +26,12 @@ export const StripeCheckout = ({ clientSecret }: { clientSecret: string }) => {
   return (
     <div>
       <PaymentElement />
-      <button onClick={handleConfirm}>Confirmar pago</button>
+      <button
+        className={`w-full py-4 px-6 rounded-xl items-center mb-4 bg-orange-500 active:bg-orange-600 shadow-lg text-white`}
+        onClick={handleConfirm}
+      >
+        Confirmar pago
+      </button>
     </div>
   );
 };

@@ -6,7 +6,7 @@ import { BackendPaymentAccount, getBackendErrorMessage } from "src/services";
 import { CloudinaryService } from "src/services/cloudinary/cloudinary.service";
 import { usePayment } from "src/hooks/payment/usePayment.web";
 import { useAuth } from "src/context";
-
+import { PaymentStripeService } from "src/services/payment/payment.service";
 // Tipos
 export interface PaymentMethod {
   id: "BANK_TRANSFER" | "STRIPE";
@@ -250,11 +250,9 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
     } else if (selectedPaymentMethod === "STRIPE") {
       try {
         setIsLoading(true);
-        const { PaymentStripeService } = require("src/services");
         const response = await PaymentStripeService.createStripeUrlWeb(
           Number(amount),
         );
-
         setClientSecret(response.clientSecret);
       } catch (error) {
         notify.error({ message: "Error iniciando el pago" });
