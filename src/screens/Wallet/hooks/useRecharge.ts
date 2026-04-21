@@ -1,17 +1,15 @@
 import { useState, useEffect } from "react";
-import { Platform, Alert } from "react-native";
 import { useUploadImage } from "src/hooks";
 import { useThemedTabs } from "src/components";
 import { notify } from "src/hooks/notification/notify.external";
 import { BackendPaymentAccount, getBackendErrorMessage } from "src/services";
 import { CloudinaryService } from "src/services/cloudinary/cloudinary.service";
-import { generateClientTransactionId } from "src/screens/PayphoneSuccessScreen/utils/helpers";
 import { usePayment } from "src/hooks/payment/usePayment.web";
 import { useAuth } from "src/context";
 
 // Tipos
 export interface PaymentMethod {
-  id: "PAYPHONE" | "BANK_TRANSFER" | "STRIPE";
+  id: "BANK_TRANSFER" | "STRIPE";
   name: string;
   icon: string;
   badge?: string;
@@ -64,70 +62,22 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
 ];
 export type PaymentMethodId = PaymentMethod["id"];
 
-// Función para cargar el script Payphone en web
-function loadPayphoneScript(): Promise<void> {
-  if (Platform.OS !== "web") {
-    return Promise.reject(new Error("Payphone solo está disponible en web"));
-  }
-
-  return new Promise((resolve, reject) => {
-    // @ts-ignore
-    if (typeof window === "undefined") {
-      reject(new Error("Window no está definido"));
-      return;
-    }
-
-    // Cargar CSS solo una vez
-    // @ts-ignore
-    if (!document.getElementById("payphone-css")) {
-      // @ts-ignore
-      const link = document.createElement("link");
-      link.id = "payphone-css";
-      link.rel = "stylesheet";
-      link.href =
-        "https://cdn.payphonetodoesposible.com/box/v1.1/payphone-payment-box.css";
-      // @ts-ignore
-      document.head.appendChild(link);
-    }
-
-    // Cargar JS solo una vez
-    // @ts-ignore
-    if (window.PPaymentButtonBox) {
-      resolve();
-      return;
-    }
-
-    // @ts-ignore
-    const script = document.createElement("script");
-    script.type = "module";
-    script.src =
-      "https://cdn.payphonetodoesposible.com/box/v1.1/payphone-payment-box.js";
-    script.onload = () => resolve();
-    script.onerror = () =>
-      reject(new Error("No se pudo cargar el script de Payphone."));
-    // @ts-ignore
-    document.body.appendChild(script);
-  });
-}
-
 type useRechargeType = {
   paramsAmount: string;
 };
-// Hook personalizado
+
 export function useRecharge({ paramsAmount }: useRechargeType) {
   const normalizedAmount = paramsAmount ? Number(paramsAmount).toFixed(2) : "";
-
   const [amount, setAmount] = useState(normalizedAmount);
   const { user } = useAuth();
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<PaymentMethodId | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [modalPayphone, setModalPayphone] = useState(false);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+
   // Cálculos derivados
   const beCoinsAmount = amount ? Math.floor(Number(amount) / 0.05) : 0;
   const usdAmount = Number(amount) || 0;
-  const processingFee = 0;
-  const totalAmount = usdAmount + processingFee;
   const { pay } = usePayment();
 
   // Validación
@@ -149,83 +99,6 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
 
   const handlePaymentMethodSelect = (methodId: PaymentMethodId) => {
     setSelectedPaymentMethod(methodId);
-  };
-
-  const clearPayphoneStorage = () => {
-    if (Platform.OS === "web" && typeof localStorage !== "undefined") {
-      localStorage.removeItem("payphone_to_wallet_id");
-      localStorage.removeItem("payphone_amount_to_payment_id");
-      localStorage.removeItem("payphone_is_qr_payment");
-
-      if (typeof sessionStorage !== "undefined") {
-        sessionStorage.removeItem("payphone_to_wallet_id");
-        sessionStorage.removeItem("payphone_amount_to_payment_id");
-      }
-    }
-  };
-
-  const handlePayphonePayment = async () => {
-    if (Platform.OS !== "web") {
-      Alert.alert("Error", "Payphone solo está disponible en la versión web");
-      return;
-    }
-
-    setModalPayphone(true);
-
-    try {
-      clearPayphoneStorage();
-
-      destroyPayphoneWidget();
-
-      setIsLoading(true);
-
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      await loadPayphoneScript();
-
-      const payphoneToken = process.env.EXPO_PUBLIC_PAYPHONE_TOKEN;
-
-      if (!payphoneToken) {
-        throw new Error("Token de Payphone no configurado");
-      }
-
-      localStorage.setItem("payphone_token", payphoneToken);
-      if (paramsAmount) {
-        localStorage.setItem("comeFromRecharge", "true");
-      }
-      const clientTransactionId = generateClientTransactionId();
-      const payphoneConfig = {
-        token: payphoneToken,
-        clientTransactionId: clientTransactionId,
-        amount: parseInt(amount) * 100,
-        amountWithoutTax: parseInt(amount) * 100,
-        currency: "USD",
-        storeId: process.env.EXPO_PUBLIC_PAYPHONE_STOREID,
-        reference: "Recarga Beland",
-      };
-
-      // @ts-ignore
-      new window.PPaymentButtonBox(payphoneConfig).render("pp-button");
-    } catch (error) {
-      console.error("Error al cargar Payphone:", error);
-      Alert.alert("Error", "No se pudo cargar el widget de Payphone.");
-      setIsLoading(false);
-      setModalPayphone(false);
-    }
-  };
-
-  const destroyPayphoneWidget = () => {
-    if (Platform.OS !== "web") return;
-
-    try {
-      const container = document.getElementById("pp-button");
-
-      if (container) {
-        container.innerHTML = "";
-      }
-    } catch (error) {
-      console.error("Error limpiando Payphone:", error);
-    }
   };
 
   // Bank Transfer State
@@ -372,29 +245,29 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
   const handleProceedToPayment = async () => {
     if (!isValid) return;
     if (!user) return;
-    if (selectedPaymentMethod === "PAYPHONE") {
-      await handlePayphonePayment();
-    } else if (selectedPaymentMethod === "BANK_TRANSFER") {
+    if (selectedPaymentMethod === "BANK_TRANSFER") {
       setShowBankTransferModal(true);
     } else if (selectedPaymentMethod === "STRIPE") {
-      const result = await pay(Number(amount), user.id);
-      if (result.success) {
-        notify.info({ message: "Procesando el pago, te avisaremos" });
-      } else {
-        notify.error({ message: "No se pudo procesal el pago" });
+      try {
+        setIsLoading(true);
+        const { PaymentStripeService } = require("src/services");
+        const response = await PaymentStripeService.createStripeUrlWeb(
+          Number(amount),
+        );
+
+        setClientSecret(response.clientSecret);
+      } catch (error) {
+        notify.error({ message: "Error iniciando el pago" });
+      } finally {
+        setIsLoading(false);
       }
     }
   };
-
-  // Limpiar al desmontar
+  // Protegemos el cambio de amount
   useEffect(() => {
-    return () => {
-      if (Platform.OS === "web") {
-        clearPayphoneStorage();
-        destroyPayphoneWidget();
-      }
-    };
-  }, []);
+    if (clientSecret) return;
+    setClientSecret(null);
+  }, [amount]);
 
   return {
     // Estado
@@ -404,8 +277,6 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
     previewUri,
     imageName,
     tabs,
-    modalPayphone,
-    setModalPayphone,
     // Bank Transfer State
     referenceId,
     setReferenceId,
@@ -415,12 +286,11 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
     setShowBankTransferModal,
     paymentAccounts,
     selectedPaymentAccount,
+    clientSecret,
 
     // Datos calculados
     beCoinsAmount,
     usdAmount,
-    processingFee,
-    totalAmount,
     isValid,
 
     // Handlers
@@ -431,6 +301,5 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
     handleBankTransferPayment, // Export handler to be used by modal
     setIsLoading,
     onTabChange,
-    destroyPayphoneWidget,
   };
 }

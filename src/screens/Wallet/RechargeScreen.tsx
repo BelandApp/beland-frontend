@@ -14,8 +14,8 @@ import {
   PAYMENT_METHODS,
 } from "./hooks/useRecharge";
 import { ThemedHeader } from "src/components/shared/headers/Header";
+import Constants from "expo-constants";
 
-import { Button } from "src/components";
 import { notify } from "src/hooks/notification/notify.external";
 import { useCustomNavigation } from "src/hooks";
 
@@ -37,20 +37,26 @@ const BankDetailRow = ({ label, value, isCopyable = false }: any) => (
 import BankTransferModal from "./modal/bankTransfer.modal";
 import SelectorPayment from "./components/SelectorPayment";
 import { CopyToClipboard } from "src/utils/shareHelper";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements } from "@stripe/react-stripe-js";
+import { StripeCheckout } from "./components/StripeCheckout";
+const stripe_key = Constants.expoConfig?.extra
+  ?.EXPO_PUBLIC_STRIPE_KEY as string;
 
 export const RechargeScreen = ({ route }: { route: any }) => {
   const paramsAmount = route.params?.paramsAmount;
   const { navigate } = useCustomNavigation();
+  const stripePromise = loadStripe(stripe_key);
 
   const {
     amount,
     selectedPaymentMethod,
     isLoading,
     beCoinsAmount,
+    clientSecret,
     usdAmount,
     previewUri,
     imageName,
-    totalAmount,
     isValid,
     handleAmountChange,
     handlePresetAmount,
@@ -66,9 +72,6 @@ export const RechargeScreen = ({ route }: { route: any }) => {
     selectedPaymentAccount,
     tabs,
     onTabChange,
-    modalPayphone,
-    setModalPayphone,
-    destroyPayphoneWidget,
   } = useRecharge({ paramsAmount });
 
   return (
@@ -77,8 +80,6 @@ export const RechargeScreen = ({ route }: { route: any }) => {
         title="Recargar BeCoins"
         canGoBack
         onBackPress={() => {
-          destroyPayphoneWidget();
-
           setTimeout(() => {
             navigate("MainTabs", { screen: "Wallet" });
           }, 0);
@@ -167,7 +168,7 @@ export const RechargeScreen = ({ route }: { route: any }) => {
                     </View>
 
                     {/* Comisión */}
-                    {selectedPaymentMethod === "PAYPHONE" && (
+                    {selectedPaymentMethod === "STRIPE" && (
                       <View className="flex-col md:flex-row justify-between mb-3">
                         <Text className="text-sm text-gray-600 ">
                           Comisión de terceros
@@ -200,7 +201,7 @@ export const RechargeScreen = ({ route }: { route: any }) => {
                         Total
                       </Text>
                       <Text className="text-lg font-bold text-orange-500">
-                        ${totalAmount.toFixed(2)} USD
+                        ${usdAmount.toFixed(2)} USD
                       </Text>
                     </View>
 
@@ -211,12 +212,12 @@ export const RechargeScreen = ({ route }: { route: any }) => {
                           Recibirás
                         </Text>
                         <Text className="text-base font-bold text-yellow-600 ">
-                          {selectedPaymentMethod === "PAYPHONE"
+                          {selectedPaymentMethod === "STRIPE"
                             ? `${beCoinsAmount - beCoinsAmount * 0.06} BeCoins`
                             : `${beCoinsAmount} Becoins`}
                         </Text>
 
-                        {selectedPaymentMethod === "PAYPHONE" && (
+                        {selectedPaymentMethod === "STRIPE" && (
                           <>
                             <Text className="px-1 text-sm text-gray-700">
                               y
@@ -244,55 +245,42 @@ export const RechargeScreen = ({ route }: { route: any }) => {
                     </View>
                   </View>
                 )}
-
-                {/* Contenedor para el botón de Payphone en Web */}
+                {/* Contenedor STRIPE en Web */}
                 {Platform.OS === "web" &&
-                  selectedPaymentMethod === "PAYPHONE" &&
-                  modalPayphone && (
-                    <View className="mb-4 flex gap-2">
-                      <Button
-                        onPress={() => {
-                          destroyPayphoneWidget();
-                          setModalPayphone(false);
-                        }}
-                        title="Cancelar"
-                        variant="secondary"
-                      />
-                      <div id="pp-button"></div>
-                    </View>
+                  selectedPaymentMethod === "STRIPE" &&
+                  clientSecret && (
+                    <Elements stripe={stripePromise} options={{ clientSecret }}>
+                      <StripeCheckout clientSecret={clientSecret} />
+                    </Elements>
                   )}
-
-                {/* Botón de Recargar */}
-                {!modalPayphone && (
-                  <TouchableOpacity
-                    disabled={!isValid}
-                    onPress={handleProceedToPayment}
-                    className={`w-full py-4 px-6 rounded-xl items-center mb-4 ${
-                      isValid
-                        ? "bg-orange-500 active:bg-orange-600 shadow-lg"
-                        : "bg-gray-300 "
-                    }`}
-                  >
-                    <View className="flex-row items-center gap-2">
-                      <Text
-                        className={`font-bold text-lg ${
-                          isValid ? "text-white" : "text-gray-600 "
-                        }`}
-                      >
-                        {selectedPaymentMethod === "BANK_TRANSFER"
-                          ? "Ver datos de cuenta"
-                          : "Recargar ahora"}
-                      </Text>
-                      <Ionicons
-                        name="arrow-forward"
-                        size={24}
-                        color={isValid ? "white" : "#9CA3AF"}
-                      />
-                    </View>
-                  </TouchableOpacity>
-                )}
-
-                {/* Texto de seguridad */}
+                {/* Botón de Recargar */}(
+                <TouchableOpacity
+                  disabled={!isValid}
+                  onPress={handleProceedToPayment}
+                  className={`w-full py-4 px-6 rounded-xl items-center mb-4 ${
+                    isValid
+                      ? "bg-orange-500 active:bg-orange-600 shadow-lg"
+                      : "bg-gray-300 "
+                  }`}
+                >
+                  <View className="flex-row items-center gap-2">
+                    <Text
+                      className={`font-bold text-lg ${
+                        isValid ? "text-white" : "text-gray-600 "
+                      }`}
+                    >
+                      {selectedPaymentMethod === "BANK_TRANSFER"
+                        ? "Ver datos de cuenta"
+                        : "Recargar ahora"}
+                    </Text>
+                    <Ionicons
+                      name="arrow-forward"
+                      size={24}
+                      color={isValid ? "white" : "#9CA3AF"}
+                    />
+                  </View>
+                </TouchableOpacity>
+                ){/* Texto de seguridad */}
                 <View className="flex-row justify-center items-center gap-2">
                   <Ionicons name="lock-closed" size={14} color="#9CA3AF" />
                   <Text className="text-xs text-gray-400 dark:text-gray-500">

@@ -12,7 +12,7 @@ export const useMobilePayment = (): PaymentStrategy => {
 
   const pay = async (amount: number, userId: string) => {
     const { clientSecret } =
-      await PaymentStripeService.createStripeIntentMobile(amount, userId);
+      await PaymentStripeService.createStripeIntentMobile(amount);
 
     const { error: initError } = await initPaymentSheet({
       paymentIntentClientSecret: clientSecret,
