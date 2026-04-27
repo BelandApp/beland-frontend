@@ -19,9 +19,12 @@ import { AccountManagementCard } from "../settings/AccountManagementCard";
 import { EnhancedProfileCard } from "../profile/EnhancedProfileCard";
 import { OrderService } from "src/services/OrderApiService";
 import ThemedTabs from "src/components/shared/Tabs/ThemedTabs";
+import { Button, QRIcon } from "src/components";
+import { useCustomNavigation } from "src/hooks";
 
 export const UserPanel: React.FC = () => {
   const { user, status, hasProfile } = useAuth();
+  const { navigate } = useCustomNavigation();
   const globalBeCoinsBalance = useBeCoinsStore((s) => s.balance);
   const { balance: walletBalance, loading: balanceLoading } = useUserBalance();
   const { beCoinsToUsd } = useBeCoinsPrice();
@@ -114,11 +117,7 @@ export const UserPanel: React.FC = () => {
   let dynamicTabs = [...baseTabs];
   //  MERCHANT
   if (hasProfile("MERCHANT" as ProfileEnum)) {
-    dynamicTabs.push(
-      { id: "merchant-products", label: "Productos" },
-      { id: "merchant-orders", label: "Órdenes Comercio" },
-      { id: "merchant-finance", label: "Finanzas" },
-    );
+    dynamicTabs.push({ id: "merchant-finance", label: "Finanzas" });
   }
 
   //  DRIVER
@@ -195,6 +194,29 @@ export const UserPanel: React.FC = () => {
     </View>
   );
 
+  const renderFinanceMerchant = () => (
+    <View
+      style={[styles.headerCard, { flexDirection: "column", minHeight: 150 }]}
+    >
+      <View
+        style={{
+          flexDirection: "row",
+          width: "100%",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <Text style={[styles.headerName]}>Finanzas</Text>
+        <Button
+          title="Cobrar"
+          onPress={() => navigate("CobrarScreen")}
+          icon={<QRIcon color="white" />}
+        />
+      </View>
+      <Text>Aquí veras tus movimientos proximamente</Text>
+    </View>
+  );
+
   const renderTabContent = () => {
     switch (activeTab) {
       case "overview":
@@ -207,12 +229,8 @@ export const UserPanel: React.FC = () => {
         return renderProfileTab();
       case "achievements":
         return renderAchievementsTab();
-      case "merchant-products":
-        return <></>;
-      case "merchant-orders":
-        return <></>;
       case "merchant-finance":
-        return <></>;
+        return renderFinanceMerchant();
       default:
         return renderOverviewTab();
     }
