@@ -159,13 +159,13 @@ export const UserMenu: React.FC<UserMenuProps> = ({
     try {
       const existingOrganization =
         await organizationService.getUserOrganization(user.id);
-      if (existingOrganization) {
-        notify.error({
-          message:
-            "Ya tienes una organización registrada. Solo puedes tener una organización por usuario.",
-        });
-        return;
-      }
+      // if (existingOrganization) {
+      //   notify.error({
+      //     message:
+      //       "Ya tienes una organización registrada. Solo puedes tener una organización por usuario.",
+      //   });
+      //   return;
+      // }
       // If no organization exists, open the modal
       setShowOrganizationModal(true);
     } catch (error) {
@@ -342,6 +342,9 @@ export const UserMenu: React.FC<UserMenuProps> = ({
       </TouchableOpacity>
     );
   }
+  const isMerchant = user.profiles.some(
+    (prof) => prof.profile.name === "MERCHANT",
+  );
   const MENU_CONTENT: Record<UserRole, React.ReactNode> = {
     USER: (
       <View className="gap-2">
@@ -391,7 +394,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
         />
         {/* Mostrar opción solo si el usuario NO es comerciante */}
 
-        {/* {user.role.name !== "COMERCIO" && (
+        {!isMerchant && (
           <Button
             title="Hacerme comerciante"
             onPress={handleOpenOrganizationModal}
@@ -399,7 +402,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
             icon={<Store size={18} color="#333" />}
             className="justify-start"
           />
-        )} */}
+        )}
       </View>
     ),
     ADMIN: (

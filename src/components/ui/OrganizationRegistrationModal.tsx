@@ -18,6 +18,7 @@ import type { MapboxSuggestion } from "src/services/mapboxService";
 import Toast from "react-native-toast-message";
 import { addressService, UserAddress } from "src/services/addressService";
 import { AddressManagementModal } from "src/screens/DashboardUser/components/settings/AddressManagementModal";
+import { WrapperModal } from "../shared";
 
 export interface MerchantFormData {
   name: string;
@@ -71,7 +72,7 @@ export const OrganizationRegistrationModal: React.FC<
   const [userAddresses, setUserAddresses] = useState<UserAddress[]>([]);
   const [loadingAddresses, setLoadingAddresses] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
-    null
+    null,
   );
   const [showAddressManager, setShowAddressManager] = useState(false);
 
@@ -134,7 +135,7 @@ export const OrganizationRegistrationModal: React.FC<
           {
             language: "es",
             limit: 5,
-          }
+          },
         );
         setSuggestions(results || []);
       } catch (error) {
@@ -291,460 +292,397 @@ export const OrganizationRegistrationModal: React.FC<
   };
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={handleClose}
-    >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={styles.overlay}
-      >
-        <View style={{ position: "absolute", right: 20, top: 20 }}>
-          <Toast config={toastConfig} />
+    <WrapperModal
+      isOpen={visible}
+      onClose={handleClose}
+      header={
+        <View style={styles.header}>
+          <View style={styles.headerIcon}>
+            <Building2 size={24} color="#FF6B35" />
+          </View>
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.title}>Registrar mi Organización</Text>
+            <Text style={styles.subtitle}>
+              Completa la información de tu negocio para convertirte en
+              comerciante
+            </Text>
+          </View>
         </View>
+      }
+      content={
+        <View style={styles.form}>
+          {/* NOTE: Direcciones guardadas ahora se renderizan dentro de la sección de Ubicación */}
 
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            {/* Header */}
-            <View style={styles.header}>
-              <View style={styles.headerIcon}>
-                <Building2 size={24} color="#FF6B35" />
-              </View>
-              <View style={styles.headerTextContainer}>
-                <Text style={styles.title}>Registrar mi Organización</Text>
-                <Text style={styles.subtitle}>
-                  Completa la información de tu negocio para convertirte en
-                  comerciante
-                </Text>
-              </View>
-              <TouchableOpacity
-                onPress={handleClose}
-                style={styles.closeButton}
-                disabled={isLoading}
-              >
-                <X size={24} color="#666" />
-              </TouchableOpacity>
+          {/* Basic Info */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Información Básica</Text>
+
+            <View style={[styles.inputContainer, styles.suggestionsWrapper]}>
+              <Text style={styles.label}>
+                Nombre de fantasia del Negocio{" "}
+                <Text style={styles.required}>*</Text>
+              </Text>
+              <TextInput
+                style={[styles.input, errors.name && styles.inputError]}
+                placeholder="Ej: Mi Comercio Beland"
+                value={formData.name}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, name: text })
+                }
+                editable={!isLoading}
+              />
+              {errors.name && (
+                <Text style={styles.errorText}>{errors.name}</Text>
+              )}
+            </View>
+          </View>
+
+          {/* Legal Info */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Información Legal</Text>
+
+            <View style={[styles.inputContainer, styles.suggestionsWrapper]}>
+              <Text style={styles.label}>Razón Social</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Nombre legal de la empresa"
+                value={formData.legal_name}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, legal_name: text })
+                }
+                editable={!isLoading}
+              />
             </View>
 
-            {/* Form */}
-            <ScrollView
-              style={styles.scrollView}
-              showsVerticalScrollIndicator={false}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>RUC</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Número de RUC"
+                value={formData.ruc}
+                onChangeText={(text) => setFormData({ ...formData, ruc: text })}
+                keyboardType="numeric"
+                editable={!isLoading}
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Descripción</Text>
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                placeholder="Describe tu negocio"
+                value={formData.description}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, description: text })
+                }
+                multiline
+                numberOfLines={3}
+                textAlignVertical="top"
+                editable={!isLoading}
+              />
+            </View>
+          </View>
+
+          {/* Contact */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Contacto</Text>
+
+            <View style={[styles.inputContainer, styles.suggestionsWrapper]}>
+              <View style={styles.labelWithIcon}>
+                <Phone size={16} color="#666" />
+                <Text style={styles.label}>Teléfono</Text>
+              </View>
+              <TextInput
+                style={[styles.input, errors.phone && styles.inputError]}
+                placeholder="Ej: 0981234567"
+                value={formData.phone}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, phone: text })
+                }
+                keyboardType="phone-pad"
+                editable={!isLoading}
+              />
+              {errors.phone && (
+                <Text style={styles.errorText}>{errors.phone}</Text>
+              )}
+            </View>
+
+            <View style={styles.inputContainer}>
+              <View style={styles.labelWithIcon}>
+                <Mail size={16} color="#666" />
+                <Text style={styles.label}>Email</Text>
+              </View>
+              <TextInput
+                style={[styles.input, errors.email && styles.inputError]}
+                placeholder="contacto@ejemplo.com"
+                value={formData.email}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, email: text })
+                }
+                keyboardType="email-address"
+                autoCapitalize="none"
+                editable={!isLoading}
+              />
+              {errors.email && (
+                <Text style={styles.errorText}>{errors.email}</Text>
+              )}
+            </View>
+
+            <View style={styles.inputContainer}>
+              <View style={styles.labelWithIcon}>
+                <Globe size={16} color="#666" />
+                <Text style={styles.label}>
+                  Sitio Web (debe incluir http:// o https://)
+                </Text>
+              </View>
+              <TextInput
+                style={[styles.input, errors.website && styles.inputError]}
+                placeholder="https://ejemplo.com"
+                value={formData.website}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, website: text })
+                }
+                keyboardType="url"
+                autoCapitalize="none"
+                editable={!isLoading}
+              />
+              {errors.website && (
+                <Text style={styles.errorText}>{errors.website}</Text>
+              )}
+            </View>
+          </View>
+
+          {/* Location Information (either selected address summary or inputs) */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Ubicación </Text>
+
+            {/* Saved addresses chooser */}
+            {loadingAddresses ? (
+              <Text style={styles.helperText}>Cargando direcciones...</Text>
+            ) : userAddresses.length === 0 ? (
+              <Text style={styles.helperText}>
+                No tienes direcciones guardadas.
+              </Text>
+            ) : (
+              <View style={styles.addressList}>
+                {userAddresses.map((a) => {
+                  const selected = selectedAddressId === a.id;
+                  return (
+                    <TouchableOpacity
+                      key={a.id}
+                      style={[
+                        styles.addressCard,
+                        selected && styles.addressCardSelected,
+                      ]}
+                      onPress={() => {
+                        setSelectedAddressId(a.id);
+                        setFormData((prev) => ({
+                          ...prev,
+                          address: a.addressLine1,
+                          city: a.city,
+                          province: a.state || "",
+                          country: a.country,
+                          latitude: a.latitude,
+                          longitude: a.longitude,
+                          address_id: a.id,
+                        }));
+                      }}
+                    >
+                      <View style={styles.addressRow}>
+                        <View style={styles.addressInfo}>
+                          <Text style={styles.addressTitle} numberOfLines={1}>
+                            {a.addressLine1}
+                          </Text>
+                          <Text style={styles.addressMeta} numberOfLines={1}>
+                            {a.city} {a.state ? `- ${a.state}` : ""} •{" "}
+                            {a.country}
+                          </Text>
+                        </View>
+                        <View
+                          style={[
+                            styles.radio,
+                            selected && styles.radioSelected,
+                          ]}
+                        />
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
+
+            {/* CTA para agregar nueva dirección (abre AddressManagementModal) */}
+            <TouchableOpacity
+              style={styles.addAddressButton}
+              onPress={() => setShowAddressManager(true)}
             >
-              <View style={styles.form}>
-                {/* NOTE: Direcciones guardadas ahora se renderizan dentro de la sección de Ubicación */}
+              <Text style={styles.addAddressText}>
+                + Agregar nueva dirección
+              </Text>
+            </TouchableOpacity>
 
-                {/* Basic Info */}
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>
-                    Información Básica <Text style={styles.required}>*</Text>
+            {selectedAddressId ? (
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Dirección seleccionada</Text>
+                <Text style={[styles.input, { backgroundColor: "#f7f7f7" }]}>
+                  {formData.address}
+                </Text>
+                <Text style={styles.suggestionSubText}>
+                  {formData.city}{" "}
+                  {formData.province ? `- ${formData.province}` : ""} •{" "}
+                  {formData.country}
+                </Text>
+                <TouchableOpacity
+                  style={{ marginTop: 8 }}
+                  onPress={() => {
+                    setSelectedAddressId(null);
+                    setFormData((p) => ({ ...p, address_id: undefined }));
+                  }}
+                >
+                  <Text style={{ color: "#ff9900" }}>
+                    Usar otra dirección / editar
                   </Text>
-
-                  <View
-                    style={[styles.inputContainer, styles.suggestionsWrapper]}
-                  >
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <>
+                <View style={styles.inputContainer}>
+                  <View style={styles.labelWithIcon}>
+                    <MapPin size={16} color="#666" />
                     <Text style={styles.label}>
-                      Nombre del Negocio <Text style={styles.required}>*</Text>
+                      Dirección (mín. 5 caracteres)
                     </Text>
-                    <TextInput
-                      style={[styles.input, errors.name && styles.inputError]}
-                      placeholder="Ej: Mi Comercio Beland"
-                      value={formData.name}
-                      onChangeText={(text) =>
-                        setFormData({ ...formData, name: text })
-                      }
-                      editable={!isLoading}
-                    />
-                    {errors.name && (
-                      <Text style={styles.errorText}>{errors.name}</Text>
-                    )}
                   </View>
+                  <TextInput
+                    style={[styles.input, errors.address && styles.inputError]}
+                    placeholder="Calle, número, barrio"
+                    value={formData.address}
+                    onChangeText={(text) => {
+                      setFormData({ ...formData, address: text });
+                      setSearchQuery(text);
+                    }}
+                    editable={!isLoading}
+                  />
+
+                  {suggestions.length > 0 && (
+                    <View style={styles.suggestionsContainer}>
+                      {suggestions.map((s) => (
+                        <TouchableOpacity
+                          key={s.id}
+                          style={styles.suggestionItem}
+                          onPress={() => handleSuggestionSelect(s)}
+                        >
+                          <Text style={styles.suggestionText}>
+                            {s.full_address}
+                          </Text>
+                          <Text
+                            style={styles.suggestionSubText}
+                            numberOfLines={1}
+                          >
+                            {s.context?.region?.name ||
+                              s.context?.country?.name}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
+
+                  {errors.address && (
+                    <Text style={styles.errorText}>{errors.address}</Text>
+                  )}
                 </View>
 
-                {/* Legal Info */}
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>
-                    Información Legal (Opcional)
-                  </Text>
-
-                  <View
-                    style={[styles.inputContainer, styles.suggestionsWrapper]}
-                  >
-                    <Text style={styles.label}>Razón Social</Text>
+                <View style={styles.row}>
+                  <View style={[styles.inputContainer, styles.halfWidth]}>
+                    <Text style={styles.label}>Ciudad (mín. 2 caracteres)</Text>
                     <TextInput
-                      style={styles.input}
-                      placeholder="Nombre legal de la empresa"
-                      value={formData.legal_name}
+                      style={[styles.input, errors.city && styles.inputError]}
+                      placeholder="Ej: Pichincha"
+                      value={formData.city}
                       onChangeText={(text) =>
-                        setFormData({ ...formData, legal_name: text })
+                        setFormData({ ...formData, city: text })
                       }
                       editable={!isLoading}
                     />
-                  </View>
-
-                  <View style={styles.inputContainer}>
-                    <Text style={styles.label}>RUC</Text>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Número de RUC"
-                      value={formData.ruc}
-                      onChangeText={(text) =>
-                        setFormData({ ...formData, ruc: text })
-                      }
-                      keyboardType="numeric"
-                      editable={!isLoading}
-                    />
-                  </View>
-
-                  <View style={styles.inputContainer}>
-                    <Text style={styles.label}>Descripción</Text>
-                    <TextInput
-                      style={[styles.input, styles.textArea]}
-                      placeholder="Describe tu negocio"
-                      value={formData.description}
-                      onChangeText={(text) =>
-                        setFormData({ ...formData, description: text })
-                      }
-                      multiline
-                      numberOfLines={3}
-                      textAlignVertical="top"
-                      editable={!isLoading}
-                    />
-                  </View>
-                </View>
-
-                {/* Contact */}
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Contacto (Opcional)</Text>
-
-                  <View
-                    style={[styles.inputContainer, styles.suggestionsWrapper]}
-                  >
-                    <View style={styles.labelWithIcon}>
-                      <Phone size={16} color="#666" />
-                      <Text style={styles.label}>
-                        Teléfono (mín. 5 caracteres)
-                      </Text>
-                    </View>
-                    <TextInput
-                      style={[styles.input, errors.phone && styles.inputError]}
-                      placeholder="Ej: 0981234567"
-                      value={formData.phone}
-                      onChangeText={(text) =>
-                        setFormData({ ...formData, phone: text })
-                      }
-                      keyboardType="phone-pad"
-                      editable={!isLoading}
-                    />
-                    {errors.phone && (
-                      <Text style={styles.errorText}>{errors.phone}</Text>
+                    {errors.city && (
+                      <Text style={styles.errorText}>{errors.city}</Text>
                     )}
                   </View>
 
-                  <View style={styles.inputContainer}>
-                    <View style={styles.labelWithIcon}>
-                      <Mail size={16} color="#666" />
-                      <Text style={styles.label}>Email</Text>
-                    </View>
-                    <TextInput
-                      style={[styles.input, errors.email && styles.inputError]}
-                      placeholder="contacto@ejemplo.com"
-                      value={formData.email}
-                      onChangeText={(text) =>
-                        setFormData({ ...formData, email: text })
-                      }
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      editable={!isLoading}
-                    />
-                    {errors.email && (
-                      <Text style={styles.errorText}>{errors.email}</Text>
-                    )}
-                  </View>
-
-                  <View style={styles.inputContainer}>
-                    <View style={styles.labelWithIcon}>
-                      <Globe size={16} color="#666" />
-                      <Text style={styles.label}>
-                        Sitio Web (debe incluir http:// o https://)
-                      </Text>
-                    </View>
+                  <View style={[styles.inputContainer, styles.halfWidth]}>
+                    <Text style={styles.label}>
+                      Departamento (mín. 2 caracteres)
+                    </Text>
                     <TextInput
                       style={[
                         styles.input,
-                        errors.website && styles.inputError,
+                        errors.province && styles.inputError,
                       ]}
-                      placeholder="https://ejemplo.com"
-                      value={formData.website}
+                      placeholder="Ej: Ecuador"
+                      value={formData.province}
                       onChangeText={(text) =>
-                        setFormData({ ...formData, website: text })
+                        setFormData({ ...formData, province: text })
                       }
-                      keyboardType="url"
-                      autoCapitalize="none"
                       editable={!isLoading}
                     />
-                    {errors.website && (
-                      <Text style={styles.errorText}>{errors.website}</Text>
+                    {errors.province && (
+                      <Text style={styles.errorText}>{errors.province}</Text>
                     )}
                   </View>
                 </View>
 
-                {/* Location Information (either selected address summary or inputs) */}
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Ubicación </Text>
-
-                  {/* Saved addresses chooser */}
-                  {loadingAddresses ? (
-                    <Text style={styles.helperText}>
-                      Cargando direcciones...
-                    </Text>
-                  ) : userAddresses.length === 0 ? (
-                    <Text style={styles.helperText}>
-                      No tienes direcciones guardadas.
-                    </Text>
-                  ) : (
-                    <View style={styles.addressList}>
-                      {userAddresses.map((a) => {
-                        const selected = selectedAddressId === a.id;
-                        return (
-                          <TouchableOpacity
-                            key={a.id}
-                            style={[
-                              styles.addressCard,
-                              selected && styles.addressCardSelected,
-                            ]}
-                            onPress={() => {
-                              setSelectedAddressId(a.id);
-                              setFormData((prev) => ({
-                                ...prev,
-                                address: a.addressLine1,
-                                city: a.city,
-                                province: a.state || "",
-                                country: a.country,
-                                latitude: a.latitude,
-                                longitude: a.longitude,
-                                address_id: a.id,
-                              }));
-                            }}
-                          >
-                            <View style={styles.addressRow}>
-                              <View style={styles.addressInfo}>
-                                <Text
-                                  style={styles.addressTitle}
-                                  numberOfLines={1}
-                                >
-                                  {a.addressLine1}
-                                </Text>
-                                <Text
-                                  style={styles.addressMeta}
-                                  numberOfLines={1}
-                                >
-                                  {a.city} {a.state ? `- ${a.state}` : ""} •{" "}
-                                  {a.country}
-                                </Text>
-                              </View>
-                              <View
-                                style={[
-                                  styles.radio,
-                                  selected && styles.radioSelected,
-                                ]}
-                              />
-                            </View>
-                          </TouchableOpacity>
-                        );
-                      })}
-                    </View>
-                  )}
-
-                  {/* CTA para agregar nueva dirección (abre AddressManagementModal) */}
-                  <TouchableOpacity
-                    style={styles.addAddressButton}
-                    onPress={() => setShowAddressManager(true)}
-                  >
-                    <Text style={styles.addAddressText}>
-                      + Agregar nueva dirección
-                    </Text>
-                  </TouchableOpacity>
-
-                  {selectedAddressId ? (
-                    <View style={styles.inputContainer}>
-                      <Text style={styles.label}>Dirección seleccionada</Text>
-                      <Text
-                        style={[styles.input, { backgroundColor: "#f7f7f7" }]}
-                      >
-                        {formData.address}
-                      </Text>
-                      <Text style={styles.suggestionSubText}>
-                        {formData.city}{" "}
-                        {formData.province ? `- ${formData.province}` : ""} •{" "}
-                        {formData.country}
-                      </Text>
-                      <TouchableOpacity
-                        style={{ marginTop: 8 }}
-                        onPress={() => {
-                          setSelectedAddressId(null);
-                          setFormData((p) => ({ ...p, address_id: undefined }));
-                        }}
-                      >
-                        <Text style={{ color: "#ff9900" }}>
-                          Usar otra dirección / editar
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  ) : (
-                    <>
-                      <View style={styles.inputContainer}>
-                        <View style={styles.labelWithIcon}>
-                          <MapPin size={16} color="#666" />
-                          <Text style={styles.label}>
-                            Dirección (mín. 5 caracteres)
-                          </Text>
-                        </View>
-                        <TextInput
-                          style={[
-                            styles.input,
-                            errors.address && styles.inputError,
-                          ]}
-                          placeholder="Calle, número, barrio"
-                          value={formData.address}
-                          onChangeText={(text) => {
-                            setFormData({ ...formData, address: text });
-                            setSearchQuery(text);
-                          }}
-                          editable={!isLoading}
-                        />
-
-                        {suggestions.length > 0 && (
-                          <View style={styles.suggestionsContainer}>
-                            {suggestions.map((s) => (
-                              <TouchableOpacity
-                                key={s.id}
-                                style={styles.suggestionItem}
-                                onPress={() => handleSuggestionSelect(s)}
-                              >
-                                <Text style={styles.suggestionText}>
-                                  {s.full_address}
-                                </Text>
-                                <Text
-                                  style={styles.suggestionSubText}
-                                  numberOfLines={1}
-                                >
-                                  {s.context?.region?.name ||
-                                    s.context?.country?.name}
-                                </Text>
-                              </TouchableOpacity>
-                            ))}
-                          </View>
-                        )}
-
-                        {errors.address && (
-                          <Text style={styles.errorText}>{errors.address}</Text>
-                        )}
-                      </View>
-
-                      <View style={styles.row}>
-                        <View style={[styles.inputContainer, styles.halfWidth]}>
-                          <Text style={styles.label}>
-                            Ciudad (mín. 2 caracteres)
-                          </Text>
-                          <TextInput
-                            style={[
-                              styles.input,
-                              errors.city && styles.inputError,
-                            ]}
-                            placeholder="Ej: Pichincha"
-                            value={formData.city}
-                            onChangeText={(text) =>
-                              setFormData({ ...formData, city: text })
-                            }
-                            editable={!isLoading}
-                          />
-                          {errors.city && (
-                            <Text style={styles.errorText}>{errors.city}</Text>
-                          )}
-                        </View>
-
-                        <View style={[styles.inputContainer, styles.halfWidth]}>
-                          <Text style={styles.label}>
-                            Departamento (mín. 2 caracteres)
-                          </Text>
-                          <TextInput
-                            style={[
-                              styles.input,
-                              errors.province && styles.inputError,
-                            ]}
-                            placeholder="Ej: Ecuador"
-                            value={formData.province}
-                            onChangeText={(text) =>
-                              setFormData({ ...formData, province: text })
-                            }
-                            editable={!isLoading}
-                          />
-                          {errors.province && (
-                            <Text style={styles.errorText}>
-                              {errors.province}
-                            </Text>
-                          )}
-                        </View>
-                      </View>
-
-                      <View style={styles.inputContainer}>
-                        <Text style={styles.label}>País</Text>
-                        <TextInput
-                          style={styles.input}
-                          placeholder="Ecuador"
-                          value={formData.country}
-                          onChangeText={(text) =>
-                            setFormData({ ...formData, country: text })
-                          }
-                          editable={!isLoading}
-                        />
-                      </View>
-                    </>
-                  )}
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>País</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Ecuador"
+                    value={formData.country}
+                    onChangeText={(text) =>
+                      setFormData({ ...formData, country: text })
+                    }
+                    editable={!isLoading}
+                  />
                 </View>
-              </View>
-            </ScrollView>
-
-            {/* Footer Actions */}
-            <View style={styles.footer}>
-              <TouchableOpacity
-                style={[styles.button, styles.cancelButton]}
-                onPress={handleClose}
-                disabled={isLoading}
-              >
-                <Text style={styles.cancelButtonText}>Cancelar</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.button,
-                  styles.submitButton,
-                  isLoading && styles.submitButtonDisabled,
-                ]}
-                onPress={handleSubmit}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Text style={styles.submitButtonText}>
-                    Registrar Organización
-                  </Text>
-                )}
-              </TouchableOpacity>
-            </View>
+              </>
+            )}
           </View>
+          <AddressManagementModal
+            visible={showAddressManager}
+            onClose={() => setShowAddressManager(false)}
+            onCreated={handleAddressCreated}
+          />
         </View>
-      </KeyboardAvoidingView>
-      <AddressManagementModal
-        visible={showAddressManager}
-        onClose={() => setShowAddressManager(false)}
-        onCreated={handleAddressCreated}
-      />
-    </Modal>
+      }
+      actions={
+        <View style={styles.footer}>
+          <TouchableOpacity
+            style={[styles.button, styles.cancelButton]}
+            onPress={handleClose}
+            disabled={isLoading}
+          >
+            <Text style={styles.cancelButtonText}>Cancelar</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.button,
+              styles.submitButton,
+              isLoading && styles.submitButtonDisabled,
+            ]}
+            onPress={handleSubmit}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.submitButtonText}>
+                Registrar Organización
+              </Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      }
+    />
   );
 };
 
@@ -768,9 +706,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
-    backgroundColor: "#F9F9F9",
   },
   headerIcon: {
     width: 48,
@@ -799,7 +734,7 @@ const styles = StyleSheet.create({
   label: { fontSize: 14, fontWeight: "600", color: "#333", marginBottom: 8 },
   labelWithIcon: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: 6,
     marginBottom: 8,
   },

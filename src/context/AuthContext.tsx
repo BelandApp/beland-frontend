@@ -14,8 +14,20 @@ import { Storage } from "src/services/auth/storage.service";
 import { getBackendErrorMessage } from "src/services";
 import { notify } from "src/hooks/notification/notify.external";
 import { clearStorage, resetStores } from "src/utils/logoutUtils";
-import { Wallet } from "src/services/WalletApiService";
-
+type profiles = {
+  created_at: string;
+  id: string;
+  profile: {
+    created_at: string;
+    description: string;
+    id: string;
+    is_active: boolean;
+    name: string;
+    updated_at: string;
+  };
+  profile_id: string;
+  user_id: string;
+};
 export type User = {
   id: string;
   address: string;
@@ -27,7 +39,7 @@ export type User = {
   isBlocked: boolean;
   phone?: string;
   profile_picture_url?: string;
-  profiles: string[];
+  profiles: profiles[];
   role_name?: string;
   total_weight_recycled: string;
 };
