@@ -10,8 +10,6 @@ import {
   Platform,
 } from "react-native";
 import { useAuth } from "src/context";
-import { StackNavigationProp } from "@react-navigation/stack";
-import { RootStackParamList } from "src/components/layout/RootStackNavigator";
 import DashboardWrapper from "../DashboardWrapper";
 import {
   adminApiService,
@@ -234,7 +232,7 @@ interface DashboardSection {
 }
 
 const SuperAdminPanel: React.FC = () => {
-  const { user, isLoading } = useAuth();
+  const { user, status } = useAuth();
   const { navigate } = useCustomNavigation();
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loadingMetrics, setLoadingMetrics] = useState(true);
@@ -516,7 +514,10 @@ const SuperAdminPanel: React.FC = () => {
   );
 
   return (
-    <DashboardWrapper title={`Panel ${user?.role_name}`} isLoading={isLoading}>
+    <DashboardWrapper
+      title={`Panel ${user?.role_name}`}
+      isLoading={status === "loading"}
+    >
       <View style={styles.container}>
         {/* Welcome Section */}
 

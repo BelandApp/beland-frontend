@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, StyleSheet, Image } from "react-native";
-import { useAuth } from "src/context";
+import { ProfileEnum, useAuth } from "src/context";
 import { useBeCoinsStore } from "src/stores";
 import { useUserBalance } from "src/hooks/useUserBalance";
 import { useBeCoinsPrice } from "src/hooks/useBeCoinsPrice";
@@ -17,17 +17,11 @@ import { ChangePasswordModal } from "../settings/ChangePasswordModal";
 import { AddressManagementModal } from "../settings/AddressManagementModal";
 import { AccountManagementCard } from "../settings/AccountManagementCard";
 import { EnhancedProfileCard } from "../profile/EnhancedProfileCard";
-import {
-  LayoutDashboard,
-  ShoppingBag,
-  BarChart3,
-  User,
-  Trophy,
-} from "lucide-react-native";
 import { OrderService } from "src/services/OrderApiService";
+import ThemedTabs from "src/components/shared/Tabs/ThemedTabs";
 
 export const UserPanel: React.FC = () => {
-  const { user, isLoading, setUser } = useAuth();
+  const { user, status, hasProfile } = useAuth();
   const globalBeCoinsBalance = useBeCoinsStore((s) => s.balance);
   const { balance: walletBalance, loading: balanceLoading } = useUserBalance();
   const { beCoinsToUsd } = useBeCoinsPrice();
@@ -55,12 +49,12 @@ export const UserPanel: React.FC = () => {
         (o: any) =>
           o.status?.code === "DELIVERED" ||
           o.status?.code === "COLLECTED" ||
-          o.status?.code === "RECYCLED"
+          o.status?.code === "RECYCLED",
       );
 
       const totalSpent = completed.reduce(
         (sum, o: any) => sum + parseFloat(o.total_amount || 0),
-        0
+        0,
       );
 
       // Calcular balance bloqueado en órdenes pendientes
@@ -68,17 +62,17 @@ export const UserPanel: React.FC = () => {
         (o: any) =>
           o.status?.code === "PENDING" ||
           o.status?.code === "PREPARING" ||
-          o.status?.code === "IN_DELIVERY"
+          o.status?.code === "IN_DELIVERY",
       );
 
       const lockedBC = pendingOrders.reduce(
         (sum, o: any) => sum + parseFloat(o.total_becoin || 0),
-        0
+        0,
       );
 
       const lockedUSD = pendingOrders.reduce(
         (sum, o: any) => sum + parseFloat(o.total_amount || 0),
-        0
+        0,
       );
 
       setOrderStats({
@@ -94,7 +88,7 @@ export const UserPanel: React.FC = () => {
 
   if (!user) {
     return (
-      <DashboardWrapper title="Dashboard" isLoading={isLoading}>
+      <DashboardWrapper title="Dashboard" isLoading={status === "loading"}>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>
             No se pudieron cargar los datos del usuario. Por favor, reinicie la
@@ -110,14 +104,31 @@ export const UserPanel: React.FC = () => {
   const storeBalanceNum = Number(globalBeCoinsBalance ?? 0) || 0;
   const beCoinsToShow =
     storeBalanceNum > 0 ? storeBalanceNum : parsedUserBalance;
-
-  const tabs = [
+  const baseTabs = [
     { id: "overview", label: "Resumen" },
     { id: "orders", label: "Órdenes" },
     { id: "stats", label: "Estadísticas" },
     { id: "profile", label: "Perfil" },
     { id: "achievements", label: "Logros" },
   ];
+  let dynamicTabs = [...baseTabs];
+  // 👉 MERCHANT
+  if (hasProfile("MERCHANT" as ProfileEnum)) {
+    dynamicTabs.push(
+      { id: "merchant-products", label: "Productos" },
+      { id: "merchant-orders", label: "Órdenes Comercio" },
+      { id: "merchant-finance", label: "Finanzas" },
+    );
+  }
+
+  // 👉 DRIVER
+  if (hasProfile("DRIVER" as ProfileEnum)) {
+    dynamicTabs.push({
+      id: "driver-orders",
+      label: "Órdenes (Reparto)",
+    });
+  }
+  const tabs = dynamicTabs;
   const renderOverviewTab = () => (
     <View style={styles.tabContent}>
       <BalanceCard
@@ -202,7 +213,7 @@ export const UserPanel: React.FC = () => {
   };
 
   return (
-    <DashboardWrapper title="Mi Dashboard" isLoading={isLoading}>
+    <DashboardWrapper title="Mi Dashboard" isLoading={status === "loading"}>
       <ScrollView
         style={styles.scrollContainer}
         contentContainerStyle={styles.scrollContent}
@@ -241,7 +252,7 @@ export const UserPanel: React.FC = () => {
               <Text style={styles.balanceUSD} numberOfLines={1}>
                 $
                 {beCoinsToUsd(
-                  walletBalance || globalBeCoinsBalance || 0
+                  walletBalance || globalBeCoinsBalance || 0,
                 ).toFixed(2)}{" "}
                 USD
               </Text>
