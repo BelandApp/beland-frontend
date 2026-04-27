@@ -164,7 +164,9 @@ export const OrganizationRegistrationModal: React.FC<
     } else if (formData.name.trim().length > 150) {
       newErrors.name = "El nombre no puede exceder 150 caracteres";
     }
-
+    if (!formData.ruc || formData.ruc.trim().length < 5) {
+      newErrors.ruc = "El número de ruc es requerido";
+    }
     // If user didn't select an existing address, require address fields
     if (!formData.address_id) {
       if (!formData.address || !formData.address.trim()) {
