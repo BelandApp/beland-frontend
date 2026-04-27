@@ -106,13 +106,13 @@ export const UserPanel: React.FC = () => {
     storeBalanceNum > 0 ? storeBalanceNum : parsedUserBalance;
   const baseTabs = [
     { id: "overview", label: "Resumen" },
-    { id: "orders", label: "Órdenes" },
+    { id: "orders", label: "Mis Órdenes" },
     { id: "stats", label: "Estadísticas" },
     { id: "profile", label: "Perfil" },
     { id: "achievements", label: "Logros" },
   ];
   let dynamicTabs = [...baseTabs];
-  // 👉 MERCHANT
+  //  MERCHANT
   if (hasProfile("MERCHANT" as ProfileEnum)) {
     dynamicTabs.push(
       { id: "merchant-products", label: "Productos" },
@@ -121,7 +121,7 @@ export const UserPanel: React.FC = () => {
     );
   }
 
-  // 👉 DRIVER
+  //  DRIVER
   if (hasProfile("DRIVER" as ProfileEnum)) {
     dynamicTabs.push({
       id: "driver-orders",
@@ -207,6 +207,12 @@ export const UserPanel: React.FC = () => {
         return renderProfileTab();
       case "achievements":
         return renderAchievementsTab();
+      case "merchant-products":
+        return <></>;
+      case "merchant-orders":
+        return <></>;
+      case "merchant-finance":
+        return <></>;
       default:
         return renderOverviewTab();
     }
