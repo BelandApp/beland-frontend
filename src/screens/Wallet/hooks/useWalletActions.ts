@@ -6,15 +6,12 @@ import {
   RechargeIcon,
   CobrarIcon,
 } from "../../../components/icons";
-import { useAuth } from "src/context";
+import { ProfileEnum, useAuth } from "src/context";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 export const useWalletActions = () => {
   const { navigate } = useCustomNavigation();
-
-  // Obtener rol del usuario
-  const { user } = useAuth();
-
+  const { hasProfile } = useAuth();
   // Acciones principales del wallet
   const mainWalletActions: WalletAction[] = [
     {
@@ -44,12 +41,7 @@ export const useWalletActions = () => {
   ];
 
   // TODO CHEQUEAR botón Cobrar solo para roles permitidos
-  if (
-    typeof user?.role_name === "string" &&
-    ["COMMERCE", "ADMIN", "SUPERADMIN", "EMPRESA"].includes(
-      user.role_name.toUpperCase(),
-    )
-  ) {
+  if (hasProfile("MERCHANT" as ProfileEnum)) {
     mainWalletActions.push({
       id: "cobrar",
       label: "Cobrar",

@@ -26,6 +26,7 @@ import { STATUS_MESSAGES } from "./constants";
 export default function PayphoneSuccessScreen() {
   const { id, clientTxId, status, loading, walletBalance } =
     usePayphoneConfirmation();
+  const comeFromRecharge = localStorage.getItem("comeFromRecharge");
   const { navigate } = useCustomNavigation();
   const isTrouble = STATUS_MESSAGES.REJECTED_OR_CANCELLED;
   return (
@@ -54,19 +55,37 @@ export default function PayphoneSuccessScreen() {
         <View className="flex-row">
           <Button
             title="Volver"
-            onPress={() => navigate("MainTabs", { screen: "Home" })}
+            onPress={() => {
+              localStorage.removeItem("comeFromRecharge");
+              navigate("MainTabs", { screen: "Home" });
+            }}
             style={{ margin: "auto" }}
           />
+          {!isTrouble && comeFromRecharge && (
+            <Button
+              title="Terminar de comprar"
+              onPress={() => {
+                localStorage.removeItem("comeFromRecharge");
+                navigate("MainTabs", {
+                  screen: "Catalog",
+                  params: { comeFromRecharge: true },
+                });
+              }}
+              style={{ margin: "auto" }}
+            />
+          )}
           {isTrouble && !loading && (
             <Button
               title="Tengo problemas"
               icon={<PhoneCall />}
-              onPress={() =>
+              onPress={() => {
+                localStorage.removeItem("comeFromRecharge");
+
                 shareTextOnWhatsApp({
                   message: `Tengo problemas con mi recarga de payphone, id:${id} clientTxId: ${clientTxId}`,
                   phone: DIEGO_NUMBER,
-                })
-              }
+                });
+              }}
               style={{ margin: "auto" }}
               variant="secondary"
             />

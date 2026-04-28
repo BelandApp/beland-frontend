@@ -10,7 +10,7 @@ import { Button } from "src/components";
 import { useCustomNavigation } from "src/hooks";
 
 export const UserDashboard: React.FC = () => {
-  const { user, status, getUserRole } = useAuth();
+  const { user, status, isAdmin } = useAuth();
   const { navigate } = useCustomNavigation();
 
   if (status === "loading") {
@@ -34,33 +34,36 @@ export const UserDashboard: React.FC = () => {
     );
   }
 
-  // normalizar el Role
-  const role = getUserRole();
-
-  switch (role) {
-    case UserRole.SUPERADMIN:
-      return <SuperAdminPanel />;
-    case UserRole.ADMIN:
-      return <AdminPanel />;
-    case UserRole.LEADER:
-      return <LeaderPanel />;
-    case UserRole.EMPRESA:
-      return <EmpresaPanel />;
-    case UserRole.USER:
-      return <UserPanel />;
-    default:
-      console.error("[UserDashboard] rol desconocido:", {
-        role,
-        user,
-      });
-      return (
-        <View style={styles.container}>
-          <Text style={styles.errorText}>
-            No se reconoce tu rol. Contacta al soporte.
-          </Text>
-        </View>
-      );
+  if (isAdmin()) {
+    return <SuperAdminPanel />;
   }
+  return <UserPanel />;
+
+  // old architecture TODO eliminar cuando sea safe
+  // switch (role) {
+  //   case UserRole.SUPERADMIN:
+  //     return <SuperAdminPanel />;
+  //   case UserRole.ADMIN:
+  //     return <AdminPanel />;
+  //   case UserRole.LEADER:
+  //     return <LeaderPanel />;
+  //   case UserRole.EMPRESA:
+  //     return <EmpresaPanel />;
+  //   case UserRole.USER:
+  //     return <UserPanel />;
+  //   default:
+  //     console.error("[UserDashboard] rol desconocido:", {
+  //       role,
+  //       user,
+  //     });
+  //     return (
+  //       <View style={styles.container}>
+  //         <Text style={styles.errorText}>
+  //           No se reconoce tu rol. Contacta al soporte.
+  //         </Text>
+  //       </View>
+  //     );
+  // }
 };
 
 const styles = StyleSheet.create({

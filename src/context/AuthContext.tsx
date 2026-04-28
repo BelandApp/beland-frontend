@@ -14,8 +14,20 @@ import { Storage } from "src/services/auth/storage.service";
 import { getBackendErrorMessage } from "src/services";
 import { notify } from "src/hooks/notification/notify.external";
 import { clearStorage, resetStores } from "src/utils/logoutUtils";
-import { Wallet } from "src/services/WalletApiService";
-
+type profiles = {
+  created_at: string;
+  id: string;
+  profile: {
+    created_at: string;
+    description: string;
+    id: string;
+    is_active: boolean;
+    name: string;
+    updated_at: string;
+  };
+  profile_id: string;
+  user_id: string;
+};
 export type User = {
   id: string;
   address: string;
@@ -27,26 +39,25 @@ export type User = {
   isBlocked: boolean;
   phone?: string;
   profile_picture_url?: string;
-  profiles: string[];
-  role_name?: string;
+  profiles: profiles[];
+  role_name?: UserRole;
   total_weight_recycled: string;
 };
 
 export enum UserRole {
   SUPERADMIN = "SUPERADMIN",
   ADMIN = "ADMIN",
-  LEADER = "LEADER",
-  EMPRESA = "EMPRESA",
   USER = "USER",
 }
 
-const rolePermissions: Record<UserRole, string[]> = {
-  SUPERADMIN: ["*"],
-  ADMIN: ["manage_users", "view_dashboard"],
-  LEADER: ["view_team"],
-  EMPRESA: ["manage_company"],
-  USER: ["basic_access"],
-};
+export enum ProfileEnum {
+  DRIVER = "DRIVER",
+  HUB = "HUB",
+  MERCHANT = "MERCHANT",
+  FOUNDATION = "FOUNDATION",
+  CREATOR = "CREATOR",
+  RECYCLER_BASE = "RECYCLER_BASE",
+}
 
 type StatusType = "checking" | "authenticated" | "unauthenticated" | "loading";
 type AuthContextType = {
@@ -62,8 +73,10 @@ type AuthContextType = {
   isAuthenticated: boolean;
   updateUser: (partial: Partial<User>) => void;
   reloadUser: () => void;
-  hasRole: (roles: UserRole | UserRole[]) => boolean | typeof rolePermissions;
   getUserRole: () => UserRole | null;
+  getUserProfiles: () => void;
+  hasProfile: (profiles: ProfileEnum | ProfileEnum[]) => boolean;
+  isAdmin: () => boolean;
   requireAuth: (action: () => void | Promise<void>) => Promise<void>; //TODO VER SI LO PODEMOS QUITAR
 };
 WebBrowser.maybeCompleteAuthSession();
@@ -246,26 +259,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return rawRole?.toUpperCase() as UserRole;
   };
 
-  const hasRole = (roles: UserRole | UserRole[]) => {
-    if (!user) return false;
+  const getUserProfiles = (): ProfileEnum[] => {
+    if (!user) return [];
 
-    const userRole = getUserRole();
-    if (!userRole) return false;
-
-    if (Array.isArray(roles)) {
-      return roles.includes(userRole);
-    }
-
-    return userRole === roles;
+    return user.profiles.map(
+      (p) => p.profile.name.toUpperCase() as ProfileEnum,
+    );
   };
 
-  const hasPermission = (permission: string) => {
+  const hasProfile = (profiles: ProfileEnum | ProfileEnum[]) => {
+    if (!user) return false;
+
+    const userProfiles = getUserProfiles();
+
+    if (Array.isArray(profiles)) {
+      return profiles.some((p) => userProfiles.includes(p));
+    }
+
+    return userProfiles.includes(profiles);
+  };
+
+  const isAdmin = () => {
     const role = getUserRole();
-    if (!role) return false;
-
-    const permissions = rolePermissions[role];
-
-    return permissions.includes("*") || permissions.includes(permission);
+    return role === UserRole.ADMIN || role === UserRole.SUPERADMIN;
   };
 
   return (
@@ -281,7 +297,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         requireAuth,
         updateUser,
         reloadUser,
-        hasRole,
+        isAdmin,
+        getUserProfiles,
+        hasProfile,
         getUserRole,
       }}
     >

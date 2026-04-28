@@ -108,9 +108,14 @@ function loadPayphoneScript(): Promise<void> {
   });
 }
 
+type useRechargeType = {
+  paramsAmount: string;
+};
 // Hook personalizado
-export function useRecharge() {
-  const [amount, setAmount] = useState("");
+export function useRecharge({ paramsAmount }: useRechargeType) {
+  const normalizedAmount = paramsAmount ? Number(paramsAmount).toFixed(2) : "";
+
+  const [amount, setAmount] = useState(normalizedAmount);
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<PaymentMethodId | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -178,6 +183,9 @@ export function useRecharge() {
       }
 
       localStorage.setItem("payphone_token", payphoneToken);
+      if (paramsAmount) {
+        localStorage.setItem("comeFromRecharge", "true");
+      }
       const clientTransactionId = generateClientTransactionId();
       const payphoneConfig = {
         token: payphoneToken,
@@ -324,10 +332,17 @@ export function useRecharge() {
         ticket_image_url: imageUrl,
       });
 
-      notify.success({
-        message:
-          "Solicitud de recarga enviada correctamente. Será procesada en 24-48 horas.",
-      });
+      if (paramsAmount) {
+        notify.success({
+          message:
+            "Solicitud de recarga enviada correctamente. Será procesada en 24-48 horas. Luego podrás continuar con tu compra",
+        });
+      } else {
+        notify.success({
+          message:
+            "Solicitud de recarga enviada correctamente. Será procesada en 24-48 horas.",
+        });
+      }
 
       // Reset logic
       setReferenceId("");
@@ -362,7 +377,7 @@ export function useRecharge() {
     return () => {
       if (Platform.OS === "web") {
         clearPayphoneStorage();
-destroyPayphoneWidget();
+        destroyPayphoneWidget();
       }
     };
   }, []);

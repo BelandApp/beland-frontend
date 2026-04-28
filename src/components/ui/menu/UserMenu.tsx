@@ -65,7 +65,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   iconColor = "#fff",
 }) => {
   const { navigate } = useCustomNavigation();
-  const { user, logout, reloadUser, status } = useAuth();
+  const { user, logout, reloadUser, status, getUserRole } = useAuth();
   const notify = useNotify();
   const [menuVisible, setMenuVisible] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -146,7 +146,6 @@ export const UserMenu: React.FC<UserMenuProps> = ({
         break;
     }
   };
-
   const handleOpenOrganizationModal = async () => {
     setMenuVisible(false);
 
@@ -342,6 +341,9 @@ export const UserMenu: React.FC<UserMenuProps> = ({
       </TouchableOpacity>
     );
   }
+  const isMerchant = user.profiles.some(
+    (prof) => prof.profile.name === "MERCHANT",
+  );
   const MENU_CONTENT: Record<UserRole, React.ReactNode> = {
     USER: (
       <View className="gap-2">
@@ -391,7 +393,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
         />
         {/* Mostrar opción solo si el usuario NO es comerciante */}
 
-        {/* {user.role.name !== "COMERCIO" && (
+        {!isMerchant && (
           <Button
             title="Hacerme comerciante"
             onPress={handleOpenOrganizationModal}
@@ -399,7 +401,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
             icon={<Store size={18} color="#333" />}
             className="justify-start"
           />
-        )} */}
+        )}
       </View>
     ),
     ADMIN: (
@@ -545,25 +547,12 @@ export const UserMenu: React.FC<UserMenuProps> = ({
                   <Text style={styles.menuUserName}>
                     {user.full_name || "Usuario"}
                   </Text>
-                  {user.role_name && (
-                    <View
-                      style={[
-                        styles.menuRoleBadge,
-                        {
-                          backgroundColor:
-                            user.role_name === "COMMERCE"
-                              ? "#4CAF50"
-                              : "#FF6B35",
-                        },
-                      ]}
-                    >
-                      <Text style={styles.menuRoleBadgeText}>
-                        {user.role_name === "COMMERCE"
-                          ? "Comerciante"
-                          : user.role_name}
-                      </Text>
-                    </View>
-                  )}
+
+                  <View style={styles.menuRoleBadge}>
+                    <Text style={styles.menuRoleBadgeText}>
+                      {getUserRole()}
+                    </Text>
+                  </View>
                 </View>
                 <Button
                   onPress={toggleMenu}
@@ -707,6 +696,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     alignSelf: "flex-start",
+    backgroundColor: "#FF6B35",
   },
 
   menuRoleBadgeText: {

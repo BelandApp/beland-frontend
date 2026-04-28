@@ -32,9 +32,13 @@ import { buildCatalogTabs, CatalogTabs } from "./components/catalogTab";
 import { containerStyles } from "./styles";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Pagination } from "src/components/shared/pagination/Pagination";
+import { useWallet } from "../Wallet";
 
-export const CatalogScreen = () => {
+export const CatalogScreen = ({ route }: { route: any }) => {
+  const comeFromRecharge = route.params?.comeFromRecharge;
+
   const { navigate } = useCustomNavigation();
+  const { walletData } = useWallet();
   const {
     handleAddProduct,
     cartProducts,
@@ -44,7 +48,14 @@ export const CatalogScreen = () => {
     closeCart,
     showCart,
     addingProductId,
+    totalUSD,
   } = useCatalogCart();
+  useEffect(() => {
+    if (comeFromRecharge) {
+      openCart();
+    }
+  }, [comeFromRecharge, openCart]);
+
   const notify = useNotify();
   const { searchText, setSearchText, filters, setFilters } =
     useCatalogFilters();
@@ -67,7 +78,8 @@ export const CatalogScreen = () => {
   useEffect(() => {
     scrollRef.current?.scrollTo({ y: 0, animated: true });
   }, [pagination.page]);
-
+  const estimatedDebt = Number(totalUSD()) - Number(walletData.estimatedValue);
+  const formattedAmount = estimatedDebt.toFixed(2);
   return (
     <>
       {/* Header */}
@@ -155,7 +167,7 @@ export const CatalogScreen = () => {
         onClose={closeCart}
         onNavigateToRecharge={() => {
           closeCart();
-          navigate("RechargeScreen");
+          navigate("RechargeScreen", { paramsAmount: formattedAmount });
         }}
         onCheckout={async () => {
           if (!isAuthenticated) {

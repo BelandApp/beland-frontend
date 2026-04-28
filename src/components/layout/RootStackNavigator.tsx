@@ -32,7 +32,6 @@ import { LoginScreen } from "@screens/Login";
 import { RegisterScreen } from "@screens/Register";
 import { NewPasswordScreen } from "@screens/NewPassword";
 import { RewardsScreen } from "@screens/Rewards";
-import { EventModal, AcquiredEventModal } from "@screens/Events";
 import {
   UseEventScreen,
   QRUseEventScreen,
@@ -63,11 +62,11 @@ export type RootStackParamList = {
   FAQ: undefined;
   // Payments
   CobrarScreen: undefined;
-  SendScreen: { id?: string };
+  SendScreen: { id?: string; amount?: string };
   ReceiveScreen: undefined;
   HistoryScreen: undefined;
   WalletHistoryScreen: undefined;
-  RechargeScreen: undefined;
+  RechargeScreen: { paramsAmount?: string } | undefined;
   WalletSettingsScreen: undefined;
   PaymentScreen: {
     paymentData: {
@@ -134,6 +133,7 @@ export const RootStackNavigator = () => {
             intent={{
               screen: "SendScreen",
               id: props.route.params.id,
+              amount: props.route.params.amount,
             }}
             fallback={<WalletGuestScreen />}
           >

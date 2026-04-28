@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -16,17 +16,11 @@ import {
 } from "./hooks/useRecharge";
 import { ThemedHeader } from "src/components/shared/headers/Header";
 
-import {
-  BeCoinsBalance,
-  Button,
-  CustomLoader,
-  WrapperModal,
-} from "src/components";
+import { BeCoinsBalance, Button, WrapperModal } from "src/components";
 import { notify } from "src/hooks/notification/notify.external";
 import { CopyToClipboard } from "src/utils/shareHelper";
 import ThemedTabs from "src/components/shared/Tabs/ThemedTabs";
 import { useCustomNavigation } from "src/hooks";
-import { useAuth } from "src/context";
 
 const BankDetailRow = ({ label, value, isCopyable = false }: any) => (
   <View className="flex-col sm:flex-row justify-between py-2 border-b border-gray-100 dark:border-gray-800">
@@ -44,7 +38,8 @@ const BankDetailRow = ({ label, value, isCopyable = false }: any) => (
   </View>
 );
 
-export default function RechargeScreen() {
+export const RechargeScreen = ({ route }: { route: any }) => {
+  const paramsAmount = route.params?.paramsAmount;
   const { navigate } = useCustomNavigation();
 
   const {
@@ -74,7 +69,7 @@ export default function RechargeScreen() {
     modalPayphone,
     setModalPayphone,
     destroyPayphoneWidget,
-  } = useRecharge();
+  } = useRecharge({ paramsAmount });
 
   const handleBeforeClose = () => {
     return new Promise<boolean>((resolve) => {
@@ -92,12 +87,12 @@ export default function RechargeScreen() {
         title="Recargar BeCoins"
         canGoBack
         onBackPress={() => {
-  destroyPayphoneWidget();
+          destroyPayphoneWidget();
 
-  setTimeout(() => {
-    navigate("MainTabs", { screen: "Wallet" });
-  }, 0);
-}}
+          setTimeout(() => {
+            navigate("MainTabs", { screen: "Wallet" });
+          }, 0);
+        }}
       />
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="py-8 px-4">
@@ -562,4 +557,6 @@ export default function RechargeScreen() {
       />
     </>
   );
-}
+};
+
+export default RechargeScreen;
