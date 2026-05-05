@@ -253,9 +253,7 @@ const FinancesManagement: React.FC = () => {
         isOpen={financeUI.modal === "recharge"}
         onClose={financeUI.handleCancel}
         header={
-          <Text className="text-lg font-semibold capitalize">
-            {financeUI.typeAction} Transacción
-          </Text>
+          <Text className="text-lg font-semibold capitalize">Transacción</Text>
         }
         actions={
           <View className="flex flex-row justify-center gap-6">
@@ -274,6 +272,10 @@ const FinancesManagement: React.FC = () => {
         }
         content={
           <View>
+            <Text className="mb-2">
+              Estás por {financeUI.typeAction === "approve" && "aprobar"}
+              {financeUI.typeAction === "reject" && "rechazar"} la Transferencia
+            </Text>
             <CustomInput
               variant="filled"
               label="Nro Transaccion bancaria"
@@ -295,9 +297,7 @@ const FinancesManagement: React.FC = () => {
         isOpen={financeUI.modal === "withdraw"}
         onClose={financeUI.handleCancel}
         header={
-          <Text className="text-lg font-semibold capitalize">
-            {financeUI.typeAction} Retiro
-          </Text>
+          <Text className="text-lg font-semibold capitalize">Retiro</Text>
         }
         actions={
           <View className="flex flex-row justify-center gap-6">
@@ -316,6 +316,10 @@ const FinancesManagement: React.FC = () => {
         }
         content={
           <View>
+            <Text className="mb-2">
+              Estás por {financeUI.typeAction === "approve" && "aprobar"}{" "}
+              {financeUI.typeAction === "reject" && "rechazar"} el retiro
+            </Text>
             <CustomInput
               variant="filled"
               label="Nro retiro bancaria"
