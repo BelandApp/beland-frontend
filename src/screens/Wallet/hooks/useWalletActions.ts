@@ -14,14 +14,14 @@ export const useWalletActions = () => {
   const { hasProfile } = useAuth();
   // Acciones principales del wallet
   const mainWalletActions: WalletAction[] = [
-    {
-      id: "recharge",
-      label: "Recargar",
-      icon: RechargeIcon,
-      color: "#1E40AF",
-      bgColor: "#DBEAFE",
-      onPress: () => navigate("RechargeScreen"),
-    },
+    // {
+    //   id: "recharge",
+    //   label: "Recargar",
+    //   icon: RechargeIcon,
+    //   color: "#1E40AF",
+    //   bgColor: "#DBEAFE",
+    //   onPress: () => navigate("RechargeScreen"),
+    // },
     {
       id: "exchange",
       label: "Canjear",
