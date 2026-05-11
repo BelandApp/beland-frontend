@@ -34,13 +34,10 @@ export const HeaderSteps: React.FC<headerStepsType> = ({
         />
       )}
       <Text style={styles.title}>
-        {step === "select"
-          ? "Dirección de entrega"
-          : step === "form"
-            ? "Nueva dirección"
-            : step === "processing"
-              ? "Confirmar pedido"
-              : ""}
+        {step === "select" && "Dirección de entrega"}
+        {step === "form" && "Nueva dirección"}
+        {step === "processing" && "Confirmar pedido"}
+        {step === "payment" && "Finalizar"}
       </Text>
     </View>
   );

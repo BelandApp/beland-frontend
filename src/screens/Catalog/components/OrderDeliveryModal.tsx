@@ -11,6 +11,7 @@ import Toast from "react-native-toast-message";
 import { toastConfig } from "src/components/shared/notification/GlobalNotification";
 import { Button, WrapperModal } from "src/components";
 import { View } from "react-native";
+import PaymentStep from "./orderSteps/payment.step";
 
 interface OrderDeliveryModalProps {
   visible: boolean;
@@ -44,6 +45,7 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
     setShowLocationModal,
     submitStatus,
     setSubmitStatus,
+    subtotal,
   } = useOrderDelivery(onOrderCreated);
 
   useEffect(() => {
@@ -82,9 +84,16 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
     processing: (
       <ConfirmOrder
         onSubmit={handleSubmit}
-        submitStatus={submitStatus}
         preOrder={preOrder}
         onCancel={cancelPreOrder}
+        submitStatus={submitStatus}
+      />
+    ),
+    payment: (
+      <PaymentStep
+        paramsAmount={subtotal}
+        submitStatus={submitStatus}
+        onCancel={() => setStep("processing")}
       />
     ),
   };
@@ -100,11 +109,12 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
     form: <></>,
     processing: (
       <Button
-        onPress={handleSubmit}
-        title="Confirmar pedido"
+        onPress={() => setStep("payment")}
+        title="Confirmar y pagar"
         disabled={loading}
       />
     ),
+    payment: <Button title="Ver mi pedido" onPress={handleSubmit} />,
   };
   return (
     <>

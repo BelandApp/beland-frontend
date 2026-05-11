@@ -165,10 +165,6 @@ export const CatalogScreen = ({ route }: { route: any }) => {
       <CartBottomSheet
         visible={showCart}
         onClose={closeCart}
-        onNavigateToRecharge={() => {
-          closeCart();
-          navigate("RechargeScreen", { paramsAmount: formattedAmount });
-        }}
         onCheckout={async () => {
           if (!isAuthenticated) {
             notify.confirm({
@@ -199,6 +195,8 @@ export const CatalogScreen = ({ route }: { route: any }) => {
         onClose={closeDeliveryModal}
         onCancel={openCart}
         onOrderCreated={() => {
+          closeDeliveryModal();
+          navigate("RechargeScreen", { paramsAmount: formattedAmount });
           // Navigate to Orders tab to see the created order
           navigate("Orders", { screen: "OrdersList" });
         }}

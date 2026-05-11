@@ -1,4 +1,3 @@
 export { CategoryFilter } from "./CategoryFilter";
 export { ResourcesGrid } from "./ResourcesGrid";
-export * from "./InsufficientBalanceModal";
-export * from "./PurchaseModal"
+export * from "./PurchaseModal";

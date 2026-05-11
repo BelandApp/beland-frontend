@@ -14,10 +14,9 @@ import {
   formatUSDPrice,
   CURRENCY_CONFIG,
 } from "@/constants";
-import { InsufficientBalanceModal } from "../../Community/components";
-import { useNotify } from "@/hooks";
+import { useCustomNavigation, useNotify } from "@/hooks";
 import { getBackendErrorMessage } from "src/services";
-import { Button, toastConfig } from "src/components";
+import { Button } from "src/components";
 import { useCartStore } from "@/stores";
 import { useAuth } from "src/context";
 import WarpperModal from "src/components/shared/modals/wrapperModal";
@@ -25,15 +24,13 @@ import WarpperModal from "src/components/shared/modals/wrapperModal";
 interface CartBottomSheetProps {
   visible: boolean;
   onClose: () => void;
-  onCheckout?: () => void;
-  onNavigateToRecharge?: () => void;
+  onCheckout: () => void;
 }
 
 export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
   visible,
   onClose,
   onCheckout,
-  onNavigateToRecharge,
 }) => {
   const { isAuthenticated, handleAuth0Login, user } = useAuth();
   const {
@@ -46,9 +43,6 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
     syncCart,
   } = useCartStore();
   const notify = useNotify();
-  const { balance } = useUserBalance();
-  const [insufficientModalVisible, setInsufficientModalVisible] =
-    useState(false);
 
   useEffect(() => {
     if (user) syncCart();
@@ -177,30 +171,12 @@ export const CartBottomSheet: React.FC<CartBottomSheetProps> = ({
                     });
                     return;
                   }
-
-                  if ((balance || 0) < totalBecoins()) {
-                    setInsufficientModalVisible(true);
-                    return;
-                  }
-                  onCheckout && onCheckout();
+                  onCheckout();
                 }}
               />
             </View>
           </View>
         }
-      />
-
-      {/* Modal de saldo insuficiente reutilizable */}
-      <InsufficientBalanceModal
-        visible={insufficientModalVisible}
-        userBalance={balance || 0}
-        requiredAmount={totalBecoins()}
-        onRecharge={() => {
-          setInsufficientModalVisible(false);
-          onClose();
-          onNavigateToRecharge && onNavigateToRecharge();
-        }}
-        onCancel={() => setInsufficientModalVisible(false)}
       />
     </>
   );

@@ -1,14 +1,6 @@
-import {
-  ActivityIndicator,
-  View,
-  Text,
-  StyleSheet,
-  Dimensions,
-  ScrollView,
-} from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { colors } from "src/styles";
-import { Button } from "src/components";
 import { preOrderType } from "../../hooks";
 import { UserAddress } from "src/services";
 import { convertUSDToBeCoins } from "src/constants";
@@ -24,7 +16,6 @@ export const ConfirmOrder: React.FC<ProcessingStepProps> = ({
   preOrder,
   onSubmit,
   onCancel,
-  submitStatus,
 }) => {
   if (!preOrder) {
     return (
@@ -41,41 +32,8 @@ export const ConfirmOrder: React.FC<ProcessingStepProps> = ({
   );
   const total = (subtotal + SHIPPING_COST).toFixed(2);
 
-  if (submitStatus === "loading") {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.belandOrange} />
-        <Text style={styles.loadingText}>Creando tu orden...</Text>
-      </View>
-    );
-  }
-
-  if (submitStatus === "success") {
-    return (
-      <View style={styles.loadingContainer}>
-        <MaterialCommunityIcons
-          name="check-circle"
-          size={64}
-          color={colors.belandGreen}
-        />
-        <Text style={styles.loadingText}>¡Orden creada con éxito!</Text>
-      </View>
-    );
-  }
-
-  if (submitStatus === "error") {
-    return (
-      <View style={styles.loadingContainer}>
-        <MaterialCommunityIcons name="alert-circle" size={64} color="red" />
-        <Text style={styles.loadingText}>
-          Ocurrió un error al crear la orden
-        </Text>
-        <Button title="Volver" onPress={onCancel} />
-      </View>
-    );
-  }
   return (
-    <View>
+    <View className="gap-2">
       {/* Products Section */}
       <View style={styles.section}>
         <View style={styles.productsWrapper}>
@@ -378,18 +336,6 @@ const styles = StyleSheet.create({
     gap: 12,
     justifyContent: "flex-end",
     marginTop: 8,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 40,
-    gap: 16,
-  },
-  loadingText: {
-    fontSize: 16,
-    color: "#666",
-    textAlign: "center",
   },
   processingIcon: {
     width: 80,

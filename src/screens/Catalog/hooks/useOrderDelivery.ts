@@ -16,7 +16,7 @@ import { CartService } from "@/services";
 import { CreateOrderRequest, DeliveryAddress } from "src/types";
 import { COORDINATES_HAMONI } from "src/constants/deliveryCoordinats";
 
-export type DeliveryStep = "select" | "form" | "processing";
+export type DeliveryStep = "select" | "form" | "processing" | "payment";
 type OrderSubmitStatus = "idle" | "loading" | "success" | "error";
 export type preOrderType = {
   products: any[];
@@ -39,6 +39,7 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
   const [preOrder, setPreOrder] = useState<preOrderType | null>(null);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [detectedCountry, setDetectedCountry] = useState("");
+  const [subtotal, setSubtotal] = useState("");
   const notify = useNotify();
   const { items } = useCartStore();
   const { createOrder } = useOrdersStoreAPI();
@@ -125,8 +126,6 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
         driverLat: COORDINATES_HAMONI[0],
         driverLon: COORDINATES_HAMONI[1],
       });
-      setSelectedAddress(address);
-      setSelectedAddressId(id);
       setPreOrder({
         products: backendItems, // Usar items del backend
         address: address,
@@ -135,6 +134,16 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
         duration_min: deliveryCost.durationMin,
         distance_km: deliveryCost.distanceKm,
       });
+      // subtotal productos
+      const itemsSubtotal = backendItems.reduce(
+        (acc, item) => acc + item.price * item.quantity,
+        0,
+      );
+      // total final
+      const total = itemsSubtotal + (deliveryCost.cost || 1);
+      setSelectedAddress(address);
+      setSelectedAddressId(id);
+      setSubtotal(String(total));
       setStep("processing");
     } catch (e) {
       notify.error({ message: getBackendErrorMessage(e) });
@@ -236,6 +245,7 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
     showLocationModal,
     detectedCountry,
     setShowLocationModal,
+    subtotal,
 
     loadAddresses,
     setSubmitStatus,
@@ -248,84 +258,3 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
     cancelPreOrder,
   };
 }
-
-//! CODIGO LEGACY VER SI ES NECESARIO
-// try {
-//   const hasDelivery =
-//     newOrder &&
-//     ((newOrder as any).deliveryAddress || (newOrder as any).delivery_address);
-
-//   const shouldForceAttach = !!(newOrder as any).__get_failed || !hasDelivery;
-
-//   if (shouldForceAttach) {
-//     let fallbackAddress: any = undefined;
-//     if (addressId) {
-//       fallbackAddress = userAddresses.find((a) => a.id === addressId);
-//     }
-
-//     if (!fallbackAddress && deliveryAddress) {
-//       fallbackAddress = {
-//         addressLine1: deliveryAddress.street,
-//         addressLine2: deliveryAddress.additionalInfo || "",
-//         city: deliveryAddress.city,
-//         state: (deliveryAddress as any).state || "",
-//         postalCode: (deliveryAddress as any).zipCode || "",
-//         country: deliveryAddress.country,
-//         latitude: (deliveryAddress as any).latitude,
-//         longitude: (deliveryAddress as any).longitude,
-//         phone: (deliveryAddress as any).phone || undefined,
-//       };
-//     }
-
-//     if (!fallbackAddress && (orderRequest as any).deliveryAddress) {
-//       const od = (orderRequest as any).deliveryAddress;
-//       fallbackAddress = {
-//         addressLine1: od.street,
-//         addressLine2: od.additionalInfo || "",
-//         city: od.city,
-//         state: od.state || "",
-//         postalCode: od.zipCode || "",
-//         country: od.country,
-//         latitude: od.latitude,
-//         longitude: od.longitude,
-//         phone: od.phone || undefined,
-//       };
-//     }
-
-//     if (fallbackAddress) {
-//       const normalized = {
-//         street:
-//           fallbackAddress.addressLine1 ||
-//           fallbackAddress.address_line_1 ||
-//           fallbackAddress.street ||
-//           "",
-//         additionalInfo:
-//           fallbackAddress.addressLine2 ||
-//           fallbackAddress.address_line_2 ||
-//           fallbackAddress.additionalInfo ||
-//           "",
-//         city: fallbackAddress.city || fallbackAddress.town || "",
-//         state: fallbackAddress.state || fallbackAddress.province || "",
-//         zipCode:
-//           fallbackAddress.postalCode ||
-//           fallbackAddress.postal_code ||
-//           fallbackAddress.zip ||
-//           "",
-//         country: fallbackAddress.country || "",
-//         latitude: fallbackAddress.latitude,
-//         longitude: fallbackAddress.longitude,
-//         phone: fallbackAddress.phone,
-//       };
-
-//       const patched: any = { ...(newOrder as any) };
-//       patched.deliveryAddress = normalized;
-//       patched.delivery_address = normalized;
-//       try {
-//         patched.__attached_fallback = true;
-//       } catch (e) {}
-//       newOrder = patched as any;
-//     }
-//   }
-// } catch (attachErr) {
-//   // Failed to attach fallback deliveryAddress
-// }
