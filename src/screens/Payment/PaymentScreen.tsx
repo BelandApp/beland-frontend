@@ -75,10 +75,11 @@ type PaymentScreenRouteProp = RouteProp<
   "PaymentScreen"
 >;
 
+//@deprecated use StripePayment
 const PaymentScreen: React.FC = () => {
   const route = useRoute<PaymentScreenRouteProp>();
-   const { navigate, goBack } = useCustomNavigation();
-  const notify = useNotify()
+  const { navigate, goBack } = useCustomNavigation();
+  const notify = useNotify();
 
   // Estados principales
   const [selectedMethod, setSelectedMethod] = useState<
@@ -183,7 +184,7 @@ const PaymentScreen: React.FC = () => {
   // Helper: calcula monto descontado a partir de un original y una redención
   const computeDiscountFrom = (
     original: number,
-    redemption: Redemption | RealUserResource | null
+    redemption: Redemption | RealUserResource | null,
   ) => {
     if (!redemption) {
       // computeDiscountFrom -> no redemption
@@ -253,7 +254,7 @@ const PaymentScreen: React.FC = () => {
     // Calcular con helper usando el original actual
     const { discounted, free } = computeDiscountFrom(
       originalAmount,
-      redemption as any
+      redemption as any,
     );
     // computed discount applied
     setDiscountedAmount(discounted);
@@ -377,11 +378,11 @@ const PaymentScreen: React.FC = () => {
     if (paymentData.wallet_id || paymentData.amount_to_payment_id) {
       sessionStorage.setItem(
         "payphone_to_wallet_id",
-        paymentData.wallet_id || ""
+        paymentData.wallet_id || "",
       );
       sessionStorage.setItem(
         "payphone_amount_to_payment_id",
-        paymentData.amount_to_payment_id || ""
+        paymentData.amount_to_payment_id || "",
       );
 
       // Guardar información de redención aplicada
@@ -401,7 +402,7 @@ const PaymentScreen: React.FC = () => {
             original_amount: originalAmount,
             discounted_amount: getEffectiveAmount(),
             is_free_entry: isFreeEntry,
-          })
+          }),
         );
       } else {
         sessionStorage.removeItem("payphone_applied_redemption");
@@ -808,7 +809,7 @@ const PaymentScreen: React.FC = () => {
                             setAmountError(null);
                           } else {
                             setAmountError(
-                              "Solo se permiten números del 1 al 999999"
+                              "Solo se permiten números del 1 al 999999",
                             );
                           }
                         }}
@@ -974,8 +975,8 @@ const PaymentScreen: React.FC = () => {
                     {isLoading
                       ? "Procesando..."
                       : isFreeEntry
-                      ? "Ingresar gratis"
-                      : "Pagar con Payphone"}
+                        ? "Ingresar gratis"
+                        : "Pagar con Payphone"}
                   </button>
                 ) : selectedMethod === "bank_transfer" ? (
                   <button
@@ -998,17 +999,14 @@ const PaymentScreen: React.FC = () => {
                     {isLoading
                       ? "Procesando..."
                       : isFreeEntry
-                      ? "Ingresar gratis"
-                      : `Pagar ${usdToBeCoins(
-                          Number(amount || 0)
-                        ).toLocaleString()} BeCoins`}
+                        ? "Ingresar gratis"
+                        : `Pagar ${usdToBeCoins(
+                            Number(amount || 0),
+                          ).toLocaleString()} BeCoins`}
                   </button>
                 )}
 
-                <button
-                  className="secondary-button"
-                  onClick={() => goBack()}
-                >
+                <button className="secondary-button" onClick={() => goBack()}>
                   Cancelar
                 </button>
               </div>

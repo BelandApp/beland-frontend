@@ -10,7 +10,9 @@ export const PaymentStripeService = {
     return response;
   },
   createStripeUrlWeb: async (amount: number, userId: string) => {
-    const response = await core.post(`/paymentWeb`, { amount, userId });
+    const response = await core.post(`/stripe-topups/create-intent`, {
+      amountUsd: amount,
+    });
     return response;
   },
 };

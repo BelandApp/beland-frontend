@@ -1,3 +1,6 @@
 export interface PaymentStrategy {
-  pay(amount: number, userId: string): Promise<{ success: boolean }>;
+  pay(
+    amount: number,
+    userId: string,
+  ): Promise<{ success: boolean; clientSecret: string }>;
 }
