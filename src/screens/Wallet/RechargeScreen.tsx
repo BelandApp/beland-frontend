@@ -11,14 +11,12 @@ import {
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import {
   useRecharge,
-  PRESET_AMOUNTS,
   PAYMENT_METHODS,
   cardBrandStyles,
 } from "./hooks/useRecharge";
 import { ThemedHeader } from "src/components/shared/headers/Header";
-import Constants from "expo-constants";
 
-import { Button, CustomLoader, WrapperModal } from "src/components";
+import { Button, WrapperModal } from "src/components";
 import { notify } from "src/hooks/notification/notify.external";
 import { useCustomNavigation } from "src/hooks";
 import { CardElement } from "@stripe/react-stripe-js";
@@ -41,6 +39,8 @@ const BankDetailRow = ({ label, value, isCopyable = false }: any) => (
     </View>
   </View>
 );
+// para validacion
+const stripeKey = process.env.EXPO_PUBLIC_STRIPE_KEY;
 export const RechargeScreen = ({ route }: { route: any }) => {
   const paramsAmount = route.params?.paramsAmount;
   const { navigate } = useCustomNavigation();
@@ -54,7 +54,7 @@ export const RechargeScreen = ({ route }: { route: any }) => {
     previewUri,
     imageName,
     isValid,
-    handleAmountChange,
+    PRESET_AMOUNTS,
     handlePresetAmount,
     handlePaymentMethodSelect,
     handleProceedToPayment,
@@ -73,7 +73,7 @@ export const RechargeScreen = ({ route }: { route: any }) => {
     handlePay,
     cardBrand,
     setCardBrand,
-  } = useRecharge();
+  } = useRecharge({ paramsAmount });
   const brand = cardBrandStyles[cardBrand ?? "unknown"];
   const handleBeforeClose = () => {
     return new Promise<boolean>((resolve) => {
@@ -116,14 +116,14 @@ export const RechargeScreen = ({ route }: { route: any }) => {
                       key={presetAmount}
                       onPress={() => handlePresetAmount(presetAmount)}
                       className={`flex-1 py-10 rounded-xl border ${
-                        amount === presetAmount.toString()
+                        amount === presetAmount
                           ? "bg-orange-500 border-orange-500 shadow-lg"
                           : "border-orange-200  active:border-orange-500"
                       }`}
                     >
                       <Text
                         className={`text-center text-base font-medium ${
-                          amount === presetAmount.toString()
+                          amount === presetAmount
                             ? "text-white font-semibold"
                             : "text-gray-800"
                         }`}
@@ -320,64 +320,74 @@ export const RechargeScreen = ({ route }: { route: any }) => {
       </ScrollView>
 
       {/* MODAL DE STRIPE */}
-      <WrapperModal
-        beforeClose={handleBeforeClose}
-        isOpen={modalStripe}
-        onClose={() => setModalStripe(false)}
-        header={
-          <Text className="text-lg font-semibold">Pago mediante Stripe</Text>
-        }
-        actions={<Button title="Pagar" onPress={handlePay} />}
-        content={
-          <View className="gap-4">
-            <Text className="text-lg ">Introduce los datos de tu tarjeta:</Text>
-            <View
-              className=" shadow-xl min-h-20 justify-center p-2 gap-4"
-              style={{
-                backgroundColor: brand.color,
-                borderRadius: 12,
-                padding: 12,
-              }}
-            >
-              <Text className="text-lg font-semibold text-white capitalize">
-                {brand.label}
+      {
+        <WrapperModal
+          beforeClose={handleBeforeClose}
+          isOpen={modalStripe}
+          onClose={() => setModalStripe(false)}
+          header={
+            <Text className="text-lg font-semibold">Pago mediante Stripe</Text>
+          }
+          actions={<Button title="Pagar" onPress={handlePay} />}
+          content={
+            <View className="gap-4">
+              <Text className="text-lg ">
+                Introduce los datos de tu tarjeta:
               </Text>
-              <View className="bg-white p-2 rounded-lg">
-                <CardElement
-                  onChange={(event) => {
-                    setCardBrand(event.brand);
-                  }}
-                  options={{
-                    style: {
-                      base: {
-                        fontSize: "16px",
-                      },
-                    },
-                  }}
-                  onLoadError={() => {
-                    notify.error({
-                      message: "Error cargando Stripe, intenta nuevamente",
-                    });
-                  }}
-                />
-              </View>
-              <View className="flex-row justify-between">
-                <Text className="text-white">{user?.full_name}</Text>
+              <View
+                className=" shadow-xl min-h-20 justify-center p-2 gap-4"
+                style={{
+                  backgroundColor: brand.color,
+                  borderRadius: 12,
+                  padding: 12,
+                }}
+              >
+                <Text className="text-lg font-semibold text-white capitalize">
+                  {brand.label}
+                </Text>
+                <View className="bg-white p-2 rounded-lg">
+                  {stripeKey ? (
+                    <CardElement
+                      onChange={(event) => {
+                        setCardBrand(event.brand);
+                      }}
+                      options={{
+                        style: {
+                          base: {
+                            fontSize: "16px",
+                          },
+                        },
+                      }}
+                      onLoadError={() => {
+                        notify.error({
+                          message: "Error cargando Stripe, intenta nuevamente",
+                        });
+                      }}
+                    />
+                  ) : (
+                    <Text className="text-lg text-red-400">
+                      Error cargando stripe, contacte con el administrador
+                    </Text>
+                  )}
+                </View>
+                <View className="flex-row justify-between">
+                  <Text className="text-white">{user?.full_name}</Text>
 
-                {cardBrand != "unknown" ? (
-                  <FontAwesome
-                    name={`cc-${cardBrand}` as any}
-                    size={22}
-                    color={"white"}
-                  />
-                ) : (
-                  <FontAwesome name="credit-card" size={22} color={"white"} />
-                )}
+                  {cardBrand != "unknown" && cardBrand ? (
+                    <FontAwesome
+                      name={`cc-${cardBrand}` as any}
+                      size={22}
+                      color={"white"}
+                    />
+                  ) : (
+                    <FontAwesome name="credit-card" size={22} color={"white"} />
+                  )}
+                </View>
               </View>
             </View>
-          </View>
-        }
-      />
+          }
+        />
+      }
       {/* MODAL DE TRANSFERENCIA BANCARIA */}
       <WrapperModal
         beforeClose={handleBeforeClose}

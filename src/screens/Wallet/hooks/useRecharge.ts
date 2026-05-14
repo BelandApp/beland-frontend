@@ -40,8 +40,6 @@ export interface PaymentAccount {
   updated_at: string;
   user_id: string;
 }
-// Constantes
-export const PRESET_AMOUNTS = [5, 10, 25, 100];
 
 export const PAYMENT_METHODS: PaymentMethod[] = [
   {
@@ -71,7 +69,7 @@ export const cardBrandStyles: Record<string, { color: string; label: string }> =
       label: "Visa",
     },
     mastercard: {
-      color: "#EB001B",
+      color: "#213143",
       label: "Mastercard",
     },
     amex: {
@@ -83,13 +81,15 @@ export const cardBrandStyles: Record<string, { color: string; label: string }> =
       label: "Tarjeta",
     },
   };
-
-// Hook personalizado
-export function useRecharge() {
+type useRechargeType = {
+  paramsAmount: string;
+};
+export function useRecharge({ paramsAmount }: useRechargeType) {
+  const normalizedAmount = paramsAmount ? Number(paramsAmount).toFixed(2) : "";
+  const [amount, setAmount] = useState(normalizedAmount);
   const [modalStripe, setModalStripe] = useState(false);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [cardBrand, setCardBrand] = useState<string | null>(null);
-  const [amount, setAmount] = useState("");
   const { user } = useAuth();
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<PaymentMethodId | null>(null);
@@ -101,6 +101,10 @@ export function useRecharge() {
 
   // Validación
   const isValid = amount && selectedPaymentMethod && Number(amount) > 0;
+  let PRESET_AMOUNTS = ["5", "10", "25", "100"];
+  if (paramsAmount) {
+    PRESET_AMOUNTS = [normalizedAmount];
+  }
 
   // Handlers
   const handleAmountChange = (value: string) => {
@@ -112,8 +116,8 @@ export function useRecharge() {
     }
   };
 
-  const handlePresetAmount = (presetAmount: number) => {
-    setAmount(presetAmount.toString());
+  const handlePresetAmount = (presetAmount: string) => {
+    setAmount(presetAmount);
   };
 
   const handlePaymentMethodSelect = (methodId: PaymentMethodId) => {
@@ -287,7 +291,9 @@ export function useRecharge() {
 
     if (result.error) {
       notify.error({ message: "Hubo un error, intenta luego" });
-      setModalStripe(false);
+      setTimeout(() => {
+        setModalStripe(false);
+      }, 500);
     } else if (result.paymentIntent?.status === "succeeded") {
       notify.success({ message: "Pago exitoso, se acreditara en la brevedad" });
       setModalStripe(false);
@@ -306,6 +312,7 @@ export function useRecharge() {
     setModalStripe,
     cardBrand,
     setCardBrand,
+    PRESET_AMOUNTS,
 
     // Bank Transfer State
     referenceId,

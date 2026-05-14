@@ -7,7 +7,7 @@ export interface StripeIntentResponse {
   clientTransactionId: string;
   currency: string;
   paymentIntentId: string;
-  status: "PENDING" | "SUCCEEDED" | "FAILED"; // ajustá según backend
+  status: "PENDING" | "SUCCEEDED" | "FAILED";
   topupId: string;
 }
 export const PaymentStripeService = {
