@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useUploadImage } from "src/hooks";
+import { useCustomNavigation, useUploadImage } from "src/hooks";
 import { useThemedTabs } from "src/components";
 import { notify } from "src/hooks/notification/notify.external";
 import { BackendPaymentAccount, getBackendErrorMessage } from "src/services";
@@ -85,8 +85,10 @@ type useRechargeType = {
   paramsAmount: string;
 };
 export function useRecharge({ paramsAmount }: useRechargeType) {
-  const normalizedAmount = paramsAmount ? Number(paramsAmount).toFixed(2) : "";
-  const [amount, setAmount] = useState(normalizedAmount);
+  const parsedAmount = Number(paramsAmount);
+  const normalizedAmount =
+    !paramsAmount || isNaN(parsedAmount) ? 1 : Math.max(parsedAmount, 1);
+  const [amount, setAmount] = useState<string>(normalizedAmount.toFixed(2));
   const [modalStripe, setModalStripe] = useState(false);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [cardBrand, setCardBrand] = useState<string | null>(null);
@@ -98,12 +100,12 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
   const beCoinsAmount = amount ? Math.floor(Number(amount) / 0.05) : 0;
   const usdAmount = Number(amount) || 0;
   const { pay } = usePayment();
-
+  const { navigate } = useCustomNavigation();
   // Validación
   const isValid = amount && selectedPaymentMethod && Number(amount) > 0;
   let PRESET_AMOUNTS = ["5", "10", "25", "100"];
   if (paramsAmount) {
-    PRESET_AMOUNTS = [normalizedAmount];
+    PRESET_AMOUNTS = [normalizedAmount.toFixed(2)];
   }
 
   // Handlers
@@ -293,10 +295,20 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
       notify.error({ message: "Hubo un error, intenta luego" });
       setTimeout(() => {
         setModalStripe(false);
-      }, 500);
+      }, 3000);
     } else if (result.paymentIntent?.status === "succeeded") {
       notify.success({ message: "Pago exitoso, se acreditara en la brevedad" });
-      setModalStripe(false);
+      setTimeout(() => {
+        setModalStripe(false);
+        if (paramsAmount) {
+          navigate("MainTabs", {
+            screen: "Catalog",
+            params: { comeFromRecharge: true },
+          });
+        } else {
+          navigate("WalletHistoryScreen");
+        }
+      }, 3000);
     }
   };
 
