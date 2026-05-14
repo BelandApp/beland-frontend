@@ -84,7 +84,7 @@ const PaymentScreen: React.FC = () => {
   // Estados principales
   const [selectedMethod, setSelectedMethod] = useState<
     "payphone" | "becoin" | "bank_transfer"
-  >("payphone");
+  >("becoin");
   const [showBankTransferModal, setShowBankTransferModal] = useState(false);
   const [appliedRedemption, setAppliedRedemption] = useState<
     Redemption | RealUserResource | null
@@ -954,6 +954,7 @@ const PaymentScreen: React.FC = () => {
 
               {/* Botones de acción - Solo CSS, sin estilos inline */}
               <div className="action-buttons">
+{/*
                 {isPresetFreeEntry && amount === "0" ? (
                   <button
                     className={`primary-button free-entry-button ${
@@ -988,7 +989,7 @@ const PaymentScreen: React.FC = () => {
                   >
                     {isLoading ? "Procesando..." : "Pagar por Transferencia"}
                   </button>
-                ) : (
+                ) : ( */}
                   <button
                     className={`primary-button becoins-button ${
                       !canPay || isLoading ? "disabled" : ""
@@ -1004,7 +1005,7 @@ const PaymentScreen: React.FC = () => {
                             Number(amount || 0),
                           ).toLocaleString()} BeCoins`}
                   </button>
-                )}
+    //            )}
 
                 <button className="secondary-button" onClick={() => goBack()}>
                   Cancelar

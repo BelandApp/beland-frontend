@@ -27,13 +27,13 @@ import {
   Share,
   Share2,
 } from "lucide-react-native";
-import { shareTextOnWhatsApp, showShareOptions } from "src/utils/shareHelper";
 import { share } from "src/utils/Share";
 
 type Tab = "amount" | "contacts";
 
 const SendScreen = ({ route }: { route: any }) => {
   const id = route.params?.id;
+  const amount = route.params?.amount;
   const { navigate } = useCustomNavigation();
   const { user, handleAuth0Login } = useAuth();
   const notify = useNotify();
@@ -48,7 +48,7 @@ const SendScreen = ({ route }: { route: any }) => {
 
   // Estados principales
   const [activeTab, setActiveTab] = useState<Tab>("amount");
-  const [amountUsd, setAmountUsd] = useState("");
+  const [amountUsd, setAmountUsd] = useState(amount ?? "");
   const [address, setAddress] = useState(id ?? "");
   const [shareMessage, setShareMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -304,7 +304,7 @@ const SendScreen = ({ route }: { route: any }) => {
         ) : (
           <>
             <MaterialCommunityIcons name="send" size={20} color="#fff" />
-            <Text style={styles.sendButtonText}>ENVIAR TRANSFERENCIA</Text>
+            <Text style={styles.sendButtonText}>ENVIAR GIFT CARD</Text>
           </>
         )}
       </TouchableOpacity>
@@ -347,7 +347,7 @@ const SendScreen = ({ route }: { route: any }) => {
   return (
     <View style={styles.container}>
       <ThemedHeader
-        title="Enviar Dinero"
+        title="Enviar Gift Card"
         buttons={
           <TouchableOpacity
             onPress={() => navigate("QR")}
@@ -471,13 +471,13 @@ const SendScreen = ({ route }: { route: any }) => {
               <ArrowDownRight color="orange" size="45" />
             </View>
             <Text className="text-xl">
-              La transferencia de
+              El envío de GifCard
               <Text className="font-bold"> USD$ {amountUsd} </Text>a
               <Text className="italic"> {address} </Text>
-              ya fue procesada correctamente
+              fue exitoso
             </Text>
             <Text className="mt-2 text-lg text-center">
-              ¿Te gustaría compartirla?
+              ¿Te gustaría compartirlo?
             </Text>
           </View>
         }

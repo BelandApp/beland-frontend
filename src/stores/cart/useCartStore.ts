@@ -26,11 +26,13 @@ export type CartStore = {
   deliveryType?: "group" | "home";
   groupId?: string;
   address?: string;
+  showCart: boolean;
   // --actions--//
   getCartId: () => Promise<string>;
   addProduct: (CartItem: CartItem) => void;
   removeProduct: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
+  setShowCart: (value: boolean) => void;
   clearCart: () => void;
   logOutCart: () => void;
   syncCart: () => Promise<boolean>;
@@ -43,9 +45,11 @@ export type CartStore = {
 
 export const useCartStore = create<CartStore>((set, get) => ({
   cartId: undefined,
+  showCart: false,
   items: [],
   loading: false,
   hasInitialized: false,
+  setShowCart: (value) => set({ showCart: value }),
   totalUSD: () => {
     const { items } = get();
     return items.reduce((sum, p) => sum + p.price * p.quantity, 0);

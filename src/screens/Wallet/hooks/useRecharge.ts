@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
-import { Platform, Alert } from "react-native";
 import { useUploadImage } from "src/hooks";
 import { useThemedTabs } from "src/components";
 import { notify } from "src/hooks/notification/notify.external";
 import { BackendPaymentAccount, getBackendErrorMessage } from "src/services";
 import { CloudinaryService } from "src/services/cloudinary/cloudinary.service";
+import { usePayment } from "src/hooks/payment/usePayment.web";
 import { useAuth } from "src/context";
-import { usePayment } from "src/hooks/payment/usePayment";
 import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js";
 
 // Tipos
@@ -47,7 +46,7 @@ export const PRESET_AMOUNTS = [5, 10, 25, 100];
 export const PAYMENT_METHODS: PaymentMethod[] = [
   {
     id: "STRIPE",
-    name: "Tarjeta Crédito/Débito",
+    name: "STRIPE",
     icon: "card",
     badge: "Instantáneo",
     badgeColor: "green",
@@ -59,7 +58,7 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     icon: "business",
     badge: "48 horas hábiles",
     badgeColor: "gray",
-    description: "Sin comisiones",
+    description: "Operación manual",
   },
 ];
 type PaymentMethodId = PaymentMethod["id"];
@@ -98,8 +97,6 @@ export function useRecharge() {
   // Cálculos derivados
   const beCoinsAmount = amount ? Math.floor(Number(amount) / 0.05) : 0;
   const usdAmount = Number(amount) || 0;
-  const processingFee = 0;
-  const totalAmount = usdAmount + processingFee;
   const { pay } = usePayment();
 
   // Validación
@@ -107,9 +104,12 @@ export function useRecharge() {
 
   // Handlers
   const handleAmountChange = (value: string) => {
-    // Solo permitir números
-    const cleanValue = value.replace(/[^0-9]/g, "");
-    setAmount(cleanValue);
+    // Permite números con hasta 2 decimales
+    const regex = /^\d*(\.\d{0,2})?$/;
+
+    if (regex.test(value)) {
+      setAmount(value);
+    }
   };
 
   const handlePresetAmount = (presetAmount: number) => {
@@ -320,8 +320,6 @@ export function useRecharge() {
     // Datos calculados
     beCoinsAmount,
     usdAmount,
-    processingFee,
-    totalAmount,
     isValid,
 
     // Handlers

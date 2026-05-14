@@ -1,11 +1,11 @@
-import React, { useEffect } from "react";
+import React from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   ScrollView,
   Platform,
+  TextInput,
   Image,
 } from "react-native";
 import { FontAwesome, Ionicons } from "@expo/vector-icons";
@@ -16,14 +16,15 @@ import {
   cardBrandStyles,
 } from "./hooks/useRecharge";
 import { ThemedHeader } from "src/components/shared/headers/Header";
+import Constants from "expo-constants";
 
 import { Button, CustomLoader, WrapperModal } from "src/components";
 import { notify } from "src/hooks/notification/notify.external";
-import { CopyToClipboard } from "src/utils/shareHelper";
-import ThemedTabs from "src/components/shared/Tabs/ThemedTabs";
 import { useCustomNavigation } from "src/hooks";
 import { CardElement } from "@stripe/react-stripe-js";
 import { useAuth } from "src/context";
+import { CopyToClipboard } from "src/utils/shareHelper";
+import ThemedTabs from "src/components/shared/Tabs/ThemedTabs";
 
 const BankDetailRow = ({ label, value, isCopyable = false }: any) => (
   <View className="flex-col sm:flex-row justify-between py-2 border-b border-gray-100">
@@ -40,8 +41,8 @@ const BankDetailRow = ({ label, value, isCopyable = false }: any) => (
     </View>
   </View>
 );
-
-export default function RechargeScreen() {
+export const RechargeScreen = ({ route }: { route: any }) => {
+  const paramsAmount = route.params?.paramsAmount;
   const { navigate } = useCustomNavigation();
   const { user } = useAuth();
   const {
@@ -52,7 +53,6 @@ export default function RechargeScreen() {
     usdAmount,
     previewUri,
     imageName,
-    totalAmount,
     isValid,
     handleAmountChange,
     handlePresetAmount,
@@ -90,7 +90,11 @@ export default function RechargeScreen() {
       <ThemedHeader
         title="Recargar BeCoins"
         canGoBack
-        onBackPress={() => navigate("MainTabs", { screen: "Wallet" })}
+        onBackPress={() => {
+          setTimeout(() => {
+            navigate("MainTabs", { screen: "Wallet" });
+          }, 0);
+        }}
       />
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="py-8 px-4">
@@ -103,10 +107,10 @@ export default function RechargeScreen() {
             >
               {/* Montos Rápidos */}
               <View>
-                <Text className=" font-semibold text-gray-800 uppercase tracking-wider mb-4">
-                  Selecciona el monto de monedas a comprar:
+                <Text className="font-semibold text-gray-800 uppercase tracking-wider mb-4">
+                  Montos Predefinidos:
                 </Text>
-                <View className="flex-row gap-3">
+                <View className="md:flex-row gap-3">
                   {PRESET_AMOUNTS.map((presetAmount) => (
                     <TouchableOpacity
                       key={presetAmount}
@@ -121,7 +125,7 @@ export default function RechargeScreen() {
                         className={`text-center text-base font-medium ${
                           amount === presetAmount.toString()
                             ? "text-white font-semibold"
-                            : "text-gray-800 "
+                            : "text-gray-800"
                         }`}
                       >
                         ${presetAmount}
@@ -252,7 +256,7 @@ export default function RechargeScreen() {
                         Total
                       </Text>
                       <Text className="text-lg font-bold text-orange-500">
-                        ${totalAmount.toFixed(2)} USD
+                        ${usdAmount.toFixed(2)} USD
                       </Text>
                     </View>
 
@@ -527,4 +531,6 @@ export default function RechargeScreen() {
       />
     </>
   );
-}
+};
+
+export default RechargeScreen;

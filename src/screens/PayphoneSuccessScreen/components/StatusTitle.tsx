@@ -23,8 +23,6 @@ export const StatusTitle: React.FC<StatusTitleProps> = ({
     status === STATUS_MESSAGES.PAYMENT_SUCCESS ||
     status === STATUS_MESSAGES.RECHARGE_SUCCESS;
 
-  const isError = !isSuccess;
-
   return (
     <Text
       className={`font-semibold text-lg ${isSuccess ? "text-green-500" : "text-red-500"}`}

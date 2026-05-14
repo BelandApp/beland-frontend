@@ -48,7 +48,7 @@ export interface EventPass {
   sold_tickets: number;
   available: boolean;
   attended_count: number;
-  price_becoin: string;
+  price_dollar: string;
   discount: string;
   total_becoin: string;
   is_refundable: boolean;

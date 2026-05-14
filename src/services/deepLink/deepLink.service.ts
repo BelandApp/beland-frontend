@@ -4,14 +4,15 @@ const DEEPLINK_KEY = "pending_deeplink";
 export type SetIntentType = {
   screen: string;
   id: string | undefined;
+  amount: string | undefined;
 };
 export const DeepLinkService = {
-  async setIntent({ screen, id }: SetIntentType) {
+  async setIntent({ screen, id, amount }: SetIntentType) {
     await storage.setItem(
       DEEPLINK_KEY,
       JSON.stringify({
         screen,
-        params: { id },
+        params: { id, amount },
       }),
     );
   },
