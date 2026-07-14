@@ -3,7 +3,7 @@ import { Transaction } from "../types";
 import { View, Text, Pressable, Platform } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SquareChevronDown } from "lucide-react-native";
-import { convertBeCoinsToUSD } from "src/constants";
+import { convertBeCoinsToUSD, convertUSDToBeCoins } from "src/constants";
 import { captureRef } from "react-native-view-shot";
 import * as Sharing from "expo-sharing";
 import { useTransactionInfo } from "../hooks/useTransactionInfo";
@@ -159,22 +159,21 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                 className="text-3xl font-bold"
                 style={{
                   color:
-                    Number(transaction.amount_becoin) > 0
+                    Number(transaction.amount_usd) > 0
                       ? colors.brand.green[500]
                       : colors.semantic.error[500],
                 }}
               >
-                {transaction.amount_becoin} Becoin
+                {convertUSDToBeCoins(transaction.amount_usd)} Becoin
               </Text>
 
               <Text className="text-sm text-gray-500">
-                ≈ USD${" "}
-                {convertBeCoinsToUSD(transaction.amount_becoin).toFixed(2)}
+                ≈ USD$ {transaction.amount_usd}
               </Text>
             </View>
             <Text className="text-xs text-gray-400 text-center">
               Saldo después de la operación: Usd$
-              {convertBeCoinsToUSD(Number(transaction.post_balance)).toFixed(2)}
+              {Number(transaction.post_balance).toFixed(2)}
             </Text>
 
             <View className="items-center mt-3 gap-1">
