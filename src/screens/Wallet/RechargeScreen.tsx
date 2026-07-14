@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  Platform,
   TextInput,
   Image,
 } from "react-native";
@@ -108,7 +107,9 @@ export const RechargeScreen = ({ route }: { route: any }) => {
               {/* Montos Rápidos */}
               <View>
                 <Text className="font-semibold text-gray-800 uppercase tracking-wider mb-4">
-                  Montos Predefinidos:
+                  {paramsAmount === undefined
+                    ? "Montos Predefinidos:"
+                    : "Monto de recarga:"}
                 </Text>
                 <View className="md:flex-row gap-3">
                   {PRESET_AMOUNTS.map((presetAmount) => (

@@ -87,8 +87,9 @@ type useRechargeType = {
 export function useRecharge({ paramsAmount }: useRechargeType) {
   const parsedAmount = Number(paramsAmount);
   const normalizedAmount =
-    !paramsAmount || isNaN(parsedAmount) ? 1 : Math.max(parsedAmount, 1);
+    !paramsAmount || isNaN(parsedAmount) ? 5 : Math.max(parsedAmount, 5);
   const [amount, setAmount] = useState<string>(normalizedAmount.toFixed(2));
+  console.log("monto de params", paramsAmount, "monto de amount", amount);
   const [modalStripe, setModalStripe] = useState(false);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [cardBrand, setCardBrand] = useState<string | null>(null);
@@ -103,7 +104,7 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
   const { navigate } = useCustomNavigation();
   // Validación
   const isValid = amount && selectedPaymentMethod && Number(amount) > 0;
-  let PRESET_AMOUNTS = ["5", "10", "25", "100"];
+  let PRESET_AMOUNTS = ["5.00", "10.00", "25.00", "100.00"];
   if (paramsAmount) {
     PRESET_AMOUNTS = [normalizedAmount.toFixed(2)];
   }
