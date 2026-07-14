@@ -10,6 +10,13 @@ export interface StripeIntentResponse {
   status: "PENDING" | "SUCCEEDED" | "FAILED";
   topupId: string;
 }
+
+export type transactionType =
+  | "RECHARGE"
+  | "GIFTCARD"
+  | "EVENTPASS"
+  | "ORDER_PAYMENT "
+  | "EXPERIENCE";
 export const PaymentStripeService = {
   createStripeIntentMobile: async (amountUsd: number) => {
     const response = await core.post(`/stripe-toups/create-intent`, {
@@ -20,9 +27,11 @@ export const PaymentStripeService = {
   },
   createStripeUrlWeb: async (
     amountUsd: number,
+    transactionType: transactionType,
   ): Promise<StripeIntentResponse> => {
     const response = await core.post(`/stripe-topups/create-intent`, {
       amountUsd,
+      owner: transactionType,
     });
     return response;
   },

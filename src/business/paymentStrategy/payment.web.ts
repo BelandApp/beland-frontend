@@ -1,11 +1,14 @@
-import { PaymentStripeService } from "src/services/payment/payment.service";
+import {
+  PaymentStripeService,
+  transactionType,
+} from "src/services/payment/payment.service";
 import { PaymentStrategy } from "./payment.strategy";
 
 export const useWebPayment = (): PaymentStrategy => {
-  const pay = async (amount: number, userId: string) => {
+  const pay = async (amount: number, transactionType: transactionType) => {
     const paymentIntent = await PaymentStripeService.createStripeUrlWeb(
       amount,
-      userId,
+      transactionType,
     );
     return {
       success: true,

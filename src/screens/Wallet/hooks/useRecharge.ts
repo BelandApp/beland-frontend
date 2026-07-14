@@ -266,7 +266,7 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
     if (selectedPaymentMethod === "BANK_TRANSFER") {
       setShowBankTransferModal(true);
     } else if (selectedPaymentMethod === "STRIPE") {
-      const result = await pay(Number(amount), user.id);
+      const result = await pay(Number(amount), "RECHARGE");
       if (result.success) {
         setClientSecret(result.clientSecret);
         setModalStripe(true);
