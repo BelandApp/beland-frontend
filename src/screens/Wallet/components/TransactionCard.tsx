@@ -4,7 +4,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Transaction } from "../types";
 import { Card } from "../../../components/ui/Card";
 import { DateToParagraphAndHour } from "src/utils/dateTransform";
-import { convertBeCoinsToUSD } from "src/constants";
+import { convertBeCoinsToUSD, convertUSDToBeCoins } from "src/constants";
 import { CheckCircle, Watch } from "lucide-react-native";
 import { colors } from "src/design-system";
 import { BeCoinIcon } from "src/components";
@@ -60,13 +60,13 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
                 styles.amount,
                 {
                   color:
-                    Number(transaction.amount_becoin) > 0
+                    Number(transaction.amount_usd) > 0
                       ? colors.brand.green[500]
                       : colors.semantic.error[500],
                 },
               ]}
             >
-              {convertBeCoinsToUSD(transaction.amount_becoin).toFixed(2)} $
+              {convertUSDToBeCoins(transaction.amount_usd).toFixed(2)} $
             </Text>
             <BeCoinIcon />
           </View>
