@@ -33,16 +33,49 @@ import { containerStyles } from "./styles";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Pagination } from "src/components/shared/pagination/Pagination";
 import { useWallet } from "../Wallet";
-import SubscriptionSlider, {
-  SubscriptionProduct,
-} from "./components/suscription/SuscriptionSlider";
-const subscriptionProducts: SubscriptionProduct[] = [
+import SubscriptionSlider from "./components/suscription/SuscriptionSlider";
+import { CircularProduct } from "./components/suscription/type";
+
+const subscriptionProducts: CircularProduct[] = [
   {
     id: "1",
     name: "Huevos de campo",
+    madeBy: "Granja 1",
+    isCircular: true,
     price: 5,
-    imageUrl: "/Eggs-default.png",
-    characters: ["Naturales", "Frescos", "Sin agroquímicos"],
+    image:
+      "https://res.cloudinary.com/dbfboc8cm/image/upload/v1770127726/Huevos_el_Artesanal_ijxf3w.png",
+    features: ["Naturales", "Frescos", "Sin agroquímicos"],
+  },
+  {
+    id: "2",
+    name: "Leche Frescas",
+    price: 6,
+    image:
+      "https://res.cloudinary.com/dbfboc8cm/image/upload/v1770127726/Huevos_el_Artesanal_ijxf3w.png",
+    features: [""],
+    madeBy: "Granja 2",
+    isCircular: false,
+  },
+  {
+    id: "3",
+    name: "Leche Frescas",
+    price: 6,
+    image:
+      "https://res.cloudinary.com/dbfboc8cm/image/upload/v1770127726/Huevos_el_Artesanal_ijxf3w.png",
+    features: [""],
+    madeBy: "Granja 2",
+    isCircular: false,
+  },
+  {
+    id: "4",
+    name: "Leche Frescas",
+    price: 6,
+    image:
+      "https://res.cloudinary.com/dbfboc8cm/image/upload/v1770127726/Huevos_el_Artesanal_ijxf3w.png",
+    features: [""],
+    madeBy: "Granja 2",
+    isCircular: false,
   },
 ];
 export const CatalogScreen = ({ route }: { route: any }) => {
