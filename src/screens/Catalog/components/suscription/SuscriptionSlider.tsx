@@ -15,18 +15,18 @@ const SubscriptionSlider: React.FC<SubscriptionProps> = ({ products }) => {
   return (
     <View className="flex items-center">
       {products.map((product) => (
-        <View className="flex flex-col rounded-xl bg-beland-green-500 p-6 gap-10 min-w-[90%] md:min-w-[700px] shadow relative">
+        <View className="flex flex-col rounded-xl bg-white p-6 gap-10 min-w-[90%] md:min-w-[700px] shadow shadow-beland-orange-500 relative">
           <View className="flex flex-row">
             <View className="z-10">
-              <Text className="text-3xl text-white font-semibold">
+              <Text className="text-3xl text-black font-semibold">
                 {product.name}
               </Text>
-              <Text className="font-semibold italic text-neutral-200 text-xl">
+              <Text className="font-semibold italic text-neutral-700 text-xl">
                 ${product.price} usd/month
               </Text>
               <View className="mt-5">
                 {product.characters.map((item) => (
-                  <Text className="text-lg text-rose-100 font-medium">
+                  <Text className="text-lg text-emerald-900 font-medium">
                     {item}
                   </Text>
                 ))}
