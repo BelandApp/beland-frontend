@@ -6,15 +6,18 @@ import { Check, CircleCheck, LeafyGreen } from "lucide-react-native";
 interface SubscriptionCardProps {
   product: CircularProduct;
   width: number;
+  onPress: () => void;
 }
 
 const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
   product,
   width,
+  onPress,
 }) => {
   const { image, name, price, madeBy, isCircular } = product;
   return (
     <Pressable
+      onPress={onPress}
       style={{ width }}
       className="overflow-hidden rounded-3xl bg-white h-fit relative shadow"
     >
