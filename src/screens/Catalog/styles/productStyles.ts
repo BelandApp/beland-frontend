@@ -48,6 +48,7 @@ export const productStyles = StyleSheet.create({
           justifyContent: "space-between",
           width: getCardWidth(),
           minHeight: 280,
+          minWidth: 250,
           boxSizing: "border-box",
         }
       : {
@@ -86,15 +87,13 @@ export const productStyles = StyleSheet.create({
     color: colors.textSecondary,
     marginBottom: 4,
     fontWeight: "500" as const,
-    textAlign: "center" as const,
   },
   productName: {
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: "600" as const,
     color: colors.textPrimary,
     marginBottom: 4,
     lineHeight: 16,
-    textAlign: "center" as const,
     minHeight: 32, // Altura mínima para mantener alineación
   },
   productCategory: {

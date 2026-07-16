@@ -96,20 +96,24 @@ export const EventCard: React.FC<Event> = ({
             </View>
           </View>
           <View style={styles.footer}>
-            <View style={styles.priceSection}>
-              <View style={styles.textContainer}>
-                <BadgeDollarSign color={colors.belandOrange} />
-                <Text style={styles.eventPrice}>{price_dollar} Usd</Text>
+            {price_dollar ? (
+              <View style={styles.priceSection}>
+                <View style={styles.textContainer}>
+                  <BadgeDollarSign color={colors.belandOrange} />
+                  <Text style={styles.eventPrice}>{price_dollar} Usd</Text>
+                </View>
+                {/* Badge de precio en USD más distintivo */}
+                <View style={styles.usdBadge}>
+                  <Text style={styles.usdBadgeLabel}>≈ </Text>
+                  <Text style={styles.usdBadgePrice}>
+                    ${formatUSDPrice(convertBeCoinsToUSD(Number(price_dollar)))}
+                  </Text>
+                  <Text style={styles.usdBadgeCurrency}> USD</Text>
+                </View>
               </View>
-              {/* Badge de precio en USD más distintivo */}
-              <View style={styles.usdBadge}>
-                <Text style={styles.usdBadgeLabel}>≈ </Text>
-                <Text style={styles.usdBadgePrice}>
-                  ${formatUSDPrice(convertBeCoinsToUSD(Number(price_dollar)))}
-                </Text>
-                <Text style={styles.usdBadgeCurrency}> USD</Text>
-              </View>
-            </View>
+            ) : (
+              <Text style={styles.freeSection}>Free</Text>
+            )}
             <SquareChevronUp />
           </View>
         </View>
@@ -205,6 +209,16 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     gap: 6,
     alignItems: "flex-start",
+  },
+  freeSection: {
+    paddingRight: 10,
+    paddingVertical: 4,
+    borderBottomRightRadius: 16,
+    borderTopRightRadius: 16,
+    backgroundColor: colors.belandOrange,
+    color: "white",
+    fontSize: 25,
+    fontWeight: 600,
   },
   usdBadge: {
     flexDirection: "row",
