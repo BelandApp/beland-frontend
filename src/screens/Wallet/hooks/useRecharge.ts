@@ -89,7 +89,6 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
   const normalizedAmount =
     !paramsAmount || isNaN(parsedAmount) ? 5 : Math.max(parsedAmount, 5);
   const [amount, setAmount] = useState<string>(normalizedAmount.toFixed(2));
-  console.log("monto de params", paramsAmount, "monto de amount", amount);
   const [modalStripe, setModalStripe] = useState(false);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [cardBrand, setCardBrand] = useState<string | null>(null);
@@ -162,7 +161,6 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
       try {
         const { PaymentAccountService } = require("src/services");
         const response = await PaymentAccountService.getPaymentAccounts();
-        console.log("Respuesta de cuentas", response);
 
         // Handle response structure (it returns [data, count] based on controller analysis)
         let accounts: BackendPaymentAccount[] = [];
@@ -172,10 +170,8 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
           // Standard PaginatedResponse
           accounts = (response as any).data || [];
         }
-        console.log("Loaded payment accounts:", accounts);
         // filter only actives
         accounts = accounts.filter((account) => account.is_active);
-        console.log("Cuentas activas", accounts);
         setPaymentAccounts(accounts);
         setSelectedPaymentAccount(accounts[0]);
       } catch (error) {
@@ -250,7 +246,6 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
       setShowBankTransferModal(false);
       setSelectedPaymentMethod(null);
     } catch (error: any) {
-      console.error("Error creating bank transfer recharge:", error);
       const res = getBackendErrorMessage(error);
       notify.error({
         message:
@@ -271,8 +266,6 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
       if (result.success) {
         setClientSecret(result.clientSecret);
         setModalStripe(true);
-      } else {
-        notify.error({ message: "No se pudo procesar el pago" });
       }
     }
   };
