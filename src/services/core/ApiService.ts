@@ -5,6 +5,7 @@
 
 import Constants from "expo-constants";
 import * as SecureStore from "expo-secure-store";
+import { notify } from "src/hooks/notification/notify.external";
 // API Configuration
 export const API_CONFIG = {
   BASE_URL:
@@ -146,6 +147,12 @@ export class CoreApiService {
     const path = endpoint.replace(/^\/+/, "");
     return `${base}/${path}`;
   }
+  /**
+   * Notify API error from response
+   */
+  protected notifyApiError(error: ApiError) {
+    notify.error({ message: error.message ?? "Error intenta mas tarde" });
+  }
 
   /**
    * Create API error from response
@@ -158,7 +165,7 @@ export class CoreApiService {
     error.status = response.status;
     error.code = data?.code;
     error.details = data;
-
+    this.notifyApiError(error);
     return error;
   }
 
@@ -240,8 +247,9 @@ export class CoreApiService {
               await this.delay(API_CONFIG.RETRY_DELAY * (attempt + 1));
               continue;
             }
-
-            throw this.createApiError(response, data);
+            const error = this.createApiError(response, data);
+            this.notifyApiError(error);
+            throw error;
           }
 
           return data;
