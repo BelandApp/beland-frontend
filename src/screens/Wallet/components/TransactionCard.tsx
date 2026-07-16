@@ -66,9 +66,9 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
                 },
               ]}
             >
-              {convertUSDToBeCoins(transaction.amount_usd).toFixed(2)} $
+              {transaction.amount_usd}
             </Text>
-            <BeCoinIcon />
+            <Text style={styles.usdText}>USD$</Text>
           </View>
         </View>
       </View>
@@ -118,13 +118,16 @@ const styles = {
   },
   amountContainer: {
     flexDirection: "row" as const,
-    alignItems: "center" as const,
+    alignItems: "baseline" as const,
     marginBottom: 4,
   },
   amount: {
     fontSize: 14,
     fontWeight: "600" as const,
-    marginLeft: 4,
+    marginHorizontal: 4,
+  },
+  usdText: {
+    fontSize: 10,
   },
   statusIndicator: {
     width: 40,
