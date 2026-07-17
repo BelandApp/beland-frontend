@@ -75,6 +75,7 @@ export interface CreateEventPassDto {
   end_sale_date?: Date;
   limit_tickets: number;
   price_becoin: number;
+  price_usd: number;
   discount?: number;
   is_refundable?: boolean;
   refund_days_limit?: number;
@@ -128,7 +129,7 @@ export class AdminApiService extends CoreApiService {
   // =================== USERS MANAGEMENT ===================
   async getUsers(
     page: number = 1,
-    limit: number = 10
+    limit: number = 10,
   ): Promise<{
     users: AdminUser[];
     total: number;
@@ -145,7 +146,7 @@ export class AdminApiService extends CoreApiService {
 
   async getUserByEmail(email: string): Promise<AdminUser> {
     return this.get<AdminUser>(
-      `users/by-email?email=${encodeURIComponent(email)}`
+      `users/by-email?email=${encodeURIComponent(email)}`,
     );
   }
 
@@ -156,7 +157,7 @@ export class AdminApiService extends CoreApiService {
   // =================== PRODUCTS MANAGEMENT ===================
   async getProducts(
     page: number = 1,
-    limit: number = 10
+    limit: number = 10,
   ): Promise<{
     data: AdminProduct[];
     total: number;
@@ -172,14 +173,14 @@ export class AdminApiService extends CoreApiService {
   }
 
   async createProduct(
-    productData: Partial<AdminProduct>
+    productData: Partial<AdminProduct>,
   ): Promise<AdminProduct> {
     return this.post<AdminProduct>("products", productData);
   }
 
   async updateProduct(
     productId: string,
-    productData: Partial<AdminProduct>
+    productData: Partial<AdminProduct>,
   ): Promise<AdminProduct> {
     return this.patch<AdminProduct>(`products/${productId}`, productData);
   }
@@ -191,7 +192,7 @@ export class AdminApiService extends CoreApiService {
   // =================== EVENT PASS MANAGEMENT ===================
   async getEventPasses(
     page: number = 1,
-    limit: number = 10
+    limit: number = 10,
   ): Promise<{
     data: EventPass[];
     total: number;
@@ -208,7 +209,7 @@ export class AdminApiService extends CoreApiService {
 
   async toggleEventPassStatus(
     eventId: string,
-    isActive: boolean
+    isActive: boolean,
   ): Promise<EventPass> {
     const endpoint = isActive
       ? `event-pass/active/${eventId}`
@@ -335,7 +336,7 @@ export class AdminApiService extends CoreApiService {
     if (mainImage) {
       formData.append("image_url", mainImage);
       console.log(
-        `📎 Imagen principal (image_url): ${mainImage.name} (${mainImage.size} bytes, tipo: ${mainImage.type})`
+        `📎 Imagen principal (image_url): ${mainImage.name} (${mainImage.size} bytes, tipo: ${mainImage.type})`,
       );
     }
 
@@ -344,7 +345,7 @@ export class AdminApiService extends CoreApiService {
       additionalImages.forEach((img, idx) => {
         formData.append("images_urls", img);
         console.log(
-          `📎 Imagen adicional [${idx}] (images_urls): ${img.name} (${img.size} bytes, tipo: ${img.type})`
+          `📎 Imagen adicional [${idx}] (images_urls): ${img.name} (${img.size} bytes, tipo: ${img.type})`,
         );
       });
     }
@@ -364,8 +365,8 @@ export class AdminApiService extends CoreApiService {
             }
             return value;
           },
-          2
-        )
+          2,
+        ),
       );
     } catch (e) {
       console.log("[DEBUG] No se pudo serializar eventData", e);
@@ -377,7 +378,7 @@ export class AdminApiService extends CoreApiService {
         // Mostrar información robusta sobre el valor
         if (value instanceof File) {
           console.log(
-            `   ${key}: File -> name=${value.name}, size=${value.size}, type=${value.type}`
+            `   ${key}: File -> name=${value.name}, size=${value.size}, type=${value.type}`,
           );
         } else if (typeof value === "object" && value !== null) {
           // Podría ser un Blob o un objeto con uri (React Native)
@@ -398,7 +399,7 @@ export class AdminApiService extends CoreApiService {
     // Usar FormData directo con los nombres que espera el backend
     const result = await this.postFormDataDirect<EventPass>(
       "event-pass",
-      formData
+      formData,
     );
     // Invalidar caché de eventos para que otras vistas refresquen
     try {
@@ -422,7 +423,7 @@ export class AdminApiService extends CoreApiService {
 
   private async postFormDataDirect<T>(
     endpoint: string,
-    formData: FormData
+    formData: FormData,
   ): Promise<T> {
     const token = await this.getAuthToken();
     const url = this.buildUrl(endpoint);
@@ -452,7 +453,7 @@ export class AdminApiService extends CoreApiService {
 
   private async putFormDataDirect<T>(
     endpoint: string,
-    formData: FormData
+    formData: FormData,
   ): Promise<T> {
     const token = await this.getAuthToken();
     const url = this.buildUrl(endpoint);
@@ -482,11 +483,11 @@ export class AdminApiService extends CoreApiService {
 
   async updateEventPassFormData(
     eventId: string,
-    formData: FormData
+    formData: FormData,
   ): Promise<EventPass> {
     const result = await this.putFormDataDirect<EventPass>(
       `event-pass/${eventId}`,
-      formData
+      formData,
     );
     try {
       const fresh = await this.getEventPass(eventId);
@@ -514,11 +515,11 @@ export class AdminApiService extends CoreApiService {
 
   async updateEventPass(
     eventId: string,
-    eventData: Partial<CreateEventPassDto>
+    eventData: Partial<CreateEventPassDto>,
   ): Promise<EventPass> {
     const result = await this.put<EventPass>(
       `event-pass/${eventId}`,
-      eventData
+      eventData,
     );
     try {
       const fresh = await this.getEventPass(eventId);
@@ -573,7 +574,7 @@ export class AdminApiService extends CoreApiService {
       const acquired = eventStore.getState().acquiredEvents || [];
       setAvailable(available.filter((e) => e.id !== eventId));
       setAcquired(
-        acquired.filter((e) => e.id !== eventId && e.event_pass_id !== eventId)
+        acquired.filter((e) => e.id !== eventId && e.event_pass_id !== eventId),
       );
     } catch (e) {
       console.warn("Error updating eventStore after delete:", e);
@@ -583,7 +584,7 @@ export class AdminApiService extends CoreApiService {
 
   async getEventPassTypes(
     page: number = 1,
-    limit: number = 20
+    limit: number = 20,
   ): Promise<{
     data: EventPassType[];
     total: number;
@@ -601,7 +602,7 @@ export class AdminApiService extends CoreApiService {
   // =================== ORDERS MANAGEMENT ===================
   async getOrders(
     page: number = 1,
-    limit: number = 10
+    limit: number = 10,
   ): Promise<{
     data: AdminOrder[];
     total: number;
@@ -651,7 +652,7 @@ export class AdminApiService extends CoreApiService {
 
   async updateOrderStatus(
     orderId: string,
-    status: string
+    status: string,
   ): Promise<AdminOrder> {
     return this.put<AdminOrder>(`orders/${status}/${orderId}`, {});
   }
@@ -659,14 +660,14 @@ export class AdminApiService extends CoreApiService {
   // =================== ORGANIZATIONS MANAGEMENT ===================
   async getOrganizations(
     page: number = 1,
-    limit: number = 10
+    limit: number = 10,
   ): Promise<Organization[]> {
     return this.get<Organization[]>(`merchants?page=${page}&limit=${limit}`);
   }
 
   async toggleOrganizationStatus(
     orgId: string,
-    isActive: boolean
+    isActive: boolean,
   ): Promise<Organization> {
     if (!isActive) {
       // Disactivate organization

@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
   Modal,
-  SafeAreaView,
   ScrollView,
   Text,
   View,
@@ -16,6 +15,7 @@ import { EventPass, EventPassType } from "src/services/AdminApiService";
 import { useEventForm } from "../../hooks/useEventForm";
 import EventDateCard from "src/screens/DashboardUser/components/eventos/EventDateCard";
 import { AddressMapPicker } from "@/components";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface Props {
   visible: boolean;
@@ -79,7 +79,7 @@ export default function EventFormModal({
     longitude: undefined,
     event_date: new Date(),
     limit_tickets: 100,
-    price_dollar: 0,
+    price_usd: 0,
     discount: 0,
     is_refundable: true,
     refund_days_limit: 3,
@@ -89,9 +89,9 @@ export default function EventFormModal({
   const prevPriceRef = useRef<number>(0);
 
   useEffect(() => {
-    const p = Number(form.price_dollar) || 0;
+    const p = Number(form.price_usd) || 0;
     if (p > 0) prevPriceRef.current = p;
-  }, [form.price_dollar]);
+  }, [form.price_usd]);
 
   useEffect(() => {
     if (editingEvent) {
@@ -100,7 +100,7 @@ export default function EventFormModal({
       setField("description", (editingEvent as any).description || "");
       setField(
         "type_id",
-        (editingEvent as any).type_id || eventTypes?.[0]?.id || ""
+        (editingEvent as any).type_id || eventTypes?.[0]?.id || "",
       );
       setField("event_place", editingEvent.event_place || "");
       setField("event_city", editingEvent.event_city || "");
@@ -111,13 +111,13 @@ export default function EventFormModal({
       if ((editingEvent as any).end_sale_date) {
         setField(
           "end_sale_date",
-          new Date((editingEvent as any).end_sale_date) as any
+          new Date((editingEvent as any).end_sale_date) as any,
         );
       }
       setField("limit_tickets", editingEvent.limit_tickets as any);
       setField(
-        "price_dollar",
-        parseFloat((editingEvent as any).price_dollar as any) || (0 as any)
+        "price_usd",
+        parseFloat((editingEvent as any).price_usd as any) || (0 as any),
       );
 
       const existingImages: string[] = [];
@@ -179,7 +179,7 @@ export default function EventFormModal({
       setField("longitude", coords.longitude as any);
       const place = await mapboxService.reverseGeocode(
         coords.latitude,
-        coords.longitude
+        coords.longitude,
       );
       if (place) {
         setField("address", place.full_address as any);
@@ -215,7 +215,7 @@ export default function EventFormModal({
     }
     const v = parseFloat(sanitized) || 0;
     if (v > 0) prevPriceRef.current = v;
-    setField("price_dollar", v as any);
+    setField("price_usd", v as any);
   };
 
   return (
@@ -262,6 +262,16 @@ export default function EventFormModal({
                   <Text className="text-sm text-text-secondary-light">
                     Recomendado 1200x600 px
                   </Text>
+                  <View className="px-2 py-0.5 bg-orange-100 rounded">
+                    <Text className="text-xs text-accent-orange">
+                      Requerido
+                    </Text>
+                  </View>
+                  {errors.images && (
+                    <Text className="text-sm text-red-600">
+                      {errors.images}
+                    </Text>
+                  )}
                 </View>
               </TouchableOpacity>
 
@@ -457,7 +467,7 @@ export default function EventFormModal({
                           setField("address", s.full_address as any);
                           setField(
                             "event_place",
-                            (streetWithNumber || s.name) as any
+                            (streetWithNumber || s.name) as any,
                           );
                           setField("event_city", deriveCity(s) as any);
                           // Coordinates from Mapbox feature center (lat, lng)
@@ -514,18 +524,18 @@ export default function EventFormModal({
                       </View>
                       <TextInput
                         value={
-                          typeof form.price_dollar === "number"
-                            ? `${form.price_dollar}`
-                            : `${(form.price_dollar as any) || 0}`
+                          typeof form.price_usd === "number"
+                            ? `${form.price_usd}`
+                            : `${(form.price_usd as any) || 0}`
                         }
                         onChangeText={handlePriceChange}
                         className="w-full pl-10 bg-gray-50 rounded-lg py-2"
                         keyboardType="numeric"
                         maxLength={10}
                       />
-                      {errors?.price_dollar ? (
+                      {errors?.price_usd ? (
                         <Text className="text-sm text-red-600 mt-1">
-                          {errors.price_dollar}
+                          {errors.price_usd}
                         </Text>
                       ) : null}
                     </View>
@@ -534,31 +544,31 @@ export default function EventFormModal({
                   <View className="flex-row items-center justify-between pt-2">
                     <View>
                       <Text className="text-sm font-medium">
-                        {Number(form.price_dollar) === 0
+                        {Number(form.price_usd) === 0
                           ? "Evento gratuito"
                           : "Evento de pago"}
                       </Text>
                       <Text className="text-xs text-text-secondary-light">
-                        {Number(form.price_dollar) === 0
+                        {Number(form.price_usd) === 0
                           ? "No se requiere pago para la entrada"
                           : "Pago requerido para la entrada"}
                       </Text>
                     </View>
                     <TouchableOpacity
                       onPress={() => {
-                        const current = Number(form.price_dollar) || 0;
+                        const current = Number(form.price_usd) || 0;
                         if (current === 0) {
-                          setField("price_dollar", prevPriceRef.current || 1);
+                          setField("price_usd", prevPriceRef.current || 1);
                         } else {
                           prevPriceRef.current = current;
-                          setField("price_dollar", 0 as any);
+                          setField("price_usd", 0 as any);
                         }
                       }}
                       className="items-center"
                     >
                       <View
                         className={`w-14 h-8 rounded-full p-1 ${
-                          Number(form.price_dollar) === 0
+                          Number(form.price_usd) === 0
                             ? "bg-gray-200"
                             : "bg-primary"
                         }`}
@@ -572,7 +582,7 @@ export default function EventFormModal({
                             transform: [
                               {
                                 translateX:
-                                  Number(form.price_dollar) === 0 ? 0 : 22,
+                                  Number(form.price_usd) === 0 ? 0 : 22,
                               },
                             ],
                           }}
