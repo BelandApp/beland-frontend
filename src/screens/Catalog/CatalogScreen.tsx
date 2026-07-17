@@ -46,6 +46,7 @@ const subscriptionProducts: CircularProduct[] = [
     image:
       "https://res.cloudinary.com/dbfboc8cm/image/upload/v1770127726/Huevos_el_Artesanal_ijxf3w.png",
     features: ["Naturales", "Frescos", "Sin agroquímicos"],
+    quantity: 1,
   },
   {
     id: "2",
@@ -56,6 +57,7 @@ const subscriptionProducts: CircularProduct[] = [
     features: [""],
     madeBy: "Granja 2",
     isCircular: false,
+    quantity: 1,
   },
   {
     id: "3",
@@ -65,6 +67,7 @@ const subscriptionProducts: CircularProduct[] = [
       "https://res.cloudinary.com/dbfboc8cm/image/upload/v1770127726/Huevos_el_Artesanal_ijxf3w.png",
     features: [""],
     madeBy: "Granja 2",
+    quantity: 1,
     isCircular: false,
   },
   {
@@ -75,6 +78,7 @@ const subscriptionProducts: CircularProduct[] = [
       "https://res.cloudinary.com/dbfboc8cm/image/upload/v1770127726/Huevos_el_Artesanal_ijxf3w.png",
     features: [""],
     madeBy: "Granja 2",
+    quantity: 1,
     isCircular: false,
   },
 ];

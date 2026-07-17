@@ -6,4 +6,5 @@ export interface CircularProduct {
   price: number;
   isCircular: boolean;
   features: string[];
+  quantity: number;
 }
