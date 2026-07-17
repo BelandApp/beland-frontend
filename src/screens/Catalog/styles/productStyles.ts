@@ -52,7 +52,7 @@ export const productStyles = StyleSheet.create({
           boxSizing: "border-box",
         }
       : {
-          width: "80%",
+          width: "100%",
           minHeight: 260,
         }),
   },
