@@ -36,52 +36,52 @@ import { useWallet } from "../Wallet";
 import SubscriptionSlider from "./components/suscription/SuscriptionSlider";
 import { CircularProduct } from "./components/suscription/type";
 
-const subscriptionProducts: CircularProduct[] = [
-  {
-    id: "1",
-    name: "Huevos de campo",
-    madeBy: "Granja 1",
-    isCircular: true,
-    price: 5,
-    image:
-      "https://res.cloudinary.com/dbfboc8cm/image/upload/v1770127726/Huevos_el_Artesanal_ijxf3w.png",
-    features: ["Naturales", "Frescos", "Sin agroquímicos"],
-    quantity: 1,
-  },
-  {
-    id: "2",
-    name: "Leche Frescas",
-    price: 6,
-    image:
-      "https://res.cloudinary.com/dbfboc8cm/image/upload/v1770127726/Huevos_el_Artesanal_ijxf3w.png",
-    features: [""],
-    madeBy: "Granja 2",
-    isCircular: false,
-    quantity: 1,
-  },
-  {
-    id: "3",
-    name: "Leche Frescas",
-    price: 6,
-    image:
-      "https://res.cloudinary.com/dbfboc8cm/image/upload/v1770127726/Huevos_el_Artesanal_ijxf3w.png",
-    features: [""],
-    madeBy: "Granja 2",
-    quantity: 1,
-    isCircular: false,
-  },
-  {
-    id: "4",
-    name: "Leche Frescas",
-    price: 6,
-    image:
-      "https://res.cloudinary.com/dbfboc8cm/image/upload/v1770127726/Huevos_el_Artesanal_ijxf3w.png",
-    features: [""],
-    madeBy: "Granja 2",
-    quantity: 1,
-    isCircular: false,
-  },
-];
+// const subscriptionProducts: CircularProduct[] = [
+//   {
+//     id: "1",
+//     name: "Huevos de campo",
+//     madeBy: "Granja 1",
+//     isCircular: true,
+//     price: 5,
+//     image:
+//       "https://res.cloudinary.com/dbfboc8cm/image/upload/v1770127726/Huevos_el_Artesanal_ijxf3w.png",
+//     features: ["Naturales", "Frescos", "Sin agroquímicos"],
+//     quantity: 1,
+//   },
+//   {
+//     id: "2",
+//     name: "Leche Frescas",
+//     price: 6,
+//     image:
+//       "https://res.cloudinary.com/dbfboc8cm/image/upload/v1770127726/Huevos_el_Artesanal_ijxf3w.png",
+//     features: [""],
+//     madeBy: "Granja 2",
+//     isCircular: false,
+//     quantity: 1,
+//   },
+//   {
+//     id: "3",
+//     name: "Leche Frescas",
+//     price: 6,
+//     image:
+//       "https://res.cloudinary.com/dbfboc8cm/image/upload/v1770127726/Huevos_el_Artesanal_ijxf3w.png",
+//     features: [""],
+//     madeBy: "Granja 2",
+//     quantity: 1,
+//     isCircular: false,
+//   },
+//   {
+//     id: "4",
+//     name: "Leche Frescas",
+//     price: 6,
+//     image:
+//       "https://res.cloudinary.com/dbfboc8cm/image/upload/v1770127726/Huevos_el_Artesanal_ijxf3w.png",
+//     features: [""],
+//     madeBy: "Granja 2",
+//     quantity: 1,
+//     isCircular: false,
+//   },
+// ];
 export const CatalogScreen = ({ route }: { route: any }) => {
   const comeFromRecharge = route.params?.comeFromRecharge;
 
@@ -186,7 +186,7 @@ export const CatalogScreen = ({ route }: { route: any }) => {
             placeholder="Buscar Productos..."
           />
         </View>
-        <SubscriptionSlider products={subscriptionProducts} />
+        {/* <SubscriptionSlider products={subscriptionProducts} /> */}
         <View>
           <CatalogTabs tabs={tabs} activeTab={activeTab} onPress={toggleTab} />
         </View>
