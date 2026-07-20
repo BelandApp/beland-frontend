@@ -97,7 +97,7 @@ export type RootStackParamList = {
     usdAmount: number;
   };
 
-  MisEntradas: { tab: string | undefined };
+  MisEntradas: { tab: "Próximos" | "Anteriores" | undefined };
   // Events Screens
   EventModal: { id: string };
   AcquiredEventModal: { id_modal: string };
