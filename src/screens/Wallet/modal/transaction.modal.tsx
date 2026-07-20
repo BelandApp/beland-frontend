@@ -164,11 +164,11 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                       : colors.semantic.error[500],
                 }}
               >
-                {convertUSDToBeCoins(transaction.amount_usd)} Becoin
+                {transaction.amount_usd} Usd
               </Text>
 
               <Text className="text-sm text-gray-500">
-                ≈ USD$ {transaction.amount_usd}
+                ≈ Becoins {convertUSDToBeCoins(transaction.amount_usd)}
               </Text>
             </View>
             <Text className="text-xs text-gray-400 text-center">
