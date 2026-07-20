@@ -11,33 +11,35 @@ import {
 } from "react-native";
 
 import SubscriptionCard from "./SuscriptionCard";
-import { CircularProduct } from "./type";
 import { Button, WrapperModal } from "src/components";
 import { LucideLeaf } from "lucide-react-native";
 import { useResponsiveLayout } from "src/hooks";
 import { useCartStore } from "src/stores";
+import { Product } from "src/types";
 
 interface SubscriptionProps {
-  products: CircularProduct[];
+  circularProducts: Product[];
 }
 
 const SPACING = 16;
-const SubscriptionSlider: React.FC<SubscriptionProps> = ({ products }) => {
-  const [itemModal, setItemModal] = useState<CircularProduct | null>(null);
+const SubscriptionSlider: React.FC<SubscriptionProps> = ({
+  circularProducts,
+}) => {
+  const [itemModal, setItemModal] = useState<Product | null>(null);
   const { isMobile, screenWidth } = useResponsiveLayout();
   const { addProduct, setShowCart } = useCartStore();
   const AUTO_SCROLL_INTERVAL = 4000;
   const CARD_WIDTH = isMobile ? screenWidth * 0.8 : screenWidth / 3.2;
   const ITEMS_PER_PAGE = isMobile ? 1 : 3;
-  const totalPages = Math.ceil(products.length / ITEMS_PER_PAGE);
-  const flatListRef = useRef<FlatList<CircularProduct>>(null);
+  const totalPages = Math.ceil(circularProducts.length / ITEMS_PER_PAGE);
+  const flatListRef = useRef<FlatList<Product>>(null);
 
   const currentIndex = useRef(0);
 
   const [activeIndex, setActiveIndex] = useState(0);
 
   const renderItem = useCallback(
-    ({ item }: ListRenderItemInfo<CircularProduct>) => (
+    ({ item }: ListRenderItemInfo<Product>) => (
       <SubscriptionCard
         product={item}
         width={CARD_WIDTH}
@@ -71,12 +73,12 @@ const SubscriptionSlider: React.FC<SubscriptionProps> = ({ products }) => {
     setShowCart(true);
   };
   useEffect(() => {
-    if (products.length <= 1) return;
+    if (circularProducts.length <= 1) return;
 
     const interval = setInterval(() => {
       let nextIndex = currentIndex.current + ITEMS_PER_PAGE;
 
-      if (nextIndex >= products.length) {
+      if (nextIndex >= circularProducts.length) {
         nextIndex = 0;
       }
 
@@ -90,7 +92,7 @@ const SubscriptionSlider: React.FC<SubscriptionProps> = ({ products }) => {
     }, AUTO_SCROLL_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [products.length]);
+  }, [circularProducts.length]);
 
   return (
     <>
@@ -105,7 +107,7 @@ const SubscriptionSlider: React.FC<SubscriptionProps> = ({ products }) => {
 
         <FlatList
           ref={flatListRef}
-          data={products}
+          data={circularProducts}
           horizontal
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
@@ -160,19 +162,19 @@ const SubscriptionSlider: React.FC<SubscriptionProps> = ({ products }) => {
           content={
             <View>
               <Image
-                source={{ uri: itemModal?.image }}
+                source={{ uri: itemModal?.image_url }}
                 className="w-full h-[200px] "
                 resizeMode="contain"
               />
               <Text className="italic text-lg font-semibold text-neutral-500">
-                Hecho por {itemModal?.madeBy}
+                {itemModal?.description}
               </Text>
-              <Text>Suscripción ${itemModal?.price} usd/mes</Text>
-              {itemModal?.features.map((feat) => (
+              <Text>Precio ${itemModal?.price}</Text>
+              {/* {itemModal?.features.map((feat) => (
                 <Text className="text-white font-semibold text-2xl bg-beland-orange-200 my-2 rounded-xl sm:w-[30%] px-2">
                   {feat}
                 </Text>
-              ))}
+              ))} */}
             </View>
           }
           actions={

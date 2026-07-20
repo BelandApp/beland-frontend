@@ -4,13 +4,16 @@ export interface Product {
   description?: string;
   price: number;
   cost?: number;
+  is_circular: boolean;
   price_becoin?: number;
   image_url?: string;
   category_id?: string;
   category?: Category;
   is_active: boolean;
+  quantity?: number;
   inventory_count?: number;
   created_at: string;
+  deleted_at?: string;
   updated_at: string;
   stock: number;
 }
@@ -45,6 +48,7 @@ export interface CreateProductDto {
   image_url?: string;
   category_id?: string;
   quantity: number;
+  is_circular?: boolean;
 }
 
 export interface UpdateProductDto {
@@ -56,6 +60,7 @@ export interface UpdateProductDto {
   image_url?: string;
   category_id?: string;
   is_active?: boolean;
+  is_circular?: boolean;
 }
 
 export interface ProductInventory {

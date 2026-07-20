@@ -1,10 +1,10 @@
 import { Image, Pressable, Text, View } from "react-native";
-import { CircularProduct } from "./type";
 import { memo } from "react";
 import { Check, CircleCheck, LeafyGreen } from "lucide-react-native";
+import { Product } from "src/types";
 
 interface SubscriptionCardProps {
-  product: CircularProduct;
+  product: Product;
   width: number;
   onPress: () => void;
 }
@@ -14,7 +14,7 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
   width,
   onPress,
 }) => {
-  const { image, name, price, madeBy, isCircular } = product;
+  const { name, image_url, description, price } = product;
   return (
     <Pressable
       onPress={onPress}
@@ -24,7 +24,7 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
       {/* Imagen */}
       <View className="py-4 bg-slate-100">
         <Image
-          source={{ uri: image }}
+          source={{ uri: image_url }}
           className="w-full h-[200px] "
           width={width}
           resizeMode="contain"
@@ -39,13 +39,13 @@ const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
       <View className="absolute top-3 left-3 bg-white shadow-sm rounded-full py-1 px-3">
         <Text className="text-beland-green-500 flex flex-row gap-2">
           <LeafyGreen size={15} />
-          {isCircular ? "Circular" : "Friendly"}
+          "Circular"
         </Text>
       </View>
 
       {/* Footer */}
       <View className="w-full p-6">
-        <Text className="text-neutral-600 uppercase">{madeBy}</Text>
+        <Text className="text-neutral-600 uppercase">{description}</Text>
         <Text className="text-lg font-semibold">{name}</Text>
         <View className="flex flex-row gap-2 items-center">
           <Text className="text-beland-orange-500 text-lg italic">

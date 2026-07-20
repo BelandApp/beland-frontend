@@ -10,8 +10,15 @@ export const useFilteredProducts = ({
   filters: any;
   categories: { id: string; name: string }[];
 }) => {
-  const { products, loading, pagination, updateQuery, error, refresh } =
-    useProducts();
+  const {
+    products,
+    circularProducts,
+    loading,
+    pagination,
+    updateQuery,
+    error,
+    refresh,
+  } = useProducts();
 
   /* ---------------- BACKEND QUERY ---------------- */
 
@@ -90,6 +97,7 @@ export const useFilteredProducts = ({
   return {
     loading,
     products: filteredProducts,
+    circularProducts,
     pagination,
     refresh,
     error,
