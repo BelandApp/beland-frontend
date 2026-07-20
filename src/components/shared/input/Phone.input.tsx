@@ -63,7 +63,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
   required,
   ...props
 }) => {
-  const selectedVariant = variantStyles[variant];
+  const selectedVariant = variantStyles["filled"];
   const initial = parsePhoneValue(value);
   const [countryCode, setCountryCode] = useState(initial.code);
   const [number, setNumber] = useState(initial.number);

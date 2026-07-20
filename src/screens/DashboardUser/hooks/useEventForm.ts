@@ -6,6 +6,7 @@ import {
   adminApiService,
 } from "src/services/AdminApiService";
 import { getBackendErrorMessage } from "src/services";
+import { notify } from "src/hooks/notification/notify.external";
 
 export type PartialEventForm = Partial<CreateEventPassDto> & {
   images?: string[]; // uris for preview
@@ -20,7 +21,7 @@ export function useEventForm(initial?: PartialEventForm) {
     <K extends keyof PartialEventForm>(key: K, value: PartialEventForm[K]) => {
       setForm((s) => ({ ...s, [key]: value }));
     },
-    []
+    [],
   );
 
   const reset = useCallback(() => setForm(initial || {}), [initial]);
@@ -74,7 +75,7 @@ export function useEventForm(initial?: PartialEventForm) {
           notify.error({ message: "No se pudieron seleccionar las imágenes" });
       }
     },
-    [requestImagePickerPermissions]
+    [requestImagePickerPermissions],
   );
 
   const validateField = useCallback(
@@ -86,6 +87,8 @@ export function useEventForm(initial?: PartialEventForm) {
             newErrors.name = "El nombre debe tener al menos 3 caracteres";
           else delete newErrors.name;
           break;
+        case "images":
+          if (!value) newErrors.images = "Debes agregar al menos una imagen";
         case "type_id":
           // validation requiring availability is left to caller
           if (!value) newErrors.type_id = "Debe seleccionar un tipo de evento";
@@ -102,12 +105,12 @@ export function useEventForm(initial?: PartialEventForm) {
               const dateYMD = new Date(
                 date.getFullYear(),
                 date.getMonth(),
-                date.getDate()
+                date.getDate(),
               );
               const nowYMD = new Date(
                 now.getFullYear(),
                 now.getMonth(),
-                now.getDate()
+                now.getDate(),
               );
               const isFuture =
                 dateYMD.getTime() > nowYMD.getTime() ||
@@ -133,12 +136,13 @@ export function useEventForm(initial?: PartialEventForm) {
       setErrors(newErrors);
       return newErrors;
     },
-    [errors]
+    [errors],
   );
 
   const validateForm = useCallback(
     (eventTypes: any[] = []) => {
       const newErrors: Record<string, string> = {};
+
       if (!form.name || form.name.trim().length < 3)
         newErrors.name = "El nombre debe tener al menos 3 caracteres";
       if (eventTypes.length > 0 && !form.type_id)
@@ -155,12 +159,12 @@ export function useEventForm(initial?: PartialEventForm) {
           const dateYMD = new Date(
             date.getFullYear(),
             date.getMonth(),
-            date.getDate()
+            date.getDate(),
           );
           const nowYMD = new Date(
             now.getFullYear(),
             now.getMonth(),
-            now.getDate()
+            now.getDate(),
           );
           const isFuture =
             dateYMD.getTime() > nowYMD.getTime() ||
@@ -171,14 +175,14 @@ export function useEventForm(initial?: PartialEventForm) {
       }
       if (!form.limit_tickets || form.limit_tickets < 1)
         newErrors.limit_tickets = "Debe haber al menos 1 entrada disponible";
-      if (form.price_dollar !== undefined && form.price_dollar < 0)
-        newErrors.price_dollar = "El precio no puede ser negativo";
+      if (form.price_usd !== undefined && form.price_usd < 0)
+        newErrors.price_usd = "El precio no puede ser negativo";
+      if (!form.images) newErrors.images = "Debe haber al menos una foto";
       setErrors(newErrors);
       return Object.keys(newErrors).length === 0;
     },
-    [form]
+    [form],
   );
-
   const submit = useCallback(
     async (params: {
       editingEvent?: any | null;
@@ -218,7 +222,7 @@ export function useEventForm(initial?: PartialEventForm) {
           if (editingEvent) {
             result = await adminApiService.updateEventPass(
               editingEvent.id,
-              eventDataToSubmit
+              eventDataToSubmit,
             );
           } else {
             result = await adminApiService.createEventPass(eventDataToSubmit);
@@ -265,7 +269,7 @@ export function useEventForm(initial?: PartialEventForm) {
         } catch (compressionError) {
           console.warn(
             "Error compressing images, using originals:",
-            compressionError
+            compressionError,
           );
           compressedFiles = imageFiles;
         }
@@ -300,7 +304,7 @@ export function useEventForm(initial?: PartialEventForm) {
         if (editingEvent) {
           result = await adminApiService.updateEventPassFormData(
             editingEvent.id,
-            fd
+            fd,
           );
         } else {
           // Omit preview `images` from create payload as well
@@ -323,6 +327,7 @@ export function useEventForm(initial?: PartialEventForm) {
               ? "Evento actualizado correctamente"
               : "Evento creado correctamente",
           });
+        setForm({});
         return result;
       } catch (error: any) {
         console.error("Error saving event:", error);
@@ -334,7 +339,7 @@ export function useEventForm(initial?: PartialEventForm) {
         setLoading(false);
       }
     },
-    [form, validateForm]
+    [form, validateForm],
   );
 
   return {

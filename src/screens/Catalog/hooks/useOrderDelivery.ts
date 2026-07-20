@@ -25,6 +25,7 @@ export type preOrderType = {
   cost: number;
   duration_min: number;
   distance_km: number;
+  totalAmount: number;
 };
 
 export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
@@ -125,13 +126,19 @@ export function useOrderDelivery(onOrderCreated?: (orderId: string) => void) {
         driverLat: COORDINATES_HAMONI[0],
         driverLon: COORDINATES_HAMONI[1],
       });
+      const shippingCost = deliveryCost.cost || 1;
+      const productsTotal = backendItems.reduce(
+        (total, item) => total + item.price * item.quantity,
+        0,
+      );
       setSelectedAddress(address);
       setSelectedAddressId(id);
       setPreOrder({
-        products: backendItems, // Usar items del backend
+        products: backendItems,
         address: address,
         addressId: id,
-        cost: deliveryCost.cost || 1,
+        cost: shippingCost,
+        totalAmount: productsTotal + shippingCost,
         duration_min: deliveryCost.durationMin,
         distance_km: deliveryCost.distanceKm,
       });

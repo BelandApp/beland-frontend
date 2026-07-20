@@ -37,9 +37,28 @@ export function useProducts(initialQuery: ProductQuery = {}) {
       page: 1, // reset page al filtrar
     }));
   }, []);
+  const products = data?.data ?? [];
 
+  const { regularProducts, circularProducts } = useMemo(() => {
+    return products.reduce(
+      (acc, product) => {
+        if (product.is_circular) {
+          acc.circularProducts.push(product);
+        } else {
+          acc.regularProducts.push(product);
+        }
+
+        return acc;
+      },
+      {
+        regularProducts: [] as Product[],
+        circularProducts: [] as Product[],
+      },
+    );
+  }, [products]);
   return {
-    products: data?.data ?? [],
+    products: regularProducts,
+    circularProducts,
     loading,
     error,
     refresh,

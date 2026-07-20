@@ -3,11 +3,15 @@ import { useAuth } from "src/context";
 import { useCustomNavigation, useUserValidation } from "src/hooks";
 import { notify } from "src/hooks/notification/notify.external";
 import { getBackendErrorMessage } from "src/services";
+import { userService } from "src/services/user/user.service";
 
 export const useLogin = () => {
   const { navigate } = useCustomNavigation();
   const { validateForm, errors } = useUserValidation();
-  const { handleAuth0Login, loginWithEmail, isAuthenticated, isLoading } =
+  const [showLocalLogin, setShowLocalLogin] = useState(false);
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [phone, setPhone] = useState("");
+  const { handleAuth0Login, loginWithEmail, isAuthenticated, status } =
     useAuth();
   const [FormData, setFormData] = useState({
     email: "",
@@ -37,15 +41,36 @@ export const useLogin = () => {
       notify.error({ message });
     }
   };
-  // Elimino funciones innecesarias
+
+  const handleAddPhone = async () => {
+    try {
+      const isValid = validateForm({ phone: phone });
+      if (!isValid) return;
+      await userService.updateUser({ phone });
+      notify.success({ message: "Teléfono ingresado correctamente" });
+      setTimeout(() => {
+        setShowPhoneModal(false);
+      }, 300);
+    } catch (error) {
+      const message = getBackendErrorMessage(error);
+      notify.error({ message });
+    }
+  };
   return {
     FormData,
+    showLocalLogin,
+    showPhoneModal,
+    phone,
+    setPhone,
     errors,
     setFormData,
     handleLoginAuth0,
     handleLogin,
     navigate,
-    isLoading,
+    status,
     isAuthenticated,
+    handleAddPhone,
+    setShowLocalLogin,
+    setShowPhoneModal,
   };
 };

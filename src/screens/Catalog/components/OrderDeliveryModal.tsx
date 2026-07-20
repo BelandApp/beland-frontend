@@ -11,6 +11,9 @@ import Toast from "react-native-toast-message";
 import { toastConfig } from "src/components/shared/notification/GlobalNotification";
 import { Button, WrapperModal } from "src/components";
 import { View } from "react-native";
+import { useWallet } from "src/screens/Wallet";
+import { useCustomNavigation } from "src/hooks";
+import { convertBeCoinsToUSD } from "src/constants";
 
 interface OrderDeliveryModalProps {
   visible: boolean;
@@ -45,7 +48,22 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
     submitStatus,
     setSubmitStatus,
   } = useOrderDelivery(onOrderCreated);
+  const { walletData } = useWallet();
+  const { navigate } = useCustomNavigation();
+  const balance = convertBeCoinsToUSD(walletData.balance);
+  const orderCost = preOrder?.totalAmount ?? 0;
+  const hasEnoughBalance = preOrder != null && balance >= orderCost;
+  const difBalance = balance - orderCost;
+  const buttonTitle = !preOrder
+    ? "Calculando costo..."
+    : hasEnoughBalance
+      ? "Confirmar pedido"
+      : "Saldo insuficiente, Recargar";
 
+  const navigateToRecharge = () => {
+    onClose();
+    navigate("RechargeScreen", { paramsAmount: String(difBalance) });
+  };
   useEffect(() => {
     if (visible) loadAddresses();
     else setStep("select");
@@ -100,9 +118,10 @@ export const OrderDeliveryModal: React.FC<OrderDeliveryModalProps> = ({
     form: <></>,
     processing: (
       <Button
-        onPress={handleSubmit}
-        title="Confirmar pedido"
+        title={buttonTitle}
         disabled={loading}
+        variant={hasEnoughBalance ? "primary" : "secondary"}
+        onPress={hasEnoughBalance ? handleSubmit : navigateToRecharge}
       />
     ),
   };

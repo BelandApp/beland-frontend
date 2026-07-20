@@ -13,13 +13,14 @@ export const usePaymentHandler = (
   user: User,
   total_amount: number,
   productId: string,
-  balance: number
+  balance: number,
 ) => {
   const [loading, setLoading] = useState(false);
   const { navigate } = useCustomNavigation();
   const { handleAuth0Login } = useAuth();
-  const isFree = !total_amount || total_amount === 0;
-  const canPurchase = balance >= total_amount;
+  const isFree =
+    !total_amount || total_amount === 0 || Number.isNaN(total_amount);
+  const canPurchase = isFree || balance >= total_amount;
   const [Form, setForm] = useState({
     holder_name: "",
     holder_email: "",
@@ -51,7 +52,7 @@ export const usePaymentHandler = (
       notify.success({
         message: "Entrada adquirida con éxito",
       });
-      navigate("MisEntradas");
+      navigate("MisEntradas", { tab: "Próximos" });
     } catch (error) {
       console.error(error);
       const message = getBackendErrorMessage(error);

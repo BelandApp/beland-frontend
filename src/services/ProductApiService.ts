@@ -54,8 +54,10 @@ class ProductServiceClass extends CoreApiService {
         quantity: number;
         price: string;
         price_becoin: string;
+        is_circular: boolean;
         image_url?: string;
         category_id: string;
+
         category?: {
           id: string;
           name: string;
@@ -77,6 +79,7 @@ class ProductServiceClass extends CoreApiService {
         description: backendProduct.description,
         price: parseFloat(backendProduct.price),
         cost: parseFloat(backendProduct.cost),
+        is_circular: backendProduct.is_circular ?? false,
         stock: backendProduct.quantity,
         price_becoin: backendProduct.price_becoin
           ? parseFloat(backendProduct.price_becoin)
@@ -120,6 +123,7 @@ class ProductServiceClass extends CoreApiService {
       price: string;
       price_becoin: string;
       image_url?: string;
+      is_circular: boolean;
       category_id: string;
       category?: {
         id: string;
@@ -139,6 +143,7 @@ class ProductServiceClass extends CoreApiService {
       price: parseFloat(backendProduct.price),
       cost: parseFloat(backendProduct.cost),
       stock: backendProduct.quantity,
+      is_circular: backendProduct.is_circular ?? false,
       price_becoin: backendProduct.price_becoin
         ? parseFloat(backendProduct.price_becoin)
         : undefined,

@@ -392,8 +392,8 @@ export const UserMenu: React.FC<UserMenuProps> = ({
           className="justify-start"
         />
         {/* Mostrar opción solo si el usuario NO es comerciante */}
-
-        {!isMerchant && (
+        {/*TODO MAS ADELANTE PODER HACERSE COMERCIANTE */}
+        {/* {!isMerchant && (
           <Button
             title="Hacerme comerciante"
             onPress={handleOpenOrganizationModal}
@@ -401,7 +401,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
             icon={<Store size={18} color="#333" />}
             className="justify-start"
           />
-        )}
+        )} */}
       </View>
     ),
     ADMIN: (

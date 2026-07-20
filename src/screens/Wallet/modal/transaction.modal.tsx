@@ -3,7 +3,7 @@ import { Transaction } from "../types";
 import { View, Text, Pressable, Platform } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SquareChevronDown } from "lucide-react-native";
-import { convertBeCoinsToUSD } from "src/constants";
+import { convertBeCoinsToUSD, convertUSDToBeCoins } from "src/constants";
 import { captureRef } from "react-native-view-shot";
 import * as Sharing from "expo-sharing";
 import { useTransactionInfo } from "../hooks/useTransactionInfo";
@@ -29,23 +29,11 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
     let sender = "";
     let receiver = "";
     if (transaction.type.code === "GIFTCARD_SEND") {
-      sender =
-        transaction.wallet.user?.full_name ??
-        transaction.wallet.user?.username ??
-        "";
-      receiver =
-        transaction.related_wallet.user?.full_name ??
-        transaction.related_wallet.user?.full_name ??
-        "";
+      sender = transaction.wallet.user?.full_name ?? "";
+      receiver = transaction.related_wallet.user?.full_name ?? "";
     } else if (transaction.type.code === "GIFTCARD_RECEIVED") {
-      receiver =
-        transaction.wallet.user?.full_name ??
-        transaction.wallet.user?.username ??
-        "";
-      sender =
-        transaction.related_wallet.user?.full_name ??
-        transaction.related_wallet.user?.full_name ??
-        "";
+      receiver = transaction.wallet.user?.full_name ?? "";
+      sender = transaction.related_wallet.user?.full_name ?? "";
     }
     return { sender, receiver };
   };
@@ -115,10 +103,6 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                 {transaction.type.name}
               </Text>
             </View>
-
-            <Pressable onPress={onClose} hitSlop={10}>
-              <SquareChevronDown color="white" size={26} />
-            </Pressable>
           </View>
         }
         content={
@@ -175,22 +159,21 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                 className="text-3xl font-bold"
                 style={{
                   color:
-                    Number(transaction.amount_becoin) > 0
+                    Number(transaction.amount_usd) > 0
                       ? colors.brand.green[500]
                       : colors.semantic.error[500],
                 }}
               >
-                {transaction.amount_becoin} Becoin
+                {transaction.amount_usd} Usd
               </Text>
 
               <Text className="text-sm text-gray-500">
-                ≈ USD${" "}
-                {convertBeCoinsToUSD(transaction.amount_becoin).toFixed(2)}
+                ≈ Becoins {convertUSDToBeCoins(transaction.amount_usd)}
               </Text>
             </View>
             <Text className="text-xs text-gray-400 text-center">
               Saldo después de la operación: Usd$
-              {convertBeCoinsToUSD(Number(transaction.post_balance)).toFixed(2)}
+              {Number(transaction.post_balance).toFixed(2)}
             </Text>
 
             <View className="items-center mt-3 gap-1">

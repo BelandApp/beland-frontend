@@ -33,6 +33,7 @@ import { containerStyles } from "./styles";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Pagination } from "src/components/shared/pagination/Pagination";
 import { useWallet } from "../Wallet";
+import SubscriptionSlider from "./components/suscription/SuscriptionSlider";
 
 export const CatalogScreen = ({ route }: { route: any }) => {
   const comeFromRecharge = route.params?.comeFromRecharge;
@@ -60,13 +61,12 @@ export const CatalogScreen = ({ route }: { route: any }) => {
   const { searchText, setSearchText, filters, setFilters } =
     useCatalogFilters();
   const { categories } = useCategories();
-  const { products, loading, refresh, error, pagination } = useFilteredProducts(
-    {
+  const { products, circularProducts, loading, refresh, pagination } =
+    useFilteredProducts({
       filters,
       searchText,
       categories,
-    },
-  );
+    });
 
   const tabs = buildCatalogTabs(categories);
 
@@ -131,21 +131,25 @@ export const CatalogScreen = ({ route }: { route: any }) => {
           <RefreshControl refreshing={loading} onRefresh={refresh} />
         }
       >
-        <SearchBarInput
-          searchQuery={searchText}
-          onSearchChange={setSearchText}
-          placeholder="Buscar Productos..."
-        />
-
-        <CatalogTabs tabs={tabs} activeTab={activeTab} onPress={toggleTab} />
+        <View>
+          <SearchBarInput
+            searchQuery={searchText}
+            onSearchChange={setSearchText}
+            placeholder="Buscar Productos..."
+          />
+        </View>
+        <SubscriptionSlider circularProducts={circularProducts} />
+        <View>
+          <CatalogTabs tabs={tabs} activeTab={activeTab} onPress={toggleTab} />
+        </View>
 
         {loading ? (
           <CustomLoader />
-        ) : error ? (
-          <Text style={{ color: "red", textAlign: "center", marginTop: 32 }}>
-            Error al cargar los productos
-          </Text>
         ) : (
+          // : error ? (
+          // <Text style={{ color: "red", textAlign: "center", marginTop: 32 }}>
+          //   Error al cargar los productos
+          // </Text>)
           <>
             <ProductGrid
               products={products}

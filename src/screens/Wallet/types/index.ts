@@ -28,7 +28,8 @@ export interface Transaction {
     icon: string;
     color: string;
   };
-  amount_becoin: number;
+  amount_usd: number;
+  external_provider: string;
   post_balance: string;
   reference: string;
   created_at: string;

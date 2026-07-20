@@ -2,28 +2,29 @@ import React from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   ScrollView,
-  Platform,
+  TextInput,
   Image,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import {
   useRecharge,
-  PRESET_AMOUNTS,
   PAYMENT_METHODS,
+  cardBrandStyles,
 } from "./hooks/useRecharge";
 import { ThemedHeader } from "src/components/shared/headers/Header";
 
-import { BeCoinsBalance, Button, WrapperModal } from "src/components";
+import { Button, WrapperModal } from "src/components";
 import { notify } from "src/hooks/notification/notify.external";
+import { useCustomNavigation } from "src/hooks";
+import { CardElement } from "@stripe/react-stripe-js";
+import { useAuth } from "src/context";
 import { CopyToClipboard } from "src/utils/shareHelper";
 import ThemedTabs from "src/components/shared/Tabs/ThemedTabs";
-import { useCustomNavigation } from "src/hooks";
 
 const BankDetailRow = ({ label, value, isCopyable = false }: any) => (
-  <View className="flex-col sm:flex-row justify-between py-2 border-b border-gray-100 dark:border-gray-800">
+  <View className="flex-col sm:flex-row justify-between py-2 border-b border-gray-100">
     <Text className="text-gray-900 text-sm">{label}</Text>
     <View className="flex-row items-center gap-2">
       <Text className="text-gray-700 font-medium text-right text-xs md:text-sm  line-clamp-1">
@@ -37,11 +38,12 @@ const BankDetailRow = ({ label, value, isCopyable = false }: any) => (
     </View>
   </View>
 );
-
+// para validacion
+const stripeKey = process.env.EXPO_PUBLIC_STRIPE_KEY;
 export const RechargeScreen = ({ route }: { route: any }) => {
   const paramsAmount = route.params?.paramsAmount;
   const { navigate } = useCustomNavigation();
-
+  const { user } = useAuth();
   const {
     amount,
     selectedPaymentMethod,
@@ -50,9 +52,8 @@ export const RechargeScreen = ({ route }: { route: any }) => {
     usdAmount,
     previewUri,
     imageName,
-    totalAmount,
     isValid,
-    handleAmountChange,
+    PRESET_AMOUNTS,
     handlePresetAmount,
     handlePaymentMethodSelect,
     handleProceedToPayment,
@@ -66,11 +67,13 @@ export const RechargeScreen = ({ route }: { route: any }) => {
     selectedPaymentAccount,
     tabs,
     onTabChange,
-    modalPayphone,
-    setModalPayphone,
-    destroyPayphoneWidget,
+    setModalStripe,
+    modalStripe,
+    handlePay,
+    cardBrand,
+    setCardBrand,
   } = useRecharge({ paramsAmount });
-
+  const brand = cardBrandStyles[cardBrand ?? "unknown"];
   const handleBeforeClose = () => {
     return new Promise<boolean>((resolve) => {
       notify.confirm({
@@ -87,8 +90,6 @@ export const RechargeScreen = ({ route }: { route: any }) => {
         title="Recargar BeCoins"
         canGoBack
         onBackPress={() => {
-          destroyPayphoneWidget();
-
           setTimeout(() => {
             navigate("MainTabs", { screen: "Wallet" });
           }, 0);
@@ -97,62 +98,35 @@ export const RechargeScreen = ({ route }: { route: any }) => {
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="py-8 px-4">
           {/* Card Principal */}
-          <View className="bg-white dark:bg-gray-800 rounded-3xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <View className="bg-white  rounded-3xl shadow-lg border border-gray-200  overflow-hidden">
             {/* Sección de Monto */}
             <View
-              className="p-8 border-b border-gray-200 dark:border-gray-700"
+              className="p-8 border-b border-gray-200"
               style={{ position: "relative" }}
             >
-              {/* Header con Saldo: pill centrado encima en móvil, alineado a la derecha en escritorio */}
-              <BeCoinsBalance
-                size="medium"
-                variant="header"
-                style={{ marginLeft: "auto" }}
-              />
-
-              {/* Input de Monto */}
-              <View className="mb-12">
-                <View className="flex-row items-center">
-                  <Text className="text-5xl text-gray-400 dark:text-gray-500 font-light">
-                    $
-                  </Text>
-                  <TextInput
-                    className="flex-1 text-7xl font-bold text-gray-900 dark:text-white ml-3"
-                    placeholder="0.00"
-                    placeholderTextColor="#D1D5DB"
-                    keyboardType="numeric"
-                    value={amount}
-                    onChangeText={handleAmountChange}
-                  />
-                  <View className="border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1 bg-gray-50 dark:bg-gray-700">
-                    <Text className="text-sm font-bold text-gray-400 dark:text-gray-500">
-                      USD
-                    </Text>
-                  </View>
-                </View>
-              </View>
-
               {/* Montos Rápidos */}
               <View>
-                <Text className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-4">
-                  Montos rápidos
+                <Text className="font-semibold text-gray-800 uppercase tracking-wider mb-4">
+                  {paramsAmount === undefined
+                    ? "Montos Predefinidos:"
+                    : "Monto de recarga:"}
                 </Text>
-                <View className="flex-row gap-3">
+                <View className="md:flex-row gap-3">
                   {PRESET_AMOUNTS.map((presetAmount) => (
                     <TouchableOpacity
                       key={presetAmount}
                       onPress={() => handlePresetAmount(presetAmount)}
-                      className={`flex-1 py-3 rounded-xl border ${
-                        amount === presetAmount.toString()
+                      className={`flex-1 py-10 rounded-xl border ${
+                        amount === presetAmount
                           ? "bg-orange-500 border-orange-500 shadow-lg"
-                          : "border-gray-200 dark:border-gray-700 active:border-orange-500"
+                          : "border-orange-200  active:border-orange-500"
                       }`}
                     >
                       <Text
                         className={`text-center text-base font-medium ${
-                          amount === presetAmount.toString()
+                          amount === presetAmount
                             ? "text-white font-semibold"
-                            : "text-gray-600 dark:text-gray-300"
+                            : "text-gray-800"
                         }`}
                       >
                         ${presetAmount}
@@ -164,9 +138,9 @@ export const RechargeScreen = ({ route }: { route: any }) => {
             </View>
 
             {/* Sección de Método de Pago */}
-            <View className="p-8 bg-gray-50/50 dark:bg-gray-800/20">
-              <Text className="text-lg font-bold text-gray-900 dark:text-white mb-6">
-                Método{PAYMENT_METHODS.length > 1 ? "s" : ""} de pago
+            <View className="p-8 ">
+              <Text className="text-lg font-bold text-gray-900 mb-6">
+                Método de pago
               </Text>
 
               {/* Lista de Métodos de Pago */}
@@ -178,15 +152,15 @@ export const RechargeScreen = ({ route }: { route: any }) => {
                     index < PAYMENT_METHODS.length - 1 ? "mb-4" : ""
                   } ${
                     selectedPaymentMethod === method.id
-                      ? "border-2 border-orange-500 bg-white dark:bg-gray-800 shadow-md"
-                      : "border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                      ? "border-2 border-orange-500 bg-white shadow-md"
+                      : "border border-gray-200  bg-white"
                   }`}
                 >
                   <View
                     className={`w-12 h-12 rounded-full ${
                       selectedPaymentMethod === method.id
-                        ? "bg-orange-50 dark:bg-gray-700"
-                        : "bg-gray-100 dark:bg-gray-700"
+                        ? "bg-orange-50"
+                        : "bg-gray-100"
                     } items-center justify-center mr-4`}
                   >
                     <Ionicons
@@ -201,22 +175,22 @@ export const RechargeScreen = ({ route }: { route: any }) => {
                   </View>
                   <View className="flex-1">
                     <View className="flex-row justify-between items-center mb-0.5">
-                      <Text className="text-sm font-bold text-gray-900 dark:text-white">
+                      <Text className="text-sm font-bold text-gray-900">
                         {method.name}
                       </Text>
                       {method.badge && (
                         <View
                           className={`px-2 py-0.5 rounded-full ${
                             method.badgeColor === "green"
-                              ? "bg-green-100 dark:bg-green-900/40"
-                              : "bg-gray-100 dark:bg-gray-700"
+                              ? "bg-green-100"
+                              : "bg-gray-100"
                           }`}
                         >
                           <Text
                             className={`text-[10px] font-bold ${
                               method.badgeColor === "green"
-                                ? "text-green-700 dark:text-green-400"
-                                : "text-gray-600 dark:text-gray-400"
+                                ? "text-green-700"
+                                : "text-gray-600"
                             }`}
                           >
                             {method.badge}
@@ -225,7 +199,7 @@ export const RechargeScreen = ({ route }: { route: any }) => {
                       )}
                     </View>
                     {method.description && (
-                      <Text className="text-xs text-gray-500 dark:text-gray-400">
+                      <Text className="text-xs text-gray-500">
                         {method.description}
                       </Text>
                     )}
@@ -234,7 +208,7 @@ export const RechargeScreen = ({ route }: { route: any }) => {
                     className={`w-5 h-5 rounded-full ${
                       selectedPaymentMethod === method.id
                         ? "bg-orange-500 border-2 border-orange-500"
-                        : "border-2 border-gray-300 dark:border-gray-500"
+                        : "border-2 border-gray-300"
                     } items-center justify-center ml-2`}
                   >
                     {selectedPaymentMethod === method.id && (
@@ -245,156 +219,98 @@ export const RechargeScreen = ({ route }: { route: any }) => {
               ))}
 
               {/* Resumen y Botón */}
-              <View className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+              <View className="mt-8 pt-8 border-t border-gray-200">
                 {/* Resumen de la Orden */}
                 {amount && Number(amount) > 0 && (
-                  <View className="bg-gray-100 dark:bg-gray-900/30 rounded-2xl p-5 mb-6">
-                    <Text className="text-base font-bold text-gray-900 dark:text-white mb-4">
+                  <View className="bg-gray-100 rounded-2xl p-5 mb-6">
+                    <Text className="text-base font-bold text-gray-900 mb-4">
                       Resumen de la orden
                     </Text>
 
                     {/* Monto de recarga */}
                     <View className="flex-row justify-between mb-3">
-                      <Text className="text-sm text-gray-600 dark:text-gray-400">
+                      <Text className="text-sm text-gray-600">
                         Monto de recarga
                       </Text>
-                      <Text className="text-sm font-semibold text-gray-900 dark:text-white">
+                      <Text className="text-sm font-semibold text-gray-900">
                         ${usdAmount.toFixed(2)} USD
                       </Text>
                     </View>
 
-                    {/* Comisión */}
-                    {selectedPaymentMethod === "PAYPHONE" && (
-                      <View className="flex-col md:flex-row justify-between mb-3">
-                        <Text className="text-sm text-gray-600 dark:text-gray-400">
-                          Comisión de terceros
-                        </Text>
-                        <View className="bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-md">
-                          <Text className="text-sm font-bold text-orange-600 dark:text-orange-400">
-                            Te lo devolvemos en Orange Becoins (6%)
-                          </Text>
-                        </View>
-                      </View>
-                    )}
-
                     <View className="flex-row justify-between mb-3">
-                      <Text className="text-sm text-gray-600 dark:text-gray-400">
+                      <Text className="text-sm text-gray-600">
                         Comisión Beland
                       </Text>
-                      <View className="bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-md">
-                        <Text className="text-sm font-bold text-green-600 dark:text-green-400">
+                      <View className="bg-green-50 px-2 py-1 rounded-md">
+                        <Text className="text-sm font-bold text-green-600">
                           Gratis (0%)
                         </Text>
                       </View>
                     </View>
 
                     {/* Divisor */}
-                    <View className="h-px bg-gray-200 dark:border-gray-700 my-3" />
+                    <View className="h-px bg-gray-200 my-3" />
 
                     {/* Total */}
                     <View className="flex-row justify-between mb-4">
-                      <Text className="text-base font-bold text-gray-900 dark:text-white">
+                      <Text className="text-base font-bold text-gray-900">
                         Total
                       </Text>
                       <Text className="text-lg font-bold text-orange-500">
-                        ${totalAmount.toFixed(2)} USD
+                        ${usdAmount.toFixed(2)} USD
                       </Text>
                     </View>
 
                     {/* BeCoins a recibir */}
-                    <View className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/30 rounded-xl p-3 ">
+                    <View className="bg-blue-50 border border-blue-200 rounded-xl p-3 ">
                       <View className="flex flex-col md:flex-row w-full justify-center items-center gap-1">
-                        <Text className="text-sm text-gray-700 dark:text-gray-300 text-center">
+                        <Text className="text-sm text-gray-700 text-center">
                           Recibirás
                         </Text>
-                        <Text className="text-base font-bold text-yellow-600 dark:text-yellow-400">
-                          {selectedPaymentMethod === "PAYPHONE"
-                            ? `${beCoinsAmount - beCoinsAmount * 0.06} BeCoins`
-                            : `${beCoinsAmount} Becoins`}
+                        <Text className="text-base font-bold text-beland-orange-500">
+                          ${beCoinsAmount} Becoins
                         </Text>
-
-                        {selectedPaymentMethod === "PAYPHONE" && (
-                          <>
-                            <Text className="px-1 text-sm text-gray-700 dark:text-gray-300">
-                              y
-                            </Text>
-                            <Text className="text-base font-bold text-orange-600 dark:text-orange-400">
-                              {beCoinsAmount * 0.06} Orange Becoins
-                            </Text>
-                            <Ionicons
-                              name="information-circle"
-                              size={20}
-                              color="gray"
-                              onPress={() =>
-                                notify.info({
-                                  message:
-                                    "Absorvemos la comision bancaria y te la devolvemos como Orange BeCoins",
-                                })
-                              }
-                            />
-                          </>
-                        )}
                       </View>
-                      <Text className="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
+                      <Text className="text-xs text-gray-500 text-center mt-1">
                         1 BeCoin = $0.05 USD
                       </Text>
                     </View>
                   </View>
                 )}
 
-                {/* Contenedor para el botón de Payphone en Web */}
-                {Platform.OS === "web" &&
-                  selectedPaymentMethod === "PAYPHONE" &&
-                  modalPayphone && (
-                    <View className="mb-4 flex gap-2">
-                      <Button
-                        onPress={() => {
-                          destroyPayphoneWidget();
-                          setModalPayphone(false);
-                        }}
-                        title="Cancelar"
-                        variant="secondary"
-                      />
-                      <div id="pp-button"></div>
-                    </View>
-                  )}
-
                 {/* Botón de Recargar */}
-                {!modalPayphone && (
-                  <TouchableOpacity
-                    disabled={!isValid}
-                    onPress={handleProceedToPayment}
-                    className={`w-full py-4 px-6 rounded-xl items-center mb-4 ${
-                      isValid
-                        ? "bg-orange-500 active:bg-orange-600 shadow-lg"
-                        : "bg-gray-300 dark:bg-gray-700"
-                    }`}
-                  >
-                    <View className="flex-row items-center gap-2">
-                      <Text
-                        className={`font-bold text-lg ${
-                          isValid
-                            ? "text-white"
-                            : "text-gray-500 dark:text-gray-400"
-                        }`}
-                      >
-                        {selectedPaymentMethod === "BANK_TRANSFER"
-                          ? "Ver datos de cuenta"
-                          : "Recargar ahora"}
-                      </Text>
-                      <Ionicons
-                        name="arrow-forward"
-                        size={24}
-                        color={isValid ? "white" : "#9CA3AF"}
-                      />
-                    </View>
-                  </TouchableOpacity>
-                )}
+
+                <TouchableOpacity
+                  disabled={!isValid}
+                  onPress={handleProceedToPayment}
+                  className={`w-full py-4 px-6 rounded-xl items-center mb-4 ${
+                    isValid
+                      ? "bg-orange-500 active:bg-orange-600 shadow-lg"
+                      : "bg-gray-300"
+                  }`}
+                >
+                  <View className="flex-row items-center gap-2">
+                    <Text
+                      className={`font-bold text-lg ${
+                        isValid ? "text-white" : "text-gray-500"
+                      }`}
+                    >
+                      {selectedPaymentMethod === "BANK_TRANSFER"
+                        ? "Ver datos de cuenta"
+                        : "Recargar ahora"}
+                    </Text>
+                    <Ionicons
+                      name="arrow-forward"
+                      size={24}
+                      color={isValid ? "white" : "#9CA3AF"}
+                    />
+                  </View>
+                </TouchableOpacity>
 
                 {/* Texto de seguridad */}
                 <View className="flex-row justify-center items-center gap-2">
                   <Ionicons name="lock-closed" size={14} color="#9CA3AF" />
-                  <Text className="text-xs text-gray-400 dark:text-gray-500">
+                  <Text className="text-xs text-gray-400">
                     Pagos procesados de forma segura y encriptada
                   </Text>
                 </View>
@@ -404,13 +320,82 @@ export const RechargeScreen = ({ route }: { route: any }) => {
         </View>
       </ScrollView>
 
+      {/* MODAL DE STRIPE */}
+      {
+        <WrapperModal
+          beforeClose={handleBeforeClose}
+          isOpen={modalStripe}
+          onClose={() => setModalStripe(false)}
+          header={
+            <Text className="text-lg font-semibold">Pago mediante Stripe</Text>
+          }
+          actions={<Button title="Pagar" onPress={handlePay} />}
+          content={
+            <View className="gap-4">
+              <Text className="text-lg ">
+                Introduce los datos de tu tarjeta:
+              </Text>
+              <View
+                className=" shadow-xl min-h-20 justify-center p-2 gap-4"
+                style={{
+                  backgroundColor: brand.color,
+                  borderRadius: 12,
+                  padding: 12,
+                }}
+              >
+                <Text className="text-lg font-semibold text-white capitalize">
+                  {brand.label}
+                </Text>
+                <View className="bg-white p-2 rounded-lg">
+                  {stripeKey ? (
+                    <CardElement
+                      onChange={(event) => {
+                        setCardBrand(event.brand);
+                      }}
+                      options={{
+                        style: {
+                          base: {
+                            fontSize: "16px",
+                          },
+                        },
+                      }}
+                      onLoadError={() => {
+                        notify.error({
+                          message: "Error cargando Stripe, intenta nuevamente",
+                        });
+                      }}
+                    />
+                  ) : (
+                    <Text className="text-lg text-red-400">
+                      Error cargando stripe, contacte con el administrador
+                    </Text>
+                  )}
+                </View>
+                <View className="flex-row justify-between">
+                  <Text className="text-white">{user?.full_name}</Text>
+
+                  {cardBrand != "unknown" && cardBrand ? (
+                    <FontAwesome
+                      name={`cc-${cardBrand}` as any}
+                      size={22}
+                      color={"white"}
+                    />
+                  ) : (
+                    <FontAwesome name="credit-card" size={22} color={"white"} />
+                  )}
+                </View>
+              </View>
+            </View>
+          }
+        />
+      }
       {/* MODAL DE TRANSFERENCIA BANCARIA */}
       <WrapperModal
         beforeClose={handleBeforeClose}
         content={
           <View>
             {/* Instrucciones */}
-            <View className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800 mb-6">
+            <View className="bg-blue-50 p-4 rounded-xl border border-blue-100 mb-6">
               <View className="flex-row gap-2 mb-2">
                 <Ionicons name="information-circle" size={20} color="#3B82F6" />
                 <Text className="  font-bold flex-1">Pasos para recargar:</Text>
@@ -428,7 +413,7 @@ export const RechargeScreen = ({ route }: { route: any }) => {
                 abajo.
               </Text>
             </View>
-            <View className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800">
+            <View className="bg-blue-50 p-4 rounded-xl border border-blue-100">
               <ThemedTabs tabs={tabs} onTabChange={onTabChange} />
               {/* Datos de la Cuenta */}
               {selectedPaymentAccount && (
@@ -474,7 +459,7 @@ export const RechargeScreen = ({ route }: { route: any }) => {
               </Text>
               <TouchableOpacity
                 onPress={() => pickImage()}
-                className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800 items-center justify-center min-h-[150px]"
+                className="bg-blue-50 p-4 rounded-xl border border-blue-100 items-center justify-center min-h-[150px]"
               >
                 {image && previewUri ? (
                   <View className="items-center">
@@ -506,14 +491,14 @@ export const RechargeScreen = ({ route }: { route: any }) => {
                   </View>
                 ) : (
                   <>
-                    <View className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl  border-blue-100 dark:border-blue-800 mb-2 ">
+                    <View className="bg-blue-50 p-4 rounded-xl  border-blue-100 mb-2 ">
                       <Ionicons
                         name="cloud-upload-outline"
                         size={24}
                         color="#F97316"
                       />
                     </View>
-                    <Text className="text-gray-600 dark:text-gray-900 font-medium">
+                    <Text className="text-gray-600 font-medium">
                       Subir foto del comprobante
                     </Text>
                     <Text className="text-xs text-gray-400 mt-1">
@@ -534,7 +519,7 @@ export const RechargeScreen = ({ route }: { route: any }) => {
                 onChangeText={setReferenceId}
                 placeholder="Ej: 12345678"
                 placeholderTextColor="#9CA3AF"
-                className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800 py-3 text-gray-900 text-base"
+                className="bg-blue-50 p-4 rounded-xl border border-blue-100 py-3 text-gray-900 text-base"
               />
               <Text className="text-xs text-gray-500 mt-2 ml-1">
                 Ingresa el número de confirmación que aparece en tu comprobante.

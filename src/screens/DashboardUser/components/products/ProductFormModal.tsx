@@ -6,6 +6,7 @@ import {
   Modal,
   TouchableOpacity,
   Image,
+  Pressable,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { ProductService } from "@/services/core";
@@ -80,6 +81,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         image_url: product.image_url || "",
         category_id: product.category_id || "",
         quantity: product.stock,
+        is_circular: product.is_circular || false,
       });
     } else {
       setFormData({
@@ -90,6 +92,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         image_url: "",
         category_id: "",
         quantity: 0,
+        is_circular: false,
       });
     }
     setErrors({});
@@ -140,17 +143,28 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
     }
   };
 
-  const handleChange = (field: keyof CreateProductDto, value: string) => {
-    if (value.includes(",")) {
-      value = value.replace(",", ".");
+  const handleChange = <K extends keyof CreateProductDto>(
+    field: K,
+    value: CreateProductDto[K],
+  ) => {
+    let finalValue = value;
+
+    if (typeof finalValue === "string" && finalValue.includes(",")) {
+      finalValue = finalValue.replace(",", ".") as CreateProductDto[K];
     }
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    // Clear error when user types
+
+    setFormData((prev) => ({
+      ...prev,
+      [field]: finalValue,
+    }));
+
     if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
+      setErrors((prev) => ({
+        ...prev,
+        [field]: undefined,
+      }));
     }
   };
-
   const validate = (): boolean => {
     const newErrors: Partial<Record<keyof CreateProductDto, string>> = {};
 
@@ -262,7 +276,9 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 variant="filled"
                 value={String(formData.quantity)}
                 keyboardType="decimal-pad"
-                onChangeText={(value) => handleChange("quantity", value)}
+                onChangeText={(value) =>
+                  handleChange("quantity", Number(value))
+                }
                 error={errors.quantity}
               />
             </View>
@@ -283,7 +299,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 keyboardType="decimal-pad"
                 label="Costo (USD)"
                 value={formData.cost.toString()}
-                onChangeText={(num) => handleChange("cost", num)}
+                onChangeText={(num) => handleChange("cost", Number(num))}
                 error={errors.cost}
               />
               <CustomInput
@@ -292,8 +308,21 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 keyboardType="decimal-pad"
                 label="Precio (USD)"
                 value={formData.price.toString()}
-                onChangeText={(num) => handleChange("price", num)}
+                onChangeText={(num) => handleChange("price", Number(num))}
                 error={errors.price}
+              />
+            </View>
+            <View className="flex flex-row items-center gap-2">
+              <span>El producto es circular?</span>
+              <Button
+                title="Si"
+                variant={formData.is_circular ? "primary" : "ghost"}
+                onPress={() => handleChange("is_circular", true)}
+              />
+              <Button
+                title="No"
+                variant={formData.is_circular ? "ghost" : "primary"}
+                onPress={() => handleChange("is_circular", false)}
               />
             </View>
 

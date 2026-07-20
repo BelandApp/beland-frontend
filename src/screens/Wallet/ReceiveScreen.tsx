@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useAuth } from "src/context";
+import { ProfileEnum, useAuth, UserRole } from "src/context";
 import { useWallet } from "../Wallet/hooks/useWalletData";
 import { WalletService } from "@services/core";
 import { useNotify } from "src/hooks";
@@ -24,7 +24,7 @@ import { ThemedHeader } from "src/components/shared/headers/Header";
 import { CustomLoader } from "src/components";
 const ReceiveScreen = () => {
   const { navigate } = useCustomNavigation();
-  const { user } = useAuth();
+  const { user, hasProfile, isAdmin } = useAuth();
 
   const { walletData, wallet, refreshAll } = useWallet();
   const { beCoinsToUsd } = useBeCoinsPrice();
@@ -39,7 +39,7 @@ const ReceiveScreen = () => {
   const notify = useNotify();
   // Usar alias del backend (siempre en mayúsculas)
   const alias = walletData?.alias?.toUpperCase();
-
+  const canSeeQR = hasProfile(ProfileEnum.MERCHANT) || isAdmin;
   // Calcular saldo en USD
   const balanceUsd = useMemo(() => {
     return beCoinsToUsd(walletData.balance || 0);
@@ -260,7 +260,7 @@ Gracias! Un abrazo, ${userName} ♻️🌎 `,
       </View>
 
       {/* QR Code (solo para comercios) */}
-      {user?.role_name === "COMMERCE" && (
+      {canSeeQR && (
         <View style={styles.qrSection}>
           <View style={styles.sectionHeader}>
             <MaterialCommunityIcons name="qrcode" size={20} color="#111827" />

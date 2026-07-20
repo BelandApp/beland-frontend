@@ -26,7 +26,6 @@ export default function WalletHistoryScreen() {
     loadingMore,
   } = useWallet();
   const [modalTransaction, setModalOpen] = useState<Transaction | null>(null);
-  const [walletTransfers, setWalletTransfers] = useState<Wallet | null>(null);
   const { navigate } = useCustomNavigation();
   const {
     searchText,
@@ -162,7 +161,6 @@ export default function WalletHistoryScreen() {
           transaction={modalTransaction}
           onClose={() => {
             setModalOpen(null);
-            setWalletTransfers(null);
           }}
         />
       )}

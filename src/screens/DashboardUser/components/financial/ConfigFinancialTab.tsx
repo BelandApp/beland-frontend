@@ -30,7 +30,7 @@ const ConfigFinancialTab: React.FC<ConfigTabProps> = ({
             <Text>Estado: {item.is_active ? "Activa" : "Suspendida"}</Text>
           </View>
           <View className="flex flex-row justify-center gap-8">
-            <View className="flex flex-row justify-center gap-8 mt-2 pt-2 border-t border-t-slate-400 w-full">
+            <View className="flex md:flex-row justify-center gap-2 md:gap-8 mt-2 pt-2 border-t border-t-slate-400 w-full">
               <Button
                 disabled={loading}
                 title={item.is_active ? "Suspender" : "Activar"}
