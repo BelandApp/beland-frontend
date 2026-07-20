@@ -131,25 +131,14 @@ const FinancesManagement: React.FC = () => {
         content={
           <View className="grid md:grid-cols-2 gap-2">
             <CustomInput
+              id="banco"
               variant="filled"
               label="Banco"
               onChangeText={financeUI.setBanco}
               value={financeUI.bank}
               required
             />
-            <CustomPicker
-              label="Seleccionar tipo de cuenta"
-              value={financeUI.type_account}
-              onChange={(value) =>
-                financeUI.setAccountType(value as TypeAccount)
-              }
-              required
-              options={[
-                { label: "Seleccionar tipo de cuenta", value: null },
-                { label: "Caja de ahorro", value: "AHORRO" },
-                { label: "Cuenta corriente", value: "CORRIENTE" },
-              ]}
-            />
+            {/* picker for account type */}
             <View
               style={{
                 height: 40,
@@ -184,6 +173,7 @@ const FinancesManagement: React.FC = () => {
               )}
             </View>
             <CustomInput
+              id="holder"
               variant="filled"
               label="Nombre del titular bancario"
               onChangeText={financeUI.setAccountHolder}
@@ -191,6 +181,7 @@ const FinancesManagement: React.FC = () => {
               required
             />
             <CustomInput
+              id="identify"
               variant="filled"
               label="Nombre identificador"
               onChangeText={financeUI.setName}
@@ -199,12 +190,14 @@ const FinancesManagement: React.FC = () => {
             />
             <CustomInput
               variant="filled"
+              id="account_number"
               label="Nro cuenta bancaria"
               onChangeText={financeUI.setAccountNumber}
               value={financeUI.nro_account}
               required
             />
             <CustomInput
+              id="email_reference"
               variant="filled"
               label="Email de referencia"
               onChangeText={financeUI.setEmail}
@@ -212,18 +205,21 @@ const FinancesManagement: React.FC = () => {
               required
             />
             <CustomInput
+              id="ruc"
               variant="filled"
               label="Ruc"
               onChangeText={financeUI.setRuc}
               value={financeUI.ruc}
             />
             <CustomInput
+              id="cbu"
               variant="filled"
               label="CBU"
               onChangeText={financeUI.setCbu}
               value={financeUI.cbu}
             />
             <CustomInput
+              id="alias"
               variant="filled"
               label="Alias"
               onChangeText={financeUI.setAlias}
