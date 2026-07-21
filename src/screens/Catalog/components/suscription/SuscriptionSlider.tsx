@@ -179,8 +179,7 @@ const SubscriptionSlider: React.FC<SubscriptionProps> = ({
           }
           actions={
             <View className="flex flex-col sm:flex-row gap-2 justify-evenly">
-              <Button title="Suscribirse" onPress={() => {}} />
-
+              <Button title="Suscribirse" onPress={() => {}} disabled />
               <Button title="Comprar" onPress={addItem} />
             </View>
           }
