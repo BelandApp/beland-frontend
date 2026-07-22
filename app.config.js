@@ -11,7 +11,7 @@ export default {
     newArchEnabled: true,
     scheme: "belandnative",
     owner: "beland",
-    plugins: ["expo-secure-store", "expo-web-browser"],
+    plugins: ["expo-secure-store", "expo-web-browser", "expo-video"],
     extra: {
       auth0Domain: process.env.EXPO_PUBLIC_AUTH0_DOMAIN,
       auth0MobileClientId: process.env.EXPO_PUBLIC_AUTH0_MOBILE_CLIENT_ID,

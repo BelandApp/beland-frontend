@@ -46,6 +46,10 @@ import { GroupDetailScreen } from "src/screens/GroupDetailScreen";
 import { Guard } from "src/guard/GuardRole";
 import { WalletGuestScreen } from "src/screens/Wallet/guardScreen/WalletGuestScreen";
 import TransferReceive from "src/screens/Wallet/TransferReceive";
+import OnboardingScreen from "src/screens/onboardingProcess/OnboardingScreen";
+import AppGate from "src/screens/Splash/AppGate";
+import SplashContent from "src/screens/Splash/SplashContent";
+import { useOnboardingContext } from "src/screens/onboardingProcess/context/OnboardingContext";
 
 export type RootStackParamList = {
   // Auth Screens
@@ -108,149 +112,163 @@ export type RootStackParamList = {
   TransferReceive: { id: string };
   // Chequear si son necesarios
   Rewards: undefined;
+  AppGate: undefined;
+  Onboarding: { invited?: boolean } | undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export const RootStackNavigator = () => {
+  const { isLoading, hasCompleted } = useOnboardingContext();
+  if (isLoading) return <SplashContent />;
   return (
-    <Stack.Navigator
-      initialRouteName="MainTabs"
-      screenOptions={{ headerShown: false }}
-    >
-      <Stack.Screen name="MainTabs" component={MainTabNavigator} />
-      <Stack.Screen name="GroupDetailScreen" component={GroupDetailScreen} />
-      <Stack.Screen
-        name="Orders"
-        component={OrdersStackNavigator}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen name="CanjearScreen" component={CanjearScreen} />
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {!hasCompleted ? (
+        <>
+          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+        </>
+      ) : (
+        <>
+          <Stack.Screen name="AppGate" component={AppGate} />
+          <Stack.Screen name="MainTabs" component={MainTabNavigator} />
+          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+          <Stack.Screen
+            name="GroupDetailScreen"
+            component={GroupDetailScreen}
+          />
+          <Stack.Screen
+            name="Orders"
+            component={OrdersStackNavigator}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen name="CanjearScreen" component={CanjearScreen} />
 
-      <Stack.Screen name="SendScreen">
-        {(props) => (
-          <Guard
-            intent={{
-              screen: "SendScreen",
-              id: props.route.params.id,
-              amount: props.route.params.amount,
-            }}
-            fallback={<WalletGuestScreen />}
-          >
-            <SendScreen {...props} />
-          </Guard>
-        )}
-      </Stack.Screen>
-      <Stack.Screen
-        name="WalletHistoryScreen"
-        component={WalletHistoryScreen}
-      />
-      <Stack.Screen name="RechargeScreen" component={RechargeScreen} />
-      <Stack.Screen name="CreateGroup" component={CreateGroupScreen} />
-      <Stack.Screen
-        name="WalletSettingsScreen"
-        component={WalletSettingsScreen}
-      />
-      <Stack.Screen
-        name="QR"
-        component={QRScannerScreen}
-        options={{ presentation: "modal" }}
-      />
-      <Stack.Screen
-        name="RecyclingMap"
-        component={RecyclingMapScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="HistoryScreen"
-        component={HistoryScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="UserDashboardScreen"
-        component={DashboardStackNavigator}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="ReceiveScreen"
-        component={ReceiveScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="PayphoneSuccess"
-        component={PayphoneSuccessScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="CobrarScreen"
-        component={CobrarScreen}
-        options={{ headerShown: false, title: "Cobrar" }}
-      />
-      <Stack.Screen
-        name="PaymentScreen"
-        component={PaymentScreen}
-        options={{ headerShown: false }}
-      />
+          <Stack.Screen name="SendScreen">
+            {(props) => (
+              <Guard
+                intent={{
+                  screen: "SendScreen",
+                  id: props.route.params.id,
+                  amount: props.route.params.amount,
+                }}
+                fallback={<WalletGuestScreen />}
+              >
+                <SendScreen {...props} />
+              </Guard>
+            )}
+          </Stack.Screen>
+          <Stack.Screen
+            name="WalletHistoryScreen"
+            component={WalletHistoryScreen}
+          />
+          <Stack.Screen name="RechargeScreen" component={RechargeScreen} />
+          <Stack.Screen name="CreateGroup" component={CreateGroupScreen} />
+          <Stack.Screen
+            name="WalletSettingsScreen"
+            component={WalletSettingsScreen}
+          />
+          <Stack.Screen
+            name="QR"
+            component={QRScannerScreen}
+            options={{ presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="RecyclingMap"
+            component={RecyclingMapScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="HistoryScreen"
+            component={HistoryScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="UserDashboardScreen"
+            component={DashboardStackNavigator}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="ReceiveScreen"
+            component={ReceiveScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="PayphoneSuccess"
+            component={PayphoneSuccessScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="CobrarScreen"
+            component={CobrarScreen}
+            options={{ headerShown: false, title: "Cobrar" }}
+          />
+          <Stack.Screen
+            name="PaymentScreen"
+            component={PaymentScreen}
+            options={{ headerShown: false }}
+          />
 
-      <Stack.Screen
-        name="MisEntradas"
-        component={UserResourcesScreen}
-        options={{ headerShown: false }}
-      />
+          <Stack.Screen
+            name="MisEntradas"
+            component={UserResourcesScreen}
+            options={{ headerShown: false }}
+          />
 
-      <Stack.Screen
-        name="Login"
-        component={LoginScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Register"
-        component={RegisterScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="NewPassword"
-        component={NewPasswordScreen}
-        options={{ headerShown: false }}
-      />
+          <Stack.Screen
+            name="Login"
+            component={LoginScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Register"
+            component={RegisterScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="NewPassword"
+            component={NewPasswordScreen}
+            options={{ headerShown: false }}
+          />
 
-      <Stack.Screen
-        name="UseEventScreen"
-        component={UseEventScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="QrUseEventScreen"
-        component={QRUseEventScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="ConsumedEventScreen"
-        component={ConsumedEventScreen}
-        options={{ headerShown: false }}
-      />
+          <Stack.Screen
+            name="UseEventScreen"
+            component={UseEventScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="QrUseEventScreen"
+            component={QRUseEventScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="ConsumedEventScreen"
+            component={ConsumedEventScreen}
+            options={{ headerShown: false }}
+          />
 
-      <Stack.Screen
-        name="Rewards"
-        component={RewardsScreen}
-        options={{ headerShown: false }}
-      />
+          <Stack.Screen
+            name="Rewards"
+            component={RewardsScreen}
+            options={{ headerShown: false }}
+          />
 
-      <Stack.Screen
-        name="NewPaymentScreen"
-        component={NewPaymentScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="FAQ"
-        component={FAQScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="TransferReceive"
-        options={{ headerShown: false }}
-        component={TransferReceive}
-      />
+          <Stack.Screen
+            name="NewPaymentScreen"
+            component={NewPaymentScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="FAQ"
+            component={FAQScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="TransferReceive"
+            options={{ headerShown: false }}
+            component={TransferReceive}
+          />
+        </>
+      )}
     </Stack.Navigator>
   );
 };

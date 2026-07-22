@@ -70,13 +70,7 @@ export const EnhancedProfileCard: React.FC<EnhancedProfileCardProps> = () => {
           <Text style={styles.userEmail}>{user.email}</Text>
           {user.role_name && (
             <View style={styles.roleBadge}>
-              <Text style={styles.roleText}>
-                {user.role_name === "USER"
-                  ? "Usuario"
-                  : user.role_name === "COMMERCE"
-                    ? "Comercio"
-                    : user.role_name}
-              </Text>
+              <Text style={styles.roleText}>{user.role_name}</Text>
             </View>
           )}
         </View>

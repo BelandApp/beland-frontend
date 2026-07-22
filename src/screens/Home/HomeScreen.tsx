@@ -21,6 +21,7 @@ export const HomeScreen = () => {
     navigateDelivery,
     navigateFaq,
   } = useDashboardNavigation();
+  const { navigate } = useCustomNavigation();
   const { isAuthenticated } = useAuth();
   const { userStats } = useDashboardData();
   const { getBeCoinsInUSD } = useBeCoinsStore();
@@ -43,6 +44,10 @@ export const HomeScreen = () => {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.content}>
+          <Button
+            title="Ir a onboarding"
+            onPress={() => navigate("Onboarding")}
+          />
           <HeroSection wallet={walletData} isLoading={loading} />
           {isAuthenticated && (
             <WalletActions
