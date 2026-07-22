@@ -2,12 +2,11 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Image, ListRenderItemInfo, Text, View } from "react-native";
 
 import SubscriptionCard from "./SuscriptionCard";
-import { Button, WrapperModal } from "src/components";
+import { Button, WrapperModal, Slider } from "src/components";
 import { LucideLeaf } from "lucide-react-native";
 import { useResponsiveLayout } from "src/hooks";
 import { useCartStore } from "src/stores";
 import { Product } from "src/types";
-import Slider from "src/components/shared/slider/Slider";
 
 interface SubscriptionProps {
   circularProducts: Product[];
@@ -17,8 +16,8 @@ const SubscriptionSlider: React.FC<SubscriptionProps> = ({
   circularProducts,
 }) => {
   const [itemModal, setItemModal] = useState<Product | null>(null);
-  const { isMobile, screenWidth } = useResponsiveLayout();
   const { addProduct, setShowCart } = useCartStore();
+  const { isMobile, screenWidth } = useResponsiveLayout();
   const SPACING = 16;
   const CARD_WIDTH = isMobile ? screenWidth * 0.8 : screenWidth / 3.2;
   const ITEMS_PER_PAGE = isMobile ? 1 : 3;
