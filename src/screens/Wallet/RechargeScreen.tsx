@@ -72,6 +72,7 @@ export const RechargeScreen = ({ route }: { route: any }) => {
     handlePay,
     cardBrand,
     setCardBrand,
+    handleAmountChange,
   } = useRecharge({ paramsAmount });
   const brand = cardBrandStyles[cardBrand ?? "unknown"];
   const handleBeforeClose = () => {
@@ -104,6 +105,22 @@ export const RechargeScreen = ({ route }: { route: any }) => {
               className="p-8 border-b border-gray-200"
               style={{ position: "relative" }}
             >
+              {/* custom amount */}
+              <View className="mb-12 shadow rounded-2xl p-2">
+                <View className="flex-row items-center">
+                  <Text className="text-3xl text-gray-400 dark:text-gray-500 font-light px-2 text-nowrap">
+                    $
+                  </Text>
+                  <TextInput
+                    className={`flex-1 text-5xl font-bold ${selectedPaymentMethod != null && "text-beland-orange-500"}`}
+                    placeholder="0.00"
+                    placeholderTextColor="#D1D5DB"
+                    keyboardType="numeric"
+                    value={amount}
+                    onChangeText={handleAmountChange}
+                  />
+                </View>
+              </View>
               {/* Montos Rápidos */}
               <View>
                 <Text className="font-semibold text-gray-800 uppercase tracking-wider mb-4">
