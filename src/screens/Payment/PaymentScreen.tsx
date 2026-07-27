@@ -778,7 +778,12 @@ const PaymentScreen: React.FC = () => {
           <Text className="text-lg font-semibold">
             Abonaras: Usd$ {paymentData.amount}
           </Text>
-          <Text className="italic">A {paymentData.full_name}</Text>
+          <Text className="italic">
+            A{" "}
+            {paymentData.full_name
+              ? paymentData.full_name
+              : "un Comercio de Beland"}
+          </Text>
           <View className="flex flex-row items-center justify-center gap-2 ">
             <Button
               title="Cancelar"
