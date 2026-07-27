@@ -220,7 +220,7 @@ class WalletServiceClass extends CoreApiService {
    */
   async createPurchaseBecoin(purchaseData: {
     toWalletId: string;
-    amountBecoin: number;
+    amountUsd: number;
     amount_payment_id?: string;
     user_resource_id?: string;
   }): Promise<any> {

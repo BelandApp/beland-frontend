@@ -6,17 +6,8 @@ import { WalletService } from "@services/core";
 import DiscountsButton from "./components/DiscountsButton";
 import DiscountsModal from "./components/DiscountsModal";
 
-// Importar estilos CSS
-import "./styles/paymentScreenStyles.css";
-
 // Importar estilos y componentes
-import {
-  containerStyles,
-  amountStyles,
-  couponStyles,
-  discountBannerStyles,
-  actionButtonStyles,
-} from "./styles";
+import { containerStyles, amountStyles } from "./styles";
 
 import {
   PaymentHeader,
@@ -30,6 +21,8 @@ import { UserResource as RealUserResource } from "../../types/resource";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 import { useNotify } from "src/hooks";
 import { getBackendErrorMessage } from "src/services";
+import { Pressable, ScrollView, Text, View } from "react-native";
+import { Button, ThemedHeader } from "src/components";
 
 // Types del código original
 type Resource = {
@@ -99,11 +92,11 @@ const PaymentScreen: React.FC = () => {
   const [showDiscountsModal, setShowDiscountsModal] = useState(false);
 
   // Hook para obtener recursos del usuario
-  const {
-    userResources,
-    loading: userResourcesLoading,
-    error: userResourcesError,
-  } = useUserResources();
+  // const {
+  //   userResources,
+  //   loading: userResourcesLoading,
+  //   error: userResourcesError,
+  // } = useUserResources();
 
   const { paymentData, amount_to_payment_id } = route.params;
 
@@ -497,7 +490,7 @@ const PaymentScreen: React.FC = () => {
         // Solo enviar campos que acepta el backend DTO
         const backendData = {
           toWalletId: freeEntryData.toWalletId,
-          amountBecoin: freeEntryData.amountBecoin,
+          amountUsd: freeEntryData.amountBecoin,
           amount_payment_id: freeEntryData.amount_payment_id,
           user_resource_id: freeEntryData.user_resource_id,
         };
@@ -591,46 +584,46 @@ const PaymentScreen: React.FC = () => {
       setIsLoading(true);
       const effectiveAmount = getEffectiveAmount();
       const beCoinsAmount = isFreeEntry ? 0 : usdToBeCoins(effectiveAmount);
-      console.log("Prueba:", paymentData.wallet_id);
+
       const purchaseData: any = {
         toWalletId: paymentData.wallet_id,
-        amountBecoin: beCoinsAmount,
+        amountUsd: paymentData.amount,
       };
 
       if (paymentData.amount_to_payment_id) {
         purchaseData.amount_payment_id = paymentData.amount_to_payment_id;
       }
 
-      if (
-        Array.isArray(paymentData.resource) &&
-        paymentData.resource.length > 0 &&
-        paymentData.resource[0].id
-      ) {
-        purchaseData.user_resource_id = paymentData.resource[0].id;
-      }
+      // if (
+      //   Array.isArray(paymentData.resource) &&
+      //   paymentData.resource.length > 0 &&
+      //   paymentData.resource[0].id
+      // ) {
+      //   purchaseData.user_resource_id = paymentData.resource[0].id;
+      // }
 
       // Agregar información de redención aplicada
-      if (appliedRedemption) {
-        purchaseData.applied_redemption_id = appliedRedemption.id;
-        if ("value" in appliedRedemption) {
-          purchaseData.redemption_discount = appliedRedemption.value;
-        } else {
-          purchaseData.redemption_discount =
-            appliedRedemption.resource?.discount || 0;
-        }
-        purchaseData.original_amount = originalAmount;
-        purchaseData.discounted_amount = effectiveAmount;
-      }
+      // if (appliedRedemption) {
+      //   purchaseData.applied_redemption_id = appliedRedemption.id;
+      //   if ("value" in appliedRedemption) {
+      //     purchaseData.redemption_discount = appliedRedemption.value;
+      //   } else {
+      //     purchaseData.redemption_discount =
+      //       appliedRedemption.resource?.discount || 0;
+      //   }
+      //   purchaseData.original_amount = originalAmount;
+      //   purchaseData.discounted_amount = effectiveAmount;
+      // }
 
       // Agregar información adicional para notificación
-      if (
-        Array.isArray(paymentData.resource) &&
-        paymentData.resource.length > 0
-      ) {
-        purchaseData.resource_name = paymentData.resource[0].resource_name;
-        purchaseData.resource_quantity =
-          paymentData.resource[0].resource_quanity;
-      }
+      // if (
+      //   Array.isArray(paymentData.resource) &&
+      //   paymentData.resource.length > 0
+      // ) {
+      //   purchaseData.resource_name = paymentData.resource[0].resource_name;
+      //   purchaseData.resource_quantity =
+      //     paymentData.resource[0].resource_quanity;
+      // }
 
       // Preparar datos adicionales para notificación (no van al backend)
       const notificationData: {
@@ -663,11 +656,9 @@ const PaymentScreen: React.FC = () => {
       // Solo enviar campos que acepta el backend DTO
       const backendData = {
         toWalletId: purchaseData.toWalletId,
-        amountBecoin: purchaseData.amountBecoin,
+        amountUsd: paymentData.amount,
         amount_payment_id: purchaseData.amount_payment_id,
-        user_resource_id: purchaseData.user_resource_id,
       };
-
       const response = await WalletService.createPurchaseBecoin(backendData);
 
       // Guardar contexto de transacción para enriquecer notificaciones
@@ -738,7 +729,7 @@ const PaymentScreen: React.FC = () => {
       // Solo enviar campos que acepta el backend DTO
       const backendData = {
         toWalletId: purchaseData.toWalletId,
-        amountBecoin: purchaseData.amountBecoin,
+        amountUsd: purchaseData.amountBecoin,
         amount_payment_id: purchaseData.amount_payment_id,
         user_resource_id: purchaseData.user_resource_id,
       };
@@ -770,261 +761,47 @@ const PaymentScreen: React.FC = () => {
   // Calcular total de descuentos disponibles
   const totalDiscounts =
     (paymentData.resource?.length || 0) +
-    (paymentData.redemptions?.length || 0) +
-    (userResources?.length || 0);
-
+    (paymentData.redemptions?.length || 0);
+  // +
+  // (userResources?.length || 0);
   return (
     <>
-      <div style={containerStyles.container}>
-        <div style={containerStyles.scrollContainer} className="payment-scroll">
-          <div style={containerStyles.content} className="payment-container">
-            <div style={containerStyles.card} className="payment-card">
-              <PaymentHeader
-                commerceImg={comercioImg}
-                commerceName={comercioNombre}
-              />
-
-              {/* Monto grande, centrado y profesional */}
-              <div
-                style={containerStyles.sectionCard}
-                className="payment-section-card"
-              >
-                <div style={amountStyles.amountContainer}>
-                  {canEdit ? (
-                    <div>
-                      <input
-                        type="text"
-                        value={
-                          amount ? `$${Number(amount).toLocaleString()}` : ""
-                        }
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        onChange={(e) => {
-                          const val = e.target.value.replace(/[$,]/g, "");
-                          if (/^\d{0,6}$/.test(val)) {
-                            setAmount(val);
-                            setAmountError(null);
-                          } else if (val === "") {
-                            setAmount("");
-                            setAmountError(null);
-                          } else {
-                            setAmountError(
-                              "Solo se permiten números del 1 al 999999",
-                            );
-                          }
-                        }}
-                        onKeyDown={(e) => {
-                          if (
-                            !/[0-9]/.test(e.key) &&
-                            ![
-                              "Backspace",
-                              "Delete",
-                              "ArrowLeft",
-                              "ArrowRight",
-                              "Tab",
-                            ].includes(e.key)
-                          ) {
-                            e.preventDefault();
-                          }
-                        }}
-                        style={amountStyles.amountInput}
-                        className="no-spinner"
-                        placeholder="$0.00"
-                      />
-                      {amountError && (
-                        <div style={amountStyles.amountError}>
-                          {amountError}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div>
-                      <div style={amountStyles.amountDisplay}>
-                        {isPresetFreeEntry
-                          ? "$0,00"
-                          : Number(amount).toLocaleString("es-EC", {
-                              style: "currency",
-                              currency: "USD",
-                            })}
-                      </div>
-                    </div>
-                  )}
-
-                  {isPresetFreeEntry && (
-                    <div style={amountStyles.freeEntryBadge}>
-                      ✨ Entrada Gratuita ✨
-                    </div>
-                  )}
-
-                  <div style={amountStyles.amountDivider}></div>
-
-                  {paymentData.message && (
-                    <div style={amountStyles.messageText}>
-                      {paymentData.message}
-                    </div>
-                  )}
-
-                  {/* Información de conversión para BeCoins */}
-                  {selectedMethod === "becoin" &&
-                    amount &&
-                    Number(amount) > 0 && (
-                      <div style={amountStyles.conversionInfo}>
-                        = {usdToBeCoins(Number(amount)).toLocaleString()}{" "}
-                        BeCoins
-                      </div>
-                    )}
-                </div>
-              </div>
-
-              <PaymentMethodSelector
-                selectedMethod={selectedMethod}
-                onMethodChange={setSelectedMethod}
-                isPayphoneAvailable={isPayphoneAvailable}
-                shouldForceBeCoins={shouldForceBeCoins}
-                effectiveAmount={effectiveAmount}
-              />
-
-              <PresetAmounts
-                amounts={PRESET_AMOUNTS}
-                selectedAmount={amount}
-                onAmountSelect={(preset) => {
-                  if (canEdit) {
-                    setAmount(String(preset));
-                    setAmountError(null);
-                  }
-                }}
-                canEdit={canEdit}
-              />
-
-              {/* Botón de descuentos con modal */}
-              <div className="discounts-button">
-                <DiscountsButton
-                  totalDiscounts={totalDiscounts}
-                  onClick={() => setShowDiscountsModal(true)}
-                />
-              </div>
-
-              {/* Descuento aplicado */}
-              {appliedRedemption && (
-                <div
-                  style={containerStyles.gradientCard}
-                  className="discount-banner"
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: 14 }}>
-                        Cupón aplicado:{" "}
-                        {"code" in appliedRedemption
-                          ? appliedRedemption.code
-                          : appliedRedemption.resource?.name || "Descuento"}
-                      </div>
-                      {"value" in appliedRedemption &&
-                        appliedRedemption.type === "DISCOUNT" && (
-                          <div style={{ fontSize: 12, opacity: 0.9 }}>
-                            Descuento: {appliedRedemption.value}%
-                          </div>
-                        )}
-                      {"resource" in appliedRedemption &&
-                        appliedRedemption.resource &&
-                        appliedRedemption.resource.discount && (
-                          <div style={{ fontSize: 12, opacity: 0.9 }}>
-                            Descuento: {appliedRedemption.resource.discount}%
-                          </div>
-                        )}
-                    </div>
-                    <div style={{ textAlign: "right" }}>
-                      <div style={{ fontSize: 12, opacity: 0.9 }}>
-                        Monto original: ${originalAmount.toFixed(2)}
-                      </div>
-                      <div style={{ fontWeight: 600, fontSize: 14 }}>
-                        {isFreeEntry
-                          ? "¡GRATIS!"
-                          : `Nuevo monto: $${discountedAmount.toFixed(2)}`}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Botones de acción - Solo CSS, sin estilos inline */}
-              <div className="action-buttons">
-{/*
-                {isPresetFreeEntry && amount === "0" ? (
-                  <button
-                    className={`primary-button free-entry-button ${
-                      isLoading ? "loading" : ""
-                    }`}
-                    onClick={handleFreeEntry}
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Procesando..." : "Registrar entrada gratuita"}
-                  </button>
-                ) : selectedMethod === "payphone" ? (
-                  <button
-                    className={`primary-button payphone-button ${
-                      !canPay || isLoading ? "disabled" : ""
-                    } ${isLoading ? "loading" : ""}`}
-                    onClick={handlePayphoneWeb}
-                    disabled={!canPay || isLoading}
-                  >
-                    {isLoading
-                      ? "Procesando..."
-                      : isFreeEntry
-                        ? "Ingresar gratis"
-                        : "Pagar con Payphone"}
-                  </button>
-                ) : selectedMethod === "bank_transfer" ? (
-                  <button
-                    className={`primary-button bank-transfer-button ${
-                      isLoading ? "loading" : ""
-                    }`}
-                    onClick={() => setShowBankTransferModal(true)}
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Procesando..." : "Pagar por Transferencia"}
-                  </button>
-                ) : ( */}
-                  <button
-                    className={`primary-button becoins-button ${
-                      !canPay || isLoading ? "disabled" : ""
-                    } ${isLoading ? "loading" : ""}`}
-                    onClick={handleBeCoinsPayment}
-                    disabled={!canPay || isLoading}
-                  >
-                    {isLoading
-                      ? "Procesando..."
-                      : isFreeEntry
-                        ? "Ingresar gratis"
-                        : `Pagar ${usdToBeCoins(
-                            Number(amount || 0),
-                          ).toLocaleString()} BeCoins`}
-                  </button>
-    //            )}
-
-                <button className="secondary-button" onClick={() => goBack()}>
-                  Cancelar
-                </button>
-              </div>
-
-              {/* Widget Payphone */}
-              {!isPresetFreeEntry && (
-                <div style={{ width: "100%", marginTop: 24, minHeight: 60 }}>
-                  <div id="pp-button" style={{ marginBottom: 16 }}></div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
+      <ThemedHeader title="Abonar" canGoBack />
+      <ScrollView>
+        <View className="mx-6">
+          <PaymentHeader
+            commerceImg={comercioImg}
+            commerceName={comercioNombre}
+          />
+        </View>
+        <View className="gap-2 bg-background-light rounded-lg p-6 mx-6 items-center">
+          <Text className="text-lg font-semibold">
+            Abonaras: Usd$ {paymentData.amount}
+          </Text>
+          <Text className="italic">
+            A{" "}
+            {paymentData.full_name
+              ? paymentData.full_name
+              : "un Comercio de Beland"}
+          </Text>
+          <View className="flex flex-row items-center justify-center gap-2 ">
+            <Button
+              title="Cancelar"
+              variant="ghost"
+              className="secondary-button"
+              onPress={goBack}
+            />
+            <Button
+              title="Pagar"
+              onPress={handleBeCoinsPayment}
+              disabled={!canPay || isLoading}
+            />
+          </View>
+        </View>
+      </ScrollView>
 
       {/* Modal de descuentos */}
-      <DiscountsModal
+      {/* <DiscountsModal
         isVisible={showDiscountsModal}
         onClose={() => setShowDiscountsModal(false)}
         paymentDataResource={paymentData.resource}
@@ -1035,7 +812,7 @@ const PaymentScreen: React.FC = () => {
           applyRedemption(redemption);
           setShowDiscountsModal(false);
         }}
-      />
+      /> */}
 
       {/* Modal de transferencia bancaria */}
       <BankTransferModal

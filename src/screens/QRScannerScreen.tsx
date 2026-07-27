@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useRoute } from "@react-navigation/native";
-import type { StackNavigationProp } from "@react-navigation/stack";
-import type { RootStackParamList } from "../components/layout/RootStackNavigator";
 import { WalletService } from "@services/core";
 import { View, Text, StyleSheet, Alert, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -77,7 +75,7 @@ export const QRScannerScreen = () => {
           // Filter redemptions: tener id y tipo
           if (Array.isArray(copy.redemptions)) {
             copy.redemptions = copy.redemptions.filter(
-              (r: any) => r && r.id && r.type
+              (r: any) => r && r.id && r.type,
             );
           } else {
             copy.redemptions = [];
@@ -90,10 +88,10 @@ export const QRScannerScreen = () => {
               const discount = Number(
                 (ur.resource &&
                   (ur.resource.discount || ur.resource.resource_discount)) ||
-                  0
+                  0,
               );
               const qty = Number(
-                (ur.quantity ?? ur.quantity_redeemed ?? 0) || 0
+                (ur.quantity ?? ur.quantity_redeemed ?? 0) || 0,
               );
               const available =
                 Number(ur.quantity ?? 0) - Number(ur.quantity_redeemed ?? 0);
@@ -122,7 +120,7 @@ export const QRScannerScreen = () => {
           setIsActive(true);
           Alert.alert(
             "QR no válido",
-            "Los datos recibidos no parecen corresponder a un pago válido."
+            "Los datos recibidos no parecen corresponder a un pago válido.",
           );
           return;
         }
@@ -161,16 +159,16 @@ export const QRScannerScreen = () => {
           setIsActive(true);
           Alert.alert(
             "QR no válido",
-            "El código QR escaneado pertenece a una cuenta administrativa y no corresponde a una máquina de cobro."
+            "El código QR escaneado pertenece a una cuenta administrativa y no corresponde a una máquina de cobro.",
           );
           // No navegar al payment screen para evitar estados extraños
           // COMENTADO PARA PRUEBRAS
-//return;
+          //return;
         }
-//apagamos la camara HECHO EN PRUEBAS
+        //apagamos la camara HECHO EN PRUEBAS
         setLoading(false);
-setScanned(true);
-    setIsActive(false);
+        setScanned(true);
+        setIsActive(false);
         navigate("PaymentScreen", { paymentData });
       } catch (err: any) {
         setLoading(false);
@@ -184,7 +182,7 @@ setScanned(true);
         if (status === 500) {
           Alert.alert(
             "Error del servidor",
-            "Ocurrió un error interno al procesar este QR en el servidor. Intenta de nuevo más tarde o contacta soporte."
+            "Ocurrió un error interno al procesar este QR en el servidor. Intenta de nuevo más tarde o contacta soporte.",
           );
         } else {
           Alert.alert("Error", "No se pudo obtener los datos de pago");
