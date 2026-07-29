@@ -49,13 +49,15 @@ interface Props {
 export const OnboardingProvider = ({ children }: Props) => {
   const [state, setState] = useState<OnboardingState>(INITIAL_STATE);
   const [isLoading, setIsLoading] = useState(true);
-  const [hasCompleted, setHasCompleted] = useState(false);
+  const [hasCompleted, setHasCompleted] = useState(true);
   const [indexState, setIndexState] = useState<number>(0);
 
   useEffect(() => {
     const load = async () => {
       try {
         if (Platform.OS === "web") {
+          // FORZAMOS A QUE ESTE COMPLETADO
+          localStorage.setItem(ONBOARDING_KEY, "true");
           const value = localStorage.getItem(ONBOARDING_KEY);
           setHasCompleted(value === "true");
         } else {

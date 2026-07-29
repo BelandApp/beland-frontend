@@ -58,6 +58,7 @@ type MenuRoutes =
   | "FINANCESADMIN"
   | "EVENTADMIN"
   | "FAQ"
+  | "ONBOARDING"
   | "PRODUCTADMIN";
 export const UserMenu: React.FC<UserMenuProps> = ({
   style,
@@ -140,6 +141,9 @@ export const UserMenu: React.FC<UserMenuProps> = ({
         break;
       case "FAQ":
         navigate("FAQ");
+        break;
+      case "ONBOARDING":
+        navigate("Onboarding");
         break;
       case "PRODUCTADMIN":
         navigate("UserDashboardScreen", { screen: "ProductsManagement" });
@@ -387,6 +391,13 @@ export const UserMenu: React.FC<UserMenuProps> = ({
         <Button
           title="FAQs"
           onPress={() => handleNavigate("FAQ")}
+          variant="box"
+          icon={<Info size={18} color="#333" />}
+          className="justify-start"
+        />
+        <Button
+          title="Configuración rápida"
+          onPress={() => handleNavigate("ONBOARDING")}
           variant="box"
           icon={<Info size={18} color="#333" />}
           className="justify-start"
