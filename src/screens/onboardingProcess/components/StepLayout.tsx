@@ -1,8 +1,10 @@
 import React from "react";
 import { Platform, ScrollView, StyleSheet, View } from "react-native";
 
-import { ProgressDots } from "@/components";
+import { Button, ProgressDots } from "@/components";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useOnboardingContext } from "../context/OnboardingContext";
+import { useCustomNavigation } from "src/hooks";
 
 interface StepLayoutProps {
   children: React.ReactNode;
@@ -27,7 +29,13 @@ const StepLayout = ({
   scrollable = false,
 }: StepLayoutProps) => {
   const Content = scrollable ? ScrollView : View;
-
+  const { complete, reset } = useOnboardingContext();
+  const { reload } = useCustomNavigation();
+  const handleSkip = () => {
+    complete();
+    reset();
+    reload({ name: "MainTabs", params: { screen: "Home" } });
+  };
   return (
     <SafeAreaView style={styles.container}>
       <Content
@@ -43,6 +51,12 @@ const StepLayout = ({
       {showProgress && (
         <View style={styles.progress}>
           <ProgressDots current={currentStep} total={totalSteps} />
+          <Button
+            variant="box"
+            title="Skip"
+            onPress={handleSkip}
+            className="border-none"
+          />
         </View>
       )}
     </SafeAreaView>
@@ -58,6 +72,9 @@ const styles = StyleSheet.create({
   },
 
   progress: {
+    flexDirection: "row",
+    gap: 10,
+    marginHorizontal: "auto",
     paddingVertical: 12,
     paddingHorizontal: 24,
     alignItems: "center",
