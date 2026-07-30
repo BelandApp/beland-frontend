@@ -24,7 +24,7 @@ import {
   PayphoneSuccessScreen,
 } from "@screens/Wallet";
 import { CreateGroupScreen } from "@screens/Groups/CreateGroupScreen";
-import { QRScannerScreen } from "@screens/QRScannerScreen";
+import { QRScannerScreen } from "src/screens/QR/QRScannerScreen";
 import PaymentScreen from "@screens/Payment/PaymentScreen";
 import UserDashboardScreen from "@screens/UserDashboardScreen";
 import UserResourcesScreen from "@screens/UserResources/UserResourcesScreen";
