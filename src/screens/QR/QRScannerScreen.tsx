@@ -12,7 +12,7 @@ import { buildPaymentData, isAdminQR } from "./services/validators";
 import { useQRStatus } from "./hooks/useQRStatus";
 import { useCameraPermission } from "./hooks/useCameraPermissions";
 import { LoadingPermissionCamera } from "./components/LoadingPermissionCamera";
-import NotPermissionCamera from "./components/notPermissionCamera";
+import NotPermissionCamera from "./components/NotPermissionCamera";
 
 export const QRScannerScreen = () => {
   const {

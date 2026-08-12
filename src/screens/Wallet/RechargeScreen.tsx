@@ -62,13 +62,11 @@ export const RechargeScreen = ({ route }: { route: any }) => {
     setReferenceId,
     image,
     pickImage,
-    showBankTransferModal,
-    setShowBankTransferModal,
+    modal,
+    setModal,
     selectedPaymentAccount,
     tabs,
     onTabChange,
-    setModalStripe,
-    modalStripe,
     handlePay,
     cardBrand,
     setCardBrand,
@@ -341,8 +339,8 @@ export const RechargeScreen = ({ route }: { route: any }) => {
       {
         <WrapperModal
           beforeClose={handleBeforeClose}
-          isOpen={modalStripe}
-          onClose={() => setModalStripe(false)}
+          isOpen={modal === "STRIPE"}
+          onClose={() => setModal(null)}
           header={
             <Text className="text-lg font-semibold">Pago mediante Stripe</Text>
           }
@@ -406,6 +404,27 @@ export const RechargeScreen = ({ route }: { route: any }) => {
           }
         />
       }
+      {/* MODAL DE PAYPHONE */}
+      <WrapperModal
+        beforeClose={handleBeforeClose}
+        isOpen={modal === "PAYPHONE"}
+        onClose={() => setModal(null)}
+        header={
+          <>
+            <Text className="text-xl font-bold">Pago mediante Payphone</Text>
+            <Button
+              title="Cancelar"
+              className="w-fit ml-auto"
+              onPress={() => setModal(null)}
+            />
+          </>
+        }
+        content={
+          <View>
+            <View id="pp-button"></View>
+          </View>
+        }
+      />
       {/* MODAL DE TRANSFERENCIA BANCARIA */}
       <WrapperModal
         beforeClose={handleBeforeClose}
@@ -551,11 +570,11 @@ export const RechargeScreen = ({ route }: { route: any }) => {
             disabled={isLoading || !referenceId}
           />
         }
-        isOpen={showBankTransferModal}
+        isOpen={modal === "BANK_TRANSFER"}
         header={
           <Text className="text-xl font-bold">Transferencia Bancaria</Text>
         }
-        onClose={() => setShowBankTransferModal(false)}
+        onClose={() => setModal(null)}
       />
     </>
   );

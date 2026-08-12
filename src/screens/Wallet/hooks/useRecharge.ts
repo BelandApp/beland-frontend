@@ -7,10 +7,12 @@ import { CloudinaryService } from "src/services/cloudinary/cloudinary.service";
 import { usePayment } from "src/hooks/payment/usePayment.web";
 import { useAuth } from "src/context";
 import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js";
+import { destroyPayphoneWidget, loadPayphoneScript } from "./usePayphone";
+import { generateClientTransactionId } from "src/screens/PayphoneSuccessScreen/utils/helpers";
 
 // Tipos
 export interface PaymentMethod {
-  id: "BANK_TRANSFER" | "STRIPE";
+  id: "BANK_TRANSFER" | "STRIPE" | "PAYPHONE";
   name: string;
   icon: string;
   badge?: string;
@@ -51,6 +53,14 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     description: "Pago mediante Stripe",
   },
   {
+    id: "PAYPHONE",
+    name: "PAYPHONE",
+    icon: "card",
+    badge: "Instantáneo",
+    badgeColor: "green",
+    description: "Pago mediante Payphone",
+  },
+  {
     id: "BANK_TRANSFER",
     name: "Transferencia Bancaria",
     icon: "business",
@@ -89,7 +99,7 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
   const normalizedAmount =
     !paramsAmount || isNaN(parsedAmount) ? 5 : Math.max(parsedAmount, 5);
   const [amount, setAmount] = useState<string>(normalizedAmount.toFixed(2));
-  const [modalStripe, setModalStripe] = useState(false);
+  const [modal, setModal] = useState<PaymentMethodId | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [cardBrand, setCardBrand] = useState<string | null>(null);
   const { user } = useAuth();
@@ -136,7 +146,6 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
     previewUri,
     imageName,
   } = useUploadImage();
-  const [showBankTransferModal, setShowBankTransferModal] = useState(false);
   const [paymentAccounts, setPaymentAccounts] = useState<PaymentAccount[]>([]);
   const [selectedPaymentAccount, setSelectedPaymentAccount] =
     useState<PaymentAccount>();
@@ -243,7 +252,7 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
       setReferenceId("");
       clearImage();
       setAmount("");
-      setShowBankTransferModal(false);
+      setModal(null);
       setSelectedPaymentMethod(null);
     } catch (error: any) {
       const res = getBackendErrorMessage(error);
@@ -260,13 +269,38 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
     if (!isValid) return;
     if (!user) return;
     if (selectedPaymentMethod === "BANK_TRANSFER") {
-      setShowBankTransferModal(true);
+      setModal("BANK_TRANSFER");
     } else if (selectedPaymentMethod === "STRIPE") {
       const result = await pay(Number(amount), "RECHARGE");
       if (result.success) {
         setClientSecret(result.clientSecret);
-        setModalStripe(true);
+        setModal("STRIPE");
       }
+    } else if (selectedPaymentMethod === "PAYPHONE") {
+      destroyPayphoneWidget();
+      setModal("PAYPHONE");
+      // await loadPayphoneScript();
+      // console.log("Payphone script loaded");
+      // const payphoneToken = process.env.EXPO_PUBLIC_PAYPHONE_TOKEN;
+      // console.log("payphoneToken", payphoneToken);
+      // if (!payphoneToken) {
+      //   throw new Error("Token de Payphone no configurado");
+      // }
+      // const clientTransactionId = generateClientTransactionId();
+      // console.log("clientTransactionId", clientTransactionId);
+      // const payphoneConfig = {
+      //   token: payphoneToken,
+      //   clientTransactionId: clientTransactionId,
+      //   amount: parseInt(amount) * 100,
+      //   amountWithoutTax: parseInt(amount) * 100,
+      //   currency: "USD",
+      //   storeId: process.env.EXPO_PUBLIC_PAYPHONE_STOREID,
+      //   reference: "Recarga Beland",
+      // };
+
+      // // @ts-ignore
+      // new window.PPaymentButtonBox(payphoneConfig).render("pp-button");
+      // console.log("Payphone READY");
     }
   };
 
@@ -288,12 +322,12 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
     if (result.error) {
       notify.error({ message: "Hubo un error, intenta luego" });
       setTimeout(() => {
-        setModalStripe(false);
+        setModal(null);
       }, 3000);
     } else if (result.paymentIntent?.status === "succeeded") {
       notify.success({ message: "Pago exitoso, se acreditara en la brevedad" });
       setTimeout(() => {
-        setModalStripe(false);
+        setModal(null);
         if (paramsAmount) {
           navigate("MainTabs", {
             screen: "Catalog",
@@ -305,7 +339,66 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
       }, 3000);
     }
   };
+  useEffect(() => {
+    if (modal !== "PAYPHONE") return;
 
+    let isMounted = true;
+
+    const initPayphone = async () => {
+      try {
+        setIsLoading(true);
+        await loadPayphoneScript();
+
+        if (!isMounted) return;
+
+        const payphoneToken = process.env.EXPO_PUBLIC_PAYPHONE_TOKEN;
+        if (!payphoneToken) {
+          throw new Error("Token de Payphone no configurado");
+        }
+
+        // Convertir float a centavos evitando problemas con decimales
+        const parsedAmount = Math.round(parseFloat(amount) * 100);
+        const clientTransactionId = generateClientTransactionId();
+
+        const payphoneConfig = {
+          token: payphoneToken,
+          clientTransactionId: clientTransactionId,
+          amount: parsedAmount,
+          amountWithoutTax: parsedAmount,
+          currency: "USD",
+          storeId: process.env.EXPO_PUBLIC_PAYPHONE_STOREID,
+          reference: "Recarga Beland",
+        };
+
+        // Esperar 50ms/100ms para asegurar que React insertó el id="pp-button" en el DOM
+        setTimeout(() => {
+          if (!isMounted) return;
+
+          destroyPayphoneWidget(); // Limpiamos renders previos
+
+          // @ts-ignore
+          if (window.PPaymentButtonBox) {
+            // @ts-ignore
+            new window.PPaymentButtonBox(payphoneConfig).render("pp-button");
+            console.log("Payphone cargado con éxito");
+          }
+        }, 100);
+      } catch (error) {
+        console.error("Error al inicializar Payphone:", error);
+        notify.error({ message: "No se pudo cargar la pasarela de Payphone" });
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    initPayphone();
+
+    // Limpieza al cerrar el modal o desmontar
+    return () => {
+      isMounted = false;
+      destroyPayphoneWidget();
+    };
+  }, [modal, amount]);
   return {
     // Estado
     amount,
@@ -314,8 +407,8 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
     previewUri,
     imageName,
     tabs,
-    modalStripe,
-    setModalStripe,
+    modal,
+    setModal,
     cardBrand,
     setCardBrand,
     PRESET_AMOUNTS,
@@ -325,8 +418,6 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
     setReferenceId,
     image,
     pickImage,
-    showBankTransferModal,
-    setShowBankTransferModal,
     paymentAccounts,
     selectedPaymentAccount,
 
