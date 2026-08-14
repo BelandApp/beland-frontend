@@ -21,12 +21,13 @@ export const EventCard: React.FC<Event> = ({
   event_date,
   event_place,
   event_city,
-  price_dollar,
+  price_usd,
   end_sale_date,
   user_attended,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   if (!id) return null;
+  const isFree = price_usd === "0.00" || price_usd === null;
   return (
     <>
       <Pressable key={id} onPress={() => setIsOpen(true)} style={styles.card}>
@@ -96,17 +97,17 @@ export const EventCard: React.FC<Event> = ({
             </View>
           </View>
           <View style={styles.footer}>
-            {price_dollar ? (
+            {!isFree ? (
               <View style={styles.priceSection}>
                 <View style={styles.textContainer}>
                   <BadgeDollarSign color={colors.belandOrange} />
-                  <Text style={styles.eventPrice}>{price_dollar} Usd</Text>
+                  <Text style={styles.eventPrice}>{price_usd} Usd</Text>
                 </View>
                 {/* Badge de precio en USD más distintivo */}
                 <View style={styles.usdBadge}>
                   <Text style={styles.usdBadgeLabel}>≈ </Text>
                   <Text style={styles.usdBadgePrice}>
-                    ${formatUSDPrice(convertBeCoinsToUSD(Number(price_dollar)))}
+                    ${formatUSDPrice(convertBeCoinsToUSD(Number(price_usd)))}
                   </Text>
                   <Text style={styles.usdBadgeCurrency}> USD</Text>
                 </View>

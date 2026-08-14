@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
 const { persist, createJSONStorage } = require("zustand/middleware");
 
-export type BasicEvent ={
+export type BasicEvent = {
   id: string;
   name: string;
   image_url: string;
@@ -16,6 +16,7 @@ export type BasicEvent ={
   start_sale_date: Date | string;
   end_sale_date: Date | string;
   limit_tickets: number;
+  price_usd: string;
   price_dollar: string;
   discount: string;
   total_becoin: string;
@@ -81,15 +82,15 @@ export const eventStore = create<EventStore>()(
       },
       getAcquiredEvent: (user_pass_id: string) =>
         get().acquiredEvents.find(
-          (event: Event) => event.user_pass_id === user_pass_id
+          (event: Event) => event.user_pass_id === user_pass_id,
         ),
       updateEvent: (updatedEvent: Event) => {
         set((state: any) => ({
           availableEvents: state.availableEvents.map((event: Event) =>
-            event.id === updatedEvent.id ? updatedEvent : event
+            event.id === updatedEvent.id ? updatedEvent : event,
           ),
           acquiredEvents: state.acquiredEvents.map((event: Event) =>
-            event.id === updatedEvent.id ? updatedEvent : event
+            event.id === updatedEvent.id ? updatedEvent : event,
           ),
         }));
       },
@@ -97,8 +98,8 @@ export const eventStore = create<EventStore>()(
     {
       name: "events-storage",
       storage: createJSONStorage(() =>
-        Platform.OS === "web" ? localStorage : AsyncStorage
+        Platform.OS === "web" ? localStorage : AsyncStorage,
       ),
-    }
-  )
+    },
+  ),
 );

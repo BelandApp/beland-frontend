@@ -24,7 +24,7 @@ export const EventsList = ({ events, tab }: any) => {
           <>
             <Text style={styles.emptyText}>Aún no has adquirido eventos.</Text>
             {!isAuthenticated && (
-                <>
+              <>
                 <Button
                   variant="inline"
                   title="Inicia Sesion"
@@ -46,7 +46,7 @@ export const EventsList = ({ events, tab }: any) => {
           <EventCard key={event.id} {...event} />
         ) : (
           <AcquiredEventCard key={event.user_pass_id} {...event} />
-        )
+        ),
       )}
     </View>
   );

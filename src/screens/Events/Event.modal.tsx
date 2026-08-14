@@ -38,7 +38,7 @@ export const EventModal: React.FC<EventModalType> = ({
   const { getEvent } = eventStore();
   const event = getEvent(id);
   const { navigate } = useCustomNavigation();
-  const { handleAuth0Login,status } = useAuth();
+  const { handleAuth0Login, status } = useAuth();
   const [visibleImage, setVisibleImage] = useState(0);
 
   const allImages = useMemo(() => {
@@ -58,12 +58,12 @@ export const EventModal: React.FC<EventModalType> = ({
     end_sale_date,
     limit_tickets,
     sold_tickets,
-    price_dollar,
     is_refundable,
     refund_days_limit,
     image_url,
+    price_usd,
   } = event;
-
+  const isFree = Number(price_usd) === 0;
   const handleNextImage = () => {
     Animated.sequence([
       Animated.timing(translateAnim, {
@@ -82,7 +82,7 @@ export const EventModal: React.FC<EventModalType> = ({
   };
 
   const handleBuy = async () => {
-    if (status==="unauthorized") {
+    if (status === "unauthenticated") {
       notify.confirm({
         message: "Debe iniciar sesión para adquirir",
         onConfirm: handleAuth0Login,
@@ -96,11 +96,11 @@ export const EventModal: React.FC<EventModalType> = ({
         id,
         name,
         quantity: 1,
-        price: Number(price_dollar),
+        price: Number(price_usd),
         condition: "",
       },
       onSuccessEndpoint: "",
-      total_amount: Number(price_dollar),
+      total_amount: Number(price_usd),
       canBuyForOthers: true,
     });
   };
@@ -174,28 +174,34 @@ export const EventModal: React.FC<EventModalType> = ({
 
             <Text style={styles.description}>{description}</Text>
 
-            <View style={styles.section}>
-              <View style={styles.infoRow}>
-                <DollarSign size={18} color={colors.primary} />
-                <Text style={styles.infoStrong}>{price_dollar} Becoins</Text>
-              </View>
+            {!isFree ? (
+              <View style={styles.section}>
+                <View style={styles.infoRow}>
+                  <DollarSign size={18} color={colors.primary} />
+                  <Text style={styles.infoStrong}>{price_usd} Becoins</Text>
+                </View>
 
-              <View style={styles.usdPriceBadge}>
-                <Text style={styles.usdPriceText}>
-                  ≈ ${formatUSDPrice(convertBeCoinsToUSD(Number(price_dollar)))}{" "}
-                  USD
-                </Text>
-              </View>
+                <View style={styles.usdPriceBadge}>
+                  <Text style={styles.usdPriceText}>
+                    {formatUSDPrice(convertBeCoinsToUSD(Number(price_usd)))}
+                    USD
+                  </Text>
+                </View>
 
-              <View style={styles.infoRow}>
-                <Ticket size={18} color={colors.textSecondary} />
-                <Text style={styles.infoText}>
-                  {ticketsLeft} tickets disponibles
-                </Text>
+                <View style={styles.infoRow}>
+                  <Ticket size={18} color={colors.textSecondary} />
+                  <Text style={styles.infoText}>
+                    {ticketsLeft} tickets disponibles
+                  </Text>
+                </View>
               </View>
-            </View>
+            ) : (
+              <View style={styles.section}>
+                <Text style={styles.infoStrong}>Gratuito</Text>
+              </View>
+            )}
 
-            {is_refundable && (
+            {is_refundable && !isFree && (
               <View style={styles.refundBox}>
                 <RotateCcw size={18} color={colors.primary} />
                 <Text style={styles.refundText}>

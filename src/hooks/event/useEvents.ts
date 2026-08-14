@@ -19,7 +19,8 @@ export const useEvents = () => {
     loading: isLoading,
   } = useCache({
     key: "events_cache",
-    duration: 6 * 60 * 60 * 1000,
+    // pusimos en 0 por peticion de Diego
+    duration: 0,
     fetcher: () => eventsService.getAllEvents(),
   });
 
