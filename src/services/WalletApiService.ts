@@ -29,9 +29,11 @@ export interface Wallet {
 
 export interface RechargeRequest {
   amountUsd: number;
-  referenceCode: string;
-  clientTransactionId: string;
-  payphone_transactionId: number;
+  paymentReferenceId: string;
+  paymentProvider: "STRIPE" | "PAYPHONE" | "TRANSFER" | "WALLET" | "GIFTCARD";
+  // referenceCode: string;
+  // clientTransactionId: string;
+  // payphone_transactionId: number;
 }
 
 export interface TransferRequest {
@@ -205,9 +207,13 @@ class WalletServiceClass extends CoreApiService {
     walletId: string,
     purchaseData: {
       amountUsd: number;
-      referenceCode: string;
-      payphone_transactionId: number;
-      clientTransactionId: string;
+      paymentReferenceId: string;
+      paymentProvider:
+        | "STRIPE"
+        | "PAYPHONE"
+        | "TRANSFER"
+        | "WALLET"
+        | "GIFTCARD";
       wallet_id: string;
       amount_payment_id?: string;
     },
@@ -401,73 +407,6 @@ class WalletServiceClass extends CoreApiService {
   ): Promise<any> {
     const result = await this.transferToAlias(recipientIdentifier, amount);
     return { ...result, isPending: false };
-  }
-
-  /**
-   * @deprecated Use createRecharge() instead
-   */
-  async rechargeByUserEmail(
-    userEmail: string,
-    userId: string,
-    amountUsd: number,
-    rechargeMethod:
-      | "CREDIT_CARD"
-      | "DEBIT_CARD"
-      | "PAYPHONE"
-      | "BANK_TRANSFER" = "CREDIT_CARD",
-  ): Promise<{ wallet: Wallet }> {
-    const wallet = await this.getCurrentUserWallet();
-
-    const referenceCode = `RCH-${Date.now()}-${Math.random()
-      .toString(36)
-      .substr(2, 9)}`;
-    const clientTransactionId =
-      typeof crypto !== "undefined" && crypto.randomUUID
-        ? crypto.randomUUID()
-        : `${Date.now()}-tx-uuid`;
-
-    const rechargeData: RechargeRequest = {
-      amountUsd: amountUsd,
-      referenceCode: referenceCode,
-      payphone_transactionId: Date.now(),
-      clientTransactionId: clientTransactionId,
-    };
-
-    return this.createRecharge(rechargeData);
-  }
-
-  /**
-   * @deprecated Use createRecharge() instead
-   */
-  async rechargeWithPayphoneAPI(data: {
-    userId: string;
-    email: string;
-    amount: number;
-    paymentMethod: string;
-  }): Promise<{ wallet: Wallet }> {
-    const amountNum = Number(data.amount);
-    if (isNaN(amountNum) || amountNum <= 0) {
-      throw new Error(
-        "El monto de recarga debe ser un número válido y mayor a cero.",
-      );
-    }
-
-    const uuidRegex =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    const clientTransactionId = uuidRegex.test(data.userId)
-      ? data.userId
-      : typeof crypto !== "undefined" && crypto.randomUUID
-        ? crypto.randomUUID()
-        : `${Date.now()}-fake-uuid-frontend`;
-
-    const payload: RechargeRequest = {
-      amountUsd: amountNum,
-      referenceCode: `RCH-${Date.now()}`,
-      payphone_transactionId: Date.now(),
-      clientTransactionId: clientTransactionId,
-    };
-
-    return this.createRecharge(payload);
   }
 
   /**

@@ -125,9 +125,12 @@ export function createRechargePayload(
 
   return {
     amountUsd,
-    referenceCode: payphoneData.reference,
-    payphone_transactionId: payphoneData.transactionId,
-    clientTransactionId: clientTxIdParam,
+    paymentReferenceId: payphoneData.reference,
+    paymentProvider: "PAYPHONE",
+    referenceCode: String(payphoneData.transactionId),
+    // legacy >
+    // payphone_transactionId: payphoneData.transactionId,
+    // clientTransactionId: clientTxIdParam,
   };
 }
 
@@ -139,6 +142,7 @@ export function createPaymentPayload(
   walletId: string,
   clientTxIdParam: string,
   amountPaymentId?: string,
+  paymentProvider?: string,
 ): BackendPaymentPayload {
   const basePayload = createRechargePayload(payphoneData, clientTxIdParam);
 
@@ -149,6 +153,11 @@ export function createPaymentPayload(
 
   if (amountPaymentId) {
     payload.amount_payment_id = amountPaymentId;
+  }
+  if (paymentProvider) {
+    payload.paymentProvider === paymentProvider;
+  } else {
+    payload.paymentProvider === "PAYPHONE";
   }
 
   return payload;

@@ -142,7 +142,7 @@ export function usePayphoneConfirmation() {
             payphoneData,
             clientTxIdParam,
           );
-
+          console.log("Datos para recarga", rechargeData);
           try {
             backendResult = await WalletService.createRecharge(rechargeData);
             console.log(
