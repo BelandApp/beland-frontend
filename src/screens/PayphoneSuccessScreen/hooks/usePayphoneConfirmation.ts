@@ -45,7 +45,7 @@ export function usePayphoneConfirmation() {
     // Obtener datos de sessionStorage
     const { finalToWalletId, finalAmountPaymentId, isPayment } =
       getSessionStorageData();
-
+    console.log("is recharge", comeFromRecharge);
     console.log("[PayphoneSuccess][SessionStorage] State:", {
       isPayment,
       finalToWalletId,
@@ -68,6 +68,7 @@ export function usePayphoneConfirmation() {
           Number(idParam),
           clientTxIdParam,
         );
+        console.log("PaymentData", payphoneData);
 
         if (payphoneData.transactionStatus !== "Approved") {
           setStatus(STATUS_MESSAGES.REJECTED_OR_CANCELLED);

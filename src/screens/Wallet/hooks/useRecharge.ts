@@ -11,6 +11,12 @@ import { destroyPayphoneWidget, loadPayphoneScript } from "./usePayphone";
 import { generateClientTransactionId } from "src/screens/PayphoneSuccessScreen/utils/helpers";
 
 // Tipos
+
+interface commission {
+  totalUsd: number;
+  base: number;
+}
+
 export interface PaymentMethod {
   id: "BANK_TRANSFER" | "STRIPE" | "PAYPHONE";
   name: string;
@@ -99,6 +105,10 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
   const normalizedAmount =
     !paramsAmount || isNaN(parsedAmount) ? 5 : Math.max(parsedAmount, 5);
   const [amount, setAmount] = useState<string>(normalizedAmount.toFixed(2));
+  const [commission, setCommission] = useState<commission>({
+    totalUsd: 0,
+    base: 0,
+  });
   const [modal, setModal] = useState<PaymentMethodId | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [cardBrand, setCardBrand] = useState<string | null>(null);
@@ -134,6 +144,16 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
 
   const handlePaymentMethodSelect = (methodId: PaymentMethodId) => {
     setSelectedPaymentMethod(methodId);
+    if (methodId === "PAYPHONE") {
+      setCommission({ totalUsd: Number(amount) * 0.06, base: 6 });
+    } else if (methodId === "STRIPE") {
+      setCommission({ totalUsd: Number(amount) * 0.05, base: 5 });
+    } else {
+      setCommission({
+        totalUsd: 0,
+        base: 0,
+      });
+    }
   };
 
   // Bank Transfer State
@@ -355,7 +375,8 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
         if (!payphoneToken) {
           throw new Error("Token de Payphone no configurado");
         }
-
+        localStorage.setItem("payphone_token", payphoneToken);
+        localStorage.setItem("comeFromRecharge", "true");
         // Convertir float a centavos evitando problemas con decimales
         const parsedAmount = Math.round(parseFloat(amount) * 100);
         const clientTransactionId = generateClientTransactionId();
@@ -399,6 +420,7 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
       destroyPayphoneWidget();
     };
   }, [modal, amount]);
+
   return {
     // Estado
     amount,
@@ -425,6 +447,7 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
     beCoinsAmount,
     usdAmount,
     isValid,
+    commission,
 
     // Handlers
     handleAmountChange,

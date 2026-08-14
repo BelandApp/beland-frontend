@@ -22,6 +22,8 @@ import { CardElement } from "@stripe/react-stripe-js";
 import { useAuth } from "src/context";
 import { CopyToClipboard } from "src/utils/shareHelper";
 import ThemedTabs from "src/components/shared/Tabs/ThemedTabs";
+import { convertToBeCoins } from "./hooks/useCobrar";
+import { convertUSDToBeCoins } from "src/constants";
 
 const BankDetailRow = ({ label, value, isCopyable = false }: any) => (
   <View className="flex-col sm:flex-row justify-between py-2 border-b border-gray-100">
@@ -53,6 +55,7 @@ export const RechargeScreen = ({ route }: { route: any }) => {
     previewUri,
     imageName,
     isValid,
+    commission,
     PRESET_AMOUNTS,
     handlePresetAmount,
     handlePaymentMethodSelect,
@@ -82,7 +85,6 @@ export const RechargeScreen = ({ route }: { route: any }) => {
       });
     });
   };
-
   return (
     <>
       <ThemedHeader
@@ -256,12 +258,26 @@ export const RechargeScreen = ({ route }: { route: any }) => {
                       <Text className="text-sm text-gray-600">
                         Comisión Beland
                       </Text>
-                      <View className="bg-green-50 px-2 py-1 rounded-md">
+                      <View className=" py-1 rounded-md">
                         <Text className="text-sm font-bold text-green-600">
                           Gratis (0%)
                         </Text>
                       </View>
                     </View>
+                    {selectedPaymentMethod !== null &&
+                      selectedPaymentMethod !== "BANK_TRANSFER" && (
+                        <View className="flex-row justify-between mb-3">
+                          <Text className="text-sm text-gray-600">
+                            Comisión Medio de pago
+                          </Text>
+                          <View className=" py-1 rounded-md">
+                            <Text className="text-sm font-bold text-yellow-600">
+                              ${commission.totalUsd.toFixed(2)} USD (
+                              {commission.base}%)
+                            </Text>
+                          </View>
+                        </View>
+                      )}
 
                     {/* Divisor */}
                     <View className="h-px bg-gray-200 my-3" />
@@ -282,9 +298,17 @@ export const RechargeScreen = ({ route }: { route: any }) => {
                         <Text className="text-sm text-gray-700 text-center">
                           Recibirás
                         </Text>
-                        <Text className="text-base font-bold text-beland-orange-500">
-                          ${beCoinsAmount} Becoins
+                        <Text className="text-base font-bold text-yellow-500">
+                          {beCoinsAmount -
+                            convertUSDToBeCoins(commission.totalUsd)}{" "}
+                          Becoins
                         </Text>
+                        {commission.totalUsd > 0 && (
+                          <Text className="text-base font-bold text-beland-orange-500">
+                            {convertUSDToBeCoins(commission.totalUsd)} Becoins
+                            Orange
+                          </Text>
+                        )}
                       </View>
                       <Text className="text-xs text-gray-500 text-center mt-1">
                         1 BeCoin = $0.05 USD
