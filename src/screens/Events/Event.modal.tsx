@@ -104,9 +104,14 @@ export const EventModal: React.FC<EventModalType> = ({
       canBuyForOthers: true,
     });
   };
+  const now = new Date();
+
+  const isEventFinished = event_date && new Date(event_date) < now;
+
+  const isSaleFinished = end_sale_date && new Date(end_sale_date) < now;
 
   const eventStatus =
-    end_sale_date && new Date(end_sale_date) < new Date()
+    isEventFinished || isSaleFinished
       ? { label: "Finalizado", color: colors.textSecondary }
       : { label: "Disponible", color: colors.primary };
 
@@ -214,7 +219,11 @@ export const EventModal: React.FC<EventModalType> = ({
       }
       actions={
         <Pressable
-          style={[styles.button, styles.buyButton]}
+          style={[
+            styles.button,
+            styles.buyButton,
+            eventStatus.label !== "Disponible" ? styles.disabled : null,
+          ]}
           onPress={handleBuy}
           disabled={eventStatus.label !== "Disponible"}
         >
@@ -338,5 +347,8 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     fontWeight: "600",
+  },
+  disabled: {
+    opacity: 0.8,
   },
 });

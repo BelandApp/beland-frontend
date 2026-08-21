@@ -28,18 +28,19 @@ export const EventCard: React.FC<Event> = ({
   const [isOpen, setIsOpen] = useState(false);
   if (!id) return null;
   const isFree = price_usd === "0.00" || price_usd === null;
+  const now = new Date();
+
+  const isEventFinished = event_date && new Date(event_date) < now;
   return (
     <>
       <Pressable key={id} onPress={() => setIsOpen(true)} style={styles.card}>
         {/* Badges */}
         {/* No deberian superponerse, si ya fue adquirido solo mostramos ese */}
-        {!user_attended &&
-          end_sale_date &&
-          new Date(end_sale_date).getTime() < Date.now() && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>Finalizado</Text>
-            </View>
-          )}
+        {isEventFinished && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>Finalizado</Text>
+          </View>
+        )}
         {user_attended && (
           <View style={styles.badge}>
             <Text style={styles.badgeText}>Usado</Text>
@@ -165,6 +166,7 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 15,
     fontWeight: "500",
+    color: "white",
   },
   header: {
     flexDirection: "column",
