@@ -66,13 +66,19 @@ export const NewPaymentScreen = () => {
         showsVerticalScrollIndicator={false}
       >
         <CompanyHeader company={company} total_amount={total_amount || 0} />
-        {isFree && (
+        {isFree ? (
           <View style={styles.container}>
             <Text>
               Esta entrada es gratuita, recuerda llevar tu reciclable o deberas
               abonar Usd $5
             </Text>
           </View>
+        ) : (
+          <Text
+            style={{ textAlign: "center", fontSize: 12, fontStyle: "italic" }}
+          >
+            Se usarán tus becoins
+          </Text>
         )}
         <AdquisitionForm
           canBuyForOthers={canBuyForOthers}

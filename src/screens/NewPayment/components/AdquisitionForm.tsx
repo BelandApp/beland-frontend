@@ -1,11 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
 import React, { useState } from "react";
-import {
-  StyleSheet,
-  View,
-  Text,
-  TextInput,
-} from "react-native";
+import { StyleSheet, View, Text, TextInput } from "react-native";
 import { Button, CustomLoader } from "src/components";
 import { useAuth } from "src/context";
 import { colors } from "src/design-system";
@@ -25,10 +20,10 @@ export const AdquisitionForm: React.FC<Props> = ({
   canBuyForOthers,
   loading,
   canPurchase,
-  onSubmit
+  onSubmit,
 }) => {
   const { user } = useAuth();
-  const {navigate} =useCustomNavigation()
+  const { navigate } = useCustomNavigation();
   const [isForOther, setIsForOther] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const handleSubmit = () => {
@@ -45,12 +40,12 @@ export const AdquisitionForm: React.FC<Props> = ({
       notify.error({ message: "Todos los campos son obligatorios" });
       return;
     }
-    onSubmit()
+    onSubmit();
     setIsSaved(true);
   };
   const handleRrecharge = () => {
-    navigate("RechargeScreen")
-  }
+    navigate("RechargeScreen");
+  };
   return isSaved ? (
     <View style={styles.form}>
       <Text>Comprando para:</Text>
@@ -58,7 +53,7 @@ export const AdquisitionForm: React.FC<Props> = ({
         <Text>{Form.holder_name}</Text>
         <Text>Email: {Form.holder_email}</Text>
       </View>
-     <CustomLoader/>
+      <CustomLoader />
     </View>
   ) : (
     <View style={styles.form}>
@@ -120,9 +115,6 @@ export const AdquisitionForm: React.FC<Props> = ({
         onPress={canPurchase ? handleSubmit : handleRrecharge}
         isLoading={loading}
       />
-      <Text style={{ textAlign: "center", fontSize: 12, fontStyle: "italic" }}>
-        Se usará tus becoins
-      </Text>
     </View>
   );
 };
@@ -135,7 +127,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 16,
     marginVertical: 10,
-    alignItems:"center"
+    alignItems: "center",
   },
 
   toggleButton: {
