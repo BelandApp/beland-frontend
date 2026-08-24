@@ -164,6 +164,9 @@ export const CustomInput: React.FC<CustomInputProps> = ({
         {required && !value && (
           <Text className="text-red-500 self-start text-lg pr-1">*</Text>
         )}
+        {required && value === "0" && (
+          <Text className="text-red-500 self-start text-lg pr-1">*</Text>
+        )}
       </Animated.View>
       <View style={InputStyles.errorContainer}>
         {error && <Text style={InputStyles.textError}>{error}</Text>}
