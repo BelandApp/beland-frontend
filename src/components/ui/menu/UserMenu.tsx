@@ -23,6 +23,7 @@ import {
   Info,
   TicketCheck,
   ShoppingBag,
+  Rocket,
 } from "lucide-react-native";
 import { authService } from "@/services";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
@@ -59,7 +60,8 @@ type MenuRoutes =
   | "EVENTADMIN"
   | "FAQ"
   | "ONBOARDING"
-  | "PRODUCTADMIN";
+  | "PRODUCTADMIN"
+  | "EXPERIENCEADMIN";
 export const UserMenu: React.FC<UserMenuProps> = ({
   style,
   variant = "compact",
@@ -147,6 +149,9 @@ export const UserMenu: React.FC<UserMenuProps> = ({
         break;
       case "PRODUCTADMIN":
         navigate("UserDashboardScreen", { screen: "ProductsManagement" });
+        break;
+      case "EXPERIENCEADMIN":
+        navigate("UserDashboardScreen", { screen: "ExperiencesManagement" });
         break;
     }
   };
@@ -469,6 +474,13 @@ export const UserMenu: React.FC<UserMenuProps> = ({
           variant="box"
           icon={<ShoppingBag size={18} color="#333" />}
           onPress={() => handleNavigate("PRODUCTADMIN")}
+          className="justify-start"
+        />
+        <Button
+          title="Experiencias"
+          variant="box"
+          icon={<Rocket size={18} color="#333" />}
+          onPress={() => handleNavigate("EXPERIENCEADMIN")}
           className="justify-start"
         />
 
