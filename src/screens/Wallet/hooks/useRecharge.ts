@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useCustomNavigation, useUploadImage } from "src/hooks";
+import { useCustomNavigation, useUploadMedia } from "src/hooks";
 import { useThemedTabs } from "src/components";
 import { notify } from "src/hooks/notification/notify.external";
 import { BackendPaymentAccount, getBackendErrorMessage } from "src/services";
@@ -159,13 +159,13 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
   // Bank Transfer State
   const [referenceId, setReferenceId] = useState("");
   const {
-    image,
-    pickImage,
+    media,
+    pickMedia,
     appendToFormData,
-    clearImage,
+    clearMedia,
     previewUri,
-    imageName,
-  } = useUploadImage();
+    mediaName,
+  } = useUploadMedia();
   const [paymentAccounts, setPaymentAccounts] = useState<PaymentAccount[]>([]);
   const [selectedPaymentAccount, setSelectedPaymentAccount] =
     useState<PaymentAccount>();
@@ -270,7 +270,7 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
 
       // Reset logic
       setReferenceId("");
-      clearImage();
+      clearMedia();
       setAmount("");
       setModal(null);
       setSelectedPaymentMethod(null);
@@ -427,7 +427,7 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
     selectedPaymentMethod,
     isLoading,
     previewUri,
-    imageName,
+    mediaName,
     tabs,
     modal,
     setModal,
@@ -438,8 +438,8 @@ export function useRecharge({ paramsAmount }: useRechargeType) {
     // Bank Transfer State
     referenceId,
     setReferenceId,
-    image,
-    pickImage,
+    media,
+    pickMedia,
     paymentAccounts,
     selectedPaymentAccount,
 

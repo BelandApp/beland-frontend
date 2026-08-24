@@ -8,10 +8,8 @@ import {
 } from "@/services/GroupApiService";
 import { UserAddress } from "@/services/addressService";
 import { notify } from "src/hooks/notification/notify.external";
-import * as ImagePicker from "expo-image-picker";
 import { CloudinaryService } from "@/services";
-import { File } from "expo-file-system";
-import { useUploadImage } from "src/hooks/image/useUploadImage";
+import { useUploadMedia } from "src/hooks";
 export type Participant = {
   id: string;
   name: string;
@@ -33,7 +31,7 @@ export const useCreateGroupLogic = () => {
   const [paymentTypeId, setPaymentTypeId] = useState<string>("");
   const [userAddressId, setUserAddressId] = useState<string>("");
   const [eventDate, setEventDate] = useState<Date | null>(null);
-  const { image, pickImage, appendToFormData, clearImage } = useUploadImage();
+  const { media, pickMedia, appendToFormData, clearMedia } = useUploadMedia();
   // Data Options State
   const [groupTypes, setGroupTypes] = React.useState<GroupType[]>([]);
   const [privacyOptions, setPrivacyOptions] = React.useState<GroupPrivacy[]>(
@@ -130,7 +128,7 @@ export const useCreateGroupLogic = () => {
       // 🖼️ CREAMOS CLOUDINARY URL
       // ===============================
       let imagenUrl = undefined;
-      if (image) {
+      if (media) {
         const formData = new FormData();
         appendToFormData(formData);
         imagenUrl = await CloudinaryService.uploadImage(formData);
@@ -179,7 +177,7 @@ export const useCreateGroupLogic = () => {
     userAddressId,
     eventDate,
     isValid,
-    image,
+    media,
 
     // Setters
     setGroupName,
@@ -190,7 +188,7 @@ export const useCreateGroupLogic = () => {
     setPaymentTypeId,
     setUserAddressId,
     setEventDate,
-    pickImage,
+    pickMedia,
 
     // Data Options
     groupTypes,

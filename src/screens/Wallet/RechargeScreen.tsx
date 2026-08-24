@@ -53,7 +53,7 @@ export const RechargeScreen = ({ route }: { route: any }) => {
     beCoinsAmount,
     usdAmount,
     previewUri,
-    imageName,
+    mediaName,
     isValid,
     commission,
     PRESET_AMOUNTS,
@@ -63,8 +63,8 @@ export const RechargeScreen = ({ route }: { route: any }) => {
     handleBankTransferPayment,
     referenceId,
     setReferenceId,
-    image,
-    pickImage,
+    media,
+    pickMedia,
     modal,
     setModal,
     selectedPaymentAccount,
@@ -518,10 +518,10 @@ export const RechargeScreen = ({ route }: { route: any }) => {
                 Subir Comprobante
               </Text>
               <TouchableOpacity
-                onPress={() => pickImage()}
+                onPress={() => pickMedia({ mediaType: "images" })}
                 className="bg-blue-50 p-4 rounded-xl border border-blue-100 items-center justify-center min-h-[150px]"
               >
-                {image && previewUri ? (
+                {media && previewUri ? (
                   <View className="items-center">
                     {/* Note: Image requires uri */}
                     {/* In Expo ImagePicker result structure: result.assets[0].uri */}
@@ -538,7 +538,7 @@ export const RechargeScreen = ({ route }: { route: any }) => {
                       }}
                     />
                     <Text className="text-xs text-center text-gray-500 mb-2">
-                      {imageName}
+                      {mediaName}
                     </Text>
                     <Ionicons
                       name="checkmark-circle"

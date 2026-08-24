@@ -4,7 +4,7 @@ import { userService } from "src/services/user/user.service";
 import { useAuth, User } from "src/context";
 import { notify } from "../notification/notify.external";
 import { CloudinaryService, getBackendErrorMessage } from "src/services";
-import { getPreviewUri, useUploadImage } from "../image/useUploadImage";
+import { getPreviewUri, useUploadMedia } from "../media/useUploadMedia";
 
 export const useUserProfileForm = () => {
   const { user, updateUser } = useAuth();
@@ -14,11 +14,11 @@ export const useUserProfileForm = () => {
   const [phone, setPhone] = useState((user as any)?.phone?.toString() || "");
   const [localImage, setLocalImage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const { pickImage } = useUploadImage();
+  const { pickMedia } = useUploadMedia();
   const [loading, setLoading] = useState(false);
   const handleNewImage = async () => {
     try {
-      const selectedImage = await pickImage();
+      const selectedImage = await pickMedia({ mediaType: "images" });
       if (!selectedImage) return;
       setLoading(true);
       const formData = new FormData();
