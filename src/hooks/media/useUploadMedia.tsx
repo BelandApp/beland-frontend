@@ -1,6 +1,7 @@
 import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
 import { Platform, Alert } from "react-native";
+import { notify } from "../notification/notify.external";
 
 type WebMedia = {
   file: File;
@@ -113,6 +114,9 @@ export const useUploadMedia = () => {
 
       if (!fileSize || fileSize > maxSize) {
         const limitMb = maxSize / (1024 * 1024);
+        notify.error({
+          message: `El ${isVideo ? "video" : "imagen"} debe ser menor a ${limitMb} MB`,
+        });
         Alert.alert(
           "Archivo no válido",
           `El ${isVideo ? "video" : "imagen"} debe ser menor a ${limitMb} MB`,
