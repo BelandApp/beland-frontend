@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import React, { useState, useEffect, useRef } from "react";
+import { View, Text, StyleSheet } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { ProductService } from "@/services/core";
 import type {
@@ -19,6 +19,8 @@ import {
   ThemedHeader,
 } from "src/components";
 import { colors } from "src/design-system";
+import { ExperienceFormModal } from "./components/products/ExperienceFormModal";
+import { Experience } from "src/types";
 
 export const ProductsManagementScreen: React.FC = () => {
   const notify = useNotify();
@@ -43,8 +45,13 @@ export const ProductsManagementScreen: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   // Modal de formulario
-  const [showFormModal, setShowFormModal] = useState(false);
+  const [showFormModal, setShowFormModal] = useState<
+    "product" | "experience" | null
+  >(null);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editingExperience, setEditingExperience] = useState<Experience | null>(
+    null,
+  );
 
   // Búsqueda
   const [searchText, setSearchText] = useState("");
@@ -110,12 +117,20 @@ export const ProductsManagementScreen: React.FC = () => {
 
   const handleCreateProduct = () => {
     setEditingProduct(null);
-    setShowFormModal(true);
+    setShowFormModal("product");
+  };
+  const handleCreateExperience = () => {
+    setEditingProduct(null);
+    setShowFormModal("experience");
   };
 
   const handleEditProduct = (product: Product) => {
     setEditingProduct(product);
-    setShowFormModal(true);
+    setShowFormModal("product");
+  };
+  const handleEditExperience = (experience: Experience) => {
+    setEditingExperience(experience);
+    setShowFormModal("experience");
   };
 
   const handleDeleteProduct = async (productId: string) => {
@@ -139,7 +154,7 @@ export const ProductsManagementScreen: React.FC = () => {
   };
 
   const handleFormSuccess = () => {
-    setShowFormModal(false);
+    setShowFormModal(null);
     setEditingProduct(null);
     // Refrescar forzando un cambio en los filtros
     setFilters((prev) => ({ ...prev }));
@@ -203,23 +218,42 @@ export const ProductsManagementScreen: React.FC = () => {
         }
         subtitle={`${totalProducts} productos en total`}
         buttons={
-          <Button
-            title="Nuevo Producto"
-            textStyle={{ color: "white" }}
-            style={{
-              elevation: 8,
-              backgroundColor: colors.brand.green[500],
-            }}
-            onPress={handleCreateProduct}
-            icon={
-              <MaterialCommunityIcons
-                name="plus"
-                size={isMobile ? 18 : 20}
-                color="#fff"
-              />
-            }
-            variant={isMobile ? "onlyIcon" : "secondary"}
-          />
+          <>
+            <Button
+              title="Producto"
+              textStyle={{ color: "white" }}
+              style={{
+                elevation: 8,
+                backgroundColor: colors.brand.green[500],
+              }}
+              onPress={handleCreateProduct}
+              icon={
+                <MaterialCommunityIcons
+                  name="plus"
+                  size={isMobile ? 18 : 20}
+                  color="#fff"
+                />
+              }
+              variant={isMobile ? "onlyIcon" : "secondary"}
+            />
+            <Button
+              title="Experiencia"
+              textStyle={{ color: "white" }}
+              style={{
+                elevation: 8,
+                backgroundColor: colors.brand.green[500],
+              }}
+              onPress={handleCreateExperience}
+              icon={
+                <MaterialCommunityIcons
+                  name="account-box-plus-outline"
+                  size={isMobile ? 18 : 20}
+                  color="#fff"
+                />
+              }
+              variant={isMobile ? "onlyIcon" : "secondary"}
+            />
+          </>
         }
       />
 
@@ -269,12 +303,22 @@ export const ProductsManagementScreen: React.FC = () => {
         />
       )}
 
-      {/* Modal de Formulario */}
+      {/* Modal de Formulario producto */}
       <ProductFormModal
-        visible={showFormModal}
+        visible={showFormModal === "product"}
         product={editingProduct}
         onClose={() => {
-          setShowFormModal(false);
+          setShowFormModal(null);
+          setEditingProduct(null);
+        }}
+        onSuccess={handleFormSuccess}
+      />
+      {/* Modal de Formulario experiencia */}
+      <ExperienceFormModal
+        visible={showFormModal === "experience"}
+        experience={editingExperience}
+        onClose={() => {
+          setShowFormModal(null);
           setEditingProduct(null);
         }}
         onSuccess={handleFormSuccess}

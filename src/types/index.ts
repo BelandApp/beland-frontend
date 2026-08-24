@@ -1,5 +1,9 @@
 import { Product } from "./Products";
-
+export {
+  Experience,
+  CreateExperienceDto,
+  UpdateExperienceDto,
+} from "./Experiences";
 export * from "./Products";
 
 export interface Participant {
@@ -65,6 +69,6 @@ export { Product };
 
 // Export types
 export * from "./Order";
-export * from "./Auth"
-export * from "./Group"
-export * from "./navigation"
+export * from "./Auth";
+export * from "./Group";
+export * from "./navigation";
