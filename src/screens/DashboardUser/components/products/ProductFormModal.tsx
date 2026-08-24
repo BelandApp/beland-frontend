@@ -176,8 +176,14 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       newErrors.price = "El precio debe ser mayor a 0";
     }
 
-    if (formData.cost < 0) {
-      newErrors.cost = "El costo no puede ser negativo";
+    if (formData.cost <= 0) {
+      newErrors.cost = "El costo debe ser mayor a 0";
+    }
+    if (formData.is_circular === null) {
+      newErrors.is_circular = "Indicar si el producto es circular o no";
+    }
+    if (formData.category_id === "") {
+      newErrors.category_id = "Indicar una categoria";
     }
 
     setErrors(newErrors);
@@ -313,7 +319,10 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               />
             </View>
             <View className="flex flex-row items-center gap-2">
-              <span>El producto es circular?</span>
+              <Text>El producto es circular?</Text>
+              <Text style={styles.textError}>
+                {errors.is_circular ? errors.is_circular : ""}
+              </Text>
               <Button
                 title="Si"
                 variant={formData.is_circular ? "primary" : "ghost"}
@@ -360,7 +369,9 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
             <View style={styles.formGroup}>
               <View style={styles.labelRow}>
                 <Text style={styles.label}>Categoría</Text>
-
+                <Text style={styles.textError}>
+                  {errors.category_id ? errors.category_id : ""}
+                </Text>
                 <Button
                   variant="box"
                   title="Agregar categoría"
@@ -432,26 +443,28 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 />
               </View>
               <View style={[styles.row, { marginHorizontal: "auto" }]}>
-                {formData.image_url && (
-                  <View style={styles.imagePreview}>
-                    <Text>Anterior Imagen</Text>
-                    <Image
-                      source={{ uri: formData.image_url }}
-                      style={styles.previewImage}
-                      resizeMode="contain"
-                    />
-                  </View>
-                )}
-                {previewUri && (
-                  <View style={styles.imagePreview}>
-                    <Text>Nueva Imagen </Text>
-                    <Image
-                      source={{ uri: previewUri }}
-                      style={styles.previewImage}
-                      resizeMode="contain"
-                    />
-                  </View>
-                )}
+                <>
+                  {formData.image_url && (
+                    <View style={styles.imagePreview}>
+                      <Text>Anterior Imagen</Text>
+                      <Image
+                        source={{ uri: formData.image_url }}
+                        style={styles.previewImage}
+                        resizeMode="contain"
+                      />
+                    </View>
+                  )}
+                  {previewUri && (
+                    <View style={styles.imagePreview}>
+                      <Text>Nueva Imagen</Text>
+                      <Image
+                        source={{ uri: previewUri }}
+                        style={styles.previewImage}
+                        resizeMode="contain"
+                      />
+                    </View>
+                  )}
+                </>
               </View>
             </View>
           </View>
@@ -627,6 +640,11 @@ const styles = StyleSheet.create({
   },
   inputError: {
     borderColor: "#ef4444",
+  },
+  textError: {
+    color: "red",
+    fontSize: 12,
+    marginTop: 4,
   },
   textArea: {
     minHeight: 80,

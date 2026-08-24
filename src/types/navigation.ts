@@ -7,6 +7,7 @@ export type DashboardStackParamList = {
   OrderAdminDetail?: { orderId: string };
   UsersManagement: undefined;
   ProductsManagement: undefined;
+  ExperiencesManagement: undefined;
   FinancesManagement: undefined;
 };
 export type GroupsStackParamList = {

@@ -4,6 +4,7 @@ import {
   UpdateExperienceDto,
 } from "src/types";
 import { CoreApiService, PaginatedResponse } from "../core";
+import { ExperienceQuery } from "src/types/Experiences";
 
 class ExperienceServiceClass extends CoreApiService {
   private readonly ENDPOINTS = {
@@ -13,17 +14,19 @@ class ExperienceServiceClass extends CoreApiService {
   /**
    * Get products with optional filtering and pagination
    */
-  async getProducts(): Promise<PaginatedResponse<Experience>> {
+  async getExperiences(
+    query: ExperienceQuery = {},
+  ): Promise<PaginatedResponse<Experience>> {
+    const queryString = this.buildQueryString(query);
+    const endpoint = queryString
+      ? `${this.ENDPOINTS.EXPERIENCES}?${queryString}`
+      : this.ENDPOINTS.EXPERIENCES;
     // The backend returns {Experience: BackendExperience[], total: number, page: number, limit: number}
     // We need to map this to our PaginatedResponse format and convert string numbers to actual numbers
-    const response = await this.get<{
-      experience: Array<Experience>;
-      total: number;
-      page: number;
-      limit: number;
-    }>(this.ENDPOINTS.EXPERIENCES);
+    const response = await this.get<Array<Experience>>(endpoint);
+
     // Map backend experiences to frontend experience interface
-    const mappedExperience: Experience[] = response.experience.map(
+    const mappedExperience: Experience[] = response.map(
       (backendExperience) => ({
         id: backendExperience.id,
         name: backendExperience.name,
@@ -35,24 +38,28 @@ class ExperienceServiceClass extends CoreApiService {
         updated_at: backendExperience.updated_at,
         likes: backendExperience.likes,
         tags: backendExperience.tags,
-        creator: backendExperience.creator,
+        creator_name: backendExperience.creator_name,
         is_experience: backendExperience.is_experience,
       }),
     );
 
     return {
       data: mappedExperience,
-      total: response.total,
-      page: response.page,
-      limit: response.limit,
-      totalPages: Math.ceil(response.total / response.limit),
+      total: response.length,
+      // Backend no envia paginado
+      page: 1,
+      limit: 100,
+      totalPages: 1,
+      // page: response.page,
+      // limit: response.limit,
+      // totalPages: Math.ceil(response.total / response.limit),
     };
   }
 
   /**
    * Get a single product by ID
    */
-  async getProduct(id: string): Promise<Experience> {
+  async getExperience(id: string): Promise<Experience> {
     return await this.get<Experience>(`${this.ENDPOINTS.EXPERIENCES}/${id}`);
   }
 
@@ -83,9 +90,9 @@ class ExperienceServiceClass extends CoreApiService {
   }
 
   /**
-   * Upload product image (admin only)
+   * Upload experience image (admin only)
    */
-  async uploadProductImage(
+  async uploadExperienceImage(
     experienceId: string,
     imageFile: FormData,
   ): Promise<{ image_url: string }> {
@@ -94,6 +101,22 @@ class ExperienceServiceClass extends CoreApiService {
       {
         method: "POST",
         body: imageFile,
+        headers: {}, // Don't set Content-Type for FormData
+      },
+    );
+  }
+  /**
+   * Upload experience image (admin only)
+   */
+  async uploadExperienceVideo(
+    experienceId: string,
+    videoFile: FormData,
+  ): Promise<{ image_url: string }> {
+    return this.request<{ image_url: string }>(
+      `${this.ENDPOINTS.EXPERIENCES}/${experienceId}/video`,
+      {
+        method: "POST",
+        body: videoFile,
         headers: {}, // Don't set Content-Type for FormData
       },
     );

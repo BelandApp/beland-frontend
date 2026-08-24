@@ -1,12 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { ProductService } from "@/services/core";
-import type {
-  Product,
-  ProductQuery,
-  Category,
-} from "@/services/ProductApiService";
+
 import { ProductsTable } from "./components/products/ProductsTable";
 import { ProductFormModal } from "./components/products/ProductFormModal";
 import { ProductFilters } from "./components/products/ProductFilters";
@@ -19,117 +14,88 @@ import {
   ThemedHeader,
 } from "src/components";
 import { colors } from "src/design-system";
+import { ExperienceFormModal } from "./components/products/ExperienceFormModal";
+import { Experience } from "src/types";
+import { ExperienceService } from "src/services/experience/ExperienceApiService";
+import { ExperienceQuery } from "src/types/Experiences";
+import { ExperienceTable } from "./components/experience/ExperecienceTable";
 
-export const ProductsManagementScreen: React.FC = () => {
+export const ExperiencesManagementScreen: React.FC = () => {
   const notify = useNotify();
 
   // Estados principales
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [experiences, setExperiences] = useState<Experience[]>([]);
+
   const [loading, setLoading] = useState(true);
-  const [totalProducts, setTotalProducts] = useState(0);
+  const [totalExperiences, setTotalExperiences] = useState(0);
   const { navigate } = useCustomNavigation();
-  // Filtros y paginación
-  const [filters, setFilters] = useState<ProductQuery>({
+
+  // Modal de formulario
+  const [showFormModal, setShowFormModal] = useState(false);
+  const [editingExperience, setEditingExperience] = useState<Experience | null>(
+    null,
+  );
+
+  // Búsqueda
+  const [searchText, setSearchText] = useState("");
+
+  const { isMobile } = useResponsiveLayout();
+
+  // Cargar productos cuando cambian los filtros
+  useEffect(() => {
+    const fetchExperiences = async () => {
+      try {
+        setLoading(true);
+        const response = await ExperienceService.getExperiences(filters);
+        console.log("REspuesta", response);
+        setExperiences(response.data);
+        setTotalExperiences(response.total);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        // Usar notify directamente sin incluirlo en dependencias
+        notify.error({ message: "Error al cargar experiencias" });
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchExperiences();
+  }, []);
+
+  const [filters, setFilters] = useState<ExperienceQuery>({
     page: 1,
     limit: 10,
     sortBy: "created_at",
     order: "DESC",
   });
 
-  // Filtros separados para el componente ProductFilters
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [sortBy, setSortBy] = useState<"name" | "price" | "date">("date");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-
-  // Modal de formulario
-  const [showFormModal, setShowFormModal] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-
-  // Búsqueda
-  const [searchText, setSearchText] = useState("");
-
-  // Flag para evitar cargar categorías múltiples veces
-  const categoriesLoaded = useRef(false);
-
-  const { isMobile } = useResponsiveLayout();
-
-  // Cargar categorías solo una vez
-  useEffect(() => {
-    if (!categoriesLoaded.current) {
-      categoriesLoaded.current = true;
-      const loadCategories = async () => {
-        try {
-          const response = await ProductService.getCategories();
-          setCategories(response.data || []);
-        } catch (error) {
-          console.error("Error loading categories:", error);
-          setCategories([]);
-        }
-      };
-      loadCategories();
-    }
-  }, []);
-
-  // Cargar productos cuando cambian los filtros
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        const response = await ProductService.getProducts(filters);
-
-        // Mapear categorías a los productos si no vienen del backend
-        const productsWithCategories = response.data.map((product) => {
-          if (!product.category && product.category_id) {
-            const category = categories.find(
-              (cat) => cat.id === product.category_id,
-            );
-            return { ...product, category };
-          }
-          return product;
-        });
-
-        setProducts(productsWithCategories);
-        setTotalProducts(response.total);
-      } catch (error) {
-        console.error("Error fetching products:", error);
-        // Usar notify directamente sin incluirlo en dependencias
-        notify.error({ message: "Error al cargar productos" });
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProducts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters, categories]);
-
   // Handlers
+  //   TODO WHEN BACKENDS ACCEPTS
   const handleSearch = () => {
     setFilters((prev) => ({ ...prev, name: searchText, page: 1 }));
   };
 
-  const handleCreateProduct = () => {
-    setEditingProduct(null);
+  const handleCreateExperience = () => {
+    setEditingExperience(null);
     setShowFormModal(true);
   };
 
-  const handleEditProduct = (product: Product) => {
-    setEditingProduct(product);
+  const handleEditExperience = (experience: Experience) => {
+    setEditingExperience(experience);
     setShowFormModal(true);
   };
 
-  const handleDeleteProduct = async (productId: string) => {
+  const handleDeleteExperience = async (experienceId: string) => {
     notify.confirm({
-      message: "¿Estás seguro de que deseas eliminar este producto?",
+      message: "¿Estás seguro de que deseas eliminar esta experiencia?",
       onConfirm: async () => {
         try {
-          await ProductService.deleteProduct(productId);
-          notify.success({ message: "Producto eliminado exitosamente" });
+          await ExperienceService.deleteExperience(experienceId);
+          notify.success({ message: "Experiencia eliminada exitosamente" });
           // Refrescar forzando un cambio en los filtros
           setFilters((prev) => ({ ...prev }));
         } catch (error) {
           console.error("Error deleting product:", error);
-          notify.error({ message: "Error al eliminar producto" });
+          notify.error({ message: "Error al eliminar la experiencia" });
         }
       },
       onCancel: () => {
@@ -140,7 +106,7 @@ export const ProductsManagementScreen: React.FC = () => {
 
   const handleFormSuccess = () => {
     setShowFormModal(false);
-    setEditingProduct(null);
+    setEditingExperience(null);
     // Refrescar forzando un cambio en los filtros
     setFilters((prev) => ({ ...prev }));
   };
@@ -149,68 +115,26 @@ export const ProductsManagementScreen: React.FC = () => {
     setFilters((prev) => ({ ...prev, page: newPage }));
   };
 
-  const handleCategoryChange = (categoryId: string) => {
-    setSelectedCategory(categoryId);
-    setFilters((prev) => ({
-      ...prev,
-      category_id: categoryId || undefined,
-      page: 1,
-    }));
-  };
-
-  const handleSortChange = (
-    newSortBy: "name" | "price" | "date",
-    newSortOrder: "asc" | "desc",
-  ) => {
-    setSortBy(newSortBy);
-    setSortOrder(newSortOrder);
-
-    const sortByMapping = {
-      name: "name",
-      price: "price",
-      date: "created_at",
-    } as const;
-
-    setFilters((prev) => ({
-      ...prev,
-      sortBy: sortByMapping[newSortBy],
-      order: newSortOrder.toUpperCase() as "ASC" | "DESC",
-      page: 1,
-    }));
-  };
-
-  const handleResetFilters = () => {
-    setSelectedCategory("");
-    setSortBy("date");
-    setSortOrder("desc");
-    setFilters({
-      page: 1,
-      limit: 10,
-      sortBy: "created_at",
-      order: "DESC",
-    });
-  };
-
-  const totalPages = Math.ceil(totalProducts / (filters.limit || 10));
+  const totalPages = Math.ceil(totalExperiences / (filters.limit || 10));
   return (
     <View style={styles.container}>
       {/* Header */}
       <ThemedHeader
-        title="Gestión de productos"
+        title="Gestión de experiencias"
         canGoBack
         onBackPress={() =>
           navigate("UserDashboardScreen", { screen: "Dashboard" })
         }
-        subtitle={`${totalProducts} productos en total`}
+        subtitle={`${totalExperiences} experiencias en total`}
         buttons={
           <Button
-            title="Producto"
+            title="Experiencia"
             textStyle={{ color: "white" }}
             style={{
               elevation: 8,
               backgroundColor: colors.brand.green[500],
             }}
-            onPress={handleCreateProduct}
+            onPress={handleCreateExperience}
             icon={
               <MaterialCommunityIcons
                 name="plus"
@@ -230,52 +154,42 @@ export const ProductsManagementScreen: React.FC = () => {
         placeholder="Buscar por nombre..."
         styleContainer={{ marginTop: 4, marginHorizontal: 16 }}
       />
-      {/* Filtros */}
-      <ProductFilters
-        categories={categories}
-        selectedCategory={selectedCategory}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        onCategoryChange={handleCategoryChange}
-        onSortChange={handleSortChange}
-        onReset={handleResetFilters}
-      />
 
       {/* Contenido */}
       {loading ? (
-        <CustomLoader title="Cargando productos" />
-      ) : products.length === 0 ? (
+        <CustomLoader title="Cargando Experiencias" />
+      ) : experiences.length === 0 ? (
         <View style={styles.emptyContainer}>
           <MaterialCommunityIcons
             name="package-variant"
             size={64}
             color="#d1d5db"
           />
-          <Text style={styles.emptyText}>No hay productos disponibles</Text>
+          <Text style={styles.emptyText}>No hay experiencias disponibles</Text>
           <Text style={styles.emptySubtext}>
             {filters.name
               ? "No se encontraron resultados para tu búsqueda"
-              : "Crea tu primer producto para comenzar"}
+              : "Crea tu primer experiencia para comenzar"}
           </Text>
         </View>
       ) : (
-        <ProductsTable
-          products={products}
-          onEdit={handleEditProduct}
-          onDelete={handleDeleteProduct}
+        <ExperienceTable
+          experiences={experiences}
+          onEdit={handleEditExperience}
+          onDelete={handleDeleteExperience}
           currentPage={filters.page || 1}
           totalPages={totalPages}
           onPageChange={handlePageChange}
         />
       )}
 
-      {/* Modal de Formulario producto */}
-      <ProductFormModal
+      {/* Modal de Formulario experiencia */}
+      <ExperienceFormModal
         visible={showFormModal}
-        product={editingProduct}
+        experience={editingExperience}
         onClose={() => {
           setShowFormModal(false);
-          setEditingProduct(null);
+          setEditingExperience(null);
         }}
         onSuccess={handleFormSuccess}
       />
@@ -412,4 +326,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ProductsManagementScreen;
+export default ExperiencesManagementScreen;

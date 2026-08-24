@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, Image, Platform } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  Platform,
+  Pressable,
+} from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import type {
-  UpdateProductDto,
-  Experience,
-  CreateExperienceDto,
-} from "@/services/ProductApiService";
+import type { UpdateProductDto } from "@/services/ProductApiService";
 import { useNotify, useBeCoinsPrice, useUploadMedia } from "@/hooks";
 import {
   Button,
@@ -16,8 +19,9 @@ import {
 import { colors } from "src/design-system";
 
 import { CloudinaryService } from "src/services";
-import { ImagePlus, VideoIcon, X } from "lucide-react-native";
+import { ImagePlus, Plus, VideoIcon, X, XCircle } from "lucide-react-native";
 import { ExperienceService } from "src/services/experience/ExperienceApiService";
+import { Experience, CreateExperienceDto } from "src/types";
 
 interface ExperienceFormModalProps {
   visible: boolean;
@@ -47,12 +51,48 @@ export const ExperienceFormModal: React.FC<ExperienceFormModalProps> = ({
     price: 0,
     image_url: "",
     video_url: "",
-    creator: "",
+    creator_name: "",
     tags: [],
   });
 
   // UI state
   const [loading, setLoading] = useState(false);
+  const [previewTag, setPreviewTag] = useState<string>("");
+  const handleAddTag = () => {
+    const cleanTag = previewTag.trim();
+
+    // 1. Validar string vacío
+    if (!cleanTag) return;
+
+    // 2. Validar duplicados (puedes usar .toLowerCase() si quieres evitar "Tag" y "tag")
+    if (formData.tags.some((t) => t.toLowerCase() === cleanTag.toLowerCase())) {
+      notify.error({ message: "Tag ya incluido" });
+      return;
+    }
+
+    // 3. Validar límite de tags
+    if (formData.tags.length >= 3) {
+      notify.error({ message: "Máximo 3 tags" });
+      return;
+    }
+
+    // 4. Actualizar el estado correctamente
+    setFormData((prev) => ({
+      ...prev,
+      tags: [...prev.tags, cleanTag], // Accedes directamente a prev.tags
+    }));
+
+    // 5. Limpiar el input de la etiqueta
+    setPreviewTag("");
+  };
+  const removeTag = (tagToDelete: string) => {
+    const filterTags = formData.tags.filter((tag) => tag != tagToDelete);
+
+    setFormData((prev: any) => ({
+      ...prev,
+      tags: filterTags,
+    }));
+  };
   const [errors, setErrors] = useState<
     Partial<Record<keyof CreateExperienceDto, string>>
   >({});
@@ -66,7 +106,7 @@ export const ExperienceFormModal: React.FC<ExperienceFormModalProps> = ({
         price: experience.price || 0,
         image_url: experience.image_url || "",
         video_url: experience.video_url || "",
-        creator: experience.creator || "",
+        creator_name: experience.creator_name || "",
         tags: experience.tags || [],
       });
     } else {
@@ -76,7 +116,7 @@ export const ExperienceFormModal: React.FC<ExperienceFormModalProps> = ({
         price: 0,
         image_url: "",
         video_url: "",
-        creator: "",
+        creator_name: "",
         tags: [],
       });
     }
@@ -95,7 +135,7 @@ export const ExperienceFormModal: React.FC<ExperienceFormModalProps> = ({
       finalValue = finalValue.replace(",", ".") as CreateExperienceDto[K];
     }
 
-    setFormData((prev) => ({
+    setFormData((prev: any) => ({
       ...prev,
       [field]: finalValue,
     }));
@@ -180,13 +220,14 @@ export const ExperienceFormModal: React.FC<ExperienceFormModalProps> = ({
   const handleClose = () => {
     imageUpload.clearMedia();
     videoUpload.clearMedia();
+    setPreviewTag("");
     setFormData({
       name: "",
       description: "",
       price: 0,
       image_url: "",
       video_url: "",
-      creator: "",
+      creator_name: "",
       tags: [],
     });
     onClose();
@@ -232,6 +273,41 @@ export const ExperienceFormModal: React.FC<ExperienceFormModalProps> = ({
             onChangeText={(text) => handleChange("description", text)}
             error={errors.description}
           />
+          <CustomInput
+            label="Creador"
+            variant="filled"
+            value={formData.creator_name ?? ""}
+            onChangeText={(text) => handleChange("creator_name", text)}
+            error={errors.creator_name}
+          />
+          <View style={styles.row}>
+            <CustomInput
+              label="Tags"
+              variant="filled"
+              value={previewTag}
+              onChangeText={(text) => setPreviewTag(text)}
+            />
+            <Button
+              title="Añadir"
+              icon={<Plus color={previewTag !== "" ? "green" : "gray"} />}
+              variant="onlyIcon"
+              disabled={formData.tags.length >= 3 || previewTag === ""}
+              className={`h-fit`}
+              onPress={handleAddTag}
+            />
+          </View>
+          <View style={[styles.row, { marginBottom: 25 }]}>
+            {formData.tags.map((tag) => (
+              <Pressable
+                className="px-2 py-1 rounded-xl bg-[#6BA43A] flex flex-row items-center gap-2"
+                onPress={() => removeTag(tag)}
+              >
+                <Text className="text-white">{tag}</Text>
+
+                <XCircle size={16} color="red" />
+              </Pressable>
+            ))}
+          </View>
 
           <View style={styles.row}>
             <CustomInput
@@ -280,26 +356,28 @@ export const ExperienceFormModal: React.FC<ExperienceFormModalProps> = ({
               />
             </View>
             <View style={[styles.row, { marginHorizontal: "auto" }]}>
-              {formData.image_url && !imageUpload.previewUri && (
-                <View style={styles.imagePreview}>
-                  <Text>Imagen Actual</Text>
-                  <Image
-                    source={{ uri: formData.image_url }}
-                    style={styles.previewImage}
-                    resizeMode="cover"
-                  />
-                </View>
-              )}
-              {imageUpload.previewUri && (
-                <View style={styles.imagePreview}>
-                  <Text>Nueva Imagen</Text>
-                  <Image
-                    source={{ uri: imageUpload.previewUri }}
-                    style={styles.previewImage}
-                    resizeMode="cover"
-                  />
-                </View>
-              )}
+              <>
+                {formData.image_url && !imageUpload.previewUri && (
+                  <View style={styles.imagePreview}>
+                    <Text>Imagen Actual</Text>
+                    <Image
+                      source={{ uri: formData.image_url }}
+                      style={styles.previewImage}
+                      resizeMode="cover"
+                    />
+                  </View>
+                )}
+                {imageUpload.previewUri && (
+                  <View style={styles.imagePreview}>
+                    <Text>Nueva Imagen</Text>
+                    <Image
+                      source={{ uri: imageUpload.previewUri }}
+                      style={styles.previewImage}
+                      resizeMode="cover"
+                    />
+                  </View>
+                )}
+              </>
             </View>
           </View>
 
@@ -320,48 +398,50 @@ export const ExperienceFormModal: React.FC<ExperienceFormModalProps> = ({
               />
             </View>
             <View style={[styles.row, { marginHorizontal: "auto" }]}>
-              {formData.video_url && !videoUpload.previewUri && (
-                <View style={styles.imagePreview}>
-                  <Text>Video Actual</Text>
-                  {Platform.OS === "web" ? (
-                    <video
-                      src={formData.video_url}
-                      style={{
-                        width: 150,
-                        height: 150,
-                        borderRadius: 8,
-                        objectFit: "cover",
-                      }}
-                      controls
-                    />
-                  ) : (
-                    <Text style={{ fontSize: 12, color: "#6b7280" }}>
-                      Video cargado
-                    </Text>
-                  )}
-                </View>
-              )}
-              {videoUpload.previewUri && (
-                <View style={styles.imagePreview}>
-                  <Text>Nuevo Video</Text>
-                  {Platform.OS === "web" ? (
-                    <video
-                      src={videoUpload.previewUri}
-                      style={{
-                        width: 150,
-                        height: 150,
-                        borderRadius: 8,
-                        objectFit: "cover",
-                      }}
-                      controls
-                    />
-                  ) : (
-                    <Text style={{ fontSize: 12, color: "#6b7280" }}>
-                      Video listo para subir
-                    </Text>
-                  )}
-                </View>
-              )}
+              <>
+                {formData.video_url && !videoUpload.previewUri && (
+                  <View style={styles.imagePreview}>
+                    <Text>Video Actual</Text>
+                    {Platform.OS === "web" ? (
+                      <video
+                        src={formData.video_url}
+                        style={{
+                          width: 150,
+                          height: 150,
+                          borderRadius: 8,
+                          objectFit: "cover",
+                        }}
+                        controls
+                      />
+                    ) : (
+                      <Text style={{ fontSize: 12, color: "#6b7280" }}>
+                        Video cargado
+                      </Text>
+                    )}
+                  </View>
+                )}
+                {videoUpload.previewUri && (
+                  <View style={styles.imagePreview}>
+                    <Text>Nuevo Video</Text>
+                    {Platform.OS === "web" ? (
+                      <video
+                        src={videoUpload.previewUri}
+                        style={{
+                          width: 150,
+                          height: 150,
+                          borderRadius: 8,
+                          objectFit: "cover",
+                        }}
+                        controls
+                      />
+                    ) : (
+                      <Text style={{ fontSize: 12, color: "#6b7280" }}>
+                        Video listo para subir
+                      </Text>
+                    )}
+                  </View>
+                )}
+              </>
             </View>
           </View>
         </View>

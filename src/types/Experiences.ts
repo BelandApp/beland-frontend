@@ -6,7 +6,7 @@ export interface Experience {
   likes: number;
   tags: string[];
   price: number;
-  creator: string;
+  creator_name: string;
   description: string;
   is_experience: boolean;
   created_at?: string;
@@ -15,7 +15,7 @@ export interface Experience {
 export interface CreateExperienceDto {
   name: string;
   price: number;
-  creator: string;
+  creator_name: string;
   description: string;
   video_url: string;
   image_url: string;
@@ -25,9 +25,20 @@ export interface CreateExperienceDto {
 export interface UpdateExperienceDto {
   name?: string;
   price?: number;
-  creator?: string;
+  creator_name?: string;
   description?: string;
   video_url?: string;
   image_url?: string;
   tags?: string[];
+}
+
+export interface ExperienceQuery {
+  page?: number;
+  limit?: number;
+  sortBy?: "name" | "price" | "created_at";
+  order?: "ASC" | "DESC";
+  name?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  isActive?: boolean;
 }
