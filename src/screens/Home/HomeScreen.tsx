@@ -7,11 +7,8 @@ import { useWallet, useWalletActions } from "../Wallet/hooks";
 import { useBeCoinsStore } from "@/stores";
 import { HomeWave } from "src/components/ui/waves/Home.wave";
 import { ThemedHeader } from "src/components/shared/headers/Header";
-import { convertBeCoinsToUSD } from "src/constants";
 import { WalletActions } from "../Wallet";
 import { colors } from "src/design-system";
-import { useCustomNavigation } from "src/hooks";
-import { Button } from "src/components";
 import { useAuth } from "src/context";
 
 export const HomeScreen = () => {
@@ -27,13 +24,7 @@ export const HomeScreen = () => {
   const { loadingWallet: loading, transactions, walletData } = useWallet();
   // Usar la constante centralizada para el cálculo de USD
   const lockedBalance = useBeCoinsStore((state) => state.locked_balance) ?? 0;
-  const estimatedValue = getBeCoinsInUSD(walletData.balance);
 
-  // Solo pasar locked_balance si es mayor a 0
-  const shouldShowLockedBalance = lockedBalance > 0;
-  const lockedBalanceToPass = shouldShowLockedBalance
-    ? lockedBalance
-    : undefined;
   const { mainWalletActions } = useWalletActions();
   return (
     <View style={styles.container}>

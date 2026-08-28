@@ -3,30 +3,32 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
 const { persist, createJSONStorage } = require("zustand/middleware");
 
-export type BasicEvent ={
+export type BasicEvent = {
   id: string;
   name: string;
+  code: string;
+  description?: string;
+  message?: string;
   image_url: string;
   images_urls: string[];
-  code: string;
-  description: string;
+  qr: string;
   event_place: string;
   event_city: string;
+  address: string;
   event_date: Date | string;
   start_sale_date: Date | string;
   end_sale_date: Date | string;
   limit_tickets: number;
-  price_dollar: string;
-  discount: string;
-  total_becoin: string;
-  is_active: boolean;
-  created_by: string;
-  is_refundable: boolean;
-  refund_days_limit: number | null;
-  qr: string;
   sold_tickets: number;
   available: true;
   attended_count: number;
+  price_usd: string;
+  discount: string;
+  total_usd: number;
+  is_refundable: boolean;
+  refund_days_limit: number | null;
+  created_by: string;
+  is_active: boolean;
   created_at: Date;
   updated_at: Date;
 };
@@ -81,15 +83,15 @@ export const eventStore = create<EventStore>()(
       },
       getAcquiredEvent: (user_pass_id: string) =>
         get().acquiredEvents.find(
-          (event: Event) => event.user_pass_id === user_pass_id
+          (event: Event) => event.user_pass_id === user_pass_id,
         ),
       updateEvent: (updatedEvent: Event) => {
         set((state: any) => ({
           availableEvents: state.availableEvents.map((event: Event) =>
-            event.id === updatedEvent.id ? updatedEvent : event
+            event.id === updatedEvent.id ? updatedEvent : event,
           ),
           acquiredEvents: state.acquiredEvents.map((event: Event) =>
-            event.id === updatedEvent.id ? updatedEvent : event
+            event.id === updatedEvent.id ? updatedEvent : event,
           ),
         }));
       },
@@ -97,8 +99,8 @@ export const eventStore = create<EventStore>()(
     {
       name: "events-storage",
       storage: createJSONStorage(() =>
-        Platform.OS === "web" ? localStorage : AsyncStorage
+        Platform.OS === "web" ? localStorage : AsyncStorage,
       ),
-    }
-  )
+    },
+  ),
 );

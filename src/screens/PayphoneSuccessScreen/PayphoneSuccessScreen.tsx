@@ -57,6 +57,7 @@ export default function PayphoneSuccessScreen() {
             title="Volver"
             onPress={() => {
               localStorage.removeItem("comeFromRecharge");
+              localStorage.removeItem("payphone_token");
               navigate("MainTabs", { screen: "Home" });
             }}
             style={{ margin: "auto" }}
@@ -66,6 +67,7 @@ export default function PayphoneSuccessScreen() {
               title="Terminar de comprar"
               onPress={() => {
                 localStorage.removeItem("comeFromRecharge");
+                localStorage.removeItem("payphone_token");
                 navigate("MainTabs", {
                   screen: "Catalog",
                   params: { comeFromRecharge: true },
@@ -80,7 +82,7 @@ export default function PayphoneSuccessScreen() {
               icon={<PhoneCall />}
               onPress={() => {
                 localStorage.removeItem("comeFromRecharge");
-
+                localStorage.removeItem("payphone_token");
                 shareTextOnWhatsApp({
                   message: `Tengo problemas con mi recarga de payphone, id:${id} clientTxId: ${clientTxId}`,
                   phone: DIEGO_NUMBER,

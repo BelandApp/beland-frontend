@@ -5,6 +5,8 @@ const core = new CoreApiService();
 export type UpdateUserPayload = {
   full_name?: string;
   address?: string;
+  city?: string;
+  country?: string;
   phone?: string;
   profile_picture_url?: string;
 };

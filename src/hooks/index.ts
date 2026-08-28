@@ -21,7 +21,7 @@ export * from "./useErrorHandler";
 export * from "./useLoadingState";
 export * from "./useStorage";
 export * from "./form/useUserValidation";
-export * from "./image/useUploadImage";
+export * from "./media/useUploadMedia";
 export * from "./layout/useResponsiveLayout";
 
 // Hook de navegacion

@@ -16,7 +16,7 @@ import type {
   UpdateProductDto,
   Category,
 } from "@/services/ProductApiService";
-import { useNotify, useBeCoinsPrice, useUploadImage } from "@/hooks";
+import { useNotify, useBeCoinsPrice, useUploadMedia } from "@/hooks";
 import {
   Button,
   CustomInput,
@@ -68,8 +68,8 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const [errors, setErrors] = useState<
     Partial<Record<keyof CreateProductDto, string>>
   >({});
-  const { pickImage, clearImage, previewUri, image, appendToFormData } =
-    useUploadImage();
+  const { pickMedia, clearMedia, previewUri, media, appendToFormData } =
+    useUploadMedia();
   // Load form data when product changes
   useEffect(() => {
     if (product) {
@@ -176,8 +176,14 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       newErrors.price = "El precio debe ser mayor a 0";
     }
 
-    if (formData.cost < 0) {
-      newErrors.cost = "El costo no puede ser negativo";
+    if (formData.cost <= 0) {
+      newErrors.cost = "El costo debe ser mayor a 0";
+    }
+    if (formData.is_circular === null) {
+      newErrors.is_circular = "Indicar si el producto es circular o no";
+    }
+    if (formData.category_id === "") {
+      newErrors.category_id = "Indicar una categoria";
     }
 
     setErrors(newErrors);
@@ -193,7 +199,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
     try {
       setLoading(true);
       let payload = { ...formData };
-      if (image) {
+      if (media) {
         const formImage = new FormData();
         appendToFormData(formImage);
         const new_image_url = await CloudinaryService.uploadImage(formImage);
@@ -222,12 +228,12 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         error.response?.data?.message || "Error al guardar producto";
       notify.error({ message });
     } finally {
-      clearImage();
+      clearMedia();
       setLoading(false);
     }
   };
   const handleClose = () => {
-    clearImage();
+    clearMedia();
     setFormData({
       name: "",
       description: "",
@@ -313,7 +319,10 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               />
             </View>
             <View className="flex flex-row items-center gap-2">
-              <span>El producto es circular?</span>
+              <Text>El producto es circular?</Text>
+              <Text style={styles.textError}>
+                {errors.is_circular ? errors.is_circular : ""}
+              </Text>
               <Button
                 title="Si"
                 variant={formData.is_circular ? "primary" : "ghost"}
@@ -360,7 +369,9 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
             <View style={styles.formGroup}>
               <View style={styles.labelRow}>
                 <Text style={styles.label}>Categoría</Text>
-
+                <Text style={styles.textError}>
+                  {errors.category_id ? errors.category_id : ""}
+                </Text>
                 <Button
                   variant="box"
                   title="Agregar categoría"
@@ -425,33 +436,35 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 <Text style={styles.label}>URL de Imagen</Text>
                 <Button
                   title={formData.image_url ? "Cambiar imagen" : "Subir Image"}
-                  onPress={pickImage}
+                  onPress={() => pickMedia({ mediaType: "images" })}
                   className="w-fit"
                   variant="box"
                   icon={<ImagePlus color="orange" size={16} />}
                 />
               </View>
               <View style={[styles.row, { marginHorizontal: "auto" }]}>
-                {formData.image_url && (
-                  <View style={styles.imagePreview}>
-                    <Text>Anterior Imagen</Text>
-                    <Image
-                      source={{ uri: formData.image_url }}
-                      style={styles.previewImage}
-                      resizeMode="contain"
-                    />
-                  </View>
-                )}
-                {previewUri && (
-                  <View style={styles.imagePreview}>
-                    <Text>Nueva Imagen </Text>
-                    <Image
-                      source={{ uri: previewUri }}
-                      style={styles.previewImage}
-                      resizeMode="contain"
-                    />
-                  </View>
-                )}
+                <>
+                  {formData.image_url && (
+                    <View style={styles.imagePreview}>
+                      <Text>Anterior Imagen</Text>
+                      <Image
+                        source={{ uri: formData.image_url }}
+                        style={styles.previewImage}
+                        resizeMode="contain"
+                      />
+                    </View>
+                  )}
+                  {previewUri && (
+                    <View style={styles.imagePreview}>
+                      <Text>Nueva Imagen</Text>
+                      <Image
+                        source={{ uri: previewUri }}
+                        style={styles.previewImage}
+                        resizeMode="contain"
+                      />
+                    </View>
+                  )}
+                </>
               </View>
             </View>
           </View>
@@ -627,6 +640,11 @@ const styles = StyleSheet.create({
   },
   inputError: {
     borderColor: "#ef4444",
+  },
+  textError: {
+    color: "red",
+    fontSize: 12,
+    marginTop: 4,
   },
   textArea: {
     minHeight: 80,

@@ -7,3 +7,5 @@ export * from "./maps/AddressMapPicker";
 export * from "./notification/GlobalNotification";
 export * from "./modals";
 export * from "./tooltip/Tooltip";
+export * from "./dots";
+export * from "./slider";

@@ -23,6 +23,7 @@ import {
   Info,
   TicketCheck,
   ShoppingBag,
+  Rocket,
 } from "lucide-react-native";
 import { authService } from "@/services";
 import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
@@ -58,7 +59,9 @@ type MenuRoutes =
   | "FINANCESADMIN"
   | "EVENTADMIN"
   | "FAQ"
-  | "PRODUCTADMIN";
+  | "ONBOARDING"
+  | "PRODUCTADMIN"
+  | "EXPERIENCEADMIN";
 export const UserMenu: React.FC<UserMenuProps> = ({
   style,
   variant = "compact",
@@ -141,8 +144,14 @@ export const UserMenu: React.FC<UserMenuProps> = ({
       case "FAQ":
         navigate("FAQ");
         break;
+      case "ONBOARDING":
+        navigate("Onboarding");
+        break;
       case "PRODUCTADMIN":
         navigate("UserDashboardScreen", { screen: "ProductsManagement" });
+        break;
+      case "EXPERIENCEADMIN":
+        navigate("UserDashboardScreen", { screen: "ExperiencesManagement" });
         break;
     }
   };
@@ -391,6 +400,13 @@ export const UserMenu: React.FC<UserMenuProps> = ({
           icon={<Info size={18} color="#333" />}
           className="justify-start"
         />
+        <Button
+          title="Configuración rápida"
+          onPress={() => handleNavigate("ONBOARDING")}
+          variant="box"
+          icon={<Info size={18} color="#333" />}
+          className="justify-start"
+        />
         {/* Mostrar opción solo si el usuario NO es comerciante */}
         {/*TODO MAS ADELANTE PODER HACERSE COMERCIANTE */}
         {/* {!isMerchant && (
@@ -458,6 +474,13 @@ export const UserMenu: React.FC<UserMenuProps> = ({
           variant="box"
           icon={<ShoppingBag size={18} color="#333" />}
           onPress={() => handleNavigate("PRODUCTADMIN")}
+          className="justify-start"
+        />
+        <Button
+          title="Experiencias"
+          variant="box"
+          icon={<Rocket size={18} color="#333" />}
+          onPress={() => handleNavigate("EXPERIENCEADMIN")}
           className="justify-start"
         />
 

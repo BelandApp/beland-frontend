@@ -19,7 +19,7 @@ import { TypeAccount, useFinanceAdminUI } from "./hooks/useFinanceAdminUI";
 import { useEffect } from "react";
 import { Picker } from "@react-native-picker/picker";
 import { useCustomNavigation } from "src/hooks";
-import CustomPicker from "src/components/shared/input/Custom.picker";
+import ExperiencesTab from "./components/financial/ExperiencesTab";
 const FinancesManagement: React.FC = () => {
   const financeData = useFinanceAdminData();
   const financeUI = useFinanceAdminUI({
@@ -32,6 +32,7 @@ const FinancesManagement: React.FC = () => {
     "Transferencias",
     "Retiros",
     "Cuentas Bancarias",
+    "Experiencias",
   ]);
 
   /**
@@ -41,7 +42,9 @@ const FinancesManagement: React.FC = () => {
     if (activeTab === "Retiros") {
       financeData.loadWithdraws();
     }
-
+    if (activeTab === "Experiencias") {
+      financeData.loadExperiences();
+    }
     if (activeTab === "Transferencias") {
       financeData.loadTransfers();
     }
@@ -54,13 +57,15 @@ const FinancesManagement: React.FC = () => {
   const loading =
     financeData.loadingWithdraws ||
     financeData.loadingTransfers ||
-    financeData.loadingAccounts;
+    financeData.loadingAccounts ||
+    financeData.loadingExperiences;
 
   if (
     loading &&
     !financeData.withdraws &&
     !financeData.transfers &&
-    !financeData.accounts
+    !financeData.accounts &&
+    !financeData.experiences
   ) {
     return (
       <>
@@ -92,6 +97,12 @@ const FinancesManagement: React.FC = () => {
         {activeTab === "Transferencias" && financeData.transfers && (
           <PaymentTransferTab
             data={financeData.transfers}
+            handleOpen={financeUI.handleOpen}
+          />
+        )}
+        {activeTab === "Experiencias" && financeData.experiences && (
+          <ExperiencesTab
+            data={financeData.experiences}
             handleOpen={financeUI.handleOpen}
           />
         )}

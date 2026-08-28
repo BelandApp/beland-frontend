@@ -35,6 +35,7 @@ import { ErrorBoundary } from "src/components/layout/ErrorBoundary";
 import { TooltipProvider } from "src/components/shared/tooltip/Tooltip.portal";
 import { DeepLinkService } from "src/services/deepLink/deepLink.service";
 import { StripeProviderWrapper } from "src/providers/stripe.provider";
+import { OnboardingProvider } from "src/screens/onboardingProcess/context/OnboardingContext";
 
 const AppContent = () => {
   const { user, isAuthenticated } = useAuth();
@@ -163,6 +164,7 @@ const AppContent = () => {
         TransferReceive: "TransferReceive/:id",
         Login: "Login",
         Register: "Register",
+        Onboarding: "Onboarding",
       },
     },
   };
@@ -192,9 +194,11 @@ const App = () => {
             {/* <SocketStatus /> */}
             <Toast config={toastConfig} />
             <ErrorBoundary>
-              <TooltipProvider>
-                <AppContent />
-              </TooltipProvider>
+              <OnboardingProvider>
+                <TooltipProvider>
+                  <AppContent />
+                </TooltipProvider>
+              </OnboardingProvider>
             </ErrorBoundary>
             <GlobalNotification />
           </NotificationProvider>

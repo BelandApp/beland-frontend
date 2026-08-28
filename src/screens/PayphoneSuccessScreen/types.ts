@@ -30,10 +30,14 @@ export interface PayphoneConfirmResponse {
 }
 
 export interface BackendRechargePayload {
+  //legacy >
+  // referenceCode: string;
+  // payphone_transactionId: number;
+  // clientTransactionId: string;
   amountUsd: number;
+  paymentReferenceId: string;
+  paymentProvider: "STRIPE" | "PAYPHONE" | "TRANSFER" | "WALLET" | "GIFTCARD";
   referenceCode: string;
-  payphone_transactionId: number;
-  clientTransactionId: string;
 }
 
 export interface BackendPaymentPayload extends BackendRechargePayload {

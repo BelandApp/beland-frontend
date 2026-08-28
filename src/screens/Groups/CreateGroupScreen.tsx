@@ -41,8 +41,8 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
     paymentTypeId,
     userAddressId,
     eventDate,
-    image,
-    pickImage,
+    media,
+    pickMedia,
 
     // Setters
     setGroupName,
@@ -160,17 +160,19 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
                 />
                 <Button
                   title="Cargar imagen"
-                  onPress={() => pickImage([16, 9])}
+                  onPress={() =>
+                    pickMedia({ mediaType: "images", aspect: [16, 9] })
+                  }
                   icon={
                     <Feather
-                      name={image ? "check" : "camera"}
+                      name={media ? "check" : "camera"}
                       size={20}
-                      color={image ? "green" : "#f97316"}
+                      color={media ? "green" : "#f97316"}
                     />
                   }
                   variant="onlyIcon"
                   style={{
-                    borderColor: image ? "#00e074" : "#f97316",
+                    borderColor: media ? "#00e074" : "#f97316",
                   }}
                 />
               </View>
@@ -451,9 +453,9 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
           visible={showShareModal}
           onClose={() => {
             setShowShareModal(false);
-            navigate("Groups", {
-              screen: "GroupDetailScreen",
-              params: { groupId: createdGroup.id },
+
+            navigate("GroupDetailScreen", {
+              groupId: createdGroup.id,
             });
           }}
           groupData={{
@@ -461,7 +463,7 @@ export const CreateGroupScreen: React.FC<any> = ({ navigation }) => {
             groupId: createdGroup.id,
             description: createdGroup.description,
             memberCount: 1,
-            creatorName: user?.full_name || user?.username || "Tú",
+            creatorName: user?.full_name || "Tú",
           }}
         />
       )}

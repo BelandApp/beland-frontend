@@ -7,6 +7,7 @@ import {
   UserDashboard,
   UsersManagementScreen,
 } from "src/screens/DashboardUser";
+import ExperiencesManagementScreen from "src/screens/DashboardUser/ExperienciesManagementScreen";
 import FinancesManagement from "src/screens/DashboardUser/FinanceManagementScreen";
 import { DashboardStackParamList } from "src/types";
 
@@ -35,6 +36,10 @@ export const DashboardStackNavigator = () => {
       <Stack.Screen
         name="ProductsManagement"
         component={ProductsManagementScreen}
+      />
+      <Stack.Screen
+        name="ExperiencesManagement"
+        component={ExperiencesManagementScreen}
       />
       <Stack.Screen name="UsersManagement" component={UsersManagementScreen} />
     </Stack.Navigator>

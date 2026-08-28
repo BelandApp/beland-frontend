@@ -22,9 +22,9 @@ export const usePaymentHandler = (
     !total_amount || total_amount === 0 || Number.isNaN(total_amount);
   const canPurchase = isFree || balance >= total_amount;
   const [Form, setForm] = useState({
-    holder_name: "",
-    holder_email: "",
-    holder_phone: "",
+    holder_name: user.full_name ?? "",
+    holder_email: user.email ?? "",
+    holder_phone: user.phone ?? "",
     holder_instagram_tiktok: "",
     event_pass_id: productId,
   });

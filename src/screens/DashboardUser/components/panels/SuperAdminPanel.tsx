@@ -265,6 +265,14 @@ const SuperAdminPanel: React.FC = () => {
       screen: "products",
     },
     {
+      id: "experiences",
+      title: "Experiencias",
+      description: "CRUD experiencias",
+      icon: "PR",
+      color: "#FF9500",
+      screen: "experiences",
+    },
+    {
       id: "events",
       title: "Eventos",
       description: "Gestión de event-pass y tipos",
@@ -347,6 +355,9 @@ const SuperAdminPanel: React.FC = () => {
       case "products":
         navigate("UserDashboardScreen", { screen: "ProductsManagement" });
         break;
+      case "experiences":
+        navigate("UserDashboardScreen", { screen: "ExperiencesManagement" });
+        break;
       case "finances":
         navigate("UserDashboardScreen", { screen: "FinancesManagement" });
         break;
@@ -402,6 +413,15 @@ const SuperAdminPanel: React.FC = () => {
         trend: "up" as const,
         percentage: 8,
         onPress: () => handleSectionPress("products"),
+      },
+      {
+        label: "Experiencias",
+        value: metrics.totalProducts.toLocaleString(),
+        icon: "🚀",
+        color: "#FF9500",
+        trend: "up" as const,
+        percentage: 8,
+        onPress: () => handleSectionPress("experiencies"),
       },
       {
         label: "Órdenes",

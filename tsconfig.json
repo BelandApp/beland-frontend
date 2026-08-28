@@ -3,7 +3,7 @@
   "compilerOptions": {
     "strict": true,
     "baseUrl": "./src",
-    "moduleSuffixes": [".web", ".native", ""],
+    // "moduleSuffixes": [".web", ".native", ""],
     "paths": {
       "src/*": ["*"],
       "@/*": ["*"],

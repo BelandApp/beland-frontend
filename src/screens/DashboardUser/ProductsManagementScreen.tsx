@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import React, { useState, useEffect, useRef } from "react";
+import { View, Text, StyleSheet } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { ProductService } from "@/services/core";
 import type {
@@ -204,7 +204,7 @@ export const ProductsManagementScreen: React.FC = () => {
         subtitle={`${totalProducts} productos en total`}
         buttons={
           <Button
-            title="Nuevo Producto"
+            title="Producto"
             textStyle={{ color: "white" }}
             style={{
               elevation: 8,
@@ -269,7 +269,7 @@ export const ProductsManagementScreen: React.FC = () => {
         />
       )}
 
-      {/* Modal de Formulario */}
+      {/* Modal de Formulario producto */}
       <ProductFormModal
         visible={showFormModal}
         product={editingProduct}

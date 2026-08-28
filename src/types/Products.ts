@@ -5,6 +5,7 @@ export interface Product {
   price: number;
   cost?: number;
   is_circular: boolean;
+  is_experience?: boolean;
   price_becoin?: number;
   image_url?: string;
   category_id?: string;

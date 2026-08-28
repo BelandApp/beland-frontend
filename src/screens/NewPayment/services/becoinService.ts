@@ -18,7 +18,7 @@ export const becoinService = {
       holder_phone,
       event_pass_id,
     } = eventDto;
-    const data = await core.post("User-event-passes/purchase", {
+    const data = await core.post("user-event-passes/purchase", {
       holder_email,
       holder_instagram_tiktok,
       holder_name,
