@@ -61,7 +61,6 @@ export function adaptSequelizePagination<T>(
   if (Array.isArray(payload) && Array.isArray(payload[0])) {
     const rows = payload[0];
     const total = Number(payload[1]) || rows.length;
-
     return {
       data: rows,
       total,
@@ -78,7 +77,7 @@ export function adaptSequelizePagination<T>(
 
   // Fallback seguro
   return {
-    data: [],
+    data: payload,
     total: 0,
     page,
     limit,
