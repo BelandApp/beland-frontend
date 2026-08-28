@@ -11,7 +11,7 @@ import { useCustomNavigation } from "src/hooks/navigation/useCustomNavigation";
 
 export const useWalletActions = () => {
   const { navigate } = useCustomNavigation();
-  const { hasProfile } = useAuth();
+  const { isAdmin } = useAuth();
   // Acciones principales del wallet
   const mainWalletActions: WalletAction[] = [
     {
@@ -41,7 +41,7 @@ export const useWalletActions = () => {
   ];
 
   // TODO CHEQUEAR botón Cobrar solo para roles permitidos
-  if (hasProfile("MERCHANT" as ProfileEnum)) {
+  if (isAdmin()) {
     mainWalletActions.push({
       id: "cobrar",
       label: "Cobrar",

@@ -99,26 +99,7 @@ export const QRScannerScreen = () => {
   if (hasPermission === false) {
     return <NotPermissionCamera requestPermission={requestPermission} />;
   }
-  const QRView = () => {
-    useEffect(() => {
-      console.log("📷 Camera mounted");
 
-      return () => {
-        console.log("📷 Camera unmounted");
-      };
-    }, []);
-
-    return (
-      <CameraView
-        style={styles.camera}
-        facing="back"
-        onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
-        barcodeScannerSettings={{
-          barcodeTypes: ["qr", "pdf417"],
-        }}
-      />
-    );
-  };
   return (
     <SafeAreaView style={styles.container} edges={["bottom", "left", "right"]}>
       <ThemedHeader
@@ -126,7 +107,6 @@ export const QRScannerScreen = () => {
         subtitle="Apunta la cámara hacia el código QR"
         canGoBack
       />
-      {isActive && <QRView />}
       <View style={styles.cameraContainer}>
         {isActive && (
           <CameraView
