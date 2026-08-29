@@ -679,7 +679,15 @@ const PaymentScreen: React.FC = () => {
       navigate("MainTabs", { screen: "Home" });
     } catch (err) {
       const message = getBackendErrorMessage(err);
-      notify.error({ message });
+      console.log(message);
+      if (message === "Insufficient wallet balance") {
+        notify.error({
+          message: "No tienes saldo suficiente, por favor recarga",
+        });
+        navigate("RechargeScreen", { paramsAmount: String(effectiveAmount) });
+      } else {
+        notify.error({ message });
+      }
     } finally {
       setIsLoading(false);
     }
