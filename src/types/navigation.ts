@@ -9,6 +9,7 @@ export type DashboardStackParamList = {
   ProductsManagement: undefined;
   ExperiencesManagement: undefined;
   FinancesManagement: undefined;
+  ConfigManagement: undefined;
 };
 export type GroupsStackParamList = {
   Construction: undefined;
