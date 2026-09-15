@@ -25,7 +25,7 @@ type ThemedTabsProps = {
   textStyle?: TextStyle;
 };
 
-const ThemedTabs: React.FC<ThemedTabsProps> = ({
+export const ThemedTabs: React.FC<ThemedTabsProps> = ({
   tabs,
   onTabChange,
   containerStyle,

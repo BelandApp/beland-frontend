@@ -6,6 +6,7 @@ import {
   ProductsManagementScreen,
   UserDashboard,
   UsersManagementScreen,
+  ConfigManagement,
 } from "src/screens/DashboardUser";
 import ExperiencesManagementScreen from "src/screens/DashboardUser/ExperienciesManagementScreen";
 import FinancesManagement from "src/screens/DashboardUser/FinanceManagementScreen";
@@ -37,6 +38,7 @@ export const DashboardStackNavigator = () => {
         name="ProductsManagement"
         component={ProductsManagementScreen}
       />
+      <Stack.Screen name="ConfigManagement" component={ConfigManagement} />
       <Stack.Screen
         name="ExperiencesManagement"
         component={ExperiencesManagementScreen}

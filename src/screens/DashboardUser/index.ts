@@ -4,3 +4,4 @@ export * from "./UsersManagementScreen";
 export * from "./components/Order/OrdersManagementScreen";
 export * from "./components/Order/OrderAdminDetailScreen";
 export * from "./ProductsManagementScreen";
+export * from "./components/settings/ConfigManagement";

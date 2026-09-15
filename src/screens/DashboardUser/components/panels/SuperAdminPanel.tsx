@@ -361,6 +361,8 @@ const SuperAdminPanel: React.FC = () => {
       case "finances":
         navigate("UserDashboardScreen", { screen: "FinancesManagement" });
         break;
+      case "config":
+        navigate("UserDashboardScreen", { screen: "ConfigManagement" });
       default:
         Alert.alert(
           "Funcionalidad en desarrollo",
