@@ -50,14 +50,14 @@ export interface PaymentAccount {
 }
 
 export const PAYMENT_METHODS: PaymentMethod[] = [
-  {
-    id: "STRIPE",
-    name: "STRIPE",
-    icon: "card",
-    badge: "Instantáneo",
-    badgeColor: "green",
-    description: "Pago mediante Stripe",
-  },
+  // {
+  //   id: "STRIPE",
+  //   name: "STRIPE",
+  //   icon: "card",
+  //   badge: "Instantáneo",
+  //   badgeColor: "green",
+  //   description: "Pago mediante Stripe",
+  // },
   {
     id: "PAYPHONE",
     name: "PAYPHONE",
